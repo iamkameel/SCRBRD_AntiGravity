@@ -5,7 +5,7 @@ import {
   Truck, Wallet, Handshake, BookOpen, HelpCircle, Presentation, Dumbbell,
   ClipboardList, Eye, Layers, School as SchoolIcon, MapPin, Shovel,
   Crosshair, GitCompareArrows, GraduationCap, BarChart3, Medal,
-  Calendar, Users2, Database, CircleHelp, Target
+  Calendar, Users2, Database, CircleHelp, Target, Terminal
 } from 'lucide-react';
 
 export interface NavLink {
@@ -128,6 +128,7 @@ export const navGroups: NavGroup[] = [
     links: [
       { href: '/user-management', label: 'User Management', icon: UserCog, key: 'user-management' },
       { href: '/data-management', label: 'Data Management', icon: Database, key: 'data-management' },
+      { href: '/testing-arena', label: 'Testing Arena', icon: Terminal, key: 'testing-arena' },
       { href: '/audit-log', label: 'Audit Log', icon: FilePenLine, key: 'audit-log' },
       { href: '/pitch-deck', label: 'Pitch Deck', icon: Presentation, key: 'pitch-deck' },
     ]
