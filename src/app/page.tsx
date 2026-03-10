@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { 
   Trophy, Users, BarChart3, Calendar, Target, Zap,
   Shield, TrendingUp, Award, Clock, CheckCircle2, ArrowRight

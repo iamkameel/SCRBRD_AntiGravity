@@ -66,12 +66,12 @@ export async function migrateSampleDataAction() {
 
     // 4. People (Players, Coaches, etc.)
     for (const person of store.people) {
-      await adminDb.collection('people').doc(person.personId).set(person);
+      await adminDb.collection('people').doc(person.id || person.personId!).set(person);
     }
 
     // 5. Matches
     for (const match of store.matches) {
-      await adminDb.collection('matches').doc(match.matchId).set(match);
+      await adminDb.collection('matches').doc(match.id).set(match);
     }
 
     // 6. Divisions

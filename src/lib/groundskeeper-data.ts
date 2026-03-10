@@ -2,7 +2,7 @@
 // Replaces legacy mock data with real database queries
 
 import { fetchCollection, fetchDocument } from './firestore';
-import { Person } from '@/types/firestore';
+import { Player as Person } from '@/lib/store';
 import { where, orderBy } from 'firebase/firestore';
 
 export interface AssignedField {

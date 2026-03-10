@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AnalyticsDashboardClient } from "@/components/analytics/AnalyticsDashboardClient";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 
 export const metadata = {

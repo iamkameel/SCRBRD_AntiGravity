@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useOptimistic, useTransition } from "react";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, PenTool, Trash2, Loader2, UserPlus, RotateCcw } from "lucide-react";

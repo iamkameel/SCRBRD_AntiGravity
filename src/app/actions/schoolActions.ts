@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { SchoolSchema, SchoolInput } from '@/lib/schemas/schoolSchemas';
+import { SchoolSchema, SchoolInput } from '@/lib/validations/schoolSchema';
 import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
 import { School } from '@/types/firestore';
 
@@ -21,8 +21,8 @@ export async function createSchoolAction(
       name: formData.get('name'),
       abbreviation: formData.get('abbreviation') || undefined,
       motto: formData.get('motto') || undefined,
-      establishmentYear: formData.get('establishmentYear') 
-        ? parseInt(formData.get('establishmentYear') as string, 10) 
+      establishmentYear: formData.get('establishmentYear')
+        ? parseInt(formData.get('establishmentYear') as string, 10)
         : undefined,
       location: formData.get('location') || undefined,
       address: formData.get('address') || undefined,
@@ -40,9 +40,9 @@ export async function createSchoolAction(
     };
 
     const validatedData = SchoolSchema.parse(rawData);
-    
+
     await createDocument<Omit<School, 'id'>>('schools', validatedData as any);
-    
+
     revalidatePath('/schools');
     return { success: true };
   } catch (error: unknown) {
@@ -56,9 +56,9 @@ export async function createSchoolAction(
       });
       return { fieldErrors };
     }
-    
-    return { 
-      error: error instanceof Error ? error.message : 'Failed to create school' 
+
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create school'
     };
   }
 }
@@ -73,8 +73,8 @@ export async function updateSchoolAction(
       name: formData.get('name'),
       abbreviation: formData.get('abbreviation') || undefined,
       motto: formData.get('motto') || undefined,
-      establishmentYear: formData.get('establishmentYear') 
-        ? parseInt(formData.get('establishmentYear') as string, 10) 
+      establishmentYear: formData.get('establishmentYear')
+        ? parseInt(formData.get('establishmentYear') as string, 10)
         : undefined,
       location: formData.get('location') || undefined,
       address: formData.get('address') || undefined,
@@ -92,9 +92,9 @@ export async function updateSchoolAction(
     };
 
     const validatedData = SchoolSchema.parse(rawData);
-    
+
     await updateDocument<School>('schools', schoolId, validatedData as any);
-    
+
     revalidatePath('/schools');
     revalidatePath(`/schools/${schoolId}`);
     return { success: true };
@@ -109,9 +109,9 @@ export async function updateSchoolAction(
       });
       return { fieldErrors };
     }
-    
-    return { 
-      error: error instanceof Error ? error.message : 'Failed to update school' 
+
+    return {
+      error: error instanceof Error ? error.message : 'Failed to update school'
     };
   }
 }

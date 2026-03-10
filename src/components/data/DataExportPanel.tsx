@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileJson, FileSpreadsheet } from "lucide-react";
 import { exportMatchesToCSV, exportPlayersToCSV, downloadCSV, exportToJSON } from "@/lib/utils/dataExport";

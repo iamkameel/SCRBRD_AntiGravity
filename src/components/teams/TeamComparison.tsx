@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getHeadToHeadStatsAction, HeadToHeadStats } from "@/app/actions/teamComparisonActions";
 import { Button } from "@/components/ui/button";
 import { Users, Trophy, TrendingUp, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 interface Team {

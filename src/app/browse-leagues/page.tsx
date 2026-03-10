@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getLeagues, League } from '@/services/leagueService';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Trophy, Loader2 } from 'lucide-react';

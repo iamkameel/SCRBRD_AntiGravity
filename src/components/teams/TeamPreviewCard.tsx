@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { School, Users, Calendar, Tag, User } from "lucide-react";
 
 interface TeamPreviewCardProps {

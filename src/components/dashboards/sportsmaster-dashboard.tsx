@@ -9,12 +9,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchPersonByEmail } from '@/app/actions/personActions';
 import { getTeamsBySchool, fetchCoachesBySchool } from '@/lib/firestore';
 import { Person, Team } from '@/types/firestore';
+import { Player } from '@/lib/store';
 
 export default function SportsmasterDashboard() {
   const { user } = useAuth();
   const [person, setPerson] = useState<Person | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [coaches, setCoaches] = useState<Person[]>([]);
+  const [coaches, setCoaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Person } from "@/types/firestore";
 import { AlertCircle, CheckCircle2, HelpCircle, XCircle, Clock } from "lucide-react";

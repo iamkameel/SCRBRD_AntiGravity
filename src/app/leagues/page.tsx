@@ -1,6 +1,6 @@
 import { getLeaguesAction } from "@/app/actions/leagueActions";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, PenTool } from "lucide-react";
 import Link from "next/link";

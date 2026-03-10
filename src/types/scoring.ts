@@ -10,6 +10,9 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
+import * as V4 from './schema_v4';
+export { V4 };
+
 
 // ============================================================================
 // ENUMS & LITERAL TYPES
@@ -112,13 +115,11 @@ export interface ShotData {
 }
 
 /**
+ * @deprecated Use V4.BallEvent (Layer 7) as the new single source of truth.
  * ScoringAction represents a single delivery in a cricket match.
- * This is the ONLY place where ball-by-ball data is persisted.
- * Everything else (projections, stats, scorecards) is derived from this.
- * 
- * Collection: /matches/{matchId}/scoring_actions/{actionId}
  */
 export interface ScoringAction {
+
     // Identity
     id: string;
     matchId: string;
@@ -320,12 +321,11 @@ export interface InningsProjection {
 }
 
 /**
+ * @deprecated Use V4 layers (8-10) for derived projections.
  * LiveScoreProjection is the complete real-time view of a match.
- * This is computed from scoring_actions and cached for performance.
- * 
- * Collection: /matches/{matchId}/live/score
  */
 export interface LiveScoreProjection {
+
     matchId: string;
     status: 'scheduled' | 'live' | 'innings_break' | 'completed';
 
@@ -376,6 +376,21 @@ export interface LiveScoreProjection {
 
     // Extras summary
     extras: ExtrasBreakdown;
+
+    // Live History (for UI) - typed alias for currentOver history
+    ballHistory?: Array<{
+        runs?: number;
+        isWicket?: boolean;
+        coordinates?: { angle: number; distance: number };
+        length?: string;
+        line?: string;
+        bowlerId?: string;
+        [key: string]: any;
+    }>;
+
+    // Top-level result shortcuts
+    winnerId?: string;
+    winMargin?: string;
 
     // Previous innings (populated after 1st innings)
     innings1?: InningsProjection;

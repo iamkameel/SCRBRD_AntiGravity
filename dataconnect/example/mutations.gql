@@ -1,0 +1,143 @@
+# Core entity mutations
+
+mutation CreatePerson(
+  $firstName: String!
+  $lastName: String!
+  $email: String
+  $phone: String
+) @auth(level: PUBLIC) {
+  person_insert(
+    data: {
+      firstName: $firstName
+      lastName: $lastName
+      email: $email
+      phone: $phone
+      status: "active"
+    }
+  )
+}
+
+mutation DeletePerson($id: UUID!) @auth(level: PUBLIC) {
+  person_delete(key: { id: $id })
+}
+
+mutation UpsertFixture(
+  $id: UUID
+  $seasonId: UUID!
+  $homeTeamId: UUID!
+  $awayTeamId: UUID!
+  $venueId: UUID!
+  $scheduledStartAt: Timestamp!
+) @auth(level: PUBLIC) {
+  fixture_upsert(
+    data: {
+      id: $id
+      seasonId: $seasonId
+      homeTeamId: $homeTeamId
+      awayTeamId: $awayTeamId
+      venueId: $venueId
+      scheduledStartAt: $scheduledStartAt
+      sport: "Cricket"
+    }
+  )
+}
+
+mutation CreateMatch($fixtureId: UUID!) @auth(level: PUBLIC) {
+  match_insert(
+    data: {
+      fixtureId: $fixtureId
+      liveStatus: "pre_match"
+      matchState: "not_started"
+    }
+  )
+}
+
+mutation CreateOrganisation(
+  $name: String!
+  $organisationType: String!
+  $shortName: String
+  $slug: String!
+) @auth(level: PUBLIC) {
+  organisation_insert(
+    data: {
+      name: $name
+      organisationType: $organisationType
+      shortName: $shortName
+      slug: $slug
+    }
+  )
+}
+
+mutation CreateVenue($organisationId: UUID!, $name: String!, $venueType: String)
+@auth(level: PUBLIC) {
+  venue_insert(
+    data: {
+      organisationId: $organisationId
+      name: $name
+      venueType: $venueType
+    }
+  )
+}
+
+mutation CreateSeason(
+  $name: String!
+  $startDate: Date!
+  $endDate: Date!
+  $isActive: Boolean
+) @auth(level: PUBLIC) {
+  season_insert(
+    data: {
+      name: $name
+      startDate: $startDate
+      endDate: $endDate
+      isActive: $isActive
+    }
+  )
+}
+
+mutation CreateAgeDivision($name: String!, $minAge: Int, $maxAge: Int)
+@auth(level: PUBLIC) {
+  ageDivision_insert(data: { name: $name, minAge: $minAge, maxAge: $maxAge })
+}
+
+mutation CreateTeamClass($code: String!, $label: String!) @auth(level: PUBLIC) {
+  teamClass_insert(data: { code: $code, label: $label })
+}
+
+mutation CreateTeam(
+  $organisationId: UUID!
+  $seasonId: UUID!
+  $ageDivisionId: UUID!
+  $teamClassId: UUID!
+  $name: String!
+  $displayName: String
+  $shortName: String
+) @auth(level: PUBLIC) {
+  team_insert(
+    data: {
+      organisationId: $organisationId
+      seasonId: $seasonId
+      ageDivisionId: $ageDivisionId
+      teamClassId: $teamClassId
+      name: $name
+      displayName: $displayName
+      shortName: $shortName
+    }
+  )
+}
+
+mutation UpdateTeam(
+  $id: UUID!
+  $name: String
+  $displayName: String
+  $shortName: String
+) @auth(level: PUBLIC) {
+  team_update(
+    key: { id: $id }
+    data: { name: $name, displayName: $displayName, shortName: $shortName }
+  )
+}
+
+mutation DeleteTeam($id: UUID!) @auth(level: PUBLIC) {
+  team_delete(key: { id: $id })
+}

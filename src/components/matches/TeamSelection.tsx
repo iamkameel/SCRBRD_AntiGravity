@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Plus, X, User, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,10 @@ interface Player {
   lastName: string;
   role?: string;
   profileImageUrl?: string;
+  eligibility?: {
+    isEligible: boolean;
+    reason?: string;
+  };
 }
 
 interface TeamSelectionProps {
@@ -267,8 +271,19 @@ export function TeamSelection({
                 .map(player => (
                   <div 
                     key={player.id} 
-                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted cursor-pointer transition-colors"
-                    onClick={() => handlePlayerToggle(player.id)}
+                    className={`flex items-center justify-between p-2 rounded-md transition-colors ${
+                      player.eligibility?.isEligible === false 
+                        ? 'opacity-50 cursor-not-allowed bg-muted/20' 
+                        : 'hover:bg-muted cursor-pointer'
+                    }`}
+                    onClick={() => {
+                      if (player.eligibility?.isEligible !== false) {
+                        handlePlayerToggle(player.id);
+                      } else {
+                        toast.error(player.eligibility.reason || "Player is not eligible for this division");
+                      }
+                    }}
+                    title={player.eligibility?.reason}
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-6 w-6">
@@ -276,7 +291,7 @@ export function TeamSelection({
                         <AvatarFallback>{player.firstName[0]}{player.lastName[0]}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium">{player.firstName} {player.lastName}</p>
+                        <p className={`text-sm font-medium ${player.eligibility?.isEligible === false ? 'line-through text-muted-foreground' : ''}`}>{player.firstName} {player.lastName}</p>
                         <p className="text-xs text-muted-foreground">{player.role || 'Player'}</p>
                       </div>
                     </div>

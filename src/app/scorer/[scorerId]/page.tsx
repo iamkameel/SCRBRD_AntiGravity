@@ -7,10 +7,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchPersonById, getMatchesByScorer } from '@/lib/firestore';
 import { Person, Match, ScorerProfile } from '@/types/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Mail, Phone, ShieldCheck, CalendarClock, CheckCircle, Star, ListChecks, Info, Building, Briefcase, FileText, Loader2 } from "lucide-react";
 import { format } from 'date-fns';
 
@@ -37,7 +37,7 @@ export default function ScorerDetailPage() {
   const router = useRouter();
   const scorerId = params.scorerId as string;
   
-  const [person, setPerson] = React.useState<Person | null>(null);
+  const [person, setPerson] = React.useState<any | null>(null);
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [loading, setLoading] = React.useState(true);
 

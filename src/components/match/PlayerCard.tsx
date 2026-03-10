@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
 // Import framer-motion

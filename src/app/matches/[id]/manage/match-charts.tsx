@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManhattanChart as ManhattanChartComponent } from "@/components/charts/ManhattanChart";
 import { WormChart as WormChartComponent } from "@/components/charts/WormChart";
 import { WagonWheel as WagonWheelComponent } from "@/components/charts/WagonWheel";

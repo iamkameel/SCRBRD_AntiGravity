@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Team, StaffProfile, Match, School } from "@/types/firestore";
 import { Users, Calendar, Shield } from "lucide-react";
@@ -42,7 +42,6 @@ export function SchoolTabs({ teams, staff, fixtures, school }: SchoolTabsProps) 
                   <TeamCard 
                     key={team.id} 
                     team={team} 
-                    school={school}
                     viewMode="list" 
                   />
                 ))

@@ -9,7 +9,7 @@ import { UndoDialog } from './undo-dialog';
 import { WagonWheel } from '@/components/charts/WagonWheel';
 import { PitchMap } from '@/components/charts/PitchMap';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { endInningsAction } from '@/app/actions/matchActions';
 import { useToast } from '@/hooks/use-toast';
@@ -266,13 +266,13 @@ export function MatchManagementClient({
             </Button>
           </Link>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+            <div className="flex justify-center items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent drop-shadow-sm">
                 Live Scoring
               </h1>
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              <span className="relative flex items-center justify-center h-6 px-3 rounded-full bg-red-500 text-[10px] font-bold text-white tracking-widest shadow-sm">
+                <span className="absolute inset-0 rounded-full bg-red-400 opacity-75 animate-ping"></span>
+                <span className="relative z-10 animate-pulse">LIVE</span>
               </span>
             </div>
             <p className="text-muted-foreground font-medium mt-1">
@@ -398,21 +398,20 @@ export function MatchManagementClient({
 
         {/* Right Column - Wagon Wheel & Analysis */}
         <div className="lg:col-span-7">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Field & Shots</CardTitle>
+          <Card className="h-full glass-card border-none shadow-2xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 bg-muted/30">
+              <CardTitle className="text-xl font-bold tracking-tight uppercase">Analysis Hub</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="wagon">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="wagon">Wagon Wheel</TabsTrigger>
-
-                  <TabsTrigger value="pitch">Pitch Map</TabsTrigger>
-                  <TabsTrigger value="commentary">Commentary</TabsTrigger>
+            <CardContent className="p-6">
+              <Tabs defaultValue="wagon" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 rounded-xl">
+                  <TabsTrigger value="wagon" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Wagon Wheel</TabsTrigger>
+                  <TabsTrigger value="pitch" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Pitch Map</TabsTrigger>
+                  <TabsTrigger value="commentary" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Log</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="wagon" className="flex justify-center">
-                  <div className="w-full max-w-[500px] aspect-square">
+                <TabsContent value="wagon" className="flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="w-full max-w-[450px] aspect-square relative glass-card p-4 rounded-full border-emerald-500/20">
                     <WagonWheel
                       shots={liveScore?.ballHistory?.map(b => ({
                         angle: b.coordinates?.angle || 0,
@@ -422,28 +421,34 @@ export function MatchManagementClient({
                       })) || []}
                       onShotSelect={handleShotSelect}
                     />
-                    <p className="text-center text-sm text-muted-foreground mt-4">
-                      Tap anywhere on the field to record a shot location
+                  </div>
+                  <div className="mt-8 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-center">
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                      🎯 Interactive Field: Tap to record shot placement
                     </p>
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="pitch">
-                  <PitchMap
-                    deliveries={liveScore?.ballHistory
-                      ?.filter(b => b.length && b.line)
-                      .map(b => ({
-                        length: b.length as 'Full' | 'Good' | 'Short' | 'Yorker',
-                        line: b.line as 'Off Stump' | 'Middle Stump' | 'Leg Stump' | 'Wide Outside Off' | 'Wide Down Leg',
-                        runs: b.runs || 0,
-                        isWicket: b.isWicket || false
-                      })) || []
-                    }
-                  />
+                <TabsContent value="pitch" className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="glass-card p-6 rounded-2xl border-emerald-500/20">
+                    <PitchMap
+                      deliveries={liveScore?.ballHistory
+                        ?.filter(b => b.length && b.line)
+                        .map(b => ({
+                          length: b.length as 'Full' | 'Good' | 'Short' | 'Yorker',
+                          line: b.line as 'Off Stump' | 'Middle Stump' | 'Leg Stump' | 'Wide Outside Off' | 'Wide Down Leg',
+                          runs: b.runs || 0,
+                          isWicket: b.isWicket || false
+                        })) || []
+                      }
+                    />
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="commentary">
-                  <BallByBallCommentary commentary={commentary} maxHeight="500px" />
+                <TabsContent value="commentary" className="animate-in fade-in slide-in-from-left-4 duration-500">
+                  <div className="glass-card rounded-2xl overflow-hidden border-emerald-500/10">
+                    <BallByBallCommentary commentary={commentary} maxHeight="600px" />
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>

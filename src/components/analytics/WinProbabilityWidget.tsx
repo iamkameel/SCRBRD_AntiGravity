@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { BrainCircuit, TrendingUp, AlertCircle } from "lucide-react";
 import { predictMatchOutcomeAction, PredictionResult } from "@/app/actions/analyticsActions";
 import { Skeleton } from "@/components/ui/skeleton";

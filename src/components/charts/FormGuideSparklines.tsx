@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FormMatch {
   result: 'W' | 'L' | 'D' | 'T'; // Win, Loss, Draw, Tie

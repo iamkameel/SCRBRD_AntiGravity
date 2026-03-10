@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { fetchMatches, fetchTrips, fetchPlayers, fetchTransactions } from "@/lib/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 

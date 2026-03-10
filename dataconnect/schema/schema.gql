@@ -1,0 +1,745 @@
+# SCRBRD Schema V4: 13-Layer model
+# For use with Firebase Data Connect and PostgreSQL
+# All fields use camelCase for GQL/SDK but map to snake_case in SQL
+# PK fields in GQL are renamed to 'id' for query standardisation
+
+# --- 1) Core Identity Layer ---
+
+type Person @table(name: "persons") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "person_id")
+  firstName: String! @col(name: "first_name")
+  lastName: String! @col(name: "last_name")
+  preferredName: String @col(name: "preferred_name")
+  dateOfBirth: Date @col(name: "date_of_birth")
+  gender: String
+  email: String @unique
+  phone: String
+  profileImageUrl: String @col(name: "profile_image_url")
+  biography: String
+  dominantHand: String @col(name: "dominant_hand") # 'Right', 'Left', 'Ambidextrous'
+  status: String @default(value: "active")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type PersonAddress @table(name: "person_addresses") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "address_id")
+  person: Person!
+  addressType: String @col(name: "address_type") # 'Home', 'Work', 'Postal'
+  line1: String @col(name: "line_1")
+  line2: String @col(name: "line_2")
+  suburb: String
+  city: String
+  province: String
+  postalCode: String @col(name: "postal_code")
+  country: String @default(value: "South Africa")
+}
+
+type PersonEmergencyContact @table(name: "person_emergency_contacts") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "emergency_contact_id")
+  person: Person!
+  contactName: String! @col(name: "contact_name")
+  relationship: String
+  phone: String!
+  email: String
+  notes: String
+}
+
+type PersonDocument @table(name: "person_documents") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "document_id")
+  person: Person!
+  documentType: String @col(name: "document_type") # 'ID', 'Passport', 'License', 'Certificate'
+  fileUrl: String! @col(name: "file_url")
+  issuedOn: Date @col(name: "issued_on")
+  expiresOn: Date @col(name: "expires_on")
+  verifiedBy: Person
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+# --- 2) Organisations and School Structure ---
+
+type Organisation @table(name: "organisations") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "organisation_id")
+  organisationType: String @col(name: "organisation_type") # 'School', 'Club', 'Academy', 'League', 'Governing Body'
+  name: String!
+  shortName: String @col(name: "short_name")
+  slug: String! @unique
+  logoUrl: String @col(name: "logo_url")
+  primaryColour: String @col(name: "primary_colour")
+  secondaryColour: String @col(name: "secondary_colour")
+  contactEmail: String @col(name: "contact_email")
+  contactPhone: String @col(name: "contact_phone")
+  websiteUrl: String @col(name: "website_url")
+  status: String @default(value: "active")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Venue @table(name: "venues") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "venue_id")
+  organisation: Organisation!
+  name: String!
+  venueType: String @col(name: "venue_type") # 'Main Ground', 'Indoor Centre', 'Satellite Field'
+  addressLine1: String @col(name: "address_line_1")
+  suburb: String
+  city: String
+  province: String
+  country: String
+  latitude: Float
+  longitude: Float
+  timezone: String @default(value: "Africa/Johannesburg")
+  notes: String
+}
+
+type Field @table(name: "fields") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "field_id")
+  venue: Venue!
+  name: String! # 'A Field', 'Nets 1-4'
+  fieldType: String @col(name: "field_type") # 'Oval', 'Nets', 'Indoor'
+  pitchType: String @col(name: "pitch_type") # 'Turf', 'Astro', 'Concrete', 'Matting'
+  boundaryLengthM: Int @col(name: "boundary_length_m")
+  endsJson: Any @col(name: "ends_json")
+  status: String @default(value: "available")
+  notes: String
+}
+
+# --- 3) Season, Competition and Team Hierarchy ---
+
+type Season @table(name: "seasons") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "season_id")
+  name: String! # '2025/26 Summer'
+  sport: String! @default(value: "Cricket")
+  startDate: Date! @col(name: "start_date")
+  endDate: Date! @col(name: "end_date")
+  isActive: Boolean @default(value: false) @col(name: "is_active")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type AgeDivision @table(name: "age_divisions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "age_division_id")
+  sport: String! @default(value: "Cricket")
+  name: String! # 'U19', 'Open', 'U15'
+  minAge: Int @col(name: "min_age")
+  maxAge: Int @col(name: "max_age")
+  sortOrder: Int @col(name: "sort_order")
+}
+
+type TeamClass @table(name: "team_classes") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "team_class_id")
+  sport: String! @default(value: "Cricket")
+  code: String! # '1ST', '2ND', 'A', 'B'
+  label: String!
+  sortOrder: Int @col(name: "sort_order")
+}
+
+type Team @table(name: "teams") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "team_id")
+  organisation: Organisation!
+  season: Season!
+  sport: String! @default(value: "Cricket")
+  ageDivision: AgeDivision!
+  teamClass: TeamClass!
+  genderCategory: String @col(name: "gender_category") # 'Male', 'Female', 'Mixed'
+  name: String!
+  displayName: String @col(name: "display_name")
+  shortName: String @col(name: "short_name")
+  teamColourPrimary: String @col(name: "team_colour_primary")
+  teamColourSecondary: String @col(name: "team_colour_secondary")
+  logoUrl: String @col(name: "logo_url")
+  status: String @default(value: "active")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Competition @table(name: "competitions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "competition_id")
+  season: Season!
+  organisation: Organisation
+  sport: String! @default(value: "Cricket")
+  name: String!
+  competitionType: String @col(name: "competition_type") # 'League', 'Knockout', 'Tournament'
+  format: String # 'T20', '50-Over', 'Time-Cricket'
+  oversPerInnings: Int @col(name: "overs_per_innings")
+  ballsPerOver: Int @default(value: 6) @col(name: "balls_per_over")
+  playingConditionsId: UUID @col(name: "playing_conditions_id")
+  startsOn: Date @col(name: "starts_on")
+  endsOn: Date @col(name: "ends_on")
+  status: String @default(value: "planned")
+}
+
+type CompetitionEntry @table(name: "competition_entries") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "competition_entry_id")
+  competition: Competition!
+  team: Team!
+  seed: Int
+  groupName: String @col(name: "group_name")
+  joinedAt: Timestamp! @default(expr: "request.time") @col(name: "joined_at")
+  status: String @default(value: "entered")
+}
+
+# --- 4) Roles and Access Structure ---
+
+type UserAccount @table(name: "user_accounts") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "user_account_id")
+  person: Person! @unique
+  authProvider: String @col(name: "auth_provider") # 'Firebase', 'Google', 'Apple'
+  authIdentifier: String @unique @col(name: "auth_identifier")
+  lastLoginAt: Timestamp @col(name: "last_login_at")
+  isActive: Boolean @default(value: true) @col(name: "is_active")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type SystemRole @table(name: "system_roles") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "system_role_id")
+  code: String! @unique # 'SUPER_ADMIN', 'ORG_ADMIN', 'SCORER'
+  label: String!
+}
+
+type UserRoleAssignment @table(name: "user_role_assignments") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "user_role_assignment_id")
+  userAccount: UserAccount!
+  systemRole: SystemRole!
+  organisation: Organisation
+  team: Team
+  startDate: Date! @default(expr: "request.time") @col(name: "start_date")
+  endDate: Date @col(name: "end_date")
+  status: String @default(value: "active")
+}
+
+type TeamMembership @table(name: "team_memberships") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "team_membership_id")
+  team: Team!
+  person: Person!
+  membershipRole: String @default(value: "Player") @col(name: "membership_role") # 'Player', 'Coach', 'Manager'
+  squadNumber: String @col(name: "squad_number")
+  isCaptain: Boolean @default(value: false) @col(name: "is_captain")
+  isViceCaptain: Boolean @default(value: false) @col(name: "is_vice_captain")
+  battingStyle: String @col(name: "batting_style")
+  bowlingStyle: String @col(name: "bowling_style")
+  wicketkeeper: Boolean @default(value: false)
+  status: String @default(value: "active")
+  joinedOn: Date @default(expr: "request.time") @col(name: "joined_on")
+  leftOn: Date @col(name: "left_on")
+  notes: String
+}
+
+# --- 5) Fixtures and Match Lifecycle ---
+
+type Fixture @table(name: "fixtures") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "fixture_id")
+  competition: Competition
+  season: Season!
+  sport: String! @default(value: "Cricket")
+  homeTeam: Team!
+  awayTeam: Team!
+  venue: Venue!
+  field: Field
+  scheduledStartAt: Timestamp! @col(name: "scheduled_start_at")
+  scheduledEndAt: Timestamp @col(name: "scheduled_end_at")
+  matchType: String @col(name: "match_type")
+  oversPerInnings: Int @col(name: "overs_per_innings")
+  ballsPerOver: Int @default(value: 6) @col(name: "balls_per_over")
+  status: String @default(value: "scheduled") # 'scheduled', 'live', 'completed', 'cancelled'
+  roundName: String @col(name: "round_name")
+  notes: String
+  createdBy: Person
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Match @table(name: "matches") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "match_id")
+  fixture: Fixture! @unique
+  liveStatus: String @default(value: "pre_match") @col(name: "live_status") # 'toss', 'innings_1', 'innings_2', 'abandoned'
+  matchState: String @default(value: "not_started") @col(name: "match_state")
+  startTimeActual: Timestamp @col(name: "start_time_actual")
+  endTimeActual: Timestamp @col(name: "end_time_actual")
+  resultType: String @col(name: "result_type") # 'Win', 'Draw', 'Tie', 'No Result'
+  winningTeam: Team
+  wonByRuns: Int @col(name: "won_by_runs")
+  wonByWickets: Int @col(name: "won_by_wickets")
+  marginText: String @col(name: "margin_text")
+  tossWinnerTeam: Team
+  tossDecision: String @col(name: "toss_decision") # 'Bat', 'Bowl'
+  duckworthLewisUsed: Boolean
+    @default(value: false)
+    @col(name: "duckworth_lewis_used")
+  revisedTarget: Int @col(name: "revised_target")
+  currentInningsNo: Int @col(name: "current_innings_no")
+  currentOver: Int @col(name: "current_over")
+  currentBall: Int @col(name: "current_ball")
+  versionNo: Int @default(value: 1) @col(name: "version_no")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+# --- 6) Match Officials and Line-ups ---
+
+type MatchOfficialAssignment @table(name: "match_official_assignments") {
+  id: UUID!
+    @default(expr: "uuidV4()")
+    @col(name: "match_official_assignment_id")
+  match: Match!
+  person: Person!
+  officialRole: String! @col(name: "official_role") # 'Umpire 1', 'Umpire 2', 'Scorer', 'Referee'
+  assignedBy: Person
+  confirmedAt: Timestamp @col(name: "confirmed_at")
+  notes: String
+}
+
+type MatchTeamSheet @table(name: "match_team_sheets") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "match_team_sheet_id")
+  match: Match!
+  team: Team!
+  confirmedBy: Person
+  confirmedAt: Timestamp @col(name: "confirmed_at")
+  battingOrderLocked: Boolean
+    @default(value: false)
+    @col(name: "batting_order_locked")
+  bowlingRosterLocked: Boolean
+    @default(value: false)
+    @col(name: "bowling_roster_locked")
+  status: String @default(value: "draft") # 'confirmed', 'verified'
+}
+
+type MatchTeamSheetPlayer @table(name: "match_team_sheet_players") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "match_team_sheet_player_id")
+  matchTeamSheet: MatchTeamSheet!
+  teamMembership: TeamMembership
+  person: Person!
+  shirtNumber: String @col(name: "shirt_number")
+  battingPosition: Int @col(name: "batting_position")
+  isStartingXi: Boolean @default(value: true) @col(name: "is_starting_xi")
+  isSubstitute: Boolean @default(value: false) @col(name: "is_substitute")
+  isWicketkeeper: Boolean @default(value: false) @col(name: "is_wicketkeeper")
+  isCaptain: Boolean @default(value: false) @col(name: "is_captain")
+  isViceCaptain: Boolean @default(value: false) @col(name: "is_vice_captain")
+  availabilityStatus: String
+    @default(value: "available")
+    @col(name: "availability_status")
+  notes: String
+}
+
+# --- 7) Innings, Overs and Ball-by-Ball Scoring ---
+
+type Innings @table(name: "innings") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "innings_id")
+  match: Match!
+  inningsNo: Int! @col(name: "innings_no")
+  battingTeam: Team!
+  bowlingTeam: Team!
+  inningsType: String @col(name: "innings_type") # 'Standard', 'Super Over'
+  targetRuns: Int @col(name: "target_runs")
+  maxOvers: Int @col(name: "max_overs")
+  startedAt: Timestamp @col(name: "started_at")
+  endedAt: Timestamp @col(name: "ended_at")
+  closureType: String @col(name: "closure_type") # 'All Out', 'Overs Completed', 'Declared'
+  totalRuns: Int @default(value: 0) @col(name: "total_runs")
+  totalWickets: Int @default(value: 0) @col(name: "total_wickets")
+  totalOversDecimal: Float
+    @default(value: 0.0)
+    @col(name: "total_overs_decimal")
+  totalBalls: Int @default(value: 0) @col(name: "total_balls")
+  extrasTotal: Int @default(value: 0) @col(name: "extras_total")
+  byes: Int @default(value: 0)
+  legByes: Int @default(value: 0) @col(name: "leg_byes")
+  wides: Int @default(value: 0)
+  noBalls: Int @default(value: 0) @col(name: "no_balls")
+  penaltyRuns: Int @default(value: 0) @col(name: "penalty_runs")
+  revisedTarget: Int @col(name: "revised_target")
+  runRate: Float @col(name: "run_rate")
+  requiredRunRate: Float @col(name: "required_run_rate")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Over @table(name: "overs") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "over_id")
+  innings: Innings!
+  overNumber: Int! @col(name: "over_number")
+  bowler: Person!
+  fromEnd: String @col(name: "from_end") # 'North', 'South'
+  maiden: Boolean @default(value: false)
+  runsConceded: Int @default(value: 0) @col(name: "runs_conceded")
+  wicketsInOver: Int @default(value: 0) @col(name: "wickets_in_over")
+  legalBallsBowled: Int @default(value: 0) @col(name: "legal_balls_bowled")
+  startedAt: Timestamp @col(name: "started_at")
+  endedAt: Timestamp @col(name: "ended_at")
+}
+
+type BallEvent @table(name: "ball_events") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "ball_event_id")
+  innings: Innings!
+  over: Over!
+  overNumber: Int! @col(name: "over_number")
+  ballInOver: Int! @col(name: "ball_in_over")
+  ballSequenceGlobal: Int! @col(name: "ball_sequence_global")
+  striker: Person!
+  nonStriker: Person!
+  bowler: Person!
+  battingTeam: Team!
+  bowlingTeam: Team!
+  deliveryType: String @col(name: "delivery_type")
+  shotType: String @col(name: "shot_type")
+  contactType: String @col(name: "contact_type")
+  outcomeType: String! @col(name: "outcome_type") # 'Runs', 'Wicket', 'Extra'
+  runsBat: Int @default(value: 0) @col(name: "runs_bat")
+  runsExtras: Int @default(value: 0) @col(name: "runs_extras")
+  runsTotal: Int @default(value: 0) @col(name: "runs_total")
+  extraType: String @col(name: "extra_type") # 'Wide', 'No Ball', 'Bye', 'Leg Bye'
+  boundaryFlag: Boolean @default(value: false) @col(name: "boundary_flag")
+  isLegalDelivery: Boolean @default(value: true) @col(name: "is_legal_delivery")
+  createsFreeHit: Boolean @default(value: false) @col(name: "creates_free_hit")
+  isFreeHit: Boolean @default(value: false) @col(name: "is_free_hit")
+  wicketFlag: Boolean @default(value: false) @col(name: "wicket_flag")
+  wicketType: String @col(name: "wicket_type") # 'Bowled', 'Caught'
+  dismissedPerson: Person
+  creditedBowlerFlag: Boolean
+    @default(value: true)
+    @col(name: "credited_bowler_flag")
+  assistingFielder1: Person
+  assistingFielder2: Person
+  pitchZone: String @col(name: "pitch_zone")
+  shotZone: String @col(name: "shot_zone")
+  wagonWheelX: Float @col(name: "wagon_wheel_x")
+  wagonWheelY: Float @col(name: "wagon_wheel_y")
+  commentaryText: String @col(name: "commentary_text")
+  scorerNotes: String @col(name: "scorer_notes")
+  recordedBy: Person
+  recordedAt: Timestamp!
+    @default(expr: "request.time")
+    @col(name: "recorded_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  versionNo: Int @default(value: 1) @col(name: "version_no")
+}
+
+# --- 8) Derived Scorecard Layer ---
+
+type InningsBattingScorecard @table(name: "innings_batting_scorecards") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "batting_scorecard_id")
+  innings: Innings!
+  person: Person!
+  battingPosition: Int @col(name: "batting_position")
+  dismissalText: String @col(name: "dismissal_text")
+  runs: Int @default(value: 0)
+  balls: Int @default(value: 0)
+  fours: Int @default(value: 0)
+  sixes: Int @default(value: 0)
+  strikeRate: Float @col(name: "strike_rate")
+  minutesBatted: Int @col(name: "minutes_batted")
+  onStrikeLastKnown: Boolean
+    @default(value: false)
+    @col(name: "on_strike_last_known")
+  isNotOut: Boolean @default(value: true) @col(name: "is_not_out")
+}
+
+type InningsBowlingScorecard @table(name: "innings_bowling_scorecards") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "bowling_scorecard_id")
+  innings: Innings!
+  person: Person!
+  oversDecimal: Float @default(value: 0.0) @col(name: "overs_decimal")
+  maidens: Int @default(value: 0)
+  runsConceded: Int @default(value: 0) @col(name: "runs_conceded")
+  wickets: Int @default(value: 0)
+  wides: Int @default(value: 0)
+  noBalls: Int @default(value: 0) @col(name: "no_balls")
+  economyRate: Float @col(name: "economy_rate")
+}
+
+type InningsPartnership @table(name: "innings_partnerships") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "partnership_id")
+  innings: Innings!
+  wicketNumber: Int! @col(name: "wicket_number")
+  batter1: Person!
+  batter2: Person!
+  runs: Int @default(value: 0)
+  balls: Int @default(value: 0)
+  startedBallEvent: BallEvent
+  endedBallEvent: BallEvent
+}
+
+type InningsFallOfWicket @table(name: "innings_fall_of_wickets") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "fall_of_wicket_id")
+  innings: Innings!
+  wicketNumber: Int! @col(name: "wicket_number")
+  teamScore: Int! @col(name: "team_score")
+  batterOut: Person!
+  overDisplay: String @col(name: "over_display")
+  ballEvent: BallEvent!
+}
+
+# --- 9) Commentary, Narrative and Match Intelligence ---
+
+type CommentaryEntry @table(name: "commentary_entries") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "commentary_entry_id")
+  match: Match!
+  innings: Innings
+  ballEvent: BallEvent
+  commentaryType: String @col(name: "commentary_type") # 'Standard', 'Critical', 'Highlight'
+  title: String
+  body: String!
+  priority: Int @default(value: 0)
+  createdBy: Person
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type MatchInsight @table(name: "match_insights") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "match_insight_id")
+  match: Match!
+  innings: Innings
+  relatedBallEvent: BallEvent
+  insightType: String @col(name: "insight_type") # 'Milestone', 'Trend', 'Win Probability'
+  label: String
+  valueJson: Any @col(name: "value_json")
+  generatedAt: Timestamp!
+    @default(expr: "request.time")
+    @col(name: "generated_at")
+  source: String # 'SystemAI', 'ScorerManual'
+}
+
+# --- 10) Statistics and Analytics ---
+
+type PlayerMatchStats @table(name: "player_match_stats") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "player_match_stat_id")
+  match: Match!
+  team: Team!
+  person: Person!
+  rolePlayed: String @col(name: "role_played")
+  runs: Int @default(value: 0)
+  balls: Int @default(value: 0)
+  fours: Int @default(value: 0)
+  sixes: Int @default(value: 0)
+  wickets: Int @default(value: 0)
+  oversBowled: Float @default(value: 0.0) @col(name: "overs_bowled")
+  maidens: Int @default(value: 0)
+  runsConceded: Int @default(value: 0) @col(name: "runs_conceded")
+  catches: Int @default(value: 0)
+  stumpings: Int @default(value: 0)
+  runOuts: Int @default(value: 0) @col(name: "run_outs")
+  strikeRate: Float @col(name: "strike_rate")
+  economyRate: Float @col(name: "economy_rate")
+  fantasyPoints: Float @col(name: "fantasy_points")
+  playerOfMatchPoints: Int
+    @default(value: 0)
+    @col(name: "player_of_match_points")
+}
+
+type PlayerSeasonStats @table(name: "player_season_stats") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "player_season_stat_id")
+  season: Season!
+  team: Team!
+  person: Person!
+  matchesPlayed: Int @default(value: 0) @col(name: "matches_played")
+  inningsBatted: Int @default(value: 0) @col(name: "innings_batted")
+  notOuts: Int @default(value: 0) @col(name: "not_outs")
+  runs: Int @default(value: 0)
+  highestScore: Int @default(value: 0) @col(name: "highest_score")
+  battingAverage: Float @col(name: "batting_average")
+  strikeRate: Float @col(name: "strike_rate")
+  ballsFaced: Int @default(value: 0) @col(name: "balls_faced")
+  fours: Int @default(value: 0)
+  sixes: Int @default(value: 0)
+  inningsBowled: Int @default(value: 0) @col(name: "innings_bowled")
+  ballsBowled: Int @default(value: 0) @col(name: "balls_bowled")
+  wickets: Int @default(value: 0)
+  bestBowling: String @col(name: "best_bowling") # '5/23'
+  bowlingAverage: Float @col(name: "bowling_average")
+  economyRate: Float @col(name: "economy_rate")
+  catches: Int @default(value: 0)
+  stumpings: Int @default(value: 0)
+  runOuts: Int @default(value: 0) @col(name: "run_outs")
+}
+
+type TeamSeasonStats @table(name: "team_season_stats") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "team_season_stat_id")
+  season: Season!
+  team: Team!
+  competition: Competition
+  matchesPlayed: Int @default(value: 0) @col(name: "matches_played")
+  wins: Int @default(value: 0)
+  losses: Int @default(value: 0)
+  ties: Int @default(value: 0)
+  noResults: Int @default(value: 0) @col(name: "no_results")
+  points: Int @default(value: 0)
+  netRunRate: Float @col(name: "net_run_rate")
+  formGuideJson: Any @col(name: "form_guide_json") # ['W', 'L', 'W']
+  lastUpdatedAt: Timestamp!
+    @default(expr: "request.time")
+    @col(name: "last_updated_at")
+}
+
+type TeamHeadToHeadStats @table(name: "team_h2h_stats") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "team_h2h_stat_id")
+  teamA: Team!
+  teamB: Team!
+  matchesPlayed: Int @default(value: 0) @col(name: "matches_played")
+  teamAWins: Int @default(value: 0) @col(name: "team_a_wins")
+  teamBWins: Int @default(value: 0) @col(name: "team_b_wins")
+  ties: Int @default(value: 0)
+  noResults: Int @default(value: 0) @col(name: "no_results")
+  highestTeamAScore: Int @col(name: "highest_team_a_score")
+  highestTeamBScore: Int @col(name: "highest_team_b_score")
+  lastMeetingMatch: Match
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+# --- 11) Player Development Layer ---
+
+type PlayerProfile @table(name: "player_profiles") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "player_profile_id")
+  person: Person! @unique
+  preferredRole: String @col(name: "preferred_role") # 'Top Order Batsman', 'Leg Spinner'
+  battingStyle: String @col(name: "batting_style") # 'Right hand'
+  bowlingStyle: String @col(name: "bowling_style") # 'Leg break'
+  bowlingTypeDetail: String @col(name: "bowling_type_detail")
+  debutDate: Date @col(name: "debut_date")
+  playerIdCode: String @unique @col(name: "player_id_code")
+  profileStatus: String @default(value: "Prospect") @col(name: "profile_status")
+}
+
+type SkillRating @table(name: "skill_ratings") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "skill_rating_id")
+  person: Person!
+  ratedBy: Person!
+  season: Season
+  category: String # 'Physical', 'Tactical', 'Technical'
+  attributeName: String @col(name: "attribute_name") # 'Power Hitting', 'Stamina'
+  ratingValue: Int @col(name: "rating_value") # 1-20
+  notes: String
+  ratedAt: Timestamp! @default(expr: "request.time") @col(name: "rated_at")
+}
+
+type TrainingLog @table(name: "training_logs") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "training_log_id")
+  person: Person!
+  team: Team
+  sessionDate: Date! @col(name: "session_date")
+  sessionType: String @col(name: "session_type") # 'Batting Nets', 'Fitness', 'Match Sim'
+  workload: Int # 1-10
+  notes: String
+  coachComments: String @col(name: "coach_comments")
+  createdBy: Person
+}
+
+type InjuryRecord @table(name: "injury_records") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "injury_record_id")
+  person: Person!
+  injuryType: String @col(name: "injury_type") # 'Fracture', 'Strain'
+  bodyArea: String @col(name: "body_area") # 'Ankle', 'Hamstring'
+  severity: String # 'Low', 'Medium', 'High'
+  occurredOn: Date @col(name: "occurred_on")
+  expectedReturnDate: Date @col(name: "expected_return_date")
+  status: String @default(value: "Active") # 'Recovering', 'Cleared', 'Permanent'
+  rehabPlan: String @col(name: "rehab_plan")
+  medicalNotes: String @col(name: "medical_notes")
+  clearanceStatus: Boolean @default(value: false) @col(name: "clearance_status")
+}
+
+type PlayerAvailability @table(name: "player_availability") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "availability_id")
+  person: Person!
+  team: Team!
+  fixture: Fixture
+  availableFrom: Date @col(name: "available_from")
+  availableTo: Date @col(name: "available_to")
+  availabilityStatus: String
+    @default(value: "Available")
+    @col(name: "availability_status")
+  reason: String
+  updatedBy: Person
+}
+
+# --- 12) Finance, Operations and Logistics ---
+
+type Invoice @table(name: "invoices") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "invoice_id")
+  organisation: Organisation
+  person: Person
+  relatedEntityType: String @col(name: "related_entity_type") # 'Membership', 'Match Fee'
+  relatedEntityId: UUID @col(name: "related_entity_id")
+  invoiceNumber: String! @unique @col(name: "invoice_number")
+  currency: String @default(value: "ZAR")
+  subtotal: Float
+  taxAmount: Float @col(name: "tax_amount")
+  totalAmount: Float! @col(name: "total_amount")
+  dueDate: Date @col(name: "due_date")
+  status: String @default(value: "unpaid")
+  issuedAt: Timestamp! @default(expr: "request.time") @col(name: "issued_at")
+}
+
+type Transaction @table(name: "transactions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "transaction_id")
+  invoice: Invoice!
+  amount: Float!
+  paymentMethod: String @col(name: "payment_method") # 'EFT', 'Card', 'Cash'
+  processorReference: String @col(name: "processor_reference")
+  transactionDate: Timestamp!
+    @default(expr: "request.time")
+    @col(name: "transaction_date")
+  status: String @default(value: "completed")
+}
+
+type Vehicle @table(name: "vehicles") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "vehicle_id")
+  organisation: Organisation!
+  registrationNumber: String! @unique @col(name: "registration_number")
+  make: String
+  model: String
+  vehicleType: String @col(name: "vehicle_type") # 'Bus', 'MiniBus', 'SUV'
+  capacity: Int
+  insuranceExpiry: Date @col(name: "insurance_expiry")
+  serviceDueDate: Date @col(name: "service_due_date")
+  status: String @default(value: "active")
+}
+
+type TransportTrip @table(name: "transport_trips") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "trip_id")
+  fixture: Fixture!
+  vehicle: Vehicle
+  driver: Person
+  departureTime: Timestamp @col(name: "departure_time")
+  arrivalTime: Timestamp @col(name: "arrival_time")
+  routeNotes: String @col(name: "route_notes")
+  passengerCount: Int @col(name: "passenger_count")
+  status: String @default(value: "scheduled")
+}
+
+# --- 13) Media, Notifications and Audit ---
+
+type MediaAsset @table(name: "media_assets") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "media_asset_id")
+  relatedEntityType: String @col(name: "related_entity_type") # 'Person', 'Organisation', 'Match'
+  relatedEntityId: UUID! @col(name: "related_entity_id")
+  uploadedBy: Person
+  mediaType: String @col(name: "media_type") # 'Image', 'Video', 'PDF'
+  fileUrl: String! @col(name: "file_url")
+  thumbnailUrl: String @col(name: "thumbnail_url")
+  altText: String @col(name: "alt_text")
+  metadataJson: Any @col(name: "metadata_json")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type Notification @table(name: "notifications") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "notification_id")
+  recipient: Person!
+  notificationType: String @col(name: "notification_type") # 'Alert', 'Reminder', 'Message'
+  title: String!
+  body: String!
+  relatedEntityType: String @col(name: "related_entity_type")
+  relatedEntityId: UUID @col(name: "related_entity_id")
+  isRead: Boolean @default(value: false) @col(name: "is_read")
+  sentAt: Timestamp! @default(expr: "request.time") @col(name: "sent_at")
+  readAt: Timestamp @col(name: "read_at")
+}
+
+type AuditLog @table(name: "audit_logs") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "audit_log_id")
+  actor: Person!
+  entityType: String! @col(name: "entity_type")
+  entityId: UUID! @col(name: "entity_id")
+  actionType: String! @col(name: "action_type") # 'Create', 'Update', 'Delete'
+  beforeJson: Any @col(name: "before_json")
+  afterJson: Any @col(name: "after_json")
+  ipAddress: String @col(name: "ip_address")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}

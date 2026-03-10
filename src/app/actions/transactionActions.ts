@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { TransactionSchema, TransactionInput } from '@/lib/schemas/transactionSchemas';
+import { TransactionSchema, TransactionInput } from '@/lib/validations/transactionSchema';
 import { createDocument, updateDocument } from '@/lib/firestore';
 
 export interface TransactionActionState {

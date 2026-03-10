@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { ScoringDialog } from "./scoring-dialog";
 import { NewBatsmanDialog } from "./new-batsman-dialog";
 import { NewBowlerDialog } from "./new-bowler-dialog";

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Activity, Circle, CheckCircle2, XCircle } from "lucide-react";
 
 type DRSMode = 'BallTracking' | 'UltraEdge';

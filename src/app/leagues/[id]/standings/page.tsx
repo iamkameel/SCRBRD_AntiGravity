@@ -2,7 +2,7 @@ import { getPointsTableAction } from "@/app/actions/pointsTableActions";
 import { getLeagueAction } from "@/app/actions/leagueActions";
 import { PointsTable } from "@/components/tournaments/PointsTable";
 import { notFound } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";

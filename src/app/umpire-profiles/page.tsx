@@ -4,11 +4,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { Search, UserCheck, CalendarClock, ShieldHalf, Loader2 } from "lucide-react";
 import { fetchUmpires } from '@/lib/firestore';
 import { Person } from '@/types/firestore';

@@ -17,8 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/Badge";
-import { Person } from "@/types/firestore";
+import { Badge } from "@/components/ui/badge";
+import { Player as Person } from "@/lib/store";
 
 interface CoachMultiSelectProps {
   coaches: Person[];

@@ -4,8 +4,8 @@ import {
   fetchTeams,
   getTeamsBySchool 
 } from "@/lib/firestore";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/stats/StatCard";
 import { PerformanceRing } from "@/components/stats/PerformanceRing";
@@ -18,34 +18,10 @@ import {
   TrendingUp, Target, Users, Award, Activity,
   MapPin, School as SchoolIcon
 } from "lucide-react";
-import { Person } from "@/types/firestore";
+import { Player as Person } from "@/lib/store";
 import { SkillsManager } from "@/components/people/SkillsManager";
 
 export const dynamic = 'force-dynamic';
-
-interface PersonWithStats extends Person {
-  stats?: {
-    matchesPlayed?: number;
-    totalRuns?: number;
-    battingAverage?: number;
-    wicketsTaken?: number;
-    bowlingAverage?: number;
-    strikeRate?: number;
-    economy?: number;
-    catches?: number;
-  };
-  physicalAttributes?: {
-    height?: number;
-    weight?: number;
-    battingHand?: string;
-    bowlingStyle?: string;
-  };
-  coachProfile?: Person['coachProfile'];
-  umpireProfile?: Person['umpireProfile'];
-  scorerProfile?: Person['scorerProfile'];
-  medicalProfile?: Person['medicalProfile'];
-  groundskeeperProfile?: Person['groundskeeperProfile'];
-}
 
 export default async function PersonDetailPage(props: { 
   params: Promise<{ id: string }>, 
@@ -57,7 +33,7 @@ export default async function PersonDetailPage(props: {
   const { id } = params;
   const activeTab = searchParams.tab || 'overview';
   
-  const person = await fetchPersonById(id) as PersonWithStats | null;
+  const person = await fetchPersonById(id) as Person | null;
   
   if (!person) {
     notFound();
@@ -121,7 +97,7 @@ export default async function PersonDetailPage(props: {
     return "text-emerald-500";
   };
 
-  const renderAttributeBlock = (title: string, attributes: any) => {
+  const renderAttributeBlock = (title: string, attributes: Record<string, number> | undefined) => {
     if (!attributes) return null;
     return (
       <Card className="p-6">
@@ -394,7 +370,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Traits & Specializations</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.coachProfile.coachTraits.map((trait, i) => (
+                        {person.coachProfile.coachTraits.map((trait: string, i: number) => (
                           <Badge key={i} variant="outline" className="border-primary/20 text-primary">
                             {trait}
                           </Badge>
@@ -430,7 +406,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Traits & Style</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.umpireProfile.umpireTraits.map((trait, i) => (
+                        {person.umpireProfile.umpireTraits.map((trait: string, i: number) => (
                           <Badge key={i} variant="outline" className="border-primary/20 text-primary">
                             {trait}
                           </Badge>
@@ -466,7 +442,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Traits & Skills</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.scorerProfile.scorerTraits.map((trait, i) => (
+                        {person.scorerProfile.scorerTraits.map((trait: string, i: number) => (
                           <Badge key={i} variant="outline" className="border-primary/20 text-primary">
                             {trait}
                           </Badge>
@@ -502,7 +478,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Specializations</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.medicalProfile.specializations.map((spec, i) => (
+                        {person.medicalProfile.specializations.map((spec: string, i: number) => (
                           <Badge key={i} variant="outline" className="border-primary/20 text-primary">
                             {spec}
                           </Badge>
@@ -534,7 +510,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Machinery Licenses</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.groundskeeperProfile.machineryLicenses.map((license, i) => (
+                        {person.groundskeeperProfile.machineryLicenses.map((license: string, i: number) => (
                           <Badge key={i} variant="outline" className="border-primary/20 text-primary">
                             {license}
                           </Badge>
@@ -547,7 +523,7 @@ export default async function PersonDetailPage(props: {
                      <Card className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Primary Venues</h3>
                       <div className="flex flex-wrap gap-2">
-                        {person.groundskeeperProfile.primaryVenues.map((venue, i) => (
+                        {person.groundskeeperProfile.primaryVenues.map((venue: string, i: number) => (
                           <Badge key={i} variant="secondary">
                             {venue}
                           </Badge>
@@ -728,7 +704,7 @@ export default async function PersonDetailPage(props: {
                       </tr>
                     </thead>
                     <tbody>
-                      {person.coachProfile.coachSeasonStats.map((stat, i) => (
+                      {person.coachProfile.coachSeasonStats.map((stat: any, i: number) => (
                         <tr key={i} className="border-b last:border-0">
                           <td className="py-3">{stat.seasonId}</td>
                           <td className="py-3 font-medium">{stat.teamId}</td>

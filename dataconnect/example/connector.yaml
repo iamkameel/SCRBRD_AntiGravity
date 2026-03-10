@@ -1,0 +1,6 @@
+connectorId: "example"
+generate:
+  javascriptSdk:
+    outputDir: "../../src/generated/dataconnect"
+    package: "@scrbrd/dataconnect"
+    packageJsonDir: "../../"

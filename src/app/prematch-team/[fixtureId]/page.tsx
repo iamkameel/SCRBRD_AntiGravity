@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchFixtureById, type Fixture } from '@/lib/fixtures-data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CalendarDays, Clock, MapPin, Users, UserCheck, ClipboardList, Loader2 } from "lucide-react";
 import { format } from 'date-fns';

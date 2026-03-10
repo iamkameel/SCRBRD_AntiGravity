@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, NewsPost } from "@/types/firestore";
 import { MapPin, Phone, Globe, Mail, ExternalLink } from "lucide-react";
 import Image from "next/image";

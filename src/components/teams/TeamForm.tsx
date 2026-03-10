@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Save, CheckCircle2, AlertTriangle, Palette, Shield } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { School, Division } from "@/types/firestore";
-import { TeamSchema } from "@/lib/schemas/teamSchemas";
+import { TeamSchema } from "@/lib/validations/teamSchema";
 import { z } from "zod";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 

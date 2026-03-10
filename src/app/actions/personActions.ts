@@ -74,7 +74,7 @@ export async function updatePersonAction(personId: string, formData: FormData) {
             return { success: false, error: 'Person not found' };
         }
 
-        const personData: Partial<Person> = {
+        const personData: any = {
             ...existingPerson,
             firstName: formData.get('firstName') as string,
             lastName: formData.get('lastName') as string,

@@ -1,21 +1,70 @@
-import { 
-  collection, 
-  getDocs, 
-  query
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Team } from '@/types/firestore';
+import { dc } from '@/lib/dataconnect';
+import {
+  listTeams,
+  createTeam,
+  updateTeam,
+  deleteTeam,
+  CreateTeamVariables,
+  UpdateTeamVariables,
+  DeleteTeamVariables,
+  ListTeamsData
+} from '@/generated/dataconnect';
 
-const COLLECTION_NAME = 'teams';
+/**
+ * Service for Team management using Firebase Data Connect (PostgreSQL).
+ * Replaces the legacy Firestore teams collection.
+ */
+export const teamService = {
+  /**
+   * Get all teams with their related entities (Organisation, Season, etc.)
+   */
+  async getAll(): Promise<ListTeamsData['teams']> {
+    const response = await listTeams(dc);
+    return response.data.teams;
+  },
 
-export const getTeams = async () => {
-  try {
-    const colRef = collection(db, COLLECTION_NAME);
-    const q = query(colRef);
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Team));
-  } catch (error) {
-    console.error("Error fetching teams:", error);
-    return [];
+  /**
+   * Get team by ID
+   */
+  async getOne(id: string): Promise<ListTeamsData['teams'][0] | null> {
+    const all = await this.getAll();
+    return all.find(t => t.id === id) || null;
+  },
+
+  /**
+   * Create a new team
+   */
+  async create(variables: CreateTeamVariables) {
+    return createTeam(dc, variables);
+  },
+
+  /**
+   * Update an existing team
+   */
+  async update(variables: UpdateTeamVariables) {
+    return updateTeam(dc, variables);
+  },
+
+  /**
+   * Delete a team
+   */
+  async delete(id: string) {
+    return deleteTeam(dc, { id });
+  },
+
+  /**
+   * Get teams for a specific organisation
+   */
+  async getByOrganisation(organisationId: string): Promise<ListTeamsData['teams']> {
+    const all = await this.getAll();
+    return all.filter(t => t.organisation.id === organisationId);
+  },
+
+  /**
+   * Get teams for a specific season
+   */
+  async getBySeason(seasonId: string): Promise<ListTeamsData['teams']> {
+    const all = await this.getAll();
+    return all.filter(t => t.season.id === seasonId);
   }
 };

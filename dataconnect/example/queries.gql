@@ -1,0 +1,145 @@
+# Match lifecycle and core entity queries
+
+query ListPeople @auth(level: PUBLIC) {
+  people {
+    id
+    firstName
+    lastName
+    preferredName
+    email
+    phone
+    profileImageUrl
+    status
+    # Join roles through UserAccount
+    userAccount_on_person {
+      userRoleAssignments_on_userAccount {
+        id
+        systemRole {
+          label
+        }
+        organisation {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+query GetPerson($id: UUID!) @auth(level: PUBLIC) {
+  person(id: $id) {
+    id
+    firstName
+    lastName
+    preferredName
+    email
+    phone
+    profileImageUrl
+    status
+    userAccount_on_person {
+      userRoleAssignments_on_userAccount {
+        id
+        systemRole {
+          label
+        }
+        organisation {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+query ListFixtures @auth(level: PUBLIC) {
+  fixtures {
+    id
+    scheduledStartAt
+    homeTeam {
+      name
+    }
+    awayTeam {
+      name
+    }
+    venue {
+      name
+    }
+    status
+  }
+}
+
+query ListOrganisations @auth(level: PUBLIC) {
+  organisations {
+    id
+    name
+    organisationType
+    shortName
+    slug
+    logoUrl
+  }
+}
+
+query ListVenues @auth(level: PUBLIC) {
+  venues {
+    id
+    name
+    venueType
+    organisation {
+      id
+      name
+    }
+  }
+}
+
+query ListSeasons @auth(level: PUBLIC) {
+  seasons {
+    id
+    name
+    startDate
+    endDate
+    isActive
+  }
+}
+
+query ListAgeDivisions @auth(level: PUBLIC) {
+  ageDivisions {
+    id
+    name
+    minAge
+    maxAge
+  }
+}
+
+query ListTeamClasses @auth(level: PUBLIC) {
+  teamClasses {
+    id
+    code
+    label
+  }
+}
+
+query ListTeams @auth(level: PUBLIC) {
+  teams {
+    id
+    name
+    displayName
+    shortName
+    organisation {
+      id
+      name
+    }
+    season {
+      id
+      name
+    }
+    ageDivision {
+      id
+      name
+    }
+    teamClass {
+      id
+      label
+      code
+    }
+  }
+}

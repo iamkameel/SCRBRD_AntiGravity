@@ -10,14 +10,14 @@ export interface Fixture {
     awayTeamId: string;
     homeTeamName?: string;
     awayTeamName?: string;
-    matchType: 'T20' | 'ODI' | 'Test' | 'T10' | 'Other';
+    matchType: 'T20' | 'ODI' | 'Test' | 'T10' | '50-over' | '2-day' | 'Other';
     venueId?: string;
     venue?: string;
     scheduledDate: Date | null;
     time?: string;
     overs?: number;
     ageGroup?: string;
-    status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'postponed' | 'live';
+    status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'postponed' | 'live' | 'pre_match' | 'match_complete' | 'not_started';
     umpireIds?: string[];
     scorerId?: string | null;
     division?: string | null;

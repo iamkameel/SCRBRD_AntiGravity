@@ -1,6 +1,6 @@
 import { fetchTopRunScorers, fetchTopWicketTakers, fetchLeagueStandings } from "@/lib/firestore";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
 import { Crown, Trophy, Medal } from "lucide-react";

@@ -4,7 +4,7 @@
  * Displays match state with appropriate styling and icons
  */
 
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, 
   Users, 

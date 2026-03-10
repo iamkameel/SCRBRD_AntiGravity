@@ -85,7 +85,7 @@ export default function PlayerDashboard() {
           <MetricCard
             icon={Activity}
             label="Fitness Score"
-            value={person?.playerProfile?.physicalAttributes?.coreFitness || person?.skills?.fitness || 92}
+            value={person?.playerProfile?.physicalAttributes?.coreFitness || (person as any)?.skills?.fitness || 92}
             subtitle="Latest assessment"
           />
           <MetricCard

@@ -3,7 +3,7 @@
 import { useLiveScore } from "@/hooks/useLiveScore";
 import { MatchRecapCard } from "./match-recap-card";
 import { Person, Team } from "@/types/firestore";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 interface MatchSummaryProps {

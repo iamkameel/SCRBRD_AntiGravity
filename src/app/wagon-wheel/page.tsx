@@ -1,5 +1,5 @@
 // Wagon Wheel page - placeholder for interactive scoring tool
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
 import { Target } from "lucide-react";
 

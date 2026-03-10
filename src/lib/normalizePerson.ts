@@ -1,4 +1,4 @@
-import { Person } from '@/types/firestore';
+import { Player as Person } from '@/lib/store';
 
 /**
  * Normalizes Firestore Person data to match the application's Person interface.

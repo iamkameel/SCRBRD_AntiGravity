@@ -7,10 +7,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchPersonById, getMatchesByOfficial } from '@/lib/firestore';
 import { Person, Match, UmpireProfile } from '@/types/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Player } from '@/lib/store';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Mail, Phone, ShieldCheck, CalendarClock, CheckCircle, Star, ListChecks, Info, Building, Briefcase, FileText, ShieldHalf, Loader2 } from "lucide-react";
 import { UmpireRatingCard } from "@/components/profiles/UmpireRatingCard";
 import { format } from 'date-fns';
@@ -38,7 +39,7 @@ export default function UmpireDetailPage() {
   const router = useRouter();
   const umpireId = params.umpireId as string;
 
-  const [person, setPerson] = React.useState<Person | null>(null);
+  const [person, setPerson] = React.useState<any | null>(null);
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [loading, setLoading] = React.useState(true);
 

@@ -1,6 +1,6 @@
 import { fetchDivisions, fetchTeams } from "@/lib/firestore";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function DivisionsPage() {
   const [divisions, teams] = await Promise.all([

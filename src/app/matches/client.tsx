@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Match, Team } from '@/types/firestore';
 import { MatchCard } from './match-card';
 import { MatchCalendar } from './match-calendar';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Grid3x3, CalendarDays, Plus } from 'lucide-react';

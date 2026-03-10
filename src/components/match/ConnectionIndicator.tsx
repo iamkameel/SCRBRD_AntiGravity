@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useFirestoreConnection } from '@/hooks/useLiveScore';
 

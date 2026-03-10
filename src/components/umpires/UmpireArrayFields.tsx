@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 
 export function UmpireTraitsManager({ initialData = [], onChange }: { initialData?: string[], onChange: (data: string[]) => void }) {
   const [traits, setTraits] = useState<string[]>(initialData);

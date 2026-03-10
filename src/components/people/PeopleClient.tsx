@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useMemo, useOptimistic, useTransition } from "react";
-import { fetchCollection } from "@/lib/firestore";
-import { normalizePeople } from "@/lib/normalizePerson";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { useState, useMemo, useOptimistic, useTransition, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { 
   User, Mail, Phone, Shield, School, Search, Filter, 
   Grid3x3, List, Plus, Trash2, Edit, MoreVertical,
-  Download, Upload, X, BarChart3, Columns, Loader2
+  Download, Upload, X, BarChart3, Columns, Loader2,
+  UserCheck,
+  Building
 } from "lucide-react";
-import { Person } from "@/types/firestore";
+import { ListPeopleData } from "@/generated/dataconnect";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALL_ROLES, ROLE_GROUPS } from "@/lib/roles";
+import { ROLE_GROUPS } from "@/lib/roles";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,66 +30,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { deletePersonAction } from "@/app/actions/personActions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+// Use the generated type for Person
+type GQLPerson = ListPeopleData['people'][0];
+
 interface PeopleClientProps {
-  initialPeople: Person[];
+  initialPeople: GQLPerson[];
   userRole?: string;
 }
 
 type ViewMode = 'grid' | 'list' | 'stats' | 'board';
 
-type OptimisticAction = 
-  | { type: "delete"; id: string }
-  | { type: "update"; id: string; updates: Partial<Person> };
-
 export default function PeopleClient({ initialPeople, userRole = 'Player' }: PeopleClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
-  const [selectedSchool, setSelectedSchool] = useState<string>("all");
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedPeople, setSelectedPeople] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
 
-  // Optimistic state management
-  const [optimisticPeople, setOptimisticPeople] = useOptimistic<Person[], OptimisticAction>(
-    initialPeople,
-    (currentPeople, action) => {
-      switch (action.type) {
-        case "delete":
-          return currentPeople.filter((person) => person.id !== action.id);
-        case "update":
-          return currentPeople.map((person) =>
-            person.id === action.id ? { ...person, ...action.updates } : person
-          );
-        default:
-          return currentPeople;
-      }
-    }
-  );
+  // Helper to extract primary role and organisation from the relational structure
+  const getPersonMeta = (person: GQLPerson) => {
+    const assignments = person.userAccount_on_person?.userRoleAssignments_on_userAccount || [];
+    const primaryAssignment = assignments[0];
+    return {
+      role: primaryAssignment?.systemRole?.label || 'Player',
+      organisationName: primaryAssignment?.organisation?.name || 'Independent',
+      organisationId: primaryAssignment?.organisation?.id || 'none',
+      allRoles: assignments.map(a => a.systemRole?.label).filter(Boolean) as string[],
+      allOrgIds: assignments.map(a => a.organisation?.id).filter(Boolean) as string[]
+    };
+  };
 
   // Check permissions based on user role
   const canCreate = ['Admin', 'System Architect', 'Sportsmaster', 'Coach'].includes(userRole);
   const canEdit = ['Admin', 'System Architect', 'Sportsmaster', 'Coach', 'Team Manager'].includes(userRole);
   const canDelete = ['Admin', 'System Architect'].includes(userRole);
 
-  // Get unique schools from people
-  const schools = useMemo(() => {
-    const schoolSet = new Set<string>();
-    optimisticPeople.forEach(person => {
-      if (person.schoolId) schoolSet.add(person.schoolId);
+  // Unique Organisations from the joined data
+  const organisations = useMemo(() => {
+    const orgMap = new Map<string, string>();
+    initialPeople.forEach(p => {
+      const meta = getPersonMeta(p);
+      if (meta.organisationId !== 'none' && meta.organisationName) {
+        orgMap.set(meta.organisationId, meta.organisationName);
+      }
     });
-    return Array.from(schoolSet);
-  }, [optimisticPeople]);
+    return Array.from(orgMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [initialPeople]);
 
-  // Filter and search logic - now uses optimisticPeople
+  // Filter and search logic
   const filteredPeople = useMemo(() => {
-    return optimisticPeople.filter(person => {
+    return initialPeople.filter(person => {
+      const meta = getPersonMeta(person);
+      
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery || 
@@ -97,116 +94,30 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
         person.email?.toLowerCase().includes(searchLower) ||
         person.phone?.toLowerCase().includes(searchLower);
 
-      // Role filter
-      const matchesRole = selectedRole === "all" || person.role === selectedRole;
+      // Role filter (matches any assigned role)
+      const matchesRole = selectedRole === "all" || meta.allRoles.includes(selectedRole);
 
-      // School filter
-      const matchesSchool = selectedSchool === "all" || person.schoolId === selectedSchool;
+      // Organisation filter
+      const matchesOrg = selectedOrgId === "all" || meta.allOrgIds.includes(selectedOrgId);
 
-      return matchesSearch && matchesRole && matchesSchool;
+      return matchesSearch && matchesRole && matchesOrg;
     });
-  }, [optimisticPeople, searchQuery, selectedRole, selectedSchool]);
+  }, [initialPeople, searchQuery, selectedRole, selectedOrgId]);
 
-  // Group people by role
+  // Group people by their primary role
   const groupedByRole = useMemo(() => {
     return filteredPeople.reduce((acc, person) => {
-      const role = person.role || 'Other';
-      if (!acc[role]) {
-        acc[role] = [];
-      }
+      const meta = getPersonMeta(person);
+      const role = meta.role;
+      if (!acc[role]) acc[role] = [];
       acc[role].push(person);
       return acc;
-    }, {} as Record<string, Person[]>);
+    }, {} as Record<string, GQLPerson[]>);
   }, [filteredPeople]);
 
-  const handleSelectPerson = (personId: string) => {
-    const newSelected = new Set(selectedPeople);
-    if (newSelected.has(personId)) {
-      newSelected.delete(personId);
-    } else {
-      newSelected.add(personId);
-    }
-    setSelectedPeople(newSelected);
-  };
-
-  const handleSelectAll = () => {
-    if (selectedPeople.size === filteredPeople.length) {
-      setSelectedPeople(new Set());
-    } else {
-      setSelectedPeople(new Set(filteredPeople.map(p => p.id)));
-    }
-  };
-
   const handleDelete = async (personId: string) => {
-    if (!confirm('Are you sure you want to delete this person? This action cannot be undone.')) {
-      return;
-    }
-
-    setDeletingId(personId);
-    
-    // Optimistically remove from UI immediately
-    startTransition(async () => {
-      setOptimisticPeople({ type: "delete", id: personId });
-    });
-
-    const result = await deletePersonAction(personId);
-    
-    if (result.success) {
-      toast.success("Person deleted successfully");
-      // Remove from selection if it was selected
-      if (selectedPeople.has(personId)) {
-        const newSelected = new Set(selectedPeople);
-        newSelected.delete(personId);
-        setSelectedPeople(newSelected);
-      }
-    } else {
-      // On failure, the optimistic update will be reverted automatically
-      // when the component re-renders with the original data
-      toast.error(result.error || 'Failed to delete person');
-      router.refresh(); // Force refresh to restore original state
-    }
-    
-    setDeletingId(null);
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedPeople.size === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete ${selectedPeople.size} people? This action cannot be undone.`)) {
-      return;
-    }
-
-    const idsToDelete = Array.from(selectedPeople);
-    
-    // Optimistically remove all selected people
-    startTransition(async () => {
-      idsToDelete.forEach(id => {
-        setOptimisticPeople({ type: "delete", id });
-      });
-    });
-
-    // Process deletions
-    let successCount = 0;
-    let failCount = 0;
-    
-    for (const id of idsToDelete) {
-      const result = await deletePersonAction(id);
-      if (result.success) {
-        successCount++;
-      } else {
-        failCount++;
-      }
-    }
-
-    if (successCount > 0) {
-      toast.success(`Successfully deleted ${successCount} people`);
-    }
-    if (failCount > 0) {
-      toast.error(`Failed to delete ${failCount} people`);
-      router.refresh(); // Refresh to restore any failed deletions
-    }
-    
-    setSelectedPeople(new Set());
+    if (!confirm('Are you sure you want to delete this person from the V4 engine?')) return;
+    toast.error("Deletion not yet implemented for V4 relational model");
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -221,12 +132,7 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
   };
 
   const item = {
@@ -235,24 +141,24 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3 tracking-tight">
-            <User className="h-8 w-8 text-primary" />
-            People Directory
+          <h1 className="text-4xl font-bold flex items-center gap-3 tracking-tighter font-heading italic">
+            <UserCheck className="h-10 w-10 text-primary" />
+            Registry (V4)
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage all members of the cricket management system
+          <p className="text-muted-foreground mt-2 italic font-medium">
+            Centralized Relational Identity Directory
           </p>
         </div>
         <div className="flex items-center gap-2">
           {canCreate && (
-            <Button asChild>
+            <Button asChild className="font-heading italic bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg shadow-primary/20 border-0">
               <Link href="/people/add">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Person
+                Enroll Person
               </Link>
             </Button>
           )}
@@ -260,101 +166,84 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
       </div>
 
       {/* Search and Filters Bar */}
-      <Card className="p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <Card className="p-6 bg-card/50 backdrop-blur-md border-primary/10 shadow-xl rounded-3xl">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex-1 relative group">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <Input
-              placeholder="Search by name, email, or phone..."
+              placeholder="Search registry by name, email, or identifiers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 bg-background/50 border-primary/10 rounded-2xl text-lg focus:ring-primary/20"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Filter Toggle */}
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-            {(selectedRole !== "all" || selectedSchool !== "all") && (
-              <Badge variant="secondary" className="ml-2">
-                {[selectedRole !== "all" ? 1 : 0, selectedSchool !== "all" ? 1 : 0].reduce((a, b) => a + b, 0)}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-12 rounded-2xl px-6 font-heading italic"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Criteria
+              {(selectedRole !== "all" || selectedOrgId !== "all") && (
+                <Badge variant="secondary" className="ml-2 bg-primary/20 text-primary">
+                  Active
+                </Badge>
+              )}
+            </Button>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 border rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              title="Grid View"
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'stats' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('stats')}
-              title="Stats View"
-            >
-              <BarChart3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'board' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('board')}
-              title="Board View"
-            >
-              <Columns className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1 border border-primary/10 rounded-2xl p-1 bg-background/50">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className={`h-10 w-10 rounded-xl ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <Grid3x3 className="h-5 w-5" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className={`h-10 w-10 rounded-xl ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : ''}`}
+              >
+                <List className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Expandable Filters */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-primary/10">
                 {/* Role Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Role</label>
+                <div className="space-y-3">
+                  <label className="text-xs font-bold uppercase tracking-widest text-primary/60 px-1">Global System Role</label>
                   <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl bg-background/50 border-primary/10">
                       <SelectValue placeholder="All Roles" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
                       {Object.entries(ROLE_GROUPS).map(([group, roles]) => (
                         <div key={group}>
-                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                          <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
                             {group}
                           </div>
                           {roles.map(role => (
@@ -368,390 +257,203 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
                   </Select>
                 </div>
 
-                {/* School Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">School</label>
-                  <Select value={selectedSchool} onValueChange={setSelectedSchool}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Schools" />
+                {/* Org Filter */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold uppercase tracking-widest text-primary/60 px-1">Primary Organisation</label>
+                  <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                    <SelectTrigger className="h-12 rounded-xl bg-background/50 border-primary/10">
+                      <SelectValue placeholder="All Organisations" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Schools</SelectItem>
-                      {schools.map(school => (
-                        <SelectItem key={school} value={school}>
-                          {school}
+                      <SelectItem value="all">All Organisations</SelectItem>
+                      {organisations.map(org => (
+                        <SelectItem key={org.id} value={org.id}>
+                          {org.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-
-              {/* Clear Filters */}
-              {(selectedRole !== "all" || selectedSchool !== "all") && (
-                <div className="mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedRole("all");
-                      setSelectedSchool("all");
-                    }}
-                  >
-                    Clear all filters
-                  </Button>
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
       </Card>
 
-      {/* Results Summary */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{filteredPeople.length}</span> of{" "}
-          <span className="font-semibold text-foreground">{initialPeople.length}</span> people
-        </div>
-        {selectedPeople.size > 0 && canDelete && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {selectedPeople.size} selected
-            </span>
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
-              Delete Selected
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* View Modes */}
+      {/* Results View */}
       {filteredPeople.length > 0 ? (
-        <>
-          {viewMode === 'grid' && (
-            <div className="space-y-8">
-              {Object.entries(groupedByRole).map(([role, rolePeople]) => (
-                <motion.div
-                  key={role}
-                  className="space-y-4"
-                  initial="hidden"
-                  animate="show"
-                  variants={container}
-                >
-                  <div className="flex items-center gap-3 border-b pb-2">
-                    <Shield className="h-5 w-5 text-primary" />
-                    <h2 className="text-xl font-semibold">{role}s</h2>
-                    <Badge variant="secondary" className="ml-2">{rolePeople.length}</Badge>
-                  </div>
+        <div className="space-y-12">
+          {viewMode === 'grid' && Object.entries(groupedByRole).map(([role, rolePeople]) => (
+            <motion.div key={role} className="space-y-6" initial="hidden" animate="show" variants={container}>
+              <div className="flex items-center gap-4 px-2">
+                <div className="h-px flex-1 bg-primary/10" />
+                <div className="flex items-center gap-2">
+                   <Shield className="h-5 w-5 text-primary" />
+                   <h2 className="text-xl font-heading italic font-bold tracking-tight">{role}s</h2>
+                   <Badge variant="outline" className="ml-2 border-primary/20 text-primary">{rolePeople.length}</Badge>
+                </div>
+                <div className="h-px flex-1 bg-primary/10" />
+              </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {rolePeople.map((person) => (
-                      <motion.div key={person.id} variants={item}>
-                        <Card className="p-5 hover:shadow-lg hover:border-primary/50 transition-all duration-300 group relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="relative z-10">
-                            <div className="flex items-start justify-between mb-4">
-                              <Link href={`/people/${person.id}`} className="flex-1">
-                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
-                                  {person.firstName} {person.lastName}
-                                </h3>
-                                {person.title && (
-                                  <p className="text-sm text-muted-foreground">{person.title}</p>
-                                )}
-                              </Link>
-                              <div className="flex items-center gap-2">
-                                <Badge variant={getRoleBadgeVariant(person.role || 'Other') as any}>
-                                  {person.role}
-                                </Badge>
-                                {canEdit && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                        <MoreVertical className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem asChild>
-                                        <Link href={`/people/${person.id}`}>
-                                          <User className="h-4 w-4 mr-2" />
-                                          View Profile
-                                        </Link>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem asChild>
-                                        <Link href={`/people/${person.id}/edit`}>
-                                          <Edit className="h-4 w-4 mr-2" />
-                                          Edit
-                                        </Link>
-                                      </DropdownMenuItem>
-                                      {canDelete && (
-                                        <>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            className="text-destructive"
-                                            onClick={() => handleDelete(person.id)}
-                                          >
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </>
-                                      )}
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="space-y-2 text-sm">
-                              {person.email && (
-                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                  <Mail className="h-3.5 w-3.5" />
-                                  <span className="truncate">{person.email}</span>
-                                </div>
-                              )}
-                              {person.phone && (
-                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                  <Phone className="h-3.5 w-3.5" />
-                                  <span>{person.phone}</span>
-                                </div>
-                              )}
-                              {person.schoolId && (
-                                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
-                                  <School className="h-3.5 w-3.5" />
-                                  <span className="truncate">School ID: {person.schoolId}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {person.specializations && person.specializations.length > 0 && (
-                              <div className="mt-4 pt-4 border-t">
-                                <div className="flex flex-wrap gap-1.5">
-                                  {person.specializations.slice(0, 3).map((spec: string, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-xs">
-                                      {spec}
-                                    </Badge>
-                                  ))}
-                                  {person.specializations.length > 3 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{person.specializations.length - 3}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {viewMode === 'list' && (
-            <Card>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b bg-muted/50">
-                    <tr>
-                      {canDelete && (
-                        <th className="p-4 text-left">
-                          <input
-                            type="checkbox"
-                            checked={selectedPeople.size === filteredPeople.length}
-                            onChange={handleSelectAll}
-                            className="rounded"
-                          />
-                        </th>
-                      )}
-                      <th className="p-4 text-left font-semibold">Name</th>
-                      <th className="p-4 text-left font-semibold">Role</th>
-                      <th className="p-4 text-left font-semibold">Email</th>
-                      <th className="p-4 text-left font-semibold">Phone</th>
-                      <th className="p-4 text-left font-semibold">School</th>
-                      {canEdit && <th className="p-4 text-right font-semibold">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPeople.map((person) => (
-                      <tr key={person.id} className="border-b hover:bg-muted/30 transition-colors">
-                        {canDelete && (
-                          <td className="p-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedPeople.has(person.id)}
-                              onChange={() => handleSelectPerson(person.id)}
-                              className="rounded"
-                            />
-                          </td>
-                        )}
-                        <td className="p-4">
-                          <Link href={`/people/${person.id}`} className="font-medium hover:text-primary">
-                            {person.firstName} {person.lastName}
-                          </Link>
-                          {person.title && (
-                            <div className="text-sm text-muted-foreground">{person.title}</div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <Badge variant={getRoleBadgeVariant(person.role || 'Other') as any}>
-                            {person.role}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-sm text-muted-foreground">{person.email || '-'}</td>
-                        <td className="p-4 text-sm text-muted-foreground">{person.phone || '-'}</td>
-                        <td className="p-4 text-sm text-muted-foreground">{person.schoolId || '-'}</td>
-                        {canEdit && (
-                          <td className="p-4 text-right">
-                            <DropdownMenu>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {rolePeople.map((person) => {
+                  const meta = getPersonMeta(person);
+                  return (
+                    <motion.div key={person.id} variants={item}>
+                      <Card className="p-6 hover:shadow-2xl hover:border-primary/40 transition-all duration-500 group relative overflow-hidden bg-card/40 border-primary/5 rounded-3xl backdrop-blur-sm">
+                        <div className="absolute top-0 right-0 p-4">
+                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" className="rounded-xl">
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/people/${person.id}`}>
-                                    <User className="h-4 w-4 mr-2" />
-                                    View Profile
+                                  <Link href={`/people/${person.id}`} className="cursor-pointer">
+                                    <User className="h-4 w-4 mr-2" /> Profile
                                   </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/people/${person.id}/edit`}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </Link>
-                                </DropdownMenuItem>
-                                {canDelete && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      className="text-destructive"
-                                      onClick={() => handleDelete(person.id)}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </>
+                                {canEdit && (
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/people/${person.id}/edit`} className="cursor-pointer">
+                                      <Edit className="h-4 w-4 mr-2" /> Edit
+                                    </Link>
+                                  </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
+                           </DropdownMenu>
+                        </div>
 
-          {viewMode === 'stats' && (
-            <Card>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b bg-muted/50">
-                    <tr>
-                      <th className="p-4 text-left font-semibold">Player</th>
-                      <th className="p-4 text-center font-semibold">Matches</th>
-                      <th className="p-4 text-center font-semibold">Runs</th>
-                      <th className="p-4 text-center font-semibold">Wickets</th>
-                      <th className="p-4 text-center font-semibold">Bat Avg</th>
-                      <th className="p-4 text-center font-semibold">Bowl Avg</th>
-                      <th className="p-4 text-center font-semibold">SR</th>
-                      <th className="p-4 text-center font-semibold">Econ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPeople.map((person) => (
-                      <tr key={person.id} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="p-4">
-                          <Link href={`/people/${person.id}`} className="font-medium hover:text-primary">
-                            {person.firstName} {person.lastName}
-                          </Link>
-                          <div className="text-xs text-muted-foreground">{person.role}</div>
-                        </td>
-                        <td className="p-4 text-center font-medium">{person.stats?.matchesPlayed || 0}</td>
-                        <td className="p-4 text-center">{person.stats?.totalRuns || 0}</td>
-                        <td className="p-4 text-center">{person.stats?.wicketsTaken || 0}</td>
-                        <td className="p-4 text-center">{person.stats?.battingAverage?.toFixed(2) || '-'}</td>
-                        <td className="p-4 text-center">{person.stats?.bowlingAverage?.toFixed(2) || '-'}</td>
-                        <td className="p-4 text-center">{person.stats?.strikeRate?.toFixed(1) || '-'}</td>
-                        <td className="p-4 text-center">{person.stats?.economy?.toFixed(2) || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
-
-          {viewMode === 'board' && (
-            <div className="flex gap-6 overflow-x-auto pb-6">
-              {Object.entries(groupedByRole).map(([role, rolePeople]) => (
-                <div key={role} className="min-w-[320px] max-w-[320px] flex flex-col gap-4">
-                  <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border">
-                    <h3 className="font-semibold">{role}s</h3>
-                    <Badge variant="secondary">{rolePeople.length}</Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {rolePeople.map((person) => (
-                      <Card key={person.id} className="p-4 hover:border-primary transition-colors cursor-pointer">
-                        <Link href={`/people/${person.id}`}>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="font-medium">{person.firstName} {person.lastName}</div>
-                              <div className="text-xs text-muted-foreground mt-1">{person.email}</div>
+                        <div className="flex flex-col items-center text-center space-y-4">
+                          <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border-2 border-primary/10 relative z-10 overflow-hidden">
+                              {person.profileImageUrl ? (
+                                <img src={person.profileImageUrl} alt={person.firstName} className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="h-10 w-10 text-primary" />
+                              )}
                             </div>
-                            {person.schoolId && (
-                              <School className="h-4 w-4 text-muted-foreground" />
+                            <div className="absolute -bottom-2 -right-2 bg-background border border-primary/10 rounded-full p-1.5 shadow-sm z-20">
+                               <Shield className="h-3 w-3 text-primary" />
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="font-bold text-xl font-heading italic group-hover:text-primary transition-colors">
+                              {person.firstName} {person.lastName}
+                            </h3>
+                            <p className="text-xs font-bold uppercase tracking-widest text-primary/60 mt-1">{meta.role}</p>
+                          </div>
+
+                          <div className="w-full space-y-2 py-4 border-y border-primary/5">
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground justify-center">
+                              <Building className="h-4 w-4 text-primary/40" />
+                              <span className="font-medium truncate max-w-[180px]">{meta.organisationName}</span>
+                            </div>
+                            {person.email && (
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground justify-center">
+                                <Mail className="h-4 w-4 text-primary/40" />
+                                <span className="truncate max-w-[180px]">{person.email}</span>
+                              </div>
                             )}
                           </div>
-                          {person.specializations && person.specializations.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-3">
-                              {person.specializations.slice(0, 2).map((spec, i) => (
-                                <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0 h-5">
-                                  {spec}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </Link>
+
+                          <div className="pt-2">
+                             <Link href={`/people/${person.id}`}>
+                               <Button variant="outline" size="sm" className="rounded-full px-6 font-heading italic text-xs hover:bg-primary hover:text-primary-foreground transition-all">
+                                 View Records
+                               </Button>
+                             </Link>
+                          </div>
+                        </div>
                       </Card>
-                    ))}
-                  </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ))}
+          
+          {viewMode === 'list' && (
+             <Card className="rounded-3xl overflow-hidden border-primary/10 bg-card/40 backdrop-blur-sm shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-primary/5">
+                      <tr>
+                        <th className="p-6 text-left text-xs font-bold uppercase tracking-widest text-primary/60">Identity</th>
+                        <th className="p-6 text-left text-xs font-bold uppercase tracking-widest text-primary/60">Global Role</th>
+                        <th className="p-6 text-left text-xs font-bold uppercase tracking-widest text-primary/60">Affiliation</th>
+                        <th className="p-6 text-left text-xs font-bold uppercase tracking-widest text-primary/60">Contact</th>
+                        <th className="p-6 text-right text-xs font-bold uppercase tracking-widest text-primary/60">Manage</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-primary/5">
+                      {filteredPeople.map((person) => {
+                        const meta = getPersonMeta(person);
+                        return (
+                          <tr key={person.id} className="group hover:bg-primary/[0.02] transition-colors">
+                            <td className="p-6">
+                              <Link href={`/people/${person.id}`} className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10 overflow-hidden">
+                                   {person.profileImageUrl ? <img src={person.profileImageUrl} className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-primary" />}
+                                </div>
+                                <span className="font-bold text-lg font-heading italic group-hover:text-primary transition-colors">{person.firstName} {person.lastName}</span>
+                              </Link>
+                            </td>
+                            <td className="p-6">
+                              <Badge variant={getRoleBadgeVariant(meta.role) as any} className="font-heading italic py-1 px-4 rounded-full">
+                                {meta.role}
+                              </Badge>
+                            </td>
+                            <td className="p-6">
+                              <div className="flex items-center gap-2 text-sm font-medium">
+                                <Building className="h-4 w-4 text-muted-foreground" />
+                                {meta.organisationName}
+                              </div>
+                            </td>
+                            <td className="p-6">
+                              <div className="space-y-1">
+                                <div className="text-sm font-medium">{person.email || '-'}</div>
+                                <div className="text-xs text-muted-foreground">{person.phone || '-'}</div>
+                              </div>
+                            </td>
+                            <td className="p-6 text-right">
+                               <Link href={`/people/${person.id}`}>
+                                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
+                                   <MoreVertical className="h-5 w-5" />
+                                 </Button>
+                               </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
+             </Card>
           )}
-        </>
+        </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="p-12 text-center border-dashed">
-            <div className="bg-muted/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <User className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No People Found</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              {searchQuery || selectedRole !== "all" || selectedSchool !== "all"
-                ? "No people match your current filters. Try adjusting your search criteria."
-                : "There are no people in the database yet. Start building your directory by adding members."}
-            </p>
-            {canCreate && (
-              <Button asChild size="lg">
-                <Link href="/people/add">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Person
-                </Link>
-              </Button>
-            )}
-          </Card>
-        </motion.div>
+        <Card className="p-20 text-center border-dashed border-primary/20 bg-primary/5 rounded-[3rem]">
+          <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+            <User className="h-12 w-12 text-primary" />
+          </div>
+          <h3 className="text-3xl font-heading italic font-bold mb-4">Registry Empty</h3>
+          <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg italic font-medium">
+            {searchQuery || selectedRole !== "all" || selectedOrgId !== "all"
+              ? "The relational engine couldn't locate any identities matching these specific criteria."
+              : "The V4 Relational Registry is currently awaiting its first enrollment. Enforce data integrity from day one."}
+          </p>
+          {canCreate && (!searchQuery && selectedRole === "all" && selectedOrgId === "all") && (
+            <Button asChild size="lg" className="h-14 px-10 rounded-2xl text-lg font-heading italic shadow-xl shadow-primary/30 bg-primary hover:bg-primary/90">
+              <Link href="/people/add">
+                <Plus className="h-5 w-5 mr-3" />
+                Begin Enrollment
+              </Link>
+            </Button>
+          )}
+        </Card>
       )}
     </div>
   );

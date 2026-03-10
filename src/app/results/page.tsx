@@ -2,7 +2,7 @@
 
 "use client"; // Added this line as it uses hooks and should be a client component
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Star } from "lucide-react";
 // Assuming fetchResultsWithTeamNames is now an async function in results-data.ts
 import { fetchResultsWithTeamNames, type ResultWithTeamNames } from "@/lib/results-data"; // Updated import

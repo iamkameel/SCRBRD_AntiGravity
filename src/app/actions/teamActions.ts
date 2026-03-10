@@ -1,8 +1,7 @@
 'use server';
 
-import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
-import { TeamSchema } from '@/lib/schemas/teamSchemas';
-import { Team } from '@/types/firestore';
+import { teamService } from '@/services/teamService';
+import { TeamSchema } from '@/lib/validations/teamSchema';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
@@ -21,10 +20,14 @@ export async function createTeamAction(
     // Extract and prepare data
     const rawData: Record<string, unknown> = {
       name: formData.get('name') || '',
+      organisationId: formData.get('organisationId') || formData.get('schoolId') || '',
+      seasonId: formData.get('seasonId') || '',
+      ageDivisionId: formData.get('ageDivisionId') || formData.get('divisionId') || '',
+      teamClassId: formData.get('teamClassId') || '',
       abbreviatedName: formData.get('abbreviatedName') || undefined,
       nickname: formData.get('nickname') || undefined,
-      schoolId: formData.get('schoolId') || '',
-      divisionId: formData.get('divisionId') || undefined,
+      displayName: formData.get('displayName') || undefined,
+      shortName: formData.get('shortName') || undefined,
       suffix: formData.get('suffix') || undefined,
       defaultCaptainId: formData.get('defaultCaptainId') || undefined,
       defaultViceCaptainId: formData.get('defaultViceCaptainId') || undefined,
@@ -40,33 +43,16 @@ export async function createTeamAction(
     // Validate with Zod
     const validatedData = TeamSchema.parse(rawData);
 
-    // Prepare data for Firestore
-    const newTeamData: Omit<Team, 'id'> = {
+    // Add to Data Connect (PostgreSQL via GQL)
+    await teamService.create({
+      organisationId: validatedData.organisationId,
+      seasonId: validatedData.seasonId,
+      ageDivisionId: validatedData.ageDivisionId,
+      teamClassId: validatedData.teamClassId,
       name: validatedData.name,
-      schoolId: validatedData.schoolId,
-      divisionId: validatedData.divisionId || undefined,
-      abbreviatedName: validatedData.abbreviatedName || undefined,
-      nickname: validatedData.nickname || undefined,
-      suffix: validatedData.suffix || undefined,
-      coachIds: validatedData.coachIds || [],
-      defaultCaptainId: validatedData.defaultCaptainId || undefined,
-      defaultViceCaptainId: validatedData.defaultViceCaptainId || undefined,
-      defaultScorerId: validatedData.defaultScorerId || undefined,
-      teamColors: { primary: '#000000', secondary: '#ffffff' }, // Default colors
-      logoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(validatedData.name)}&background=random&color=fff`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Remove undefined keys to prevent Firestore errors
-    Object.keys(newTeamData).forEach(key => {
-      if ((newTeamData as any)[key] === undefined) {
-        delete (newTeamData as any)[key];
-      }
+      displayName: validatedData.displayName || undefined,
+      shortName: validatedData.shortName || undefined,
     });
-
-    // Add to Firestore
-    await createDocument<Omit<Team, 'id'>>('teams', newTeamData);
 
     revalidatePath('/teams');
   } catch (error) {
@@ -86,63 +72,71 @@ export async function createTeamAction(
   redirect('/teams');
 }
 
+/**
+ * Legacy compatibility mock for local filtering in prototype
+ */
+export async function getCoachesBySchoolAction(schoolId: string) {
+  // In a real implementation this would query Data Connect
+  return [];
+}
+
+export async function deleteTeamAction(id: string): Promise<TeamActionState> {
+  try {
+    await teamService.delete(id);
+    revalidatePath('/teams');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete team error:', error);
+    return { error: error instanceof Error ? error.message : 'Failed to delete team' };
+  }
+}
+
+export async function checkDuplicateTeamAction(
+  schoolId: string,
+  ageGroup: string,
+  suffix: string
+) {
+  // Simple check against all teams
+  const teams = await teamService.getAll();
+  const exists = teams.some(t =>
+    t.organisation.id === schoolId &&
+    t.name.includes(suffix) // Simplified check
+  );
+
+  return { exists, existingSuffixes: [] };
+}
+
 export async function updateTeamAction(
-  teamId: string,
+  id: string,
   prevState: TeamActionState,
   formData: FormData
 ): Promise<TeamActionState> {
   try {
-    // Extract and prepare data
     const rawData: Record<string, unknown> = {
       name: formData.get('name') || '',
-      abbreviatedName: formData.get('abbreviatedName') || undefined,
-      nickname: formData.get('nickname') || undefined,
-      schoolId: formData.get('schoolId') || '',
-      divisionId: formData.get('divisionId') || undefined,
-      suffix: formData.get('suffix') || undefined,
-      defaultCaptainId: formData.get('defaultCaptainId') || undefined,
-      defaultViceCaptainId: formData.get('defaultViceCaptainId') || undefined,
-      defaultScorerId: formData.get('defaultScorerId') || undefined,
+      organisationId: formData.get('organisationId') || formData.get('schoolId') || '',
+      seasonId: formData.get('seasonId') || '',
+      ageDivisionId: formData.get('ageDivisionId') || formData.get('divisionId') || '',
+      teamClassId: formData.get('teamClassId') || formData.get('suffix') || '',
+      sport: formData.get('sport') || 'Cricket',
+      status: formData.get('status') || 'active',
+      displayName: formData.get('displayName') || '',
+      shortName: formData.get('shortName') || '',
     };
 
-    // Parse coachIds if provided
-    const coachIdsValue = formData.get('coachIds');
-    if (coachIdsValue && typeof coachIdsValue === 'string' && coachIdsValue.trim()) {
-      rawData.coachIds = coachIdsValue.split(',').map(id => id.trim()).filter(Boolean);
-    }
-
-    // Validate with Zod
     const validatedData = TeamSchema.parse(rawData);
 
-    // Update in Firestore
-    const updateData: Partial<Team> = {
+    await teamService.update({
+      id,
       name: validatedData.name,
-      schoolId: validatedData.schoolId,
-      divisionId: validatedData.divisionId || undefined,
-      abbreviatedName: validatedData.abbreviatedName || undefined,
-      nickname: validatedData.nickname || undefined,
-      suffix: validatedData.suffix || undefined,
-      coachIds: validatedData.coachIds || [],
-      defaultCaptainId: validatedData.defaultCaptainId || undefined,
-      defaultViceCaptainId: validatedData.defaultViceCaptainId || undefined,
-      defaultScorerId: validatedData.defaultScorerId || undefined,
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Remove undefined keys
-    Object.keys(updateData).forEach(key => {
-      if ((updateData as any)[key] === undefined) {
-        delete (updateData as any)[key];
-      }
+      displayName: validatedData.displayName || undefined,
+      shortName: validatedData.shortName || undefined,
     });
 
-    await updateDocument<Team>('teams', teamId, updateData);
-
     revalidatePath('/teams');
-    revalidatePath(`/teams/${teamId}`);
+    revalidatePath(`/teams/${id}`);
   } catch (error) {
     if (error instanceof ZodError) {
-      // Zod validation errors
       const fieldErrors: Record<string, string[]> = {};
       error.issues.forEach((err: any) => {
         const field = String(err.path[0]);
@@ -154,101 +148,5 @@ export async function updateTeamAction(
     console.error('Update team error:', error);
     return { error: error instanceof Error ? error.message : 'Failed to update team' };
   }
-  redirect(`/teams/${teamId}`);
+  redirect(`/teams/${id}`);
 }
-
-export async function deleteTeamAction(teamId: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    await deleteDocument('teams', teamId);
-    revalidatePath('/teams');
-    return { success: true };
-  } catch (error) {
-    console.error('Delete team error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete team' };
-  }
-}
-
-// ============================================
-// Smart Team Creator Actions
-// ============================================
-
-import { fetchCoachesBySchool, fetchCollection } from '@/lib/firestore';
-import { where } from 'firebase/firestore';
-import { Person, AgeGroup } from '@/types/firestore';
-import { checkDuplicateTeam } from '@/lib/utils/DuplicateTeamChecker';
-
-
-/**
- * Get coaches assigned to a school
- * Fetches people with coach-related roles for the selected school
- */
-export async function getCoachesBySchoolAction(schoolId: string): Promise<Person[]> {
-  try {
-    return await fetchCoachesBySchool(schoolId);
-  } catch (error) {
-    console.error('Error fetching coaches by school:', error);
-    return [];
-  }
-}
-
-/**
- * Get all teams for a school (optionally filtered by season)
- */
-export async function getTeamsForSchoolAction(
-  schoolId: string,
-  seasonId?: string
-): Promise<Team[]> {
-  try {
-    const teams = await fetchCollection<Team>('teams', [
-      where('schoolId', '==', schoolId)
-    ]);
-
-    // Note: If seasonId filtering is needed, add additional logic
-    // For now, return all teams for the school
-    return teams;
-  } catch (error) {
-    console.error('Error fetching teams for school:', error);
-    return [];
-  }
-}
-
-/**
- * Check if a team with the same school + suffix already exists
- * Returns suggested alternative suffix if duplicate found
- */
-export async function checkDuplicateTeamAction(
-  schoolId: string,
-  ageGroup: AgeGroup | string,
-  suffix: string
-): Promise<{ exists: boolean; suggestedSuffix?: string; existingSuffixes: string[] }> {
-  try {
-    const teams = await fetchCollection<Team>('teams', [
-      where('schoolId', '==', schoolId)
-    ]);
-
-    const result = checkDuplicateTeam(teams, schoolId, ageGroup, suffix);
-
-    return {
-      exists: result.exists,
-      suggestedSuffix: result.suggestedSuffix,
-      existingSuffixes: result.existingSuffixes
-    };
-  } catch (error) {
-    console.error('Error checking duplicate team:', error);
-    return { exists: false, existingSuffixes: [] };
-  }
-}
-
-/**
- * Create a new team with smart validation
- */
-export async function createSmartTeamAction(
-  prevState: TeamActionState,
-  formData: FormData
-): Promise<TeamActionState> {
-  // Reuse the standard create action logic but we could add extra server-side checks here
-  // For now, we'll just delegate to the standard create action
-  // In a real implementation, we might want to re-run the duplicate check here to be safe
-  return createTeamAction(prevState, formData);
-}
-

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, Trophy, Calendar, GraduationCap } from "lucide-react";
 import { SchoolStats } from "@/types/firestore";
 

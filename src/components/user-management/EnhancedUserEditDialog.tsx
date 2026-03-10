@@ -21,7 +21,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROLE_GROUPS } from "@/lib/roles";
 import { UserData } from "@/lib/userService";
@@ -63,7 +63,7 @@ export function EnhancedUserEditDialog({
         email: user.email || "",
         role: user.role || "Player",
         roles: user.roles || [user.role || "Player"],
-        status: user.status || "active",
+        status: (user.status as "active" | "inactive" | "injured") || "active",
         assignedSchools: (user as any).assignedSchools || [],
         teamIds: (user as any).teamIds || [],
       });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TournamentBracket as TournamentBracketType } from "@/app/actions/tournamentActions";
 import { BracketMatchCard } from "./BracketMatchCard";
 import { GitBranch, Trophy } from "lucide-react";

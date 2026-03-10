@@ -57,7 +57,7 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
             return updateCoachAction(id, prevState, formData);
           }} 
           initialState={{ success: false }}
-          initialData={person}
+          initialData={person as any}
           schools={schools}
         />
       ) : person.role === USER_ROLES.UMPIRE ? (
@@ -68,7 +68,7 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
             return updateUmpireAction(id, prevState, formData);
           }}
           initialState={{ success: false }}
-          initialData={person}
+          initialData={person as any}
         />
       ) : person.role === USER_ROLES.SCORER ? (
         <ScorerForm
@@ -78,7 +78,7 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
             return updateScorerAction(id, prevState, formData);
           }}
           initialState={{ success: false }}
-          initialData={person}
+          initialData={person as any}
         />
       ) : (person.role === USER_ROLES.DOCTOR || 
            person.role === USER_ROLES.PHYSIOTHERAPIST || 
@@ -91,7 +91,7 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
             return updateMedicalAction(id, prevState, formData);
           }}
           initialState={{ success: false }}
-          initialData={person}
+          initialData={person as any}
         />
       ) : person.role === USER_ROLES.GROUNDS_KEEPER ? (
         <GroundskeeperForm
@@ -101,14 +101,14 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
             return updateGroundskeeperAction(id, prevState, formData);
           }}
           initialState={{ success: false }}
-          initialData={person}
+          initialData={person as any}
         />
       ) : (
         <PlayerForm 
           mode="edit" 
           playerAction={handleUpdate} 
           initialState={initialState}
-          initialData={person}
+          initialData={person as any}
           schools={schools}
         />
       )}

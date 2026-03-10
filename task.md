@@ -3,8 +3,18 @@
 ## Phase 1: Teams as First-Class Entities (Current Focus)
 
 - [x] **Audit**: Locate source of current team data (static vs Firestore) and analyze structure <!-- id: 1 -->
-- [x] **Schema**: Define `Team` Firestore document shape in `src/types/firestore.ts` (if not already perfect) <!-- id: 2 -->
-- [x] **Migration**: Create script to seed `teams` collection from any existing static data <!-- id: 3 -->
+- [x] **Schema**:- [x] Consolidate Match and Person types in `src/types/firestore.ts`
+- [/] Build comprehensive Firebase services for core entities
+  - [x] Create `baseService.ts` for generic Firestore operations
+  - [x] Create `matchService.ts`
+  - [x] Create `personService.ts` (consolidated players, coaches, etc.)
+  - [x] Create `teamService.ts` (refactored)
+  - [x] Create `scoringService.ts`
+- [/] Integrate and complete the XState FSM for the scoring engine
+  - [x] Refine `scoringHubMachine.ts` with strict types and transitions
+- [x] Update `useScoringHub.ts` for service layer integration
+- [x] Implement premium `ReviewConfirmStep.tsx` UI
+- [x] Wire FSM to `ScoringHubClient.tsx` and server actions and the UI
 - [x] **UI Refactor**: Update `/teams` page to fetch strictly from Firestore `teams` collection <!-- id: 4 -->
 - [x] **Dependencies**: Update `fixtures` and `results` to resolve team names via Firestore, removing `detailedTeamsData` dependency <!-- id: 5 -->
 

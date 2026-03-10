@@ -2,7 +2,7 @@
 
 import { useLiveScore } from '@/hooks/useLiveScore';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Person, Team, Match } from '@/types/firestore';
@@ -73,9 +73,9 @@ export function LiveScoreboard({ matchId, allPlayers, homeTeam, awayTeam, matchD
   const bowlerStats = liveScore.bowlers?.find(b => b.playerId === liveScore.currentPlayers?.bowlerId);
 
   // Get static details from allPlayers
-  const strikerDetails = getPlayerDetails(liveScore.currentPlayers?.strikerId);
-  const nonStrikerDetails = getPlayerDetails(liveScore.currentPlayers?.nonStrikerId);
-  const bowlerDetails = getPlayerDetails(liveScore.currentPlayers?.bowlerId);
+  const strikerDetails = getPlayerDetails(liveScore.currentPlayers?.strikerId || undefined);
+  const nonStrikerDetails = getPlayerDetails(liveScore.currentPlayers?.nonStrikerId || undefined);
+  const bowlerDetails = getPlayerDetails(liveScore.currentPlayers?.bowlerId || undefined);
 
   // Prepare Batsman Props
   const strikerProps = strikerDetails ? {
@@ -112,14 +112,13 @@ export function LiveScoreboard({ matchId, allPlayers, homeTeam, awayTeam, matchD
 
   return (
     <div className={cn(
-      'w-full rounded-xl overflow-hidden',
-      'bg-gradient-to-r from-emerald-500/10 to-emerald-600/10',
-      'border border-emerald-500/20 backdrop-blur-sm',
-      'shadow-lg hover:shadow-xl transition-all duration-300'
+      'w-full rounded-2xl overflow-hidden animate-slide-in-up',
+      'glass-morphism-premium',
+      'shadow-2xl transition-all duration-500'
     )} data-testid="live-scoreboard">
-      <div className="p-6 md:p-8 flex flex-col items-center relative">
+      <div className="p-8 md:p-10 flex flex-col items-center relative">
         {/* Background decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-60" />
         
         <ScoreboardHeader 
           homeTeamName={homeTeam.name} 
@@ -127,7 +126,7 @@ export function LiveScoreboard({ matchId, allPlayers, homeTeam, awayTeam, matchD
           division={matchData?.division || '1st XI'}
         />
 
-        <div className="mt-6 mb-8 transform md:scale-110" data-testid="current-score">
+        <div className="mt-8 mb-10 transform md:scale-125 transition-transform duration-500" data-testid="current-score">
           <MainScorePill 
             battingTeamShortName={battingTeamShort}
             bowlingTeamShortName={bowlingTeamShort}
@@ -139,8 +138,8 @@ export function LiveScoreboard({ matchId, allPlayers, homeTeam, awayTeam, matchD
             isFirstInnings={liveScore.inningsNumber === 1}
           />
           {currentInnings.overs > 0 && (
-            <div className="text-center mt-2 text-sm font-medium text-emerald-600/80 animate-pulse">
-              Run Rate: {((currentInnings.runs || 0) / currentInnings.overs).toFixed(2)}
+            <div className="text-center mt-4 text-base font-bold text-emerald-600 dark:text-emerald-400 animate-pulse tracking-wide">
+              RUN RATE: {((currentInnings.runs || 0) / currentInnings.overs).toFixed(2)}
             </div>
           )}
         </div>
@@ -159,7 +158,7 @@ export function LiveScoreboard({ matchId, allPlayers, homeTeam, awayTeam, matchD
               wickets={bowlerStats.wickets}
               runsConceded={bowlerStats.runsConceded}
               overs={bowlerStats.overs}
-              currentOver={liveScore.ballHistory?.slice(-6) || []}
+              currentOver={liveScore.currentOver?.slice(-6) || []}
             />
           </div>
         )}

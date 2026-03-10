@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Team, Field } from "@/types/firestore";
 import { fetchTeams, fetchFields } from "@/lib/firestore";
 import { DRILLS } from "@/lib/drills";

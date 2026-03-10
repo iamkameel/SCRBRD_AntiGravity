@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles } from "lucide-react";
 import { suggestPlayerRole, type SuggestPlayerRoleInput, type SuggestPlayerRoleOutput } from "@/ai/flows/suggest-player-role";
 import { useToast } from "@/hooks/use-toast";

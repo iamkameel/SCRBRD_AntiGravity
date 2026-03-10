@@ -36,7 +36,7 @@ async function migrateData() {
         console.log('\n👥 Migrating People...');
         for (const person of store.people) {
             const personData = { ...person, id: person.personId };
-            await adminDb.collection('people').doc(person.personId).set(personData);
+            await adminDb.collection('people').doc(person.personId!).set(personData);
             console.log(`  ✅ Migrated: ${person.firstName} ${person.lastName}`);
         }
 
@@ -74,7 +74,7 @@ async function migrateData() {
 
         // 7. Migrate Transactions
         console.log('\n💰 Migrating Transactions...');
-        for (const transaction of store.transactions) {
+        for (const transaction of ((store as any).transactions || [])) {
             const transactionData = { ...transaction, id: transaction.transactionId };
             await adminDb.collection('transactions').doc(transaction.transactionId).set(transactionData);
             console.log(`  ✅ Migrated: ${transaction.description}`);
@@ -103,7 +103,7 @@ async function migrateData() {
 
         // 11. Migrate Rosters
         console.log('\n📋 Migrating Rosters...');
-        for (const roster of store.rosters) {
+        for (const roster of ((store as any).rosters || [])) {
             await adminDb.collection('rosters').doc(roster.assignmentId).set(roster);
             console.log(`  ✅ Migrated roster for: ${roster.personName}`);
         }

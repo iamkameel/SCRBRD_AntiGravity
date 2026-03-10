@@ -1,7 +1,7 @@
 'use server';
 
 import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
-import { MatchSchema } from '@/lib/schemas/matchSchemas';
+import { MatchSchema } from '@/lib/validations/matchSchema';
 import admin from '@/lib/firebase-admin';
 import { Match, Person } from '@/types/firestore';
 import { ScoringAction, WicketType, ShotType, PitchLength, BowlingLine, ScoringActionSource } from '@/types/scoring';

@@ -1,5 +1,5 @@
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
 

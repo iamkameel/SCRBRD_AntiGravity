@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -331,13 +331,13 @@ export function MatchScoringInterface({
   return (
     <div className="space-y-6">
       {/* Score Display */}
-      <Card className="p-6">
+      <Card className="p-8 border-primary/20 bg-gradient-to-br from-card to-secondary/10 shadow-xl backdrop-blur-md">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-4xl font-bold">
+            <h2 className="text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 drop-shadow-sm">
               {innings.totalRuns}/{innings.wickets}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-lg font-medium text-muted-foreground mt-2 uppercase tracking-widest">
               Overs: {innings.overs.length}.{ballsInOver}
             </p>
           </div>
@@ -431,36 +431,37 @@ export function MatchScoringInterface({
 
       {/* Match Analytics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Current Run Rate</div>
-          <div className="text-2xl font-bold">{currentRunRate}</div>
+        <Card className="p-6 border-border/50 bg-secondary/5 backdrop-blur-sm hover:bg-secondary/10 transition-colors">
+          <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-2">Current Run Rate</div>
+          <div className="text-3xl font-black font-mono">{currentRunRate}</div>
           <div className="text-xs text-muted-foreground mt-1">runs per over</div>
         </Card>
         
         {requiredRunRate && (
-          <Card className="p-4 border-primary">
-            <div className="text-sm text-muted-foreground mb-1">Required Run Rate</div>
-            <div className="text-2xl font-bold text-primary">{requiredRunRate}</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {targetScore && `Need ${targetScore - innings.totalRuns} runs`}
+          <Card className="p-6 border-primary/50 bg-primary/5 backdrop-blur-sm shadow-inner overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-2xl -mr-8 -mt-8" />
+            <div className="text-xs uppercase tracking-widest font-bold text-primary mb-2">Required Run Rate</div>
+            <div className="text-3xl font-black text-primary font-mono">{requiredRunRate}</div>
+            <div className="text-xs text-muted-foreground mt-1 font-medium">
+              {targetScore && `Need ${targetScore - innings.totalRuns} runs to win`}
             </div>
           </Card>
         )}
         
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Current Partnership</div>
-          <div className="text-2xl font-bold">{partnershipRuns}</div>
-          <div className="text-xs text-muted-foreground mt-1">
+        <Card className="p-6 border-border/50 bg-secondary/5 backdrop-blur-sm hover:bg-secondary/10 transition-colors">
+          <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-2">Current Partnership</div>
+          <div className="text-3xl font-black font-mono">{partnershipRuns}</div>
+          <div className="text-xs text-muted-foreground mt-1 font-medium">
             {partnershipBalls} balls
           </div>
         </Card>
       </div>
 
       {/* Player Selection */}
-      <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="h-5 w-5" />
-          <h3 className="text-lg font-semibold">Players</h3>
+      <Card className="p-6 border-border/50 shadow-md bg-card/80 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-6 border-b pb-4">
+          <Users className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-bold tracking-tight uppercase">Current Players</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <PlayerSelector
@@ -492,11 +493,11 @@ export function MatchScoringInterface({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Scoring Controls */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Runs Selector */}
-          <Card className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Runs Scored</h3>
-            <div className="grid grid-cols-4 gap-2">
+          <Card className="p-6 border-border/50 shadow-lg bg-card/60 backdrop-blur-xl">
+            <h3 className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-4">Runs Scored</h3>
+            <div className="grid grid-cols-4 gap-3">
               {[0, 1, 2, 3, 4, 6].map(runs => (
                 <Button
                   key={runs}
@@ -504,9 +505,9 @@ export function MatchScoringInterface({
                   size="lg"
                   onClick={() => handleRunsSelect(runs)}
                   className={cn(
-                    "text-2xl font-bold",
-                    runs === 4 && "bg-blue-600 hover:bg-blue-700",
-                    runs === 6 && "bg-purple-600 hover:bg-purple-700"
+                    "text-3xl font-black h-16 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all",
+                    runs === 4 && "bg-blue-500 text-primary-foreground border-blue-600 hover:bg-blue-600 shadow-blue-500/20",
+                    runs === 6 && "bg-purple-500 text-primary-foreground border-purple-600 hover:bg-purple-600 shadow-purple-500/20"
                   )}
                 >
                   {runs}
@@ -516,7 +517,10 @@ export function MatchScoringInterface({
                 variant={currentBall.isWicket ? 'destructive' : 'outline'}
                 size="lg"
                 onClick={handleWicket}
-                className="text-2xl font-bold col-span-2"
+                className={cn(
+                  "text-3xl font-black h-16 col-span-2 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all",
+                  currentBall.isWicket ? "shadow-destructive/20" : "border-destructive/30 text-destructive hover:bg-destructive/10"
+                )}
               >
                 W
               </Button>
@@ -524,29 +528,33 @@ export function MatchScoringInterface({
           </Card>
 
           {/* Extras */}
-          <Card className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Extras</h3>
-            <div className="grid grid-cols-2 gap-2">
+          <Card className="p-6 border-border/50 shadow-lg bg-card/60 backdrop-blur-xl">
+            <h3 className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-4">Extras</h3>
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
+                className="hover:bg-primary/10 hover:text-primary transition-colors h-12"
                 onClick={() => handleExtras('wide', 1)}
               >
                 Wide
               </Button>
               <Button
                 variant="outline"
+                className="hover:bg-primary/10 hover:text-primary transition-colors h-12"
                 onClick={() => handleExtras('noball', 1)}
               >
                 No Ball
               </Button>
               <Button
                 variant="outline"
+                className="hover:bg-primary/10 hover:text-primary transition-colors h-12"
                 onClick={() => handleExtras('bye', 1)}
               >
                 Bye
               </Button>
               <Button
                 variant="outline"
+                className="hover:bg-primary/10 hover:text-primary transition-colors h-12"
                 onClick={() => handleExtras('legbye', 1)}
               >
                 Leg Bye
@@ -603,22 +611,23 @@ export function MatchScoringInterface({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-3 pt-4 border-t border-border/50">
             <Button
               onClick={recordBall}
-              className="flex-1"
-              size="lg"
+              className="flex-1 h-16 text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all hover:scale-[1.02]"
               disabled={isPaused}
             >
               Record Ball
-              <ChevronRight className="h-5 w-5 ml-2" />
+              <ChevronRight className="h-6 w-6 ml-2" />
             </Button>
             <Button
               variant="outline"
               onClick={undoLastBall}
               disabled={currentOver.length === 0}
+              className="h-16 w-16"
+              title="Undo Last Ball"
             >
-              <Undo className="h-4 w-4" />
+              <Undo className="h-5 w-5" />
             </Button>
           </div>
 

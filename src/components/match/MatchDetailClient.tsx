@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Match, Team, Innings, Person } from "@/types/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ManhattanChart } from "@/components/charts/ManhattanChart";
 import { WormChart } from "@/components/charts/WormChart";
@@ -347,7 +347,7 @@ export function MatchDetailClient({ match, homeTeam, awayTeam, players = [] }: M
               <div className="p-4 space-y-4">
                 <div className="flex justify-between border-b border-border pb-2">
                   <span className="text-sm text-muted-foreground">Toss</span>
-                  <span className="text-sm font-medium">{match.tossWinner ? `${match.tossWinner} elected to ${match.tossChoice}` : 'TBA'}</span>
+                  <span className="text-sm font-medium">{match.tossWinnerId ? `${match.tossWinnerId} elected to ${match.tossDecision}` : 'TBA'}</span>
                 </div>
                 <div className="flex justify-between border-b border-border pb-2">
                   <span className="text-sm text-muted-foreground">Umpires</span>

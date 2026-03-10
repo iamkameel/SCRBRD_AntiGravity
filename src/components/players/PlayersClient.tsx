@@ -2,19 +2,19 @@
 
 import { useState } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
 import { User, LayoutGrid, List, BarChart3, Search, Edit, Filter, ArrowUpDown, Activity } from "lucide-react";
-import { Person } from "@/types/firestore";
+import { Player as Person } from "@/lib/store";
 import { PlayerCard } from "./PlayerCard";
 
 interface PlayersClientProps {
-  players: Person[];
+  players: any[];
 }
 
 export function PlayersClient({ players }: PlayersClientProps) {

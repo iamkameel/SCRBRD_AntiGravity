@@ -30,13 +30,12 @@ export function ScoreOverlay({
 }: ScoreOverlayProps) {
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 flex flex-col shadow-2xl",
-      "animate-in slide-in-from-bottom duration-500 ease-out",
-      "backdrop-blur-md bg-background/80 border-t border-white/10",
+      "fixed bottom-0 left-0 right-0 z-50 flex flex-col p-4 md:p-6 pb-0 pointer-events-none",
+      "animate-in slide-in-from-bottom-8 fade-in duration-700 ease-out",
       className
     )}>
       {/* Main Score Bar */}
-      <div className="bg-gray-900/95 backdrop-blur-md border-t-4 border-fox-gold text-white px-4 py-3 flex items-center justify-between">
+      <div className="glass-morphism-premium rounded-t-3xl border-t-4 border-emerald-500 text-foreground px-6 py-4 flex flex-col md:flex-row items-center justify-between mx-auto w-full max-w-5xl shadow-[0_-10px_40px_rgba(34,197,94,0.15)] pointer-events-auto">
         
         {/* Left: Batting Team */}
         <div className="flex items-center gap-4">

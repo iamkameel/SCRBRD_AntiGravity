@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Radar as RadarIcon } from "lucide-react";
 import { SkillsRadar } from "@/components/charts/SkillsRadar";
 import { useState } from "react";

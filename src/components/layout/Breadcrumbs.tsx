@@ -71,6 +71,10 @@ export function Breadcrumbs() {
   let currentPath = "";
   segments.forEach((segment, index) => {
     currentPath += `/${segment}`;
+    
+    // Skip if path is /home to avoid duplicate keys (Home is already added)
+    if (currentPath === "/home") return;
+
     const label = getDynamicLabel(segment, index, segments);
     breadcrumbs.push({
       label,

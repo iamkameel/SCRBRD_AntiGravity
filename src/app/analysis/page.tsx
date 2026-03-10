@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { processQuery, AnalysisResponse } from "@/lib/analysisEngine";
 import { Send, Sparkles, BarChart2, Table as TableIcon, MessageSquare } from "lucide-react";
 

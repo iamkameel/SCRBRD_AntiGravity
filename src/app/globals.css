@@ -133,6 +133,14 @@ body {
     @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-700/50 shadow-xl;
   }
 
+  .glass-morphism-premium {
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-2xl;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] dark:hover:shadow-[0_0_20px_rgba(74,222,128,0.2)];
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500;
   }

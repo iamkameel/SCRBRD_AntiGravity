@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createDocument, updateDocument, deleteDocument } from "@/lib/firestore";
-import { SeasonSchema } from "@/lib/schemas/seasonSchemas";
+import { SeasonSchema } from "@/lib/validations/seasonSchema";
 
 interface SeasonFormState {
   errors?: {

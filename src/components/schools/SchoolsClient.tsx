@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";

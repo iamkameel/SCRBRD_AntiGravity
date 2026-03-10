@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,11 +18,11 @@ import { cn } from "@/lib/utils";
 
 export default function ScoutingPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPlayer, setSelectedPlayer] = useState<Person | null>(null);
-  const [comparePlayer, setComparePlayer] = useState<Person | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+  const [comparePlayer, setComparePlayer] = useState<any | null>(null);
   const [report, setReport] = useState<ScoutingReport | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [people, setPeople] = useState<Person[]>([]);
+  const [people, setPeople] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 'use client';
 
 import { Match, Team } from '@/types/firestore';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Trophy, Users, Moon } from 'lucide-react';
 import Link from 'next/link';

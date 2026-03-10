@@ -2,317 +2,202 @@
 
 import { useState } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import Link from "next/link";
-import { Shield, LayoutGrid, List, Table, Calendar, Search } from "lucide-react";
-import { Team, School, Division } from "@/types/firestore";
+import { 
+  LayoutGrid, 
+  List, 
+  Table, 
+  Calendar, 
+  Search, 
+  Filter,
+  X,
+  Layers
+} from "lucide-react";
+import Link from 'next/link';
+import { 
+  ListTeamsData, 
+  ListOrganisationsData, 
+  ListAgeDivisionsData 
+} from "@/generated/dataconnect";
 import { TeamCard } from "./TeamCard";
+import { Badge } from "@/components/ui/badge";
 
 interface TeamsClientProps {
-  teams: Team[];
-  schools: School[];
-  divisions: Division[];
+  teams: ListTeamsData['teams'];
+  organisations: ListOrganisationsData['organisations'];
+  ageDivisions: ListAgeDivisionsData['ageDivisions'];
 }
 
-export function TeamsClient({ teams, schools, divisions }: TeamsClientProps) {
+export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientProps) {
   const { viewMode, setViewMode } = useViewMode({ 
-    storageKey: 'teams-view-mode',
+    storageKey: 'teams-v4-view-mode',
     defaultMode: 'grid'
   });
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSchool, setSelectedSchool] = useState<string>('all');
+  const [selectedOrg, setSelectedOrg] = useState<string>('all');
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
 
-  // Filter teams based on search and filters
+  // Filter teams based on search and relational links
   const filteredTeams = teams.filter(team => {
-    const school = schools.find((s: School) => s.id === team.schoolId);
-    const division = divisions.find((d: Division) => d.id === team.divisionId);
-    
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = (
       team.name.toLowerCase().includes(searchLower) ||
-      school?.name.toLowerCase().includes(searchLower) ||
-      division?.name.toLowerCase().includes(searchLower)
+      team.organisation?.name.toLowerCase().includes(searchLower) ||
+      team.ageDivision?.name.toLowerCase().includes(searchLower)
     );
 
-    const matchesSchool = selectedSchool === 'all' || team.schoolId === selectedSchool;
-    const matchesDivision = selectedDivision === 'all' || team.divisionId === selectedDivision;
+    const matchesOrg = selectedOrg === 'all' || team.organisation?.id === selectedOrg;
+    const matchesDivision = selectedDivision === 'all' || team.ageDivision?.id === selectedDivision;
 
-    return matchesSearch && matchesSchool && matchesDivision;
+    return matchesSearch && matchesOrg && matchesDivision;
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Search and View Mode Toolbar */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           {/* Search Bar */}
-          <div className="relative flex-1 max-w-sm w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative flex-1 max-w-xl w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <Input
-              placeholder="Search teams, schools, divisions..."
+              placeholder="Search teams, organisations, divisions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 bg-card/50 border-primary/10 transition-all focus:ring-primary/20 focus:border-primary/30 text-lg rounded-2xl"
             />
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex gap-1 border border-border rounded-lg p-1 bg-muted/20 self-end sm:self-auto">
+          <div className="flex gap-1 border border-primary/10 rounded-2xl p-1.5 bg-card/50 backdrop-blur-sm self-end md:self-auto shadow-sm">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('grid')}
-              className="h-8 px-3"
-              title="Grid View"
+              className={`h-10 px-4 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'}`}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Grid
             </Button>
             <Button
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('list')}
-              className="h-8 px-3"
-              title="List View"
+              className={`h-10 px-4 rounded-xl transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'}`}
             >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className="h-8 px-3"
-              title="Table View"
-            >
-              <Table className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('calendar')}
-              className="h-8 px-3"
-              title="Calendar View"
-            >
-              <Calendar className="h-4 w-4" />
+              <List className="h-4 w-4 mr-2" />
+              List
             </Button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center bg-muted/10 p-4 rounded-lg border border-border/50">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">School:</span>
-            <select 
-              className="h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={selectedSchool}
-              onChange={(e) => setSelectedSchool(e.target.value)}
+        <div className="flex flex-wrap gap-4 items-center bg-primary/5 p-6 rounded-3xl border border-primary/10">
+          <div className="flex items-center gap-3">
+            <Filter className="h-4 w-4 text-primary" />
+            <span className="text-sm font-heading italic font-bold uppercase tracking-widest text-primary/60">Filters</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-3 flex-1">
+             <select 
+              className="h-10 min-w-[180px] rounded-xl border border-primary/10 bg-card px-4 py-1 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+              value={selectedOrg}
+              onChange={(e) => setSelectedOrg(e.target.value)}
             >
-              <option value="all">All Schools</option>
-              {schools.map(school => (
-                <option key={school.id} value={school.id}>{school.name}</option>
+              <option value="all">All Organisations</option>
+              {organisations.map(org => (
+                <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </select>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Division:</span>
             <select 
-              className="h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-10 min-w-[180px] rounded-xl border border-primary/10 bg-card px-4 py-1 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
               value={selectedDivision}
               onChange={(e) => setSelectedDivision(e.target.value)}
             >
               <option value="all">All Divisions</option>
-              {divisions.map(division => (
-                <option key={division.id} value={division.id}>{division.name}</option>
+              {ageDivisions.map(div => (
+                <option key={div.id} value={div.id}>{div.name}</option>
               ))}
             </select>
           </div>
 
-          {(selectedSchool !== 'all' || selectedDivision !== 'all' || searchTerm) && (
+          {(selectedOrg !== 'all' || selectedDivision !== 'all' || searchTerm) && (
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => {
-                setSelectedSchool('all');
+                setSelectedOrg('all');
                 setSelectedDivision('all');
                 setSearchTerm('');
               }}
-              className="ml-auto text-muted-foreground hover:text-foreground"
+              className="text-primary hover:bg-primary/10 rounded-xl"
             >
-              Reset Filters
+              <X className="h-4 w-4 mr-2" />
+              Clear
             </Button>
           )}
         </div>
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
-        Found {filteredTeams.length} {filteredTeams.length === 1 ? 'team' : 'teams'}
-        {(selectedSchool !== 'all' || selectedDivision !== 'all') && ' matching filters'}
+      <div className="flex items-center justify-between px-2">
+        <div className="text-sm text-muted-foreground italic font-medium">
+          Showing <span className="text-foreground font-bold">{filteredTeams.length}</span> {filteredTeams.length === 1 ? 'Relational Team' : 'Relational Teams'}
+        </div>
+        <Badge variant="outline" className="font-heading italic py-1 border-primary/20">
+          V4 Data Connect
+        </Badge>
       </div>
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTeams.map((team: Team) => {
-            const school = schools.find((s: School) => s.id === team.schoolId);
-            const division = divisions.find((d: Division) => d.id === team.divisionId);
-            
-            return (
-              <TeamCard 
-                key={team.id} 
-                team={team} 
-                school={school} 
-                division={division} 
-                viewMode="grid" 
-              />
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredTeams.map((team) => (
+            <TeamCard 
+              key={team.id} 
+              team={team} 
+              viewMode="grid" 
+            />
+          ))}
         </div>
       )}
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div className="space-y-4">
-          {filteredTeams.map((team: Team) => {
-            const school = schools.find((s: School) => s.id === team.schoolId);
-            const division = divisions.find((d: Division) => d.id === team.divisionId);
-
-            return (
-              <TeamCard 
-                key={team.id} 
-                team={team} 
-                school={school} 
-                division={division} 
-                viewMode="list" 
-              />
-            );
-          })}
+        <div className="space-y-6">
+          {filteredTeams.map((team) => (
+            <TeamCard 
+              key={team.id} 
+              team={team} 
+              viewMode="list" 
+            />
+          ))}
         </div>
-      )}
-
-      {/* Table View */}
-      {viewMode === 'table' && (
-        <Card className="overflow-hidden border-t-4 border-t-primary">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Team</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">School</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Division</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Season</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Coach</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTeams.map((team: Team) => {
-                    const school = schools.find((s: School) => s.id === team.schoolId);
-                    const division = divisions.find((d: Division) => d.id === team.divisionId);
-
-                    return (
-                      <tr key={team.id} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            {(team.logoUrl && team.logoUrl.trim()) || school?.logoUrl ? (
-                              <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden bg-muted border border-border/50">
-                                <Image 
-                                  src={(team.logoUrl && team.logoUrl.trim()) || school?.logoUrl || ''} 
-                                  alt={team.name}
-                                  fill
-                                  className="object-cover"
-                                  unoptimized
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 shrink-0 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
-                                <Shield className="h-4 w-4 text-primary" />
-                              </div>
-                            )}
-                            <span className="font-medium">{team.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-muted-foreground">{school?.name || '-'}</td>
-                        <td className="p-4 text-muted-foreground">{division?.name || '-'}</td>
-                        <td className="p-4 text-muted-foreground">{division?.season || '-'}</td>
-                        <td className="p-4 text-muted-foreground">
-                          {team.coachIds && team.coachIds.length > 0 ? team.coachIds.length : '0'}
-                        </td>
-                        <td className="p-4 text-right">
-                          <Link href={`/teams/${team.id}`}>
-                            <Button size="sm" variant="outline" className="hover:bg-primary hover:text-primary-foreground">View</Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Calendar View */}
-      {viewMode === 'calendar' && (
-        <Card className="border-t-4 border-t-primary">
-          <CardContent className="p-6">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Calendar View</h3>
-              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                View team schedules, upcoming matches, and training sessions in a calendar format.
-              </p>
-              <Button variant="outline" disabled>
-                Coming Soon
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Empty State */}
       {filteredTeams.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="h-8 w-8 text-muted-foreground" />
+        <Card className="border-dashed border-primary/20 bg-primary/5 rounded-3xl">
+          <CardContent className="p-16 text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Layers className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">No teams found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || selectedSchool !== 'all' || selectedDivision !== 'all' 
-                ? 'Try adjusting your filters or search terms' 
-                : 'Get started by adding your first team'}
+            <h3 className="text-2xl font-heading italic font-bold mb-3">No teams identified</h3>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto italic font-medium">
+              {searchTerm || selectedOrg !== 'all' || selectedDivision !== 'all' 
+                ? 'The relational engine couldn\'t find matches for the active filters. Keep exploring!' 
+                : 'Your relational database is clean and ready. Start building your first V4 team now.'}
             </p>
-            {(!searchTerm && selectedSchool === 'all' && selectedDivision === 'all') && (
+            {(!searchTerm && selectedOrg === 'all' && selectedDivision === 'all') && (
               <Link href="/teams/add">
-                <Button>
-                  Add Team
+                <Button className="bg-primary hover:bg-primary/90 rounded-2xl px-10 h-12 text-lg font-heading italic shadow-xl shadow-primary/20">
+                  Build Team
                 </Button>
               </Link>
-            )}
-            {(searchTerm || selectedSchool !== 'all' || selectedDivision !== 'all') && (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedSchool('all');
-                  setSelectedDivision('all');
-                }}
-              >
-                Clear Filters
-              </Button>
             )}
           </CardContent>
         </Card>

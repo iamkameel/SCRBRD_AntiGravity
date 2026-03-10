@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DRILLS, Drill, DrillCategory, DrillDifficulty } from "@/lib/drills";
 import { Search, Filter, Clock, Users, Dumbbell, ChevronDown, ChevronUp } from "lucide-react";
 

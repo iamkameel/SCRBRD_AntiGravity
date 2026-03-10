@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Calendar, Trophy, Activity, ArrowRight } from "lucide-react";
 import { getAnalyticsDataAction, AnalyticsData } from "@/app/actions/analyticsActions";
@@ -126,4 +126,4 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
   );
 }
 
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";

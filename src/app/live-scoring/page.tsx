@@ -1,5 +1,5 @@
 // Live Scoring page - placeholder for real-time match scoring
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
 import { Tv } from "lucide-react";
 

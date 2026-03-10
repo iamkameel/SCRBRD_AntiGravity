@@ -18,78 +18,78 @@ export default function MigratePage() {
 
     try {
       // Schools
-      for (const school of store.schools) {
+      for (const school of (store as any).schools) {
         await setDoc(doc(db, 'schools', school.schoolId), school);
         log(`Migrated School: ${school.name}`);
       }
 
       // Teams
-      for (const team of store.teams) {
+      for (const team of (store as any).teams) {
         await setDoc(doc(db, 'teams', team.teamId), team);
         log(`Migrated Team: ${team.name}`);
       }
 
       // People
-      for (const person of store.people) {
+      for (const person of (store as any).people) {
         const personData = { ...person, id: person.personId };
         await setDoc(doc(db, 'people', person.personId), personData);
         log(`Migrated Person: ${person.firstName} ${person.lastName}`);
       }
 
       // Matches
-      for (const match of store.matches) {
+      for (const match of (store as any).matches) {
         const matchData = { ...match, id: match.matchId };
         await setDoc(doc(db, 'matches', match.matchId), matchData);
         log(`Migrated Match: ${match.matchId}`);
       }
       
       // Fields
-      for (const field of store.fields) {
+      for (const field of (store as any).fields) {
         const fieldData = { ...field, id: field.fieldId };
         await setDoc(doc(db, 'fields', field.fieldId), fieldData);
         log(`Migrated Field: ${field.name}`);
       }
 
       // Equipment
-      for (const item of store.equipment) {
+      for (const item of (store as any).equipment) {
         const itemData = { ...item, id: item.itemId };
         await setDoc(doc(db, 'equipment', item.itemId), itemData);
         log(`Migrated Equipment: ${item.name}`);
       }
 
       // Transactions
-      for (const transaction of store.transactions) {
+      for (const transaction of (store as any).transactions) {
         const transactionData = { ...transaction, id: transaction.transactionId };
         await setDoc(doc(db, 'transactions', transaction.transactionId), transactionData);
         log(`Migrated Transaction: ${transaction.description}`);
       }
 
       // Staff Profiles
-      for (const staff of store.staffProfiles) {
+      for (const staff of (store as any).staffProfiles) {
         await setDoc(doc(db, 'staffProfiles', staff.staffId), staff);
         log(`Migrated Staff: ${staff.name}`);
       }
 
       // News Posts
-      for (const post of store.newsPosts) {
+      for (const post of (store as any).newsPosts) {
         await setDoc(doc(db, 'newsPosts', post.newsId), post);
         log(`Migrated News: ${post.title}`);
       }
 
       // Seasons
-      for (const season of store.seasons) {
+      for (const season of (store as any).seasons) {
         await setDoc(doc(db, 'seasons', season.seasonId), season);
         log(`Migrated Season: ${season.name}`);
       }
 
       // Rosters
-      for (const roster of store.rosters) {
+      for (const roster of (store as any).rosters) {
         await setDoc(doc(db, 'rosters', roster.assignmentId), roster);
         log(`Migrated Roster: ${roster.personName}`);
       }
 
       // School Stats
-      for (const stat of store.schoolStats) {
+      for (const stat of (store as any).schoolStats) {
         await setDoc(doc(db, 'schoolStats', stat.statsId), stat);
         log(`Migrated Stats: ${stat.schoolId}`);
       }

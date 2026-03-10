@@ -1,4 +1,4 @@
-import { Person } from "@/types/firestore";
+import { Player as Person } from "@/lib/store";
 
 export type ScoutingReport = {
   personId: string;

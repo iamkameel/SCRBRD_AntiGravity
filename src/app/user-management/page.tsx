@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -110,7 +110,7 @@ export default function UserManagementPage() {
         email: user.email || "",
         role: user.role || "Player",
         roles: user.roles || [user.role || "Player"],
-        status: user.status || "active"
+        status: (user.status as "active" | "inactive" | "injured") || "active"
       });
     } else {
       setEditingUser(null);
@@ -464,7 +464,7 @@ export default function UserManagementPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                      {(user as any).lastLogin ? new Date((user as any).lastLogin).toLocaleDateString() : 'Never'}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>

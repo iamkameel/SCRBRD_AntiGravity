@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { EquipmentSchema, EquipmentInput } from '@/lib/schemas/equipmentSchemas';
+import { equipmentSchema, EquipmentFormData } from '@/lib/validations/equipmentSchema';
 import { createDocument, updateDocument } from '@/lib/firestore';
 import { Equipment } from '@/types/firestore';
 
@@ -18,21 +18,18 @@ export async function createEquipmentAction(
   try {
     const rawData = {
       name: formData.get('name'),
-      type: formData.get('type'),
-      brand: formData.get('brand') || undefined,
       category: formData.get('category'),
-      status: formData.get('status'),
+      quantity: formData.get('quantity'),
       condition: formData.get('condition'),
-      quantity: formData.get('quantity')
-        ? parseInt(formData.get('quantity') as string, 10)
-        : undefined,
-      assignedTo: formData.get('assignedTo') || null,
-      cost: formData.get('cost')
-        ? parseFloat(formData.get('cost') as string)
-        : undefined,
+      location: formData.get('location'),
+      purchaseDate: formData.get('purchaseDate'),
+      purchasePrice: formData.get('purchasePrice'),
+      supplier: formData.get('supplier'),
+      serialNumber: formData.get('serialNumber'),
+      notes: formData.get('notes'),
     };
 
-    const validatedData = EquipmentSchema.parse(rawData);
+    const validatedData = equipmentSchema.parse(rawData);
 
     await createDocument<Omit<Equipment, 'id'>>('equipment', validatedData as any);
 
@@ -64,21 +61,18 @@ export async function updateEquipmentAction(
   try {
     const rawData = {
       name: formData.get('name'),
-      type: formData.get('type'),
-      brand: formData.get('brand') || undefined,
       category: formData.get('category'),
-      status: formData.get('status'),
+      quantity: formData.get('quantity'),
       condition: formData.get('condition'),
-      quantity: formData.get('quantity')
-        ? parseInt(formData.get('quantity') as string, 10)
-        : undefined,
-      assignedTo: formData.get('assignedTo') || null,
-      cost: formData.get('cost')
-        ? parseFloat(formData.get('cost') as string)
-        : undefined,
+      location: formData.get('location'),
+      purchaseDate: formData.get('purchaseDate'),
+      purchasePrice: formData.get('purchasePrice'),
+      supplier: formData.get('supplier'),
+      serialNumber: formData.get('serialNumber'),
+      notes: formData.get('notes'),
     };
 
-    const validatedData = EquipmentSchema.parse(rawData);
+    const validatedData = equipmentSchema.parse(rawData);
 
     await updateDocument<Equipment>('equipment', equipmentId, validatedData as any);
 

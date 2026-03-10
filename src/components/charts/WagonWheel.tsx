@@ -2,7 +2,7 @@
 
 import { useState, MouseEvent, useRef } from 'react';
 import { Innings, Over, Ball } from '@/types/firestore';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface Shot {

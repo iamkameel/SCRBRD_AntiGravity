@@ -8,7 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 // import { fixtures as allFixtures, type Fixture } from '@/lib/fixtures-data'; // No longer fetching all fixtures here
 // Using async fetch and importing necessary interfaces
 import { fetchScorecardData, type ScorecardData, type InningsData, type BatsmanScore, type BowlerScore, type FallOfWicket, type ResultWithTeamNames, type FixtureWithTeamNames } from '@/lib/results-data';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Trophy } from "lucide-react";
 import { format } from 'date-fns';

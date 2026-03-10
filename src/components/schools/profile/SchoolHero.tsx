@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Badge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 import { School } from "@/types/firestore";
 
 interface SchoolHeroProps {
