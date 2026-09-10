@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -31,7 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Landing page or not logged in - show navbar only
   if (!user || isPublicPage) {
     return (
-      <div className="flex min-h-screen flex-col relative">
+      <div className="flex min-h-screen flex-col relative bg-background text-foreground font-sans antialiased">
         <BackgroundEffects />
         <Navbar />
         <main className="flex-1 relative z-10">{children}</main>
@@ -42,13 +42,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Authenticated users on app pages - show responsive sidebar
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full relative">
+      <div className="flex min-h-screen w-full relative bg-background text-foreground font-sans antialiased">
         <BackgroundEffects />
         <Sidebar />
-        <main className="flex-1 lg:ml-[280px] transition-all duration-300 relative z-10">
+        <main className="flex-1 lg:ml-[260px] transition-all duration-300 relative z-10 min-h-screen pb-12">
           <Header />
           <EmailVerificationBanner />
-          <div className="p-4 sm:p-6 md:p-8">
+          <div className="p-4 sm:p-6 md:p-8 space-y-6">
             <Breadcrumbs />
             {children}
           </div>

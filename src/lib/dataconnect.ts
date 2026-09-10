@@ -7,7 +7,8 @@ import app from './firebase';
  */
 export const dc: DataConnect = getDataConnect(app, connectorConfig);
 
-if (process.env.USE_EMULATOR === 'true') {
+if (process.env.USE_EMULATOR === 'true' || process.env.NEXT_PUBLIC_USE_EMULATOR === 'true') {
     console.log('Connecting to Firebase Data Connect Emulator on localhost:9399');
     connectDataConnectEmulator(dc, 'localhost', 9399);
 }
+

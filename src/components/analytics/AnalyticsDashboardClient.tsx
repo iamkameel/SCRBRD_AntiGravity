@@ -26,6 +26,7 @@ import { TopPerformersList } from "./TopPerformersList";
 import { MatchPredictionCard } from "./MatchPredictionCard";
 import { PlayerForecastCard } from "./PlayerForecastCard";
 import { TeamStrengthAnalysis } from "./TeamStrengthAnalysis";
+import { HeadToHeadAnalytics } from "./HeadToHeadAnalytics";
 import { WinLossGauge } from "@/components/charts/WinLossGauge";
 import { PerformanceTimeline } from "@/components/charts/PerformanceTimeline";
 import { motion } from "framer-motion";
@@ -160,6 +161,9 @@ export function AnalyticsDashboardClient() {
             <StatCard title="Total Wickets" value={analytics.totalWickets} accent={D.rose} icon={<Activity className="h-5 w-5" />} />
             <StatCard title="Fielding Marks" value={analytics.mostCatches.reduce((sum, p) => sum + p.value, 0)} accent={D.emerald} icon={<Shield className="h-5 w-5" />} />
           </div>
+
+          {/* Institutional Derby Head-to-Head Analytics */}
+          <HeadToHeadAnalytics />
 
           {/* Top Performers Grid */}
           <div>

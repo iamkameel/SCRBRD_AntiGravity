@@ -8,8 +8,8 @@ export const D = {
     textPrimary: '#ffffff', textSecondary: 'hsl(var(--muted-foreground))', textMuted: 'hsl(var(--muted-foreground))',
     border: 'hsl(var(--border))', borderMed: 'hsl(var(--border))',
     sm: '8px', md: '12px', lg: '16px', xl: '20px', xxl: '24px', pill: '9999px',
-    mono: "'DM Mono',monospace", head: "var(--font-syne), sans-serif", body: "var(--font-syne), sans-serif", 
-    sans: "sans-serif", syne: "var(--font-syne), sans-serif",
+    mono: "'DM Mono',monospace", head: "var(--font-syne), sans-serif", body: "var(--font-open-sans), sans-serif", 
+    sans: "var(--font-open-sans), sans-serif", syne: "var(--font-syne), sans-serif",
 };
 
 export function GlobalStyles() {
@@ -39,7 +39,7 @@ export function GlobalStyles() {
       .sh-press{transition:transform .1s ease,opacity .1s ease}
       .sh-press:active:not(:disabled){transform:scale(.95);opacity:.85}
       .sh-press:disabled{cursor:not-allowed!important;opacity:.38!important}
-      input,button,textarea,select{font-family:var(--font-syne),sans-serif}
+      input,button,textarea,select{font-family:var(--font-open-sans),sans-serif}
     `} </style>
   );
 }

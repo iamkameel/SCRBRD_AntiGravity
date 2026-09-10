@@ -1,36 +1,49 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { usePermissions } from "@/lib/auth/usePermissions";
-import { ROLES, Role } from "@/lib/auth/rbac";
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchPersonByEmail } from '@/app/actions/personActions';
-import { Person } from '@/types/firestore';
-import { PageHeader } from './PageHeader';
-import { DashboardFilterBar } from './DashboardFilterBar';
-import FixtureCentreCard from './FixtureCentreCard';
-import { SmartDailyBriefing } from './SmartDailyBriefing';
-import { Loader2 } from 'lucide-react';
-import AdminDashboard from '../dashboards/admin-dashboard';
-import CoachDashboard from '../dashboards/coach-dashboard';
-import PlayerDashboard from '../dashboards/player-dashboard';
-import SportsmasterDashboard from '../dashboards/sportsmaster-dashboard';
-import MedicalDashboard from '../dashboards/medical-dashboard';
-import UmpireScorerDashboard from '../dashboards/umpire-scorer-dashboard';
-import GroundskeeperDashboard from '../dashboards/groundskeeper-dashboard';
-import DriverDashboard from '../dashboards/driver-dashboard';
-import GuardianDashboard from '../dashboards/guardian-dashboard';
-import SpectatorDashboard from '../dashboards/spectator-dashboard';
+import { ROLES } from "@/lib/auth/rbac";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDashboard } from "@/contexts/DashboardContext";
+import { fetchPersonByEmail } from "@/app/actions/personActions";
+import { Person } from "@/types/firestore";
+import { DashboardFilterBar } from "./DashboardFilterBar";
+import { SmartDailyBriefing } from "./SmartDailyBriefing";
+import { LiveTelemetryTicker } from "./LiveTelemetryTicker";
+import { SchoolReadinessGauge } from "./SchoolReadinessGauge";
+import { 
+  Loader2, Radio, Layers, Activity, Users, Trophy, Truck, Shield, Sparkles, UserCheck, RefreshCw, ChevronRight, Zap
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { D } from "@/lib/design-system";
+
+import AdminDashboard from "../dashboards/admin-dashboard";
+import CoachDashboard from "../dashboards/coach-dashboard";
+import PlayerDashboard from "../dashboards/player-dashboard";
+import SportsmasterDashboard from "../dashboards/sportsmaster-dashboard";
+import MedicalDashboard from "../dashboards/medical-dashboard";
+import UmpireScorerDashboard from "../dashboards/umpire-scorer-dashboard";
+import GroundskeeperDashboard from "../dashboards/groundskeeper-dashboard";
+import DriverDashboard from "../dashboards/driver-dashboard";
+import GuardianDashboard from "../dashboards/guardian-dashboard";
+import SpectatorDashboard from "../dashboards/spectator-dashboard";
+
+import { PlayerMicroPlanGenerator } from "../coaches/PlayerMicroPlanGenerator";
+import { GlobalRankingsClient } from "../rankings/GlobalRankingsClient";
 
 export default function DashboardView() {
-  const { role } = usePermissions();
+  const { role: authRole } = usePermissions();
   const { user } = useAuth();
+  const { filters, setFilters } = useDashboard();
   const [person, setPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // You can optionally fetch global context for the user here, 
-  // or rely on the specific dashboards doing it. For a truly generic
-  // container, we load the basic profile.
+  // Active OS Deck Mode tab: "operations" | "coaching" | "rankings" | "logistics"
+  const [activeDeck, setActiveDeck] = useState<string>(filters.activeDeckMode || "operations");
+
+  // Effective Role (simulated or authenticated)
+  const activeRole = filters.simulatedRole || authRole;
+
   useEffect(() => {
     async function initDashboard() {
       if (!user?.email) {
@@ -51,16 +64,18 @@ export default function DashboardView() {
 
   if (loading) {
     return (
-      <div className="flex h-[50vh] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      <div className="flex h-[60vh] w-full items-center justify-center flex-col gap-4">
+        <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400" style={{ fontFamily: D.sans }}>
+          Syncing School Cricket OS Operational Deck...
+        </p>
       </div>
     );
   }
 
-  // Determine which specific component blocks to render
-  const renderDashboardWidgets = () => {
-    switch (role) {
-      // Administrative Operations
+  // Render role-specific widgets based on active role
+  const renderDashboardWidgets = (roleToRender: string) => {
+    switch (roleToRender) {
       case ROLES.SUPERADMIN:
       case ROLES.PLATFORMOPS:
       case ROLES.SCHOOLADMIN:
@@ -69,14 +84,10 @@ export default function DashboardView() {
         return <AdminDashboard />;
       case ROLES.SPORTSMASTER:
         return <SportsmasterDashboard />;
-
-      // Team & Coaching Operations
       case ROLES.COACH:
       case ROLES.COACHSUPPORT:
       case ROLES.SCHOOLSTAFF:
         return <CoachDashboard />;
-
-      // Players & Spectators
       case ROLES.PLAYER:
       case ROLES.ADULTPLAYER:
         return <PlayerDashboard />;
@@ -85,40 +96,145 @@ export default function DashboardView() {
       case ROLES.EXTERNAL:
       case ROLES.SCOUT:
         return <SpectatorDashboard />;
-        
-      // Support & Medical Operations
       case ROLES.MEDICALOFFICER:
         return <MedicalDashboard />;
-
-      // Match & Ground Operations
       case ROLES.MATCHOFFICIAL:
         return <UmpireScorerDashboard />;
       case ROLES.GROUNDSKEEPER:
-        return <GroundskeeperDashboard schoolId={person?.schoolId || ''} />;
+        return <GroundskeeperDashboard schoolId={person?.schoolId || ""} />;
       case ROLES.DRIVER:
         return <DriverDashboard />;
-
-      // Fallback
       default:
         return <SpectatorDashboard />;
     }
   };
 
-  return (
-    <div className="pb-16 space-y-8 animate-in fade-in duration-500">
-      {/* 1. Global Daily Briefing using the user's name */}
-      <div className="px-4 md:px-8">
-        <SmartDailyBriefing userName={person?.firstName || user?.displayName?.split(' ')[0]} role={role as any} />
-      </div>
+  const deckTabs = [
+    { id: "operations", label: "Operations & Live Command", icon: Activity, color: D.indigo },
+    { id: "coaching", label: "Coaching & Micro-Plans", icon: Users, color: D.amber },
+    { id: "rankings", label: "Rankings & Milestones", icon: Trophy, color: D.emerald },
+    { id: "logistics", label: "Facilities & Logistics", icon: Truck, color: D.sky },
+  ];
 
-      {/* 2. Global Filter Bar (Season / School selection) */}
-      <div className="px-4 md:px-8">
-        <DashboardFilterBar />
-        
-        {/* 3. Role-specific Dashboard Widgets */}
-        <div className="mt-8">
-          {renderDashboardWidgets()}
+  return (
+    <div className="pb-20 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 1. Realtime Match Telemetry Ticker */}
+      <LiveTelemetryTicker />
+
+      {/* 2. Global Filter Bar & Persona Simulator Switcher */}
+      <DashboardFilterBar />
+
+      {/* 3. Persona Simulator Active Notice Banner (if role is overridden) */}
+      <AnimatePresence>
+        {filters.simulatedRole && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex items-center justify-between p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 shadow-lg"
+          >
+            <div className="flex items-center gap-3">
+              <UserCheck className="h-5 w-5 text-indigo-400 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
+                  Active Persona Simulation Mode
+                </p>
+                <p className="text-[11px] text-indigo-200 font-medium" style={{ fontFamily: D.sans }}>
+                  Viewing platform layer as: <span className="font-bold text-white uppercase">{activeRole}</span>
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setFilters({ simulatedRole: undefined })}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white transition-all"
+            >
+              <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
+              Reset Persona
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 4. Global OS Operational Readiness Gauge */}
+      <SchoolReadinessGauge />
+
+      {/* 5. Strategic 6-Layer OS Deck Navigation Tabs */}
+      <div className="space-y-6">
+        <div
+          className="flex items-center gap-2 p-1.5 rounded-2xl border overflow-x-auto shadow-lg"
+          style={{ background: D.surf1, borderColor: D.border }}
+        >
+          {deckTabs.map((tab) => {
+            const isActive = activeDeck === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveDeck(tab.id);
+                  setFilters({ activeDeckMode: tab.id });
+                }}
+                className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-xs transition-all duration-300 whitespace-nowrap ${
+                  isActive
+                    ? "bg-white/10 text-white shadow-md border border-white/15"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
+                }`}
+                style={{ fontFamily: D.sans }}
+              >
+                <div
+                  className="p-1.5 rounded-lg transition-transform"
+                  style={{
+                    background: isActive ? `${tab.color}20` : "transparent",
+                    color: isActive ? tab.color : "currentColor",
+                  }}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* 6. Dynamic Content Deck Rendering */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeDeck + activeRole}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3 }}
+          >
+            {activeDeck === "operations" && (
+              <div className="space-y-8">
+                <SmartDailyBriefing
+                  userName={person?.firstName || user?.displayName?.split(" ")[0]}
+                  role={activeRole as any}
+                />
+                {renderDashboardWidgets(activeRole || "")}
+              </div>
+            )}
+
+            {activeDeck === "coaching" && (
+              <div className="space-y-8">
+                <PlayerMicroPlanGenerator />
+              </div>
+            )}
+
+            {activeDeck === "rankings" && (
+              <div className="space-y-8">
+                <GlobalRankingsClient />
+              </div>
+            )}
+
+            {activeDeck === "logistics" && (
+              <div className="space-y-8">
+                <GroundskeeperDashboard schoolId={person?.schoolId || ""} />
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

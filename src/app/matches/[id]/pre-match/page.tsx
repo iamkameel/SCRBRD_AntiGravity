@@ -32,6 +32,7 @@ import { calculateAge } from "@/lib/utils/dateUtils";
 import { getTeamAction } from "@/app/actions/teamActions";
 
 import { BattingOrderEditor } from "@/components/matches/BattingOrderEditor";
+import { getMockSquad } from "@/lib/mockMatchData";
 
 export default function PreMatchPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -84,12 +85,14 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
           getTeamAction(matchData.awayTeamId)
         ]);
         
-        setHomeSquad(home);
-        setAwaySquad(away);
+        const hSquad = (home && home.length > 0) ? home : getMockSquad(homeTeamData?.name || matchData.homeTeamId || 'Westville 1st XI');
+        const aSquad = (away && away.length > 0) ? away : getMockSquad(awayTeamData?.name || matchData.awayTeamId || 'Kearsney 1st XI');
+
+        setHomeSquad(hSquad);
+        setAwaySquad(aSquad);
         setDivision(divData);
         if (homeTeamData?.name) setHomeTeamName(homeTeamData.name);
         if (awayTeamData?.name) setAwayTeamName(awayTeamData.name);
-        setDivision(divData);
         
       } catch (error) {
         console.error("Error fetching pre-match data:", error);

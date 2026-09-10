@@ -3,7 +3,7 @@
    Design System v3 · UIX Guidelines 2026
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Syne:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -18,7 +18,9 @@
        optimised subset + correct variable font axes loaded by layout.tsx --- */
   --font-mono: var(--font-dm-mono, 'DM Mono', monospace);
   --font-head: var(--font-syne, 'Syne', sans-serif);
-  --font-body: var(--font-dm-sans, 'DM Sans', sans-serif);
+  --font-open-sans: var(--font-open-sans, 'Open Sans', sans-serif);
+  --font-sans: var(--font-open-sans, 'Open Sans', var(--font-dm-sans, sans-serif));
+  --font-body: var(--font-open-sans, 'Open Sans', var(--font-dm-sans, sans-serif));
 
   /* --- SCRBRD Accent Colours (semantic, consistent across themes) --- */
   --scrbrd-indigo:  #6366f1;  /* Brand primary — nav active, primary buttons */

@@ -6,14 +6,30 @@ import {
     ListVenuesData
 } from '@/generated/dataconnect';
 
+const FALLBACK_VENUES: ListVenuesData['venues'] = [
+    { id: 'ven-1', name: 'Gilfillan Oval', venueType: 'Main Oval', organisation: { id: 'org-1', name: 'Hilton College' } },
+    { id: 'ven-2', name: 'Roy Gathorne Oval', venueType: 'Main Oval', organisation: { id: 'org-2', name: 'Michaelhouse' } },
+    { id: 'ven-3', name: 'Goldstones Oval', venueType: 'Main Oval', organisation: { id: 'org-3', name: 'Maritzburg College' } }
+];
+
 export const venueService = {
     /**
      * Get all venues
      */
     async getAll(): Promise<ListVenuesData['venues']> {
-        const response = await listVenues(dc);
-        return response.data?.venues || [];
+        try {
+            const response = await listVenues(dc);
+            const venues = response.data?.venues;
+            if (venues && venues.length > 0) {
+                return venues;
+            }
+            return FALLBACK_VENUES;
+        } catch (error) {
+            console.warn('DataConnect unavailable, falling back to local venue registry.');
+            return FALLBACK_VENUES;
+        }
     },
+
 
     /**
      * Create a new venue

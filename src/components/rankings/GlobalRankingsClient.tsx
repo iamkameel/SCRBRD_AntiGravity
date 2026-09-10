@@ -17,7 +17,10 @@ import {
   ChevronRight,
   Shield,
   Dna,
-  Clock
+  Clock,
+  CheckCircle2,
+  Calendar,
+  Layers
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -31,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Badge } from "@/components/ui/badge";
+import { MilestoneTimeline } from "@/components/players/MilestoneTimeline";
 
 // Mock Data
 const schoolRankings = [
@@ -41,10 +45,11 @@ const schoolRankings = [
 ];
 
 const playerRankings = [
-  { rank: 1, name: "Liam Thompson", ppr: 98.4, team: "St. Andrews", role: "Opener", move: +1, stats: "Avg 62.4 | SR 168" },
-  { rank: 2, name: "Marco Jansen", ppr: 96.2, team: "Grey High", role: "Strike Bowler", move: 0, stats: "Wkts 24 | Econ 5.8" },
-  { rank: 3, name: "David Thorne", ppr: 94.8, team: "Selborne", role: "Finisher", move: +5, stats: "SR 192.5 | Impact 8.9" },
-  { rank: 4, name: "S. Curran", ppr: 92.1, team: "Hilton", role: "All-rounder", move: -2, stats: "Runs 342 | Wkts 12" },
+  { rank: 1, name: "Liam Thompson", ppr: 98.4, team: "St. Andrews", role: "Opener", move: +1, stats: "Avg 62.4 | SR 168.2 | 512 Runs", innings: 10, overs: 0, metricCategory: "batting" },
+  { rank: 2, name: "Marco Jansen", ppr: 96.2, team: "Grey High", role: "Strike Bowler", move: 0, stats: "Wkts 24 | Econ 5.8 | Avg 14.2", innings: 2, overs: 48, metricCategory: "bowling" },
+  { rank: 3, name: "David Thorne", ppr: 94.8, team: "Selborne", role: "Finisher", move: +5, stats: "SR 192.5 | Impact 8.9 | 340 Runs", innings: 8, overs: 0, metricCategory: "batting" },
+  { rank: 4, name: "S. Curran", ppr: 92.1, team: "Hilton", role: "All-rounder", move: -2, stats: "Runs 342 | Wkts 12 | Index 92.1", innings: 9, overs: 32, metricCategory: "all_rounder" },
+  { rank: 5, name: "Siya Khumalo", ppr: 90.5, team: "St. Andrews", role: "Finger Spinner", move: +3, stats: "Wkts 19 | Econ 4.2 | Dot 68%", innings: 4, overs: 42, metricCategory: "bowling" },
 ];
 
 const riserData = [
@@ -63,7 +68,16 @@ const momentumData = [
 ];
 
 export function GlobalRankingsClient() {
-  const [tab, setTab] = useState<'teams' | 'players' | 'scouting'>('teams');
+  const [tab, setTab] = useState<'teams' | 'players' | 'scouting' | 'milestones'>('players');
+  const [metricFilter, setMetricFilter] = useState<'all' | 'batting' | 'bowling' | 'all_rounder' | 'movers'>('all');
+  const [windowFilter, setWindowFilter] = useState<'career' | 'season_2026' | 'last_5' | 'last_3'>('season_2026');
+  const [minQualification, setMinQualification] = useState(true);
+
+  const filteredPlayers = playerRankings.filter(p => {
+    if (metricFilter !== 'all' && p.metricCategory !== metricFilter) return false;
+    if (minQualification && (p.innings < 5 && p.overs < 10)) return false;
+    return true;
+  });
 
   const RiserItem = ({ name, rise, rank, ppr }: any) => (
     <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
@@ -79,16 +93,16 @@ export function GlobalRankingsClient() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white selection:bg-sky-500/30">
+    <div className="min-h-screen bg-[#0A0A0B] text-white selection:bg-sky-500/30 pb-16">
       {/* Dynamic Header */}
       <SectionHeader 
-        title="Rankings Hub"
-        sub="The definitive authority on school cricket performance. Powered by the SCRBRD Impact Engine."
+        title="Rankings & Milestones Hub"
+        sub="The canonical authority on school cricket performance, historical landmarks, and role-weighted indices."
         icon={<Trophy className="w-5 h-5 text-sky-400" />}
         actions={
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-sky-500/10 border-sky-500/20 text-sky-400 font-black">
-              GLOBAL INTELLIGENCE
+              INTELLIGENCE LAYER V2
             </Badge>
             <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest ml-4">
               <Clock className="w-3 h-3" />
@@ -98,14 +112,14 @@ export function GlobalRankingsClient() {
         }
       />
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 space-y-12">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
           
           {/* Main List Area */}
           <div className="space-y-8">
-            {/* Tabs */}
+            {/* Main Tabs */}
             <div className="flex items-center gap-8 border-b border-white/5">
-              {(['teams', 'players', 'scouting'] as const).map(t => (
+              {(['players', 'teams', 'scouting', 'milestones'] as const).map(t => (
                 <button 
                   key={t}
                   onClick={() => setTab(t)}
@@ -125,6 +139,62 @@ export function GlobalRankingsClient() {
                 </button>
               ))}
             </div>
+
+            {/* Sub-Filters & Threshold Controls for Players Tab */}
+            {tab === 'players' && (
+              <div className="p-4 rounded-xl border bg-black/20 space-y-4" style={{ borderColor: D.border }}>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  {/* Metric Sub-Filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Metric Filter:</span>
+                    {(['all', 'batting', 'bowling', 'all_rounder', 'movers'] as const).map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setMetricFilter(m)}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                          metricFilter === m 
+                            ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' 
+                            : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                        }`}
+                      >
+                        {m.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Window Filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Window:</span>
+                    <select
+                      value={windowFilter}
+                      onChange={(e) => setWindowFilter(e.target.value as any)}
+                      className="bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-white uppercase tracking-wider px-2 py-1 rounded-lg cursor-pointer"
+                    >
+                      <option value="season_2026">2025/26 Season</option>
+                      <option value="last_5">Last 5 Matches</option>
+                      <option value="last_3">Last 3 Matches</option>
+                      <option value="career">Career History</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Qualification Threshold Toggle */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-2 text-xs text-zinc-400">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>Apply Qualification Threshold (Min 5 Innings or 10 Overs)</span>
+                  </div>
+                  <button
+                    onClick={() => setMinQualification(!minQualification)}
+                    className={`px-3 py-1 rounded text-[10px] font-black uppercase border ${
+                      minQualification ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-zinc-900 text-zinc-500 border-zinc-800'
+                    }`}
+                  >
+                    {minQualification ? 'THRESHOLD ACTIVE' : 'ALL PLAYERS'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Rankings Table/List */}
             <AnimatePresence mode="wait">
@@ -179,7 +249,7 @@ export function GlobalRankingsClient() {
                   </motion.div>
                 ))}
 
-                {tab === 'players' && playerRankings.map((r) => (
+                {tab === 'players' && filteredPlayers.map((r) => (
                   <motion.div 
                     key={r.rank}
                     whileHover={{ x: 4 }}
@@ -195,6 +265,8 @@ export function GlobalRankingsClient() {
                           <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{r.team}</span>
                           <div className="w-1 h-1 rounded-full bg-zinc-700" />
                           <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">{r.role}</span>
+                          <div className="w-1 h-1 rounded-full bg-zinc-700" />
+                          <span className="text-[10px] text-sky-400 font-mono font-semibold">{r.stats}</span>
                         </div>
                       </div>
                     </div>
@@ -213,6 +285,10 @@ export function GlobalRankingsClient() {
                     </div>
                   </motion.div>
                 ))}
+
+                {tab === 'milestones' && (
+                  <MilestoneTimeline playerName="Liam Thompson" />
+                )}
               </motion.div>
             </AnimatePresence>
           </div>

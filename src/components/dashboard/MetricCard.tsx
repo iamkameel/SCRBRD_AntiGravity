@@ -33,45 +33,45 @@ export function MetricCard({
 }: MetricCardProps) {
   return (
     <motion.div
-      whileHover={onClick ? { scale: 1.02, translateY: -4 } : { scale: 1.01 }}
-      className={`relative rounded-3xl overflow-hidden border p-6 transition-all duration-300 group ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      whileHover={onClick ? { scale: 1.02, translateY: -2 } : { scale: 1.01 }}
+      className={`relative rounded-2xl overflow-hidden border p-5 transition-all duration-300 group ${onClick ? 'cursor-pointer' : ''} ${className}`}
       style={{
         background: D.surf1,
         borderColor: D.border,
-        boxShadow: `0 10px 30px -15px ${color}10`,
+        boxShadow: `0 4px 20px -10px ${color}15`,
       }}
       onClick={onClick}
     >
       {/* Strategic Accent Left Bar */}
       <div 
-        className="absolute left-0 top-6 bottom-6 w-1 rounded-full opacity-60"
+        className="absolute left-0 top-4 bottom-4 w-1 rounded-full opacity-60"
         style={{ background: color }}
       />
 
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-4">
         {/* Icon Unit */}
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
           style={{
             background: `${color}15`,
-            border: `1px solid ${color}30`,
+            border: `1px solid ${color}25`,
             color: color,
           }}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-4 h-4" />
         </div>
 
         {/* Sync Indicator */}
         <div 
           className="w-1.5 h-1.5 rounded-full animate-pulse"
-          style={{ background: color, boxShadow: `0 0 10px ${color}` }}
+          style={{ background: color, boxShadow: `0 0 8px ${color}` }}
         />
       </div>
 
       <div>
         {/* Value — DM Mono per spec §6.10 */}
         <div
-          className="text-3xl font-black italic tracking-tighter mb-1"
+          className="text-2xl font-bold tracking-tight mb-1"
           style={{
             fontFamily: D.mono,
             color: D.textPrimary,
@@ -80,13 +80,11 @@ export function MetricCard({
           {value}
         </div>
 
-        {/* Label — Syne uppercase per spec §6.10 */}
+        {/* Label — Open Sans per refined visual hierarchy */}
         <div
-          className="text-[10px] font-black uppercase tracking-[0.2em] mb-1.5"
+          className="text-xs font-semibold tracking-normal mb-0.5 text-slate-200"
           style={{ 
-            fontFamily: D.head,
-            color: D.textMuted,
-            opacity: 0.8
+            fontFamily: D.sans,
           }}
         >
           {label}
@@ -95,11 +93,10 @@ export function MetricCard({
         {/* Subtitle */}
         {subtitle && (
           <p
-            className="text-[9px] font-bold uppercase tracking-widest leading-snug"
+            className="text-[11px] font-normal tracking-normal leading-snug opacity-60"
             style={{
-              fontFamily: D.body,
+              fontFamily: D.sans,
               color: D.textMuted,
-              opacity: 0.5,
             }}
           >
             {subtitle}
@@ -109,10 +106,10 @@ export function MetricCard({
 
       {/* Background Decorative Element */}
       <div 
-        className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity"
+        className="absolute -bottom-4 -right-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none"
         style={{ color }}
       >
-        <Icon className="w-24 h-24" />
+        <Icon className="w-20 h-20" />
       </div>
     </motion.div>
   );

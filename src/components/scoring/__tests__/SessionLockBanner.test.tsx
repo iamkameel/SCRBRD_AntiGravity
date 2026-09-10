@@ -46,7 +46,7 @@ describe('SessionLockBanner', () => {
                 matchId: 'match-1',
                 activeScorerId: 'user-1',
                 activeScorerName: 'Scorer One',
-                acquiredAt: new Date().toISOString(),
+                lockedAt: new Date().toISOString(),
                 lastHeartbeatAt: new Date().toISOString(),
                 handoverStatus: 'none',
                 version: 1
@@ -73,7 +73,7 @@ describe('SessionLockBanner', () => {
                 matchId: 'match-1',
                 activeScorerId: 'user-2',
                 activeScorerName: 'Scorer Two',
-                acquiredAt: new Date().toISOString(),
+                lockedAt: new Date().toISOString(),
                 lastHeartbeatAt: new Date().toISOString(),
                 handoverStatus: 'none',
                 version: 1

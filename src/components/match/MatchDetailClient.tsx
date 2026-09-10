@@ -236,28 +236,28 @@ export function MatchDetailClient({
 
   // Design Primitives
   const Lbl = ({ children }: { children: React.ReactNode }) => (
-    <div style={{ fontFamily: D.head, fontSize: '10px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: D.textMuted }}>{children}</div>
+    <div style={{ fontFamily: D.sans, fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: D.textMuted }}>{children}</div>
   );
 
   return (
     <div style={{ background: D.base, minHeight: '100vh', paddingBottom: '80px', color: D.textPrimary }}>
       <GlobalStyles />
       {/* Top Navigation Bar */}
-      <div className="bg-card border-b border-border sticky top-0 z-40">
+      <div className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/matches" style={{ display: 'flex', alignItems: 'center', color: D.textSecondary, textDecoration: 'none' }} className="hover:text-primary transition-colors">
             <ChevronLeft className="w-5 h-5 mr-1" />
-            <span style={{ fontFamily: D.head, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '11px' }}>Back to Matches</span>
+            <span style={{ fontFamily: D.sans, fontWeight: 600, fontSize: '12px' }}>Back to Matches</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link href={`/matches/${match.id}/pre-match`}>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2 rounded-xl text-xs font-semibold">
                 <span className="hidden sm:inline">Pre-Match</span>
               </Button>
             </Link>
             <Link href={`/matches/${match.id}/score`}>
-              <Button size="sm" className="gap-2">
-                <Play className="w-4 h-4" />
+              <Button size="sm" className="gap-2 rounded-xl text-xs font-semibold" style={{ background: D.indigo, color: 'white' }}>
+                <Play className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Start Scoring</span>
               </Button>
             </Link>
@@ -274,65 +274,44 @@ export function MatchDetailClient({
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Match Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <div style={{
+        <div className="mb-6 p-6 rounded-2xl border bg-slate-900/40" style={{ borderColor: D.border }}>
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <div className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border" style={{
               background: match.status === 'live' ? `${D.rose}22` : D.surf2,
               color: match.status === 'live' ? D.rose : D.textSecondary,
-              padding: '4px 10px',
-              borderRadius: '4px',
-              fontSize: '10px',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              border: `1px solid ${match.status === 'live' ? `${D.rose}44` : D.border}`
+              borderColor: match.status === 'live' ? `${D.rose}44` : D.border,
+              fontFamily: D.sans
             }}>
               {match.status}
             </div>
             {match.isDayNight && (
-              <div style={{
+              <div className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5" style={{
                 background: `${D.violet}15`,
                 color: D.violet,
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '10px',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                border: `1px solid ${D.violet}33`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+                borderColor: `${D.violet}33`,
+                fontFamily: D.sans
               }}>
                 <Moon className="w-3 h-3" />
                 Day/Night
               </div>
             )}
-            <div style={{ fontFamily: D.head, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.textMuted }}>
+            <div className="text-xs font-normal text-slate-400" style={{ fontFamily: D.sans }}>
               {match.venue} • {match.dateTime ? new Date(match.dateTime).toLocaleDateString() : 'Date TBA'}
             </div>
           </div>
           
-          <h1 style={{ fontFamily: D.head, fontSize: 'clamp(2rem, 5vw, 4rem)', fontWeight: 800, textTransform: 'uppercase', lineHeight: 0.9, letterSpacing: '-0.02em', marginBottom: '16px' }}>
-            <span style={{ color: '#EAB308' }}>{homeTeamName}</span>
-            <span style={{ color: D.textMuted, fontSize: '0.5em', margin: '0 16px', verticalAlign: 'middle' }}>VS</span>
-            <span style={{ color: '#3B82F6' }}>{awayTeamName}</span>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 flex items-center flex-wrap gap-2 sm:gap-4" style={{ fontFamily: D.head }}>
+            <span className="text-amber-400">{homeTeamName}</span>
+            <span className="text-slate-400 text-sm font-semibold px-2 py-0.5 rounded-full border bg-slate-800/80" style={{ borderColor: D.border, fontFamily: D.sans }}>VS</span>
+            <span className="text-blue-400">{awayTeamName}</span>
           </h1>
 
           {match.result && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
+            <div className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border" style={{
               background: `${D.emerald}15`,
               color: D.emerald,
-              padding: '6px 16px',
-              borderRadius: '6px',
-              fontFamily: D.head,
-              fontSize: '13px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              border: `1px solid ${D.emerald}33`
+              fontFamily: D.sans,
+              borderColor: `${D.emerald}33`
             }}>
               {match.result}
             </div>
@@ -340,7 +319,7 @@ export function MatchDetailClient({
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: `1px solid ${D.border}`, marginBottom: '24px', overflowX: 'auto', gap: '8px' }}>
+        <div className="flex border-b mb-6 overflow-x-auto gap-2" style={{ borderColor: D.border }}>
           {[
             { id: 'overview', label: 'Overview', icon: null },
             { id: 'scorecard', label: 'Scorecard', icon: null },
@@ -353,26 +332,18 @@ export function MatchDetailClient({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
+              className="px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap"
               style={{
                 background: 'transparent',
-                border: 'none',
-                padding: '12px 20px',
-                fontFamily: D.head,
-                fontSize: '11px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
+                borderTop: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                fontFamily: D.sans,
                 color: activeTab === tab.id ? D.emerald : D.textMuted,
-                borderBottom: `2px solid ${activeTab === tab.id ? D.emerald : 'transparent'}`,
+                borderBottomColor: activeTab === tab.id ? D.emerald : 'transparent',
                 cursor: 'pointer',
-                transition: 'all .25s cubic-bezier(0.4, 0, 0.2, 1)',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                opacity: activeTab === tab.id ? 1 : 0.6,
+                opacity: activeTab === tab.id ? 1 : 0.7,
               }}
-              className="hover:opacity-100"
             >
               {tab.icon}
               {tab.label}

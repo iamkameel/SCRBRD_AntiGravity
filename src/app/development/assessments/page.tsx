@@ -94,15 +94,15 @@ export default function SkillAssessmentPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0B0F17] text-white p-6 space-y-6 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-[#05080f] text-[#f0f4ff] font-sans p-6 space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider font-sans">
             <Brain className="w-4 h-4" /> Player Development Engine
           </div>
-          <h1 className="text-3xl font-bold text-white mt-1">1–9 Skill Matrix Assessment</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-3xl font-extrabold font-['Syne',sans-serif] text-white mt-1">1–9 Skill Matrix Assessment</h1>
+          <p className="text-sm text-muted-foreground mt-1 font-sans">
             Rubric-anchored 7-domain evaluation for school cricket development.
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function SkillAssessmentPage() {
           <select
             value={selectedPlayer}
             onChange={(e) => setSelectedPlayer(e.target.value)}
-            className="px-4 py-2.5 bg-[#161D2F] border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400"
+            className="px-4 py-2.5 bg-slate-900/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400 font-medium font-sans"
           >
             {players.map((p) => (
               <option key={p.id} value={p.id}>
@@ -123,7 +123,7 @@ export default function SkillAssessmentPage() {
 
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-sm rounded-xl transition-colors shadow-lg"
+            className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-lg active:scale-95 font-sans"
           >
             <Save className="w-4 h-4" /> Save Assessment
           </button>
@@ -131,39 +131,39 @@ export default function SkillAssessmentPage() {
       </div>
 
       {savedSuccess && (
-        <div className="flex items-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-semibold">
+        <div className="flex items-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-semibold font-sans">
           <CheckCircle2 className="w-5 h-5" /> Skill assessment saved successfully!
         </div>
       )}
 
       {/* Overall Score Summary Badge */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#161D2F] border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
+        <div className="glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl rounded-2xl p-5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Normalised Skill Index</span>
-            <div className="text-3xl font-black text-amber-400 mt-1">{normalisedScore} / 100</div>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider font-sans">Normalised Skill Index</span>
+            <div className="text-3xl font-extrabold text-amber-400 mt-1 font-sans">{normalisedScore} / 100</div>
           </div>
-          <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center font-bold text-lg">
+          <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center font-bold text-lg font-mono">
             {avgRawScore.toFixed(1)}
           </div>
         </div>
 
-        <div className="bg-[#161D2F] border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
+        <div className="glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl rounded-2xl p-5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Evaluated Attributes</span>
-            <div className="text-3xl font-black text-white mt-1">{evaluations.length}</div>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider font-sans">Evaluated Attributes</span>
+            <div className="text-3xl font-extrabold text-white mt-1 font-sans">{evaluations.length}</div>
           </div>
-          <div className="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 font-semibold">
+          <div className="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 font-semibold font-sans">
             All Domains
           </div>
         </div>
 
-        <div className="bg-[#161D2F] border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
+        <div className="glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl rounded-2xl p-5 flex items-center justify-between">
           <div>
-            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Assessor Confidence</span>
-            <div className="text-xl font-bold text-emerald-400 mt-1">High (4 raters)</div>
+            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider font-sans">Assessor Confidence</span>
+            <div className="text-xl font-bold text-emerald-400 mt-1 font-sans">High (4 raters)</div>
           </div>
-          <Shield className="w-8 h-8 text-gray-600" />
+          <Shield className="w-8 h-8 text-slate-500" />
         </div>
       </div>
 
@@ -188,22 +188,22 @@ export default function SkillAssessmentPage() {
       {/* Attribute Evaluation Cards */}
       <div className="space-y-4">
         {currentDomainAttributes.length === 0 ? (
-          <div className="bg-[#161D2F] border border-gray-800 rounded-2xl p-8 text-center text-gray-400 text-sm">
+          <div className="glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl rounded-2xl p-8 text-center text-muted-foreground text-sm">
             No attributes defined for domain &quot;{activeDomain}&quot;. Select another domain above.
           </div>
         ) : (
           currentDomainAttributes.map((attr) => (
-            <div key={attr.id} className="bg-[#161D2F] border border-gray-800 rounded-2xl p-6 space-y-4">
+            <div key={attr.id} className="glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl rounded-2xl p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <h3 className="font-bold text-base text-white flex items-center gap-2 font-['Syne',sans-serif]">
                     {attr.name}
                   </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">{attr.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{attr.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-400 uppercase">Rating:</span>
-                  <span className="text-xl font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase font-['Syne',sans-serif]">Rating:</span>
+                  <span className="text-xl font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 font-['Syne',sans-serif]">
                     {attr.score} / 9
                   </span>
                 </div>
@@ -211,7 +211,7 @@ export default function SkillAssessmentPage() {
 
               {/* 1-9 Rubric Buttons */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase font-semibold">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase font-semibold font-['Syne',sans-serif]">
                   <span>1 — Severely underdeveloped</span>
                   <span>5 — Competent school standard</span>
                   <span>9 — Elite school trait</span>
@@ -224,8 +224,8 @@ export default function SkillAssessmentPage() {
                       onClick={() => handleScoreChange(attr.id, num)}
                       className={`py-2 rounded-lg font-bold text-xs transition-all ${
                         attr.score === num
-                          ? 'bg-amber-500 text-gray-950 scale-105 shadow-md'
-                          : 'bg-[#0B0F17] text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-white'
+                          ? 'bg-amber-500 text-slate-950 scale-105 shadow-md font-extrabold'
+                          : 'bg-slate-900/80 text-muted-foreground border border-white/10 hover:border-white/20 hover:text-white'
                       }`}
                     >
                       {num}
@@ -241,7 +241,7 @@ export default function SkillAssessmentPage() {
                   placeholder="Coach observations / evidence note..."
                   value={attr.notes}
                   onChange={(e) => handleNotesChange(attr.id, e.target.value)}
-                  className="w-full px-3.5 py-2 bg-[#0B0F17] border border-gray-800 rounded-lg text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2 bg-slate-950/80 border border-white/10 rounded-lg text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>

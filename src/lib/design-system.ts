@@ -71,8 +71,9 @@ export const FONTS = {
     // Reference CSS vars so inline style={{ fontFamily: D.head }} also gets the
     // Next.js-loaded optimised subset (same vars injected by layout.tsx)
     mono: "var(--font-dm-mono, 'DM Mono', monospace)",     // All numeric/data values
-    head: "var(--font-syne, 'Syne', sans-serif)",          // Headings, labels, UI chrome
-    body: "var(--font-dm-sans, 'DM Sans', sans-serif)",    // Body copy, descriptions
+    head: "var(--font-syne, 'Syne', sans-serif)",          // Main high-impact page titles
+    sans: "var(--font-open-sans, 'Open Sans', sans-serif)",// Clean subheadings & UI controls
+    body: "var(--font-open-sans, 'Open Sans', 'DM Sans', sans-serif)",    // Body copy & descriptions
 } as const;
 
 // ── Composite D token object (matches cricket_os.jsx API) ────────
@@ -90,6 +91,7 @@ export const D = {
     pill: RADIUS.pill,
     mono: FONTS.mono,
     head: FONTS.head,
+    sans: FONTS.sans,
     body: FONTS.body,
 } as const;
 

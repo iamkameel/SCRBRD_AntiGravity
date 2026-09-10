@@ -13,14 +13,44 @@ import {
  * Service for Person management using Firebase Data Connect (PostgreSQL).
  * Replaces the legacy Firestore people collection.
  */
+const FALLBACK_PEOPLE: ListPeopleData['people'] = [
+    {
+        id: 'p-1',
+        firstName: 'David',
+        lastName: 'Miller',
+        preferredName: 'Dave',
+        email: 'd.miller@hiltoncollege.com',
+        status: 'Active',
+        userAccount_on_person: {
+            userRoleAssignments_on_userAccount: [
+                {
+                    id: 'ura-1',
+                    systemRole: { label: 'Head Coach' },
+                    organisation: { id: 'org-1', name: 'Hilton College' }
+                }
+            ]
+        }
+    }
+];
+
 export const personService = {
     /**
      * Get all people with relational joins (roles, orgs)
      */
     async getAll(): Promise<ListPeopleData['people']> {
-        const response = await listPeople(dc);
-        return response.data?.people || [];
+        try {
+            const response = await listPeople(dc);
+            const people = response.data?.people;
+            if (people && people.length > 0) {
+                return people;
+            }
+            return FALLBACK_PEOPLE;
+        } catch (error) {
+            console.warn('DataConnect unavailable, falling back to local person registry.');
+            return FALLBACK_PEOPLE;
+        }
     },
+
 
     /**
      * Create a new person

@@ -5,9 +5,6 @@ const nextConfig = {
             bodySizeLimit: '2mb',
         },
     },
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
     images: {
         remotePatterns: [
             {
@@ -17,6 +14,14 @@ const nextConfig = {
             {
                 protocol: 'https',
                 hostname: 'placehold.co',
+            },
+            {
+                protocol: 'https',
+                hostname: 'api.placeholder.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'via.placeholder.com',
             },
             {
                 protocol: 'https',

@@ -12,7 +12,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Calendar, School as SchoolIcon, Radio } from "lucide-react";
+import { Filter, Calendar, School as SchoolIcon, Radio, UserCheck, Shield } from "lucide-react";
 import { D } from "@/lib/design-system";
 
 export function DashboardFilterBar() {
@@ -32,47 +32,49 @@ export function DashboardFilterBar() {
     loadData();
   }, []);
 
+  const simulatedRole = filters.simulatedRole || "default";
+
   return (
     <div 
-      className="flex flex-wrap items-center gap-4 p-4 rounded-3xl mb-8 sticky top-4 z-50 shadow-2xl border transition-all duration-500 backdrop-blur-xl"
+      className="flex flex-wrap items-center gap-4 p-4 rounded-2xl mb-8 sticky top-4 z-50 shadow-2xl border transition-all duration-500 backdrop-blur-xl"
       style={{ 
         background: `${D.surf1}f0`, 
         border: `1px solid ${D.border}`,
         boxShadow: `0 20px 40px -20px ${D.indigo}15`
       }}
     >
-      <div className="flex items-center gap-3 mr-4 pr-6" style={{ borderRight: `1px solid ${D.border}` }}>
+      <div className="flex items-center gap-3 mr-2 pr-4 border-r border-white/10">
         <div 
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
           style={{ background: `${D.indigo}15`, border: `1px solid ${D.indigo}30`, color: D.indigo }}
         >
           <Filter className="h-4 w-4" />
         </div>
         <div>
-           <span className="text-[10px] font-black uppercase tracking-[0.2em] block leading-none" style={{ color: D.textMuted }}>SYSTEM</span>
-           <span className="text-[12px] font-black uppercase tracking-tight italic" style={{ color: D.textPrimary, fontFamily: D.head }}>CONTEXT</span>
+           <span className="text-[9px] font-semibold uppercase tracking-wider block leading-none text-slate-400" style={{ fontFamily: D.sans }}>SYSTEM</span>
+           <span className="text-xs font-bold uppercase tracking-tight text-white" style={{ fontFamily: D.head }}>CONTEXT</span>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 flex-1">
+      <div className="flex flex-wrap items-center gap-4 flex-1">
         {/* Season Filter */}
-        <div className="flex items-center gap-3">
-          <Calendar className="h-4 w-4 opacity-40" style={{ color: D.textMuted }} />
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-slate-400 opacity-60" />
           <Select 
             value={filters.seasonId} 
             onValueChange={(val) => setFilters({ seasonId: val })}
           >
             <SelectTrigger 
-              className="w-[180px] rounded-xl font-black text-[10px] uppercase tracking-widest h-10 transition-all border-none"
-              style={{ background: D.surf2, color: D.textSecondary }}
+              className="w-[150px] rounded-xl font-medium text-xs h-9 transition-all border-none text-slate-200"
+              style={{ background: D.surf2 }}
             >
               <SelectValue placeholder="ALL SEASONS" />
             </SelectTrigger>
             <SelectContent className="rounded-xl p-1 border shadow-2xl" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
-              <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest rounded-lg">ALL SEASONS</SelectItem>
+              <SelectItem value="all" className="text-xs font-medium rounded-lg">ALL SEASONS</SelectItem>
               {seasons.map((season) => (
-                <SelectItem key={season.id} value={season.id} className="text-[10px] font-black uppercase tracking-widest rounded-lg">
-                  {season.name.toUpperCase()}
+                <SelectItem key={season.id} value={season.id} className="text-xs font-medium rounded-lg">
+                  {season.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -80,40 +82,66 @@ export function DashboardFilterBar() {
         </div>
 
         {/* School Filter */}
-        <div className="flex items-center gap-3">
-          <SchoolIcon className="h-4 w-4 opacity-40" style={{ color: D.textMuted }} />
+        <div className="flex items-center gap-2">
+          <SchoolIcon className="h-4 w-4 text-slate-400 opacity-60" />
           <Select 
             value={filters.schoolId} 
             onValueChange={(val) => setFilters({ schoolId: val })}
           >
             <SelectTrigger 
-              className="w-[220px] rounded-xl font-black text-[10px] uppercase tracking-widest h-10 transition-all border-none"
-              style={{ background: D.surf2, color: D.textSecondary }}
+              className="w-[190px] rounded-xl font-medium text-xs h-9 transition-all border-none text-slate-200"
+              style={{ background: D.surf2 }}
             >
               <SelectValue placeholder="ALL INSTITUTIONS" />
             </SelectTrigger>
             <SelectContent className="rounded-xl p-1 border shadow-2xl" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
-              <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest rounded-lg">ALL SCHOOLS</SelectItem>
+              <SelectItem value="all" className="text-xs font-medium rounded-lg">ALL SCHOOLS</SelectItem>
               {schools.map((school) => (
-                <SelectItem key={school.id} value={school.id} className="text-[10px] font-black uppercase tracking-widest rounded-lg">
-                  {school.name.toUpperCase()}
+                <SelectItem key={school.id} value={school.id} className="text-xs font-medium rounded-lg">
+                  {school.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        {/* Interactive Persona / Role Simulator */}
+        <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+          <UserCheck className="h-4 w-4 text-indigo-400 opacity-80" />
+          <Select 
+            value={simulatedRole} 
+            onValueChange={(val) => setFilters({ simulatedRole: val === "default" ? undefined : val })}
+          >
+            <SelectTrigger 
+              className="w-[190px] rounded-xl font-semibold text-xs h-9 transition-all border-none text-indigo-300"
+              style={{ background: `${D.indigo}15`, border: `1px solid ${D.indigo}30` }}
+            >
+              <SelectValue placeholder="PERSONA SIMULATOR" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl p-1 border shadow-2xl" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
+              <SelectItem value="default" className="text-xs font-medium rounded-lg">AUTO (AUTHENTICATED)</SelectItem>
+              <SelectItem value="superadmin" className="text-xs font-semibold text-indigo-400 rounded-lg">SYSTEM ARCHITECT</SelectItem>
+              <SelectItem value="coach" className="text-xs font-semibold text-amber-400 rounded-lg">HEAD COACH</SelectItem>
+              <SelectItem value="sportsmaster" className="text-xs font-semibold text-sky-400 rounded-lg">SPORTSMASTER</SelectItem>
+              <SelectItem value="matchofficial" className="text-xs font-semibold text-emerald-400 rounded-lg">UMPIRE / SCORER</SelectItem>
+              <SelectItem value="player" className="text-xs font-semibold text-rose-400 rounded-lg">PLAYER OPS</SelectItem>
+              <SelectItem value="groundskeeper" className="text-xs font-semibold text-violet-400 rounded-lg">GROUNDSKEEPER</SelectItem>
+              <SelectItem value="driver" className="text-xs font-semibold text-teal-400 rounded-lg">LOGISTICS / DRIVER</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="hidden lg:flex items-center gap-3 pl-8 ml-auto" style={{ borderLeft: `1px solid ${D.border}` }}>
-        <div className="flex flex-col items-end mr-3">
-           <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40" style={{ color: D.textMuted }}>REALTIME ENGINE</span>
-           <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.emerald }}>SYNC ACTIVE</span>
+      <div className="hidden lg:flex items-center gap-3 pl-6 ml-auto border-l border-white/10">
+        <div className="flex flex-col items-end mr-2">
+           <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400" style={{ fontFamily: D.sans }}>REALTIME TELEMETRY</span>
+           <span className="text-xs font-bold text-emerald-400" style={{ fontFamily: D.mono }}>SYNC ACTIVE</span>
         </div>
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center animate-pulse"
+          className="w-9 h-9 rounded-full flex items-center justify-center animate-pulse"
           style={{ background: `${D.emerald}10`, border: `1px solid ${D.emerald}20` }}
         >
-           <Radio className="h-4 w-4" style={{ color: D.emerald }} />
+           <Radio className="h-4 w-4 text-emerald-400" />
         </div>
       </div>
     </div>

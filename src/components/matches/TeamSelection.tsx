@@ -46,10 +46,14 @@ export function TeamSelection({
   isReadOnly = false,
   onSave
 }: TeamSelectionProps) {
-  const [playingXI, setPlayingXI] = useState<string[]>(initialSelection);
-  const [reserves, setReserves] = useState<string[]>(initialReserves);
-  const [captain, setCaptain] = useState<string>(initialCaptain);
-  const [viceCaptain, setViceCaptain] = useState<string>(initialViceCaptain);
+  const [playingXI, setPlayingXI] = useState<string[]>(
+    initialSelection.length > 0 ? initialSelection : squad.slice(0, 11).map(p => p.id)
+  );
+  const [reserves, setReserves] = useState<string[]>(
+    initialReserves.length > 0 ? initialReserves : squad.slice(11, 15).map(p => p.id)
+  );
+  const [captain, setCaptain] = useState<string>(initialCaptain || (squad[0]?.id || ""));
+  const [viceCaptain, setViceCaptain] = useState<string>(initialViceCaptain || (squad[1]?.id || ""));
 
   const handlePlayerToggle = (playerId: string) => {
     if (isReadOnly) return;
@@ -127,12 +131,12 @@ export function TeamSelection({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Playing XI */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
+        <Card className="p-5 glass-card border border-white/10 bg-slate-900/60 backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+            <h4 className="font-semibold flex items-center gap-2 text-white">
+              <Shield className="h-4 w-4 text-emerald-400" />
               Playing XI
-              <Badge variant={playingXI.length === 11 ? "default" : "outline"}>
+              <Badge variant={playingXI.length === 11 ? "default" : "outline"} className={playingXI.length === 11 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "text-amber-300 border-amber-500/30"}>
                 {playingXI.length}/11
               </Badge>
             </h4>

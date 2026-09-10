@@ -5,7 +5,8 @@ import {
   Truck, Wallet, Handshake, BookOpen, HelpCircle, Presentation, Dumbbell,
   ClipboardList, Eye, Layers, School as SchoolIcon, MapPin, Shovel,
   Crosshair, GitCompareArrows, GraduationCap, BarChart3, Medal,
-  Calendar, Users2, Database, CircleHelp, Target, Terminal, MessageSquare
+  Calendar, Users2, Database, CircleHelp, Target, Terminal, MessageSquare,
+  Waves, Flag, Tv
 } from 'lucide-react';
 
 export interface NavLink {
@@ -53,6 +54,18 @@ export const navGroups: NavGroup[] = [
     ]
   },
   {
+    id: 'sports-engines',
+    label: 'Sport Engines',
+    icon: Waves,
+    key: 'group-sports-engines',
+    defaultOpen: true,
+    links: [
+      { href: '/swimming', label: 'Swimming Gala Engine', icon: Waves, key: 'swimming-gala' },
+      { href: '/athletics', label: 'Athletics Track & Field', icon: Flag, key: 'athletics-meet' },
+      { href: '/media', label: 'Broadcast & Media', icon: Tv, key: 'broadcast-media' },
+    ]
+  },
+  {
     id: 'matches',
     label: 'Matches',
     icon: Crosshair,
@@ -64,6 +77,7 @@ export const navGroups: NavGroup[] = [
       { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring' },
       { href: '/umpire-review', label: 'Umpire Review', icon: Eye, key: 'umpire-review' },
       { href: '/fixtures/multi-create', label: 'Multi-Fixture Tool', icon: Sparkles, key: 'multi-fixture-tool' },
+      { href: '/match-operations', label: 'Match Operations', icon: FilePenLine, key: 'match-operations' },
       { href: '/seasons', label: 'Seasons', icon: Calendar, key: 'seasons' },
     ]
   },

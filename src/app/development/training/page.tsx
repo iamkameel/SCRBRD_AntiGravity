@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Dumbbell, Target, Plus, CheckCircle, Clock, Users, ArrowRight } from 'lucide-react';
+import { Calendar, Dumbbell, Target, Plus, CheckCircle, Clock, Users, ArrowRight, BrainCircuit } from 'lucide-react';
+import { PlayerMicroPlanGenerator } from '@/components/coaches/PlayerMicroPlanGenerator';
+import { AICoachAssistantWidget } from '@/components/coach/AICoachAssistantWidget';
+import { D } from '@/lib/design-system';
 
 interface DrillItem {
   id: string;
@@ -22,6 +25,7 @@ const DRILL_LIBRARY: DrillItem[] = [
 ];
 
 export default function TrainingPlannerPage() {
+  const [activeTab, setActiveTab] = useState<'micro_plans' | 'squad_planner'>('micro_plans');
   const [sessionTitle, setSessionTitle] = useState('');
   const [team, setTeam] = useState('1st XI');
   const [sessionDate, setSessionDate] = useState('2026-09-15');
@@ -47,165 +51,199 @@ export default function TrainingPlannerPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0B0F17] text-white p-6 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-800">
-        <div>
-          <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
-            <Dumbbell className="w-4 h-4" /> Coach Development Hub
-          </div>
-          <h1 className="text-3xl font-bold text-white mt-1">Training Session Planner</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Build structured training sessions linked to player development needs and drill taxonomy.
-          </p>
-        </div>
+    <main className="min-h-screen bg-[#0B0F17] text-white p-6 space-y-8 max-w-6xl mx-auto">
+      {/* Top Mode Selector Tabs */}
+      <div className="flex items-center gap-4 border-b border-gray-800 pb-4">
+        <button
+          onClick={() => setActiveTab('micro_plans')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === 'micro_plans'
+              ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-lg'
+              : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white'
+          }`}
+        >
+          <BrainCircuit className="w-4 h-4 text-sky-400" /> Player Micro-Plan Generator
+        </button>
 
         <button
-          onClick={handleSaveSession}
-          disabled={!sessionTitle.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-gray-950 font-bold text-sm rounded-xl transition-colors shadow-lg"
+          onClick={() => setActiveTab('squad_planner')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            activeTab === 'squad_planner'
+              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-lg'
+              : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white'
+          }`}
         >
-          <CheckCircle className="w-4 h-4" /> Save Training Plan
+          <Dumbbell className="w-4 h-4 text-amber-400" /> Squad Training Session Planner
         </button>
       </div>
 
-      {savedSuccess && (
-        <div className="flex items-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-semibold">
-          <CheckCircle className="w-5 h-5" /> Training session saved and assigned to team log!
+      {activeTab === 'micro_plans' ? (
+        <div className="space-y-8">
+          <AICoachAssistantWidget />
+          <PlayerMicroPlanGenerator />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Squad Planner Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-800">
+            <div>
+              <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
+                <Dumbbell className="w-4 h-4" /> Coach Development Hub
+              </div>
+              <h1 className="text-3xl font-bold text-white mt-1">Training Session Planner</h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Build structured training sessions linked to player development needs and drill taxonomy.
+              </p>
+            </div>
+
+            <button
+              onClick={handleSaveSession}
+              disabled={!sessionTitle.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-gray-950 font-bold text-sm rounded-xl transition-colors shadow-lg"
+            >
+              <CheckCircle className="w-4 h-4" /> Save Training Plan
+            </button>
+          </div>
+
+          {savedSuccess && (
+            <div className="flex items-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-semibold">
+              <CheckCircle className="w-5 h-5" /> Training session saved and assigned to team log!
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column — Session Details Form */}
+            <div className="lg:col-span-1 bg-[#161D2F] border border-gray-800 rounded-2xl p-6 space-y-5">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-amber-400" /> Session Details
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                    Session Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Death Bowling & Strike Rotation Block"
+                    value={sessionTitle}
+                    onChange={(e) => setSessionTitle(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                    Target Squad / Unit
+                  </label>
+                  <select
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="1st XI">1st XI Squad</option>
+                    <option value="2nd XI">2nd XI Squad</option>
+                    <option value="Under 15A">Under 15A Squad</option>
+                    <option value="Batting Unit">Batting Unit Only</option>
+                    <option value="Bowling Unit">Bowling Unit Only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                    Scheduled Date
+                  </label>
+                  <input
+                    type="date"
+                    value={sessionDate}
+                    onChange={(e) => setSessionDate(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                    Coach Objectives & Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Key coaching points, scenario goals..."
+                    value={coachNotes}
+                    onChange={(e) => setCoachNotes(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Total Duration</span>
+                  <span className="font-bold text-amber-400">{totalDuration} mins</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400 flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Selected Drills</span>
+                  <span className="font-bold text-white">{selectedDrillIds.length} drills</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column — Drill Selection Library */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Target className="w-5 h-5 text-amber-400" /> Drill Taxonomy Library
+                </h2>
+                <span className="text-xs text-gray-400 font-semibold">{DRILL_LIBRARY.length} available drills</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {DRILL_LIBRARY.map((drill) => {
+                  const isSelected = selectedDrillIds.includes(drill.id);
+                  return (
+                    <div
+                      key={drill.id}
+                      onClick={() => toggleDrill(drill.id)}
+                      className={`p-5 rounded-2xl border cursor-pointer transition-all space-y-3 ${
+                        isSelected
+                          ? 'bg-amber-500/10 border-amber-400 text-white shadow-lg'
+                          : 'bg-[#161D2F] border-gray-800 text-gray-300 hover:border-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                            {drill.category}
+                          </span>
+                          <h3 className="font-bold text-sm text-white mt-1.5">{drill.name}</h3>
+                        </div>
+                        <div className={`p-1.5 rounded-full border ${isSelected ? 'bg-amber-400 text-gray-950 border-amber-400' : 'border-gray-700 text-gray-600'}`}>
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800/60">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> {drill.durationMins} mins
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          drill.intensity === 'High' ? 'bg-rose-500/20 text-rose-300' : 'bg-blue-500/20 text-blue-300'
+                        }`}>
+                          {drill.intensity} Intensity
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-gray-400">
+                        Target Attribute: <strong className="text-gray-200">{drill.linkedAttribute}</strong>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column — Session Details Form */}
-        <div className="lg:col-span-1 bg-[#161D2F] border border-gray-800 rounded-2xl p-6 space-y-5">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-amber-400" /> Session Details
-          </h2>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                Session Title *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Death Bowling & Strike Rotation Block"
-                value={sessionTitle}
-                onChange={(e) => setSessionTitle(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                Target Squad / Unit
-              </label>
-              <select
-                value={team}
-                onChange={(e) => setTeam(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
-              >
-                <option value="1st XI">1st XI Squad</option>
-                <option value="2nd XI">2nd XI Squad</option>
-                <option value="Under 15A">Under 15A Squad</option>
-                <option value="Batting Unit">Batting Unit Only</option>
-                <option value="Bowling Unit">Bowling Unit Only</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                Scheduled Date
-              </label>
-              <input
-                type="date"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
-                Coach Objectives & Notes
-              </label>
-              <textarea
-                rows={3}
-                placeholder="Key coaching points, scenario goals..."
-                value={coachNotes}
-                onChange={(e) => setCoachNotes(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0B0F17] border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-gray-800 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-400 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Total Duration</span>
-              <span className="font-bold text-amber-400">{totalDuration} mins</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-400 flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Selected Drills</span>
-              <span className="font-bold text-white">{selectedDrillIds.length} drills</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column — Drill Selection Library */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-amber-400" /> Drill Taxonomy Library
-            </h2>
-            <span className="text-xs text-gray-400 font-semibold">{DRILL_LIBRARY.length} available drills</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {DRILL_LIBRARY.map((drill) => {
-              const isSelected = selectedDrillIds.includes(drill.id);
-              return (
-                <div
-                  key={drill.id}
-                  onClick={() => toggleDrill(drill.id)}
-                  className={`p-5 rounded-2xl border cursor-pointer transition-all space-y-3 ${
-                    isSelected
-                      ? 'bg-amber-500/10 border-amber-400 text-white shadow-lg'
-                      : 'bg-[#161D2F] border-gray-800 text-gray-300 hover:border-gray-700'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                        {drill.category}
-                      </span>
-                      <h3 className="font-bold text-sm text-white mt-1.5">{drill.name}</h3>
-                    </div>
-                    <div className={`p-1.5 rounded-full border ${isSelected ? 'bg-amber-400 text-gray-950 border-amber-400' : 'border-gray-700 text-gray-600'}`}>
-                      <CheckCircle className="w-4 h-4" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800/60">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {drill.durationMins} mins
-                    </span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      drill.intensity === 'High' ? 'bg-rose-500/20 text-rose-300' : 'bg-blue-500/20 text-blue-300'
-                    }`}>
-                      {drill.intensity} Intensity
-                    </span>
-                  </div>
-
-                  <div className="text-[11px] text-gray-400">
-                    Target Attribute: <strong className="text-gray-200">{drill.linkedAttribute}</strong>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </main>
   );
 }

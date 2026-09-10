@@ -347,7 +347,24 @@ export function MatchManagementClient({
             </div>
           </div>
           <div className="flex gap-3">
-             <Button variant="outline" className="border-white/10 hover:bg-white/5" disabled={isSaving}>Auto-Fill Squad</Button>
+             <Button 
+                variant="outline" 
+                className="border-white/10 hover:bg-white/5 text-white" 
+                disabled={isSaving}
+                onClick={() => {
+                  if (homePlayers && homePlayers.length > 0) {
+                    const xi = homePlayers.slice(0, 11).map(p => p.id);
+                    const res = homePlayers.slice(11, 15).map(p => p.id);
+                    setSelectedXIIds(xi);
+                    setSelectedReservesIds(res);
+                    toast.success(`Auto-filled Playing XI (${xi.length}) and Reserves (${res.length})`);
+                  } else {
+                    toast.error("No squad players available to auto-fill");
+                  }
+                }}
+              >
+                Auto-Fill Squad
+              </Button>
              <Button 
                 onClick={handleSaveSquad} 
                 className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex items-center gap-2"

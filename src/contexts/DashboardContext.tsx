@@ -5,6 +5,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface DashboardFilters {
   seasonId: string;
   schoolId: string;
+  simulatedRole?: string;
+  activeDeckMode?: string;
 }
 
 interface DashboardContextType {
@@ -19,6 +21,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [filters, setFiltersState] = useState<DashboardFilters>({
     seasonId: "all",
     schoolId: "all",
+    simulatedRole: undefined,
+    activeDeckMode: "operations",
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,7 +31,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const savedFilters = localStorage.getItem("scrbrd_dashboard_filters");
     if (savedFilters) {
       try {
-        setFiltersState(JSON.parse(savedFilters));
+        setFiltersState((prev) => ({ ...prev, ...JSON.parse(savedFilters) }));
       } catch (e) {
         console.error("Failed to parse saved filters", e);
       }

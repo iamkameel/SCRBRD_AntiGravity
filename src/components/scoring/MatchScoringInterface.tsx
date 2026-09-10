@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { WagonWheelScorer } from './WagonWheelScorer';
+import { WagonWheelGrid, ShotEventData } from './WagonWheelGrid';
+import { WagonWheelHeatmap } from './WagonWheelHeatmap';
 import { PlayerSelector } from './PlayerSelector';
 import { 
   Undo, Save, Play, Pause, RotateCcw,
@@ -137,13 +139,21 @@ export function MatchScoringInterface({
     ? (((targetScore - innings.totalRuns) / (20 - totalOvers))).toFixed(2)
     : null;
 
-  const handleShotRecorded = (angle: number, distance: number) => {
+  const [shotsHistory, setShotsHistory] = useState<ShotEventData[]>([]);
+
+  const handleShotRecorded = (shot: ShotEventData | { angle: number; distance: number }) => {
+    const angle = 'angle' in shot ? shot.angle : 0;
+    const distance = 'distance' in shot ? shot.distance : 0;
+    
     setCurrentBall(prev => ({
       ...prev,
       shotAngle: angle,
       shotDistance: distance
     }));
-    setShowWagonWheel(false);
+
+    if ('zoneInfo' in shot) {
+      setShotsHistory(prev => [...prev, shot as ShotEventData]);
+    }
   };
 
   const handleRunsSelect = (runs: number) => {
@@ -641,23 +651,30 @@ export function MatchScoringInterface({
           </Button>
         </div>
 
-        {/* Wagon Wheel Scorer */}
-        <div>
+        {/* Wagon Wheel Scorer & Telemetry */}
+        <div className="space-y-6">
           {showWagonWheel ? (
-            <WagonWheelScorer 
-              onShotRecorded={handleShotRecorded}
-              disabled={isPaused}
-            />
+            <div className="space-y-6">
+              <Card className="p-6 bg-slate-900/90 border border-white/10 shadow-2xl backdrop-blur-xl">
+                <WagonWheelGrid 
+                  onShotRecorded={handleShotRecorded}
+                  shotsHistory={shotsHistory}
+                  selectedRuns={selectedRuns}
+                  disabled={isPaused}
+                />
+              </Card>
+              <WagonWheelHeatmap shots={shotsHistory} />
+            </div>
           ) : (
-            <Card className="p-12 text-center h-full flex flex-col items-center justify-center">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Wagon Wheel Hidden</h3>
+            <Card className="p-12 text-center h-full flex flex-col items-center justify-center border-dashed border-white/10 bg-slate-900/40">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold mb-2">Wagon Wheel Telemetry Hidden</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Click &quot;Show Wagon Wheel&quot; to record shot placement
+                Click &quot;Show Wagon Wheel&quot; to open the 2D vector field canvas
               </p>
               {currentBall.shotAngle !== undefined && (
-                <Badge variant="secondary">
-                  Last: {currentBall.shotAngle}° - {currentBall.shotDistance}%
+                <Badge variant="secondary" className="font-mono">
+                  Last Shot Vector: {currentBall.shotAngle}° @ {currentBall.shotDistance}% distance
                 </Badge>
               )}
             </Card>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Syne, DM_Mono, DM_Sans } from 'next/font/google';
+import { Syne, DM_Mono, DM_Sans, Open_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
@@ -9,11 +9,19 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { DashboardProvider } from '@/contexts/DashboardContext';
 import { AppShell } from "@/components/layout/AppShell";
 
-// UIX Spec §3.1: Syne — headings/labels/UI chrome
+// UIX Spec §3.1: Syne — main high-impact headers
 const syne = Syne({
   variable: '--font-syne',
   subsets: ['latin'],
   weight: ['600', '700', '800'],
+  display: 'swap',
+});
+
+// Open Sans — clean UI, subheadings, interface controls
+const openSans = Open_Sans({
+  variable: '--font-open-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -25,7 +33,7 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
-// UIX Spec §3.1: DM Sans — body copy, descriptions
+// UIX Spec §3.1: DM Sans — body copy
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   subsets: ['latin'],
@@ -45,7 +53,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${syne.variable} ${dmMono.variable} ${dmSans.variable} font-body antialiased bg-background text-foreground`} suppressHydrationWarning>
+      <body className={`${syne.variable} ${openSans.variable} ${dmMono.variable} ${dmSans.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
         <Providers>
           <AuthProvider>
             <PermissionViewProvider>

@@ -22,30 +22,25 @@ interface SectionHeaderProps {
 export function SectionHeader({ title, sub, icon, color = D.indigo, actions, className = '' }: SectionHeaderProps) {
   return (
     <div
-      className={`flex items-start justify-between gap-6 mb-8 group ${className}`}
-      style={{ fontFamily: D.head }}
+      className={`flex items-start justify-between gap-6 mb-6 group ${className}`}
     >
-      {/* Strategic Left Accent Unit */}
-      <div className="flex items-start gap-4 min-w-0">
-        <div className="relative shrink-0 mt-1.5">
+      {/* Left Accent Bar & Title */}
+      <div className="flex items-start gap-3.5 min-w-0">
+        <div className="relative shrink-0 mt-1">
            <div 
-             className="w-1.5 h-10 rounded-full transition-all group-hover:scale-y-110"
+             className="w-1 h-7 rounded-full transition-all group-hover:scale-y-110 opacity-80"
              style={{ 
                background: color,
-               boxShadow: `0 0 15px ${color}30`
+               boxShadow: `0 0 10px ${color}30`
              }}
-           />
-           <div 
-             className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-background"
-             style={{ background: color }}
            />
         </div>
 
         <div className="min-w-0 pt-0.5">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {icon && <div className="shrink-0">{icon}</div>}
             <h2
-              className="text-2xl font-black italic tracking-tighter uppercase leading-none truncate"
+              className="text-xl md:text-2xl font-bold tracking-tight text-slate-100 truncate"
               style={{
                 fontFamily: D.head,
                 color: D.textPrimary,
@@ -56,9 +51,9 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
           </div>
           {sub && (
             <p
-              className="text-[10px] font-black uppercase tracking-[0.2em] mt-2 opacity-50 truncate"
+              className="text-xs font-medium tracking-normal mt-1 opacity-70 truncate"
               style={{
-                fontFamily: D.body,
+                fontFamily: D.sans,
                 color: D.textMuted,
               }}
             >
@@ -68,7 +63,7 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
         </div>
       </div>
 
-      {/* Strategic Action Hub */}
+      {/* Action Hub */}
       {actions && (
         <div className="shrink-0 flex items-center gap-3">
           {actions}

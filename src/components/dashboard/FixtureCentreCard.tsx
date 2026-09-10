@@ -123,16 +123,16 @@ export default function FixtureCentreCard({
 
     if (matches.length === 0) {
       return (
-        <div className="py-24 text-center rounded-3xl border border-dashed flex flex-col items-center justify-center gap-6" style={{ background: D.surf2, borderColor: D.border }}>
-          <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-inner" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
-            <Activity className="h-8 w-8 opacity-20" />
+        <div className="py-16 text-center rounded-2xl border border-dashed flex flex-col items-center justify-center gap-4 mt-6" style={{ background: D.surf2, borderColor: D.border }}>
+          <div className="h-12 w-12 rounded-xl flex items-center justify-center border shadow-inner" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
+            <Activity className="h-6 w-6 opacity-30 text-indigo-400" />
           </div>
           <div>
-            <p className="text-[12px] font-black uppercase tracking-[0.3em]" style={{ color: D.textPrimary }}>
-                {type === 'live' ? 'NO ACTIVE OPERATIONS' : type === 'results' ? 'NO ARCHIVED DATA' : 'NO SCHEDULED FIXTURES'}
+            <p className="text-xs font-semibold text-slate-300" style={{ fontFamily: D.sans }}>
+                {type === 'live' ? 'No Active Operations' : type === 'results' ? 'No Match Results' : 'No Scheduled Fixtures'}
             </p>
-            <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-40 px-8" style={{ color: D.textMuted }}>
-                Strategic cycle complete. No matching records found in the current temporal window.
+            <p className="text-[11px] font-normal text-slate-400 mt-1 opacity-70 px-8" style={{ fontFamily: D.sans }}>
+                No matching records found in the current temporal window.
             </p>
           </div>
         </div>
@@ -140,45 +140,45 @@ export default function FixtureCentreCard({
     }
 
     return (
-      <div className="grid gap-4 mt-8">
+      <div className="grid gap-3 mt-6">
         <AnimatePresence mode="popLayout">
           {matches.map((match, idx) => (
             <motion.div
               key={`${match.id}-${idx}`}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: idx * 0.05 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ delay: idx * 0.04 }}
             >
               <Link href={`/matches/${match.id}`} className="block group">
                 <div 
-                  className="flex items-center justify-between p-6 rounded-2xl border transition-all relative overflow-hidden group-hover:bg-black/5"
+                  className="flex items-center justify-between p-4 sm:p-5 rounded-xl border transition-all relative overflow-hidden group-hover:border-white/20 group-hover:bg-white/[0.02]"
                   style={{ background: D.surf2, border: `1px solid ${D.border}` }}
                 >
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity pointer-events-none" style={{ background: `linear-gradient(90deg, ${type === 'live' ? D.rose : D.indigo}, transparent)` }} />
                   
                   {/* Strategic Scoring Hub */}
-                  <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] gap-4 sm:gap-12 items-center">
+                  <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-8 items-center">
                     <div className="text-right">
-                      <span className="text-sm font-black uppercase italic tracking-tighter sm:text-2xl truncate block group-hover:translate-x-[-8px] transition-all duration-300" style={{ fontFamily: D.head, color: D.textPrimary }}>
+                      <span className="text-sm sm:text-base font-semibold text-slate-100 truncate block group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
                         {match.homeTeamName}
                       </span>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>HOME UNIT</span>
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Home</span>
                     </div>
 
-                    <div className="flex flex-col items-center min-w-[140px]">
+                    <div className="flex flex-col items-center min-w-[110px]">
                       {type === 'upcoming' ? (
                         <div 
-                          className="px-6 py-2 rounded-xl text-[10px] font-black tracking-[0.4em] border shadow-inner italic"
-                          style={{ background: D.surf1, borderColor: D.border, color: D.textMuted }}
+                          className="px-4 py-1 rounded-lg text-xs font-semibold text-slate-400 border bg-slate-900/60"
+                          style={{ borderColor: D.border }}
                         >
-                          VERSUS
+                          VS
                         </div>
                       ) : (
                         <div 
-                          className="text-2xl font-black italic tracking-tighter px-6 py-2 rounded-xl shadow-2xl border flex items-center gap-3 transition-transform group-hover:scale-110"
+                          className="text-sm sm:text-base font-bold tracking-tight px-4 py-1.5 rounded-lg border flex items-center gap-2 transition-transform group-hover:scale-105"
                           style={{ 
-                            background: type === 'live' ? `${D.rose}10` : D.surf1, 
+                            background: type === 'live' ? `${D.rose}15` : D.surf1, 
                             color: type === 'live' ? D.rose : D.textPrimary,
                             borderColor: type === 'live' ? `${D.rose}30` : D.border,
                             fontFamily: D.mono
@@ -190,34 +190,34 @@ export default function FixtureCentreCard({
                     </div>
 
                     <div className="text-left">
-                      <span className="text-sm font-black uppercase italic tracking-tighter sm:text-2xl truncate block group-hover:translate-x-[8px] transition-all duration-300" style={{ fontFamily: D.head, color: D.textPrimary }}>
+                      <span className="text-sm sm:text-base font-semibold text-slate-100 truncate block group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
                         {match.awayTeamName}
                       </span>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>AWAY UNIT</span>
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Away</span>
                     </div>
                   </div>
 
                   {/* Operational Status Panel */}
-                  <div className="hidden lg:flex flex-col items-end ml-10 min-w-[180px] pl-10 border-l" style={{ borderColor: D.border }}>
-                    <div className="flex items-center gap-3">
+                  <div className="hidden lg:flex flex-col items-end ml-6 min-w-[160px] pl-6 border-l" style={{ borderColor: D.border }}>
+                    <div className="flex items-center gap-2">
                       {type === 'live' && (
-                        <span className="relative flex h-2.5 w-2.5">
+                        <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: D.rose }}></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: D.rose }}></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: D.rose }}></span>
                         </span>
                       )}
-                      <span className="text-[10px] font-black uppercase tracking-widest leading-none" style={{ color: type === 'live' ? D.rose : D.textPrimary }}>
+                      <span className="text-xs font-semibold" style={{ color: type === 'live' ? D.rose : D.textPrimary, fontFamily: D.sans }}>
                         {type === 'upcoming' ? formatMatchDateTime(match) : getMatchStatusText(match.status, match.state)}
                       </span>
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-[0.2em] mt-2.5 opacity-40 flex items-center gap-2 group-hover:opacity-100 transition-opacity" style={{ color: D.textMuted }}>
-                      <MapPin className="h-3 w-3" />
-                      {match.venue || 'SYSTEM UNDEFINED'}
+                    <div className="text-[11px] font-normal text-slate-400 mt-1 flex items-center gap-1.5" style={{ fontFamily: D.sans }}>
+                      <MapPin className="h-3 w-3 text-slate-400" />
+                      {match.venue || 'TBA'}
                     </div>
                   </div>
                   
-                  <div className="ml-8 p-3 rounded-full transition-all group-hover:translate-x-3 shadow-inner" style={{ background: D.surf1, color: D.textMuted, border: `1px solid ${D.border}` }}>
-                    <ChevronRight className="h-5 w-5 opacity-40 group-hover:opacity-100 group-hover:text-indigo-500 transition-all" />
+                  <div className="ml-5 p-2 rounded-lg transition-all group-hover:translate-x-1" style={{ background: D.surf1, color: D.textMuted, border: `1px solid ${D.border}` }}>
+                    <ChevronRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
                   </div>
                 </div>
               </Link>
@@ -230,68 +230,65 @@ export default function FixtureCentreCard({
 
   return (
     <div 
-      className={cn("rounded-[2.5rem] border shadow-2xl overflow-hidden transition-all duration-700", className)}
+      className={cn("rounded-2xl border shadow-lg overflow-hidden transition-all duration-300", className)}
       style={{ background: D.surf1, borderColor: D.border }}
     >
-      {/* Dynamic Header Hub */}
-      <div className="p-10 pb-6 relative overflow-hidden border-b" style={{ borderColor: D.border, background: D.surf2 }}>
-        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-          <Activity className="h-40 w-40" style={{ color: D.indigo }} />
-        </div>
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+      {/* Header */}
+      <div className="p-6 md:p-8 pb-5 relative overflow-hidden border-b" style={{ borderColor: D.border, background: D.surf2 }}>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div>
-            <h2 className="text-4xl font-black tracking-tighter uppercase italic flex items-center gap-4" style={{ fontFamily: D.head, color: D.textPrimary }}>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3" style={{ fontFamily: D.head }}>
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border transition-transform group-hover:scale-105"
+                className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
                 style={{ background: `${D.indigo}15`, border: `1px solid ${D.indigo}30`, color: D.indigo }}
               >
-                <Activity className="h-7 w-7 animate-pulse" />
+                <Activity className="h-5 w-5" />
               </div>
-              FIXTURE <span style={{ color: D.indigo }}>CENTRE</span>
+              Fixture <span style={{ color: D.indigo }}>Centre</span>
             </h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] mt-3 italic flex items-center gap-3 opacity-60" style={{ color: D.textMuted }}>
-              <Clock className="w-4 h-4" /> REAL-TIME MULTI-SPORT OPERATIONAL GATEWAY
+            <p className="text-xs font-normal text-slate-400 mt-1.5 flex items-center gap-2" style={{ fontFamily: D.sans }}>
+              <Clock className="w-3.5 h-3.5 text-indigo-400" /> Real-time multi-sport operational gateway
             </p>
           </div>
-          <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex gap-3 w-full md:w-auto">
             <Button 
                 variant="outline" 
-                className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border shadow-sm transition-all hover:translate-y-[-2px] active:scale-95"
+                className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-5 h-10 border hover:bg-white/5"
                 style={{ background: D.surf1, borderColor: D.border, color: D.textPrimary }}
                 asChild
             >
-              <Link href="/fixtures/create">INITIALIZE</Link>
+              <Link href="/fixtures/create">Initialize</Link>
             </Button>
             <Button 
-                className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl shadow-indigo-500/20 transition-all hover:scale-[1.03] active:scale-95"
+                className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 shadow-lg"
                 style={{ background: D.indigo, color: 'white' }}
                 asChild
             >
-              <Link href="/fixtures">DIRECTORY</Link>
+              <Link href="/fixtures">Directory</Link>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Strategic Command Tabs */}
-      <div className="p-10">
+      {/* Tabs */}
+      <div className="p-6 md:p-8 pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="p-1.5 rounded-2xl border flex w-full shadow-inner" style={{ background: D.surf2, borderColor: D.border }}>
+          <TabsList className="p-1 rounded-xl border flex w-full" style={{ background: D.surf2, borderColor: D.border }}>
             {[
-              { value: "live", label: "ACTIVE OPS", icon: Activity, badge: liveMatches.length },
-              { value: "results", label: "HISTORICAL", icon: Trophy },
-              { value: "upcoming", label: "FIXTURES", icon: Calendar },
+              { value: "live", label: "Active Ops", icon: Activity, badge: liveMatches.length },
+              { value: "results", label: "Historical", icon: Trophy },
+              { value: "upcoming", label: "Fixtures", icon: Calendar },
             ].map(tab => (
               <TabsTrigger 
                 key={tab.value}
                 value={tab.value} 
-                className="flex-1 font-black text-[10px] uppercase tracking-[0.2em] gap-3 rounded-xl h-12 transition-all data-[state=active]:shadow-lg data-[state=active]:bg-background"
-                style={{ color: D.textMuted }}
+                className="flex-1 font-semibold text-xs gap-2 rounded-lg h-9 transition-all data-[state=active]:bg-white/10 data-[state=active]:text-white"
+                style={{ color: D.textMuted, fontFamily: D.sans }}
               >
-                <tab.icon className="h-4 w-4" style={{ color: activeTab === tab.value ? D.indigo : 'inherit' }} />
+                <tab.icon className="h-3.5 w-3.5" style={{ color: activeTab === tab.value ? D.indigo : 'inherit' }} />
                 {tab.label}
                 {tab.badge ? (
-                  <span className="ml-1 px-3 py-1 rounded-full text-[9px] font-black ring-4 ring-white/5 animate-pulse" style={{ background: D.rose, color: 'white' }}>
+                  <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: D.rose, color: 'white' }}>
                     {tab.badge}
                   </span>
                 ) : null}

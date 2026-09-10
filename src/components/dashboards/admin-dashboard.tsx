@@ -34,192 +34,192 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
       {/* OS Status Infrastructure row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "CORE ENGINE", status: "OPERATIONAL", icon: Cpu, color: D.emerald },
-          { label: "DATA PIPELINE", status: "HEALTHY", icon: Database, color: D.amber },
-          { label: "SECURITY LAYER", status: "ENCRYPTED", icon: ShieldCheck, color: D.sky },
-          { label: "NETWORK TOPOLOGY", status: "STABLE", icon: Server, color: D.violet },
+          { label: "Core Engine", status: "Operational", icon: Cpu, color: D.emerald },
+          { label: "Data Pipeline", status: "Healthy", icon: Database, color: D.amber },
+          { label: "Security Layer", status: "Encrypted", icon: ShieldCheck, color: D.sky },
+          { label: "Network Topology", status: "Stable", icon: Server, color: D.violet },
         ].map((item, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 p-5 rounded-2xl border shadow-lg group transition-all hover:bg-black/5"
+            className="flex items-center gap-3.5 p-4 rounded-2xl border transition-all hover:border-white/20 hover:bg-white/[0.02]"
             style={{ background: D.surf1, borderColor: D.border }}
           >
             <div
-              className="p-3 rounded-xl shadow-inner border transition-all group-hover:scale-110"
-              style={{ background: `${item.color}08`, borderColor: `${item.color}20`, color: item.color }}
+              className="p-2.5 rounded-xl border transition-all"
+              style={{ background: `${item.color}12`, borderColor: `${item.color}25`, color: item.color }}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-4.5 w-4.5" />
             </div>
             <div>
-              <p className="text-[9px] uppercase tracking-[0.25em] font-black italic mb-0.5 opacity-40" style={{ fontFamily: D.head, color: D.textMuted }}>{item.label}</p>
-              <p className="text-xs font-black uppercase tracking-widest" style={{ color: D.textPrimary }}>{item.status}</p>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-0.5" style={{ fontFamily: D.sans }}>{item.label}</p>
+              <p className="text-xs font-bold text-slate-100" style={{ fontFamily: D.mono }}>{item.status}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Strategic Command Header */}
-      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl" 
+      <div className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl" 
            style={{ background: D.surf1, borderColor: D.border }}>
-        <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group" 
-               style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
-             <Terminal className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
+        <div className="absolute inset-0 opacity-[0.07]" style={{ background: D.gradMain }} />
+        <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+          <div className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm" 
+               style={{ background: D.surf2, borderColor: `${D.indigo}30` }}>
+             <Terminal className="h-7 w-7 text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
-              COMMAND <span style={{ color: D.indigo }}>CENTRE</span>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+              Command <span style={{ color: D.indigo }}>Centre</span>
             </h1>
-            <p className="text-[12px] font-black uppercase tracking-[0.4em] mt-3 opacity-60 italic" style={{ color: D.textMuted }}>
-                GLOBAL OVERSIGHT & SYSTEM ARCHITECTURE GOVERNANCE · REAL-TIME TELEMETRY ACTIVE
+            <p className="text-xs font-normal text-slate-400 mt-1.5 leading-relaxed" style={{ fontFamily: D.sans }}>
+              Global oversight and system architecture governance · Real-time telemetry active
             </p>
           </div>
-          <div className="md:ml-auto flex gap-4 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5" style={{ background: D.surf2 }}>SYSTEM AUDIT</Button>
-             <Button className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl border border-indigo-500/50" style={{ background: D.indigo, color: 'white' }}>INFRASTRUCTURE</Button>
+          <div className="md:ml-auto flex gap-3 w-full md:w-auto">
+             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-5 h-10 border hover:bg-white/5" style={{ background: D.surf2, borderColor: D.border }}>System Audit</Button>
+             <Button className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 shadow-lg" style={{ background: D.indigo, color: 'white' }}>Infrastructure</Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Command Column (2/3) */}
-        <div className="lg:col-span-2 space-y-12">
+        <div className="lg:col-span-2 space-y-10">
           {/* Global OS Event Topology */}
           <div
-            className="overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+            className="overflow-hidden rounded-2xl border shadow-lg flex flex-col"
             style={{ background: D.surf1, borderColor: D.border }}
           >
-            <div className="flex flex-row items-center justify-between p-8 border-b" style={{ borderColor: D.border, background: D.surf2 }}>
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl border border-white/5 opacity-40 shadow-inner">
-                   <Globe className="h-5 w-5" style={{ color: D.indigo }} />
+            <div className="flex flex-row items-center justify-between p-6 border-b" style={{ borderColor: D.border, background: D.surf2 }}>
+              <div className="flex items-center gap-3.5">
+                <div className="p-2.5 rounded-xl border border-white/10 opacity-70">
+                   <Globe className="h-4.5 w-4.5" style={{ color: D.indigo }} />
                 </div>
                 <div>
-                   <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>GLOBAL OS EVENT STREAM</h3>
-                   <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>REAL-TIME CROSS-SCHOOL TELEMETRY</p>
+                   <h3 className="text-lg font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Global OS Event Stream</h3>
+                   <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Real-time cross-school telemetry</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 px-3 py-1 rounded-full border border-emerald-500/20" style={{ background: `${D.emerald}08` }}>
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500">LIVE</span>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20" style={{ background: `${D.emerald}10` }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide">Live</span>
               </div>
             </div>
             <div className="flex flex-col flex-1 divide-y" style={{ borderColor: D.border }}>
               {loadingLogs ? (
-                <div className="py-24 text-center opacity-20">
-                  <Activity className="mx-auto h-12 w-12 mb-4 animate-spin" style={{ color: D.indigo }} />
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em]">SYNCHRONIZING TELEMETRY...</p>
+                <div className="py-16 text-center opacity-40">
+                  <Activity className="mx-auto h-8 w-8 mb-3 animate-spin" style={{ color: D.indigo }} />
+                  <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>Synchronizing telemetry...</p>
                 </div>
               ) : auditLogs.length > 0 ? (
                 auditLogs.map((log: any, i: number) => (
                   <div
                     key={log.id || i}
-                    className="p-6 transition-all hover:bg-black/5 group cursor-pointer"
+                    className="p-4 transition-all hover:bg-white/[0.02] group cursor-pointer"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full shadow-[0_0_8px]" style={{ background: D.indigo, boxShadow: `0 0 8px ${D.indigo}` }} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] italic" style={{ color: D.indigo, fontFamily: D.head }}>{log.actionType.toUpperCase()}</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: D.indigo }} />
+                        <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide" style={{ fontFamily: D.sans }}>{log.actionType}</span>
                       </div>
-                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>
+                      <span className="text-[11px] font-medium text-slate-400" style={{ fontFamily: D.mono }}>
                          {log.timestamp ? format(new Date(log.timestamp.seconds * 1000), 'HH:mm:ss') : 'LIVE'}
                       </span>
                     </div>
-                    <p className="text-[13px] font-bold tracking-tight pr-12 leading-snug" style={{ color: D.textPrimary }}>{log.description.toUpperCase()}</p>
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-2 opacity-50">
-                           <Users size={12} className="text-indigo-500" />
-                           <span className="text-[9px] font-black uppercase tracking-widest italic">ACTOR: {log.actorName.toUpperCase()}</span>
+                    <p className="text-xs font-medium text-slate-200 pr-12 leading-relaxed" style={{ fontFamily: D.sans }}>{log.description}</p>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center gap-1.5 opacity-60">
+                           <Users size={12} className="text-indigo-400" />
+                           <span className="text-[10px] font-medium text-slate-400" style={{ fontFamily: D.sans }}>Actor: {log.actorName}</span>
                       </div>
                       <span
-                        className="text-[9px] px-2 py-1 rounded-lg border border-white/5 font-black tracking-[0.1em]"
+                        className="text-[10px] px-2 py-0.5 rounded-md border border-white/10 font-medium"
                         style={{ background: D.surf3, color: D.textMuted, fontFamily: D.mono }}
                       >
-                        ENT_ID: {log.entityId.slice(-6).toUpperCase()}
+                        ID: {log.entityId.slice(-6)}
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-24 text-center opacity-20">
-                  <Activity className="mx-auto h-12 w-12 mb-4 animate-pulse" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em]">NO ACTIVE SYSTEM TRAFFIC</p>
+                <div className="py-16 text-center opacity-40">
+                  <Activity className="mx-auto h-8 w-8 mb-3 opacity-30" />
+                  <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>No active system traffic</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="space-y-6">
-            <SectionHeader title="MATCH ARCHITECTURE" sub="GLOBAL FIXTURE SCHEMATIC & OPERATIONAL STATUS" />
+          <div className="space-y-5">
+            <SectionHeader title="Match Architecture" sub="Global fixture schematic & operational status" />
             <FixtureCentreCard 
               role="System Architect"
               maxMatches={5}
             />
           </div>
           
-          <div className="space-y-6">
-            <SectionHeader title="METRIC TOPOLOGY" sub="QUANTITATIVE PERFORMANCE ANALYTICS" />
+          <div className="space-y-5">
+            <SectionHeader title="Metric Topology" sub="Quantitative performance analytics" />
             <DashboardStats />
           </div>
         </div>
 
         {/* Intelligence Sidebar (1/3) */}
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Integrity Diagnostic Panel */}
           <div
-            className="rounded-[2.5rem] overflow-hidden border shadow-2xl p-8"
+            className="rounded-2xl border shadow-lg p-6"
             style={{ background: D.surf1, borderColor: D.border }}
           >
-            <div className="flex items-center gap-4 mb-10">
-               <div className="p-3 rounded-xl border border-indigo-500/20 shadow-inner" style={{ background: `${D.indigo}08` }}>
-                  <Activity className="h-5 w-5 animate-pulse" style={{ color: D.indigo }} />
+            <div className="flex items-center gap-3.5 mb-6">
+               <div className="p-2.5 rounded-xl border border-indigo-500/20" style={{ background: `${D.indigo}10` }}>
+                  <Activity className="h-4.5 w-4.5 text-indigo-400" />
                </div>
                <div>
-                  <h4 className="text-[11px] font-black uppercase tracking-[0.3em] italic" style={{ fontFamily: D.head, color: D.indigo }}>INTEGRITY DIAG</h4>
-                  <p className="text-[10px] font-black uppercase opacity-40" style={{ color: D.textMuted }}>REAL-TIME LOGIC SYNC</p>
+                  <h4 className="text-sm font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Integrity Diagnostics</h4>
+                  <p className="text-xs font-normal text-slate-400" style={{ fontFamily: D.sans }}>Real-time logic sync</p>
                </div>
             </div>
             
-            <div className="space-y-8">
+            <div className="space-y-5">
               {/* Metric 1 */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic" style={{ color: D.textMuted }}>LOGIC SYNC</span>
-                  <span className="text-[11px] font-black" style={{ color: D.emerald, fontFamily: D.mono }}>99.9%</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-medium text-slate-400" style={{ fontFamily: D.sans }}>Logic Sync</span>
+                  <span className="font-bold text-emerald-400" style={{ fontFamily: D.mono }}>99.9%</span>
                 </div>
-                <div className="h-1.5 w-full rounded-full overflow-hidden shadow-inner" style={{ background: D.surf3 }}>
+                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: D.surf3 }}>
                   <div className="h-full rounded-full transition-all duration-1000" style={{ background: D.emerald, width: '99.9%' }} />
                 </div>
               </div>
 
                {/* Metric 2 */}
-               <div className="space-y-3">
-                <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic" style={{ color: D.textMuted }}>MATCH STREAM</span>
-                  <span className="text-[11px] font-black" style={{ color: D.indigo, fontFamily: D.mono }}>ACTIVE</span>
+               <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-medium text-slate-400" style={{ fontFamily: D.sans }}>Match Stream</span>
+                  <span className="font-bold text-indigo-400" style={{ fontFamily: D.mono }}>Active</span>
                 </div>
-                <div className="h-1.5 w-full rounded-full overflow-hidden shadow-inner" style={{ background: D.surf3 }}>
+                <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: D.surf3 }}>
                   <div className="h-full rounded-full animate-pulse transition-all duration-1000" style={{ background: D.indigo, width: '75%' }} />
                 </div>
               </div>
 
               {/* Status Badge */}
               <div
-                className="w-full text-center py-5 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase border shadow-2xl shadow-indigo-500/10 mt-6"
-                style={{ background: `${D.indigo}08`, border: `1px dashed ${D.indigo}30`, color: D.indigo, fontFamily: D.head }}
+                className="w-full text-center py-3 rounded-xl text-xs font-semibold border mt-4"
+                style={{ background: `${D.indigo}10`, borderColor: `${D.indigo}25`, color: D.indigo, fontFamily: D.sans }}
               >
-                ALL SYSTEMS NOMINAL
+                All Systems Nominal
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <SectionHeader title="MANAGEMENT HUB" sub="SYSTEM CONFIGURATION & ENTITY CONTROL" />
+          <div className="space-y-5">
+            <SectionHeader title="Management Hub" sub="System configuration & entity control" />
             <ManagementHub />
           </div>
         </div>
