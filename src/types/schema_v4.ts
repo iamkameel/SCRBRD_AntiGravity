@@ -988,3 +988,65 @@ export interface AuditLog {
     afterJson?: any;
     createdAt: ISO8601Timestamp;
 }
+
+// --- Layer 14: Recognition, Awards, Accolades & Honours ---
+
+export type AwardCategory = 'Performance' | 'Tournament' | 'Institutional' | 'FairPlay';
+
+export interface Award {
+    id: UUID;
+    personId: UUID;
+    seasonId?: UUID;
+    fixtureId?: UUID;
+    organisationId?: UUID;
+    title: string;
+    category: AwardCategory;
+    awardedBy: string; // e.g., 'Bishopps College', 'Western Province Cricket Association'
+    awardedOn: ISO8601Date;
+    description?: string;
+    certificateUrl?: string;
+    createdAt: ISO8601Timestamp;
+}
+
+export interface Accolade {
+    id: UUID;
+    personId: UUID;
+    seasonId?: UUID;
+    fixtureId?: UUID;
+    source: string; // Coach, Scout, Media
+    authorPersonId?: UUID;
+    comment: string;
+    tags: string[];
+    isPublic: boolean;
+    notedOn: ISO8601Date;
+}
+
+export type HonourLevel = 'School XI' | 'Zonal' | 'Provincial' | 'National' | 'Invitational';
+
+export interface Honour {
+    id: UUID;
+    personId: UUID;
+    seasonId: UUID;
+    organisationId?: UUID;
+    honourLevel: HonourLevel;
+    teamName: string; // e.g. "Western Province U19 A", "1st XI Cap #412"
+    badgeUrl?: string;
+    conferredOn: ISO8601Date;
+    notes?: string;
+    verifiedByPersonId?: UUID;
+    createdAt: ISO8601Timestamp;
+}
+
+export interface Milestone {
+    id: UUID;
+    personId: UUID;
+    seasonId?: UUID;
+    fixtureId?: UUID;
+    title: string; // e.g., "1,000 Career Runs", "50 Wickets", "100th Match"
+    milestoneType: 'Runs' | 'Wickets' | 'Matches' | 'Catches' | 'Stumpings';
+    value: number;
+    achievedOn: ISO8601Date;
+    description?: string;
+    createdAt: ISO8601Timestamp;
+}
+

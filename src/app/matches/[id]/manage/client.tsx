@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Bus, MapPin, Activity, CheckCircle2, AlertCircle, ChevronLeft, Plus, Loader2, UserPlus } from 'lucide-react';
+import { Users, Bus, MapPin, Activity, CheckCircle2, AlertCircle, ChevronLeft, Plus, Loader2, UserPlus, GripVertical, ArrowUp, ArrowDown, ArrowRight, CornerDownRight } from 'lucide-react';
 import Link from 'next/link';
 import { createTeamSheetVersionAction, updateReadinessLayerAction, fetchManagementContextAction } from '@/app/actions/preMatchActions_v2';
 import { createPersonAction } from '@/app/actions/personActions';
@@ -130,6 +130,90 @@ export function MatchManagementClient({
   const [selectedReservesIds, setSelectedReservesIds] = useState<string[]>(
     context.latestTeamSheet ? context.selectedPlayers.filter((p: any) => p.isSubstitute).map((p: any) => p.personId) : []
   );
+
+  // Drag and Drop State
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
+  const [dragSource, setDragSource] = useState<'roster' | 'xi' | 'reserves' | null>(null);
+  const [dropTargetZone, setDropTargetZone] = useState<'xi' | 'reserves' | 'roster' | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<{ zone: 'xi' | 'reserves'; index: number } | null>(null);
+
+  // Drag Handlers
+  const handleDragStart = (e: React.DragEvent, playerId: string, source: 'roster' | 'xi' | 'reserves') => {
+    e.dataTransfer.setData('text/plain', JSON.stringify({ playerId, source }));
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedPlayerId(playerId);
+    setDragSource(source);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPlayerId(null);
+    setDragSource(null);
+    setDropTargetZone(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragOverZone = (e: React.DragEvent, targetZone: 'xi' | 'reserves' | 'roster') => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dropTargetZone !== targetZone) {
+      setDropTargetZone(targetZone);
+    }
+  };
+
+  const handleDropOnZone = (e: React.DragEvent, targetZone: 'xi' | 'reserves' | 'roster') => {
+    e.preventDefault();
+    e.stopPropagation();
+    const dataStr = e.dataTransfer.getData('text/plain');
+    if (!dataStr) return;
+
+    try {
+      const { playerId, source } = JSON.parse(dataStr);
+      if (!playerId) return;
+
+      // Handle drop based on source and target
+      if (targetZone === 'roster') {
+        // Remove from XI or Reserves
+        setSelectedXIIds(prev => prev.filter(id => id !== playerId));
+        setSelectedReservesIds(prev => prev.filter(id => id !== playerId));
+      } else if (targetZone === 'xi') {
+        if (source === 'xi') return; // Handled by reorder if dropped on item
+        if (selectedXIIds.length >= 11 && !selectedXIIds.includes(playerId)) {
+          toast.error("Starting XI is full (11 players max)");
+          handleDragEnd();
+          return;
+        }
+        // Remove from reserves if present
+        setSelectedReservesIds(prev => prev.filter(id => id !== playerId));
+        // Add to XI if not present
+        setSelectedXIIds(prev => prev.includes(playerId) ? prev : [...prev, playerId]);
+      } else if (targetZone === 'reserves') {
+        if (source === 'reserves') return;
+        if (selectedReservesIds.length >= 4 && !selectedReservesIds.includes(playerId)) {
+          toast.error("Reserves bench is full (4 players max)");
+          handleDragEnd();
+          return;
+        }
+        // Remove from XI if present
+        setSelectedXIIds(prev => prev.filter(id => id !== playerId));
+        // Add to Reserves if not present
+        setSelectedReservesIds(prev => prev.includes(playerId) ? prev : [...prev, playerId]);
+      }
+    } catch (err) {
+      console.error("Drop error", err);
+    } finally {
+      handleDragEnd();
+    }
+  };
+
+  const movePlayerInList = (list: 'xi' | 'reserves', fromIndex: number, toIndex: number) => {
+    const setList = list === 'xi' ? setSelectedXIIds : setSelectedReservesIds;
+    setList(prev => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+  };
 
   // Derive readiness state from context.readiness
   const readiness = useMemo(() => {
@@ -524,29 +608,51 @@ export function MatchManagementClient({
                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <div className="divide-y divide-white/5">
+                      <div 
+                        onDragOver={(e) => handleDragOverZone(e, 'roster')}
+                        onDrop={(e) => handleDropOnZone(e, 'roster')}
+                        className={`divide-y divide-white/5 transition-colors ${dropTargetZone === 'roster' && dragSource !== 'roster' ? 'bg-indigo-500/5 ring-1 ring-inset ring-indigo-500/30' : ''}`}
+                      >
                         {homePlayers.map((player: Person) => {
-                          const isSelected = selectedXIIds.includes(player.id) || selectedReservesIds.includes(player.id);
+                          const isSelectedXI = selectedXIIds.includes(player.id);
+                          const isSelectedReserve = selectedReservesIds.includes(player.id);
+                          const isSelected = isSelectedXI || isSelectedReserve;
                           const availability = context.availability.find(a => a.personId === player.id);
                           const medicalEval = medicalReadinessService.calculatePlayerReadiness(player.id, (context as any).medicalIncidents || []);
                           const isMedicalRestricted = medicalEval.clearanceRequired || medicalEval.status === 'Unavailable' || player.status === 'injured';
                           const isUnavailable = availability?.status === 'unavailable' || isMedicalRestricted;
+                          const isDraggingThis = draggedPlayerId === player.id;
                           
                           return (
                             <div 
                               key={player.id} 
+                              draggable={!isUnavailable || isSelected}
+                              onDragStart={(e) => handleDragStart(e, player.id, 'roster')}
+                              onDragEnd={handleDragEnd}
                               onClick={() => setSelectedPlayerForInsight(player)}
-                              className={`p-4 flex items-center justify-between hover:bg-white/5 transition-colors group cursor-pointer ${isSelected ? 'bg-white/[0.02]' : ''} ${isUnavailable ? 'opacity-60' : ''}`}
+                              className={`p-4 flex items-center justify-between hover:bg-white/5 transition-all group cursor-pointer ${
+                                isSelected ? 'bg-white/[0.02]' : ''
+                              } ${
+                                isUnavailable ? 'opacity-60' : ''
+                              } ${
+                                isDraggingThis ? 'opacity-30 border-2 border-dashed border-indigo-500' : ''
+                              }`}
                             >
-                              <div className="flex items-center gap-4">
-                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-['Syne',sans-serif] font-bold text-sm ${isSelected ? 'bg-emerald-500 text-white' : 'bg-[#101829] border border-white/10 text-muted-foreground'}`}>
+                              <div className="flex items-center gap-3 md:gap-4">
+                                 <div 
+                                   className="cursor-grab active:cursor-grabbing p-1 text-white/20 hover:text-white/60 transition-colors"
+                                   title="Drag to assign"
+                                 >
+                                    <GripVertical className="h-4 w-4" />
+                                 </div>
+                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-['Syne',sans-serif] font-bold text-sm ${isSelected ? 'bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]' : 'bg-[#101829] border border-white/10 text-muted-foreground'}`}>
                                     {player.firstName.charAt(0)}{player.lastName.charAt(0)}
                                  </div>
                                  <div>
                                    <div className="flex items-center gap-2">
                                      <h4 className="font-semibold text-[15px]">{player.firstName} {player.lastName}</h4>
-                                     {selectedXIIds.includes(player.id) && <Badge className="bg-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-wider h-4 px-1">XI</Badge>}
-                                     {selectedReservesIds.includes(player.id) && <Badge className="bg-amber-500/20 text-amber-400 text-[9px] uppercase tracking-wider h-4 px-1">Res</Badge>}
+                                     {isSelectedXI && <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] uppercase tracking-wider h-4 px-1">XI (#{selectedXIIds.indexOf(player.id) + 1})</Badge>}
+                                     {isSelectedReserve && <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] uppercase tracking-wider h-4 px-1">Res (#{selectedReservesIds.indexOf(player.id) + 1})</Badge>}
                                      {medicalEval.clearanceRequired && (
                                        <Badge variant="destructive" className="bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] uppercase tracking-wider h-4 px-1">
                                          Clearance Required
@@ -563,24 +669,26 @@ export function MatchManagementClient({
                                    </div>
                                  </div>
                               </div>
-                              <Button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (medicalEval.clearanceRequired && !isSelected) {
-                                    toast.error(`Medical Clearance Required: ${player.firstName} ${player.lastName} requires medical sign-off before squad selection.`);
-                                    return;
-                                  }
-                                  if (!isUnavailable || isSelected) {
-                                    togglePlayerSelection(player);
-                                  }
-                                }}
-                                variant={isSelected ? "outline" : "ghost"} 
-                                size="sm" 
-                                disabled={isUnavailable && !isSelected && !medicalEval.clearanceRequired}
-                                className={`${isSelected ? 'border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10' : 'opacity-0 group-hover:opacity-100 transition-opacity border border-white/10'}`}
-                              >
-                                {isSelected ? 'Remove' : 'Add to Squad'}
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (medicalEval.clearanceRequired && !isSelected) {
+                                      toast.error(`Medical Clearance Required: ${player.firstName} ${player.lastName} requires medical sign-off before squad selection.`);
+                                      return;
+                                    }
+                                    if (!isUnavailable || isSelected) {
+                                      togglePlayerSelection(player);
+                                    }
+                                  }}
+                                  variant={isSelected ? "outline" : "ghost"} 
+                                  size="sm" 
+                                  disabled={isUnavailable && !isSelected && !medicalEval.clearanceRequired}
+                                  className={`${isSelected ? 'border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10' : 'opacity-0 group-hover:opacity-100 transition-opacity border border-white/10'}`}
+                                >
+                                  {isSelected ? 'Remove' : 'Add to XI'}
+                                </Button>
+                              </div>
                             </div>
                           );
                         })}
@@ -593,66 +701,142 @@ export function MatchManagementClient({
                     </CardContent>
                   </Card>
                </div>
-               
-                <div className="lg:col-span-1">
+                               <div className="lg:col-span-1">
                   <Card className="bg-[#05080f] border-white/10 shadow-2xl sticky top-24">
                      <CardHeader className="pb-4 border-b border-white/5">
                         <CardTitle className="font-['Syne',sans-serif] text-lg flex items-center justify-between">
-                           Selected XI
-                           <Badge className="bg-[#4f46e5] text-white border-none">{selectedXIIds.length}</Badge>
+                           <span>Selected XI <span className="text-xs font-normal text-muted-foreground">(Drag to reorder)</span></span>
+                           <Badge className="bg-[#4f46e5] text-white border-none">{selectedXIIds.length} / 11</Badge>
                         </CardTitle>
                      </CardHeader>
-                     <CardContent className="p-0">
+                     <CardContent 
+                       onDragOver={(e) => handleDragOverZone(e, 'xi')}
+                       onDrop={(e) => handleDropOnZone(e, 'xi')}
+                       className={`p-0 transition-colors ${dropTargetZone === 'xi' ? 'bg-emerald-500/10 ring-2 ring-inset ring-emerald-500/40' : ''}`}
+                     >
                         {selectedXI.length > 0 ? (
-                          <div className="divide-y divide-white/5 max-h-[40vh] overflow-y-auto">
-                            {selectedXI.map((player, index) => (
-                              <div key={player.id} className="p-3 flex items-center justify-between group">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[10px] font-bold text-muted-foreground/50 w-4">{index + 1}</span>
-                                  <h5 className="text-sm font-medium">{player.firstName} {player.lastName}</h5>
-                                </div>
-                                <Button 
-                                  onClick={() => setSelectedXIIds(prev => prev.filter(id => id !== player.id))}
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400"
+                          <div className="divide-y divide-white/5 max-h-[45vh] overflow-y-auto">
+                            {selectedXI.map((player, index) => {
+                              const isDraggingThis = draggedPlayerId === player.id;
+                              return (
+                                <div 
+                                  key={player.id} 
+                                  draggable
+                                  onDragStart={(e) => handleDragStart(e, player.id, 'xi')}
+                                  onDragEnd={handleDragEnd}
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (draggedPlayerId && dragSource === 'xi' && draggedPlayerId !== player.id) {
+                                      const fromIdx = selectedXIIds.indexOf(draggedPlayerId);
+                                      if (fromIdx !== -1 && fromIdx !== index) {
+                                        movePlayerInList('xi', fromIdx, index);
+                                      }
+                                    }
+                                  }}
+                                  className={`p-3 flex items-center justify-between group hover:bg-white/5 transition-all ${
+                                    isDraggingThis ? 'opacity-30 border-2 border-dashed border-emerald-500' : ''
+                                  }`}
                                 >
-                                  ×
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-center border-b border-white/5">
-                             <Users className="h-8 w-8 text-muted-foreground/30 mb-3" />
-                             <h4 className="text-sm font-bold text-muted-foreground mb-1">Starting XI Empty</h4>
-                             <p className="text-[10px] text-muted-foreground/70 max-w-[150px]">Select players from the roster.</p>
-                          </div>
-                        )}
-
-                        <div className="p-4 border-b border-white/5 bg-white/[0.01]">
-                          <h4 className="font-['Syne',sans-serif] text-sm font-bold mb-3 flex items-center justify-between">
-                            Reserves
-                            <Badge variant="outline" className="border-white/10 text-muted-foreground">{selectedReservesIds.length}</Badge>
-                          </h4>
-                          {selectedReserves.length > 0 ? (
-                             <div className="space-y-2">
-                               {selectedReserves.map(player => (
-                                 <div key={player.id} className="flex items-center justify-between group">
-                                   <span className="text-xs text-muted-foreground">{player.firstName} {player.lastName}</span>
-                                   <Button 
-                                      onClick={() => setSelectedReservesIds(prev => prev.filter(id => id !== player.id))}
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <GripVertical className="h-4 w-4 text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing flex-shrink-0" />
+                                    <span className="text-[11px] font-bold text-emerald-400/80 w-5 flex-shrink-0 font-['DM_Mono',monospace]">#{index + 1}</span>
+                                    <h5 className="text-sm font-medium truncate">{player.firstName} {player.lastName}</h5>
+                                  </div>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <Button
+                                      onClick={() => index > 0 && movePlayerInList('xi', index, index - 1)}
+                                      disabled={index === 0}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-white/30 hover:text-white disabled:opacity-20"
+                                      title="Move Up"
+                                    >
+                                      <ArrowUp className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      onClick={() => index < selectedXI.length - 1 && movePlayerInList('xi', index, index + 1)}
+                                      disabled={index === selectedXI.length - 1}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-white/30 hover:text-white disabled:opacity-20"
+                                      title="Move Down"
+                                    >
+                                      <ArrowDown className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      onClick={() => setSelectedXIIds(prev => prev.filter(id => id !== player.id))}
                                       variant="ghost" 
                                       size="icon" 
-                                      className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-amber-400"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-opacity"
+                                      title="Remove from XI"
                                     >
                                       ×
                                     </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-center border-b border-white/5 border-dashed m-3 rounded-xl border-white/10">
+                             <Users className="h-8 w-8 text-muted-foreground/30 mb-3" />
+                             <h4 className="text-sm font-bold text-muted-foreground mb-1">Starting XI Empty</h4>
+                             <p className="text-[10px] text-muted-foreground/70 max-w-[170px]">Drag players here or click &quot;Add to XI&quot; from the squad roster.</p>
+                          </div>
+                        )}
+
+                        <div 
+                          onDragOver={(e) => handleDragOverZone(e, 'reserves')}
+                          onDrop={(e) => handleDropOnZone(e, 'reserves')}
+                          className={`p-4 border-b border-white/5 bg-white/[0.01] transition-colors ${dropTargetZone === 'reserves' ? 'bg-amber-500/10 ring-2 ring-inset ring-amber-500/40' : ''}`}
+                        >
+                          <h4 className="font-['Syne',sans-serif] text-sm font-bold mb-3 flex items-center justify-between">
+                            <span>Reserves Bench <span className="text-[10px] font-normal text-muted-foreground">(Drag to order)</span></span>
+                            <Badge variant="outline" className="border-amber-500/30 text-amber-400">{selectedReservesIds.length} / 4</Badge>
+                          </h4>
+                          {selectedReserves.length > 0 ? (
+                             <div className="space-y-1.5">
+                               {selectedReserves.map((player, index) => (
+                                 <div 
+                                   key={player.id} 
+                                   draggable
+                                   onDragStart={(e) => handleDragStart(e, player.id, 'reserves')}
+                                   onDragEnd={handleDragEnd}
+                                   onDragOver={(e) => {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     if (draggedPlayerId && dragSource === 'reserves' && draggedPlayerId !== player.id) {
+                                       const fromIdx = selectedReservesIds.indexOf(draggedPlayerId);
+                                       if (fromIdx !== -1 && fromIdx !== index) {
+                                         movePlayerInList('reserves', fromIdx, index);
+                                       }
+                                     }
+                                   }}
+                                   className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 group transition-all"
+                                 >
+                                   <div className="flex items-center gap-2">
+                                     <GripVertical className="h-3.5 w-3.5 text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing" />
+                                     <span className="text-[10px] font-bold text-amber-400/80 font-['DM_Mono',monospace]">R{index + 1}</span>
+                                     <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">{player.firstName} {player.lastName}</span>
+                                   </div>
+                                   <div className="flex items-center gap-1">
+                                     <Button 
+                                        onClick={() => setSelectedReservesIds(prev => prev.filter(id => id !== player.id))}
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-amber-400 transition-opacity"
+                                      >
+                                        ×
+                                      </Button>
+                                   </div>
                                  </div>
                                ))}
                              </div>
                           ) : (
-                            <p className="text-[10px] text-muted-foreground/50 italic text-center py-2">No reserves selected</p>
+                            <p className="text-[10px] text-muted-foreground/50 italic text-center py-4 border border-dashed border-white/5 rounded-lg">
+                              Drag players here for Reserves (Max 4)
+                            </p>
                           )}
                         </div>
                      </CardContent>

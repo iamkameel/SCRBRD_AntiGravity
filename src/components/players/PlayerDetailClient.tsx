@@ -44,6 +44,7 @@ import { RewardsStore } from "@/components/rewards/RewardsStore";
 import { RewardsWallet } from "@/types/rewards";
 import { PlayerAttributeMatrix } from "./PlayerAttributeMatrix";
 import { PlayerPassportView } from "./PlayerPassportView";
+import { PlayerHonoursCabinet } from "@/components/player/PlayerHonoursCabinet";
 import { WagonWheelHeatmap } from "@/components/analytics/WagonWheelHeatmap";
 import { PlayerComparisonTool } from "./PlayerComparisonTool";
 import { SkillAssessment, ReadinessScore } from "@/types/schema_v4";
@@ -502,6 +503,64 @@ export function PlayerDetailClient({
           ══════════════════════════════════════════════════ */}
           <TabsContent value="passport" className="space-y-6">
             <PlayerPassportView player={player} />
+            <PlayerHonoursCabinet
+              honours={[
+                {
+                  id: "h1",
+                  personId: player.id,
+                  seasonId: "s2026",
+                  honourLevel: "School XI",
+                  teamName: "1st XI Cap #142",
+                  conferredOn: "2025-01-15",
+                  notes: "Awarded 1st XI Cap following 5 consecutive match-winning performances.",
+                  createdAt: "2025-01-15T00:00:00Z"
+                },
+                {
+                  id: "h2",
+                  personId: player.id,
+                  seasonId: "s2025",
+                  honourLevel: "Provincial",
+                  teamName: "Western Province U19 A",
+                  conferredOn: "2025-11-20",
+                  notes: "Selected for SA Schools Tournament.",
+                  createdAt: "2025-11-20T00:00:00Z"
+                }
+              ]}
+              awards={[
+                {
+                  id: "a1",
+                  personId: player.id,
+                  title: "Player of the Match vs Wynberg",
+                  category: "Performance",
+                  awardedBy: "Western Province Cricket Association",
+                  awardedOn: "2026-02-10",
+                  description: "Scored 84 (52) and took 3/18 in a 12-run victory.",
+                  createdAt: "2026-02-10T00:00:00Z"
+                }
+              ]}
+              milestones={[
+                {
+                  id: "m1",
+                  personId: player.id,
+                  title: "1,000 Career Runs",
+                  milestoneType: "Runs",
+                  value: 1000,
+                  achievedOn: "2026-01-28",
+                  description: "Reached 1,000 career runs across school first-team fixtures.",
+                  createdAt: "2026-01-28T00:00:00Z"
+                },
+                {
+                  id: "m2",
+                  personId: player.id,
+                  title: "50 Wickets",
+                  milestoneType: "Wickets",
+                  value: 50,
+                  achievedOn: "2025-10-12",
+                  description: "50 1st XI wickets.",
+                  createdAt: "2025-10-12T00:00:00Z"
+                }
+              ]}
+            />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <AccoladesTimeline playerId={player.id} />
@@ -529,6 +588,7 @@ export function PlayerDetailClient({
               </div>
             </div>
           </TabsContent>
+
 
           {/* ═══════════════════════════════════════════════
               TAB: REWARDS
