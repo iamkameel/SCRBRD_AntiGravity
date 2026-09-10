@@ -120,5 +120,26 @@ export const transportService = {
 
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+    },
+
+    // --- Passenger Manifest Operations ---
+    addTripPassenger: async (tripId: string, personId: string, roleOnTrip: 'Player' | 'Coach' | 'Staff' | 'Driver', boardingStatus: 'Pending' | 'Boarded' | 'Absent' = 'Pending') => {
+        const colRef = collection(db, 'trip_passengers');
+        const docRef = await addDoc(colRef, {
+            tripId,
+            personId,
+            roleOnTrip,
+            boardingStatus,
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    },
+
+    getTripPassengers: async (tripId: string) => {
+        const colRef = collection(db, 'trip_passengers');
+        const q = query(colRef, where('tripId', '==', tripId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 };
+

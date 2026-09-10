@@ -80,5 +80,31 @@ export const scoutingService = {
         if (existing) return existing;
 
         return null;
+    },
+
+    /**
+     * Retrieves the scouting watchlist for a scout or school.
+     */
+    async getScoutWatchlist(scoutId: UUID): Promise<{ id: UUID; personId: UUID; addedAt: string; notes?: string }[]> {
+        return baseService.getAll<{ id: UUID; personId: UUID; scoutId: UUID; addedAt: string; notes?: string }>('scout_watchlists', {
+            constraints: []
+        }).then(list => list.filter(item => item.scoutId === scoutId));
+    },
+
+    /**
+     * Adds a player to a scout's watchlist.
+     */
+    async addToWatchlist(scoutId: UUID, personId: UUID, notes?: string): Promise<UUID> {
+        const id = crypto.randomUUID() as UUID;
+        const entry = {
+            id,
+            scoutId,
+            personId,
+            notes: notes || '',
+            addedAt: new Date().toISOString()
+        };
+        await baseService.set('scout_watchlists', id, entry);
+        return id;
     }
 };
+

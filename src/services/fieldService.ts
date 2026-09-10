@@ -1,10 +1,10 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
   orderBy,
   addDoc,
   updateDoc,
@@ -37,7 +37,7 @@ export const fieldService = {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         return {
           id: docSnap.id,
@@ -55,7 +55,7 @@ export const fieldService = {
   getFieldsBySchoolId: async (schoolId: string): Promise<Field[]> => {
     try {
       const q = query(
-        collection(db, COLLECTION_NAME), 
+        collection(db, COLLECTION_NAME),
         where('schoolId', '==', schoolId),
         orderBy('name')
       );
@@ -97,5 +97,48 @@ export const fieldService = {
       console.error(`Error updating field ${id}:`, error);
       throw error;
     }
+  },
+
+  // Log ground status (pitch, outfield, equipment readiness)
+  logGroundStatus: async (logData: {
+    fieldId: string;
+    fixtureId?: string;
+    conditionStatus: 'Optimal' | 'Playable' | 'Inspection Required' | 'Unplayable';
+    pitchReadiness: number; // 0-100
+    outfieldReadiness: number; // 0-100
+    equipmentReadiness: number; // 0-100
+    loggedBy: string;
+    notes?: string;
+  }): Promise<string> => {
+    try {
+      const docRef = await addDoc(collection(db, 'ground_status_logs'), {
+        ...logData,
+        loggedAt: new Date().toISOString()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error logging ground status:', error);
+      throw error;
+    }
+  },
+
+  // Get ground status logs for a field
+  getGroundStatusLogs: async (fieldId: string) => {
+    try {
+      const q = query(
+        collection(db, 'ground_status_logs'),
+        where('fieldId', '==', fieldId),
+        orderBy('loggedAt', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error(`Error fetching ground status logs for field ${fieldId}:`, error);
+      return [];
+    }
   }
 };
+

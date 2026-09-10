@@ -15,10 +15,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-interface ScoringShot {
+export interface ScoringShot {
   angle: number; // 0-360
   distance: number; // 0-100 (percentage of radius)
   runs: number;
+}
+
+interface WagonWheelHeatmapProps {
+  shots?: ScoringShot[];
+  title?: string;
+  subtitle?: string;
 }
 
 const MOCK_SHOTS: ScoringShot[] = [
@@ -31,7 +37,12 @@ const MOCK_SHOTS: ScoringShot[] = [
   { angle: 280, distance: 75, runs: 4 },
 ];
 
-export function WagonWheelHeatmap() {
+export function WagonWheelHeatmap({
+  shots = MOCK_SHOTS,
+  title = "WAGON WHEEL",
+  subtitle = "Spatial Scoring Intelligence"
+}: WagonWheelHeatmapProps) {
+  const activeShots = shots && shots.length > 0 ? shots : MOCK_SHOTS;
   const [viewMode, setViewMode] = useState<'standard' | 'heatmap'>('standard');
   const size = 300;
   const radius = size / 2 - 10;
@@ -58,9 +69,9 @@ export function WagonWheelHeatmap() {
       <div className="p-6 border-b border-white/5 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-white tracking-tighter uppercase" style={{ fontFamily: D.syne }}>
-            WAGON <span className="text-primary italic">WHEEL</span>
+            {title}
           </h2>
-          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">Spatial Scoring Intelligence</p>
+          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">{subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -100,7 +111,7 @@ export function WagonWheelHeatmap() {
 
             {/* Standard Lines */}
             <AnimatePresence>
-              {viewMode === 'standard' && MOCK_SHOTS.map((shot, i) => {
+              {viewMode === 'standard' && activeShots.map((shot, i) => {
                 const { x, y } = getCoordinates(shot.angle, shot.distance);
                 const color = shot.runs === 6 ? '#10b981' : shot.runs === 4 ? '#3b82f6' : '#94a3b8';
                 return (
@@ -118,7 +129,7 @@ export function WagonWheelHeatmap() {
 
             {/* Heatmap Gradients */}
             <AnimatePresence>
-              {viewMode === 'heatmap' && MOCK_SHOTS.map((shot, i) => {
+              {viewMode === 'heatmap' && activeShots.map((shot, i) => {
                 const { x, y } = getCoordinates(shot.angle, shot.distance);
                 return (
                   <motion.circle
@@ -133,7 +144,7 @@ export function WagonWheelHeatmap() {
             </AnimatePresence>
 
             {/* Hit points */}
-            {MOCK_SHOTS.map((shot, i) => {
+            {activeShots.map((shot, i) => {
               const { x, y } = getCoordinates(shot.angle, shot.distance);
               const color = shot.runs === 6 ? '#10b981' : shot.runs === 4 ? '#3b82f6' : '#ffffff';
               return (
