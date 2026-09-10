@@ -1,155 +1,100 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { medicalService, MedicalIncident } from '@/lib/services/medicalService';
+import { recordAuditAction } from './auditActions';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { medicalSchema } from '@/lib/validations/medicalSchema';
-import { Person } from '@/types/firestore';
-import { USER_ROLES } from '@/lib/roles';
+import { updateDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export interface MedicalActionState {
-    errors?: {
-        [key: string]: string[];
-    };
+    success: boolean;
     message?: string;
-    success?: boolean;
+    errors?: Record<string, string[]>;
 }
 
-function extractMedicalData(formData: FormData) {
-    // Parse nested attributes
-    const clinicalAttributes = {
-        diagnosisAccuracy: Number(formData.get('clinicalAttributes.diagnosisAccuracy')),
-        tapingStrapping: Number(formData.get('clinicalAttributes.tapingStrapping')),
-        emergencyResponse: Number(formData.get('clinicalAttributes.emergencyResponse')),
-        massageTherapy: Number(formData.get('clinicalAttributes.massageTherapy')),
-        injuryPrevention: Number(formData.get('clinicalAttributes.injuryPrevention')),
-    };
-
-    const rehabAttributes = {
-        returnToPlayPlanning: Number(formData.get('rehabAttributes.returnToPlayPlanning')),
-        strengthConditioning: Number(formData.get('rehabAttributes.strengthConditioning')),
-        loadManagement: Number(formData.get('rehabAttributes.loadManagement')),
-        rehabProgramDesign: Number(formData.get('rehabAttributes.rehabProgramDesign')),
-        psychologicalSupport: Number(formData.get('rehabAttributes.psychologicalSupport')),
-    };
-
-    return {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        email: formData.get('email'),
-        phoneNumber: formData.get('phoneNumber'),
-
-        // Medical Profile Core
-        qualification: formData.get('qualification') || '',
-        registrationNumber: formData.get('registrationNumber') || '',
-        experienceYears: formData.get('experienceYears') ? Number(formData.get('experienceYears')) : 0,
-
-        // Attribute Blocks
-        clinicalAttributes,
-        rehabAttributes,
-
-        // Tags
-        specializations: formData.get('specializations') ? JSON.parse(formData.get('specializations') as string) : [],
-        medicalTraits: formData.get('medicalTraits') ? JSON.parse(formData.get('medicalTraits') as string) : [],
-    };
+export async function getMedicalIncidentsAction(personId?: string) {
+    return await medicalService.getIncidents(personId);
 }
 
-function mapToFirestoreMedical(validatedData: any): Omit<Person, 'id' | 'createdAt' | 'updatedAt'> {
-    const {
-        clinicalAttributes,
-        rehabAttributes,
-        qualification,
-        registrationNumber,
-        experienceYears,
-        specializations,
-        medicalTraits,
-        ...rest
-    } = validatedData;
+export async function logMedicalIncidentAction(incident: Omit<MedicalIncident, 'id'>) {
+    const id = await medicalService.logIncident(incident);
 
-    return {
-        ...rest,
-        // Default to Physiotherapist for now, or use the existing role if updating
-        role: validatedData.role || USER_ROLES.PHYSIOTHERAPIST,
-        medicalProfile: {
-            qualification,
-            registrationNumber,
-            experienceYears,
-            clinicalAttributes,
-            rehabAttributes,
-            specializations,
-            medicalTraits,
-        }
-    };
+    await recordAuditAction({
+        actionType: 'SECURITY_ALERT',
+        entityType: 'medical_incident',
+        entityId: id,
+        description: `New medical incident reported for ${incident.personName || incident.personId}: ${incident.type} (${incident.severity}).`,
+        actorId: 'system-ops',
+        actorName: 'First Aider / Coordinator'
+    });
+
+    revalidatePath('/medical');
+    revalidatePath(`/player/${incident.personId}`);
+    return id;
 }
 
-export async function createMedicalAction(prevState: MedicalActionState, formData: FormData): Promise<MedicalActionState> {
-    const rawData = extractMedicalData(formData);
-    const validatedFields = medicalSchema.safeParse(rawData);
+export async function updateMedicalStatusAction(id: string, status: MedicalIncident['status'], personName: string) {
+    await medicalService.updateIncidentStatus(id, status);
 
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Please fix the errors below.',
-            success: false,
-        };
-    }
+    await recordAuditAction({
+        actionType: 'LOGISTICS_UPDATE',
+        entityType: 'medical_incident',
+        entityId: id,
+        description: `Medical status for ${personName} updated to ${status}.`,
+        actorId: 'system-ops',
+        actorName: 'Medical Staff'
+    });
 
-    try {
-        const medicalData = mapToFirestoreMedical(validatedFields.data);
-
-        await addDoc(collection(db, 'people'), {
-            ...medicalData,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        });
-
-    } catch (error) {
-        console.error('Error creating medical staff:', error);
-        return {
-            message: 'Database Error: Failed to create medical staff.',
-            success: false,
-        };
-    }
-
-    revalidatePath('/people');
-    redirect('/people');
+    revalidatePath('/medical');
 }
 
-export async function updateMedicalAction(
+/**
+ * updateMedicalPersonAction — FormData-based action for MedicalForm on the people edit page.
+ * Updates the person's medicalProfile fields in Firestore.
+ */
+export async function updateMedicalPersonAction(
     id: string,
     prevState: MedicalActionState,
     formData: FormData
 ): Promise<MedicalActionState> {
-    const rawData = extractMedicalData(formData);
-    const validatedFields = medicalSchema.safeParse(rawData);
-
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Please fix the errors below.',
-            success: false,
-        };
-    }
-
     try {
-        const medicalData = mapToFirestoreMedical(validatedFields.data);
+        const firstName = formData.get('firstName') as string;
+        const lastName = formData.get('lastName') as string;
+        const qualification = formData.get('qualification') as string;
+        const registrationNumber = formData.get('registrationNumber') as string;
+        const experienceYears = Number(formData.get('experienceYears') || 0);
+        const specializationsRaw = formData.get('specializations') as string;
+        const medicalTraitsRaw = formData.get('medicalTraits') as string;
 
-        await updateDoc(doc(db, 'people', id), {
-            ...medicalData,
-            updatedAt: new Date().toISOString(),
+        const specializations = specializationsRaw ? JSON.parse(specializationsRaw) : [];
+        const medicalTraits = medicalTraitsRaw ? JSON.parse(medicalTraitsRaw) : [];
+
+        const personRef = doc(db, 'people', id);
+        await updateDoc(personRef, {
+            firstName,
+            lastName,
+            'medicalProfile.qualification': qualification,
+            'medicalProfile.registrationNumber': registrationNumber,
+            'medicalProfile.experienceYears': experienceYears,
+            'medicalProfile.specializations': specializations,
+            'medicalProfile.medicalTraits': medicalTraits,
         });
 
-    } catch (error) {
-        console.error('Error updating medical staff:', error);
-        return {
-            message: 'Database Error: Failed to update medical staff.',
-            success: false,
-        };
-    }
+        await recordAuditAction({
+            actionType: 'LOGISTICS_UPDATE',
+            entityType: 'player',
+            entityId: id,
+            description: `Medical profile updated for ${firstName} ${lastName}.`,
+            actorId: 'system-ops',
+            actorName: 'Medical Staff'
+        });
 
-    revalidatePath('/people');
-    revalidatePath(`/people/${id}`);
-    redirect(`/people/${id}`);
+        revalidatePath(`/people/${id}`);
+        revalidatePath(`/people/${id}/edit`);
+
+        return { success: true, message: 'Medical profile updated successfully.' };
+    } catch (error) {
+        console.error('updateMedicalPersonAction error:', error);
+        return { success: false, message: 'Failed to update medical profile. Please try again.' };
+    }
 }

@@ -33,3 +33,8 @@ export default app;
 // Export Firebase Storage for uploads
 import { getStorage } from 'firebase/storage';
 export const storage = getStorage(app);
+
+// Data Connect
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@/generated/dataconnect';
+export const dataconnect = getDataConnect(app, connectorConfig);

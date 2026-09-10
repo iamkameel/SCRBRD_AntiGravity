@@ -70,9 +70,11 @@ export function EditMatchDialog({ open, onOpenChange, match }: EditMatchDialogPr
                 name="matchDate"
                 type="date"
                 defaultValue={
+                  !match.matchDate ? '' :
                   typeof match.matchDate === 'string'
                     ? match.matchDate.split('T')[0]
-                    : new Date(match.matchDate.toDate()).toISOString().split('T')[0]
+                    : (typeof (match.matchDate as any).toDate === 'function' ? (match.matchDate as any).toDate() : new Date(match.matchDate as any))
+                        .toISOString().split('T')[0]
                 }
                 required
               />

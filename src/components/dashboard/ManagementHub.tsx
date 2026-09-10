@@ -7,6 +7,9 @@ import {
   School, MapPin, Truck, Wallet, Handshake, Database, UsersRound 
 } from 'lucide-react';
 import { fetchPendingUserCount } from '@/app/actions/userActions';
+import { Badge } from "@/components/ui/badge";
+import { D } from '@/lib/design-system';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 
 export default function ManagementHub() {
   const [pendingUserCount, setPendingUserCount] = useState<number>(0);
@@ -54,7 +57,7 @@ export default function ManagementHub() {
       icon: ListChecks,
       title: 'Fixture Management',
       description: 'Schedule matches and manage ground availability.',
-      href: '/matches'
+      href: '/fixtures'
     },
     {
       icon: School,
@@ -102,14 +105,13 @@ export default function ManagementHub() {
   ];
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold text-foreground mb-2">
-        Management Hub
-      </h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Quick access to key management areas where you can add and assign resources.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-10">
+      <SectionHeader 
+        title="MANAGEMENT HUB" 
+        sub="SYSTEM ADMINISTRATION & RESOURCE MANAGEMENT CONTROL CENTRE" 
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {managementCards.map((card, index) => (
           <ManagementCard key={index} {...card} />
         ))}

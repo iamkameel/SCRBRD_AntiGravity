@@ -1,6 +1,10 @@
 import { fetchDivisions, fetchTeams } from "@/lib/firestore";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Layers, Plus } from "lucide-react";
+import Link from "next/link";
+import { D } from "@/lib/design-system";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { DivisionCard } from "@/components/divisions/DivisionCard";
 
 export default async function DivisionsPage() {
   const [divisions, teams] = await Promise.all([
@@ -9,69 +13,52 @@ export default async function DivisionsPage() {
   ]);
 
   return (
-    <div>
-      <header className="flex-between mb-4">
-        <div>
-          <h1>Divisions</h1>
-          <p style={{ color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-            Manage age divisions and team categories
-          </p>
-        </div>
-        <button className="btn btn-primary" style={{
-          backgroundColor: 'var(--color-primary)',
-          color: '#000',
-          border: 'none',
-          padding: '0.75rem 1.5rem',
-          borderRadius: 'var(--radius-md)',
-          fontWeight: 500,
-          cursor: 'pointer',
-          boxShadow: 'var(--shadow-glow)'
-        }}>+ Add Division</button>
-      </header>
+    <div className="space-y-12 pb-24">
+      {/* Premium Header */}
+      <SectionHeader 
+        title="Divisions & Units"
+        sub="Institutional age groups and competitive divisions. Squad allocation management."
+        icon={<Layers className="w-5 h-5 text-indigo-400" />}
+        actions={
+          <Link href="/divisions/add">
+            <Button className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
+                    style={{ background: D.indigo, color: 'white' }}>
+              <Plus className="mr-2 h-4 w-4" />
+              ADD DIVISION
+            </Button>
+          </Link>
+        }
+      />
 
-      <div style={{ display: 'grid', gap: '1rem' }}>
-        {divisions.map((division) => {
-          const divisionTeams = teams.filter((t) => t.divisionId === division.id);
-          
-          return (
-            <Card key={division.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ marginBottom: '0.5rem' }}>{division.name}</h3>
-                  <p className="text-secondary" style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
-                    {division.ageGroup} • Season {division.season}
-                  </p>
-                  
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div>
-                      <span className="text-muted" style={{ fontSize: '0.875rem' }}>Teams: </span>
-                      <Badge variant="default">{divisionTeams.length}</Badge>
-                    </div>
-                    
-                    {divisionTeams.length > 0 && (
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        {divisionTeams.map((team) => (
-                          <span key={team.id} className="text-muted" style={{ fontSize: '0.875rem' }}>
-                            {team.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Divisions Grid */}
+      <div className="grid gap-6">
+        {divisions.map((division: any, index: number) => (
+          <DivisionCard 
+            key={division.id} 
+            division={division} 
+            teams={teams} 
+            index={index} 
+          />
+        ))}
 
-      {divisions.length === 0 && (
-        <Card>
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p className="text-muted">No divisions found. Create your first division to get started.</p>
+        {divisions.length === 0 && (
+          <div className="p-24 rounded-[3rem] border border-dashed text-center space-y-4"
+               style={{ background: D.surf1, borderColor: D.border }}>
+            <div className="h-20 w-20 rounded-3xl flex items-center justify-center mx-auto opacity-20"
+                 style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
+              <Layers className="h-10 w-10 text-indigo-400" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold uppercase italic" style={{ color: D.textPrimary, fontFamily: D.head }}>
+                No Divisions Found
+              </h3>
+              <p className="text-sm font-medium" style={{ color: D.textMuted }}>
+                Define your first age group division to start organizing squads.
+              </p>
+            </div>
           </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }

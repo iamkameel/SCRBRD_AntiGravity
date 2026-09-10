@@ -5,7 +5,7 @@ import {
   Truck, Wallet, Handshake, BookOpen, HelpCircle, Presentation, Dumbbell,
   ClipboardList, Eye, Layers, School as SchoolIcon, MapPin, Shovel,
   Crosshair, GitCompareArrows, GraduationCap, BarChart3, Medal,
-  Calendar, Users2, Database, CircleHelp, Target, Terminal
+  Calendar, Users2, Database, CircleHelp, Target, Terminal, MessageSquare
 } from 'lucide-react';
 
 export interface NavLink {
@@ -35,118 +35,102 @@ export const dashboardLink: NavLink = {
   key: 'dashboard'
 };
 
-// Grouped navigation sections (matching reference design)
 export const navGroups: NavGroup[] = [
   {
-    id: 'match-operations',
-    label: 'Match Operations',
-    icon: Crosshair,
-    key: 'group-match-operations',
-    defaultOpen: false,
-    links: [
-      { href: '/fixtures', label: 'Matches', icon: CalendarDays, key: 'matches' },
-      { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring' },
-      { href: '/analytics', label: 'Analytics Dashboard', icon: BarChart3, key: 'analytics-dashboard' },
-      { href: '/strategic-calendar', label: 'Strategic Calendar', icon: Calendar, key: 'strategic-calendar' },
-      { href: '/scouting', label: 'Scouting Assistant', icon: Sparkles, key: 'scouting' },
-      { href: '/umpire-review', label: 'Umpire Review', icon: Eye, key: 'umpire-review' },
-      { href: '/results', label: 'Head-to-Head', icon: GitCompareArrows, key: 'head-to-head' },
-      { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
-    ]
-  },
-  {
-    id: 'participants',
-    label: 'Participants',
+    id: 'teams-people',
+    label: 'Teams & People',
     icon: Users2,
-    key: 'group-participants',
-    defaultOpen: false,
+    key: 'group-teams-people',
+    defaultOpen: true,
     links: [
-      { href: '/teams', label: 'Teams', icon: Shield, key: 'teams' },
+      { href: '/teams', label: 'Team Directory', icon: Shield, key: 'teams' },
       { href: '/players', label: 'People', icon: UsersRound, key: 'people' },
+      { href: '/schools', label: 'Schools', icon: SchoolIcon, key: 'schools' },
+      { href: '/browse-leagues', label: 'Leagues', icon: Trophy, key: 'competitions' },
+      { href: '/browse-divisions', label: 'Divisions', icon: Layers, key: 'divisions' },
       { href: '/umpire-profiles', label: 'Umpire Profiles', icon: UserCheck, key: 'umpire-profiles' },
       { href: '/suggest-role', label: 'Suggest Role (AI)', icon: Sparkles, key: 'suggest-role' },
-      { href: '/schools', label: 'Schools', icon: SchoolIcon, key: 'schools' },
     ]
   },
   {
-    id: 'league-structure',
-    label: 'League Structure',
-    icon: Trophy,
-    key: 'group-league-structure',
+    id: 'matches',
+    label: 'Matches',
+    icon: Crosshair,
+    key: 'group-matches',
     defaultOpen: false,
     links: [
-      { href: '/browse-leagues', label: 'Competitions', icon: Trophy, key: 'competitions' },
+      { href: '/fixtures', label: 'Match Fixtures', icon: CalendarDays, key: 'matches' },
+      { href: '/matches', label: 'Matches Hub', icon: Trophy, key: 'matches-hub' },
+      { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring' },
+      { href: '/umpire-review', label: 'Umpire Review', icon: Eye, key: 'umpire-review' },
+      { href: '/fixtures/multi-create', label: 'Multi-Fixture Tool', icon: Sparkles, key: 'multi-fixture-tool' },
       { href: '/seasons', label: 'Seasons', icon: Calendar, key: 'seasons' },
-      { href: '/browse-divisions', label: 'Divisions', icon: Layers, key: 'divisions' },
-      { href: '/rankings', label: 'Rankings', icon: BarChart3, key: 'rankings' },
-      { href: '/awards', label: 'Awards', icon: Medal, key: 'awards' },
     ]
   },
   {
-    id: 'coaching-training',
-    label: 'Coaching & Training',
-    icon: GraduationCap,
-    key: 'group-coaching-training',
+    id: 'analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    key: 'group-analytics',
+    defaultOpen: false,
+    links: [
+      { href: '/analytics', label: 'Analysis Dashboard', icon: BarChart3, key: 'analytics-dashboard' },
+      { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
+      { href: '/scouting', label: 'Scouting Assistant', icon: Sparkles, key: 'scouting' },
+      { href: '/ai-scouting', label: 'AI Scouting', icon: Sparkles, key: 'ai-scouting' },
+      { href: '/results', label: 'Head-to-Head', icon: GitCompareArrows, key: 'head-to-head' },
+      { href: '/rankings', label: 'Rankings', icon: BarChart3, key: 'rankings' },
+      { href: '/awards', label: 'Awards', icon: Medal, key: 'awards' },
+      { href: '/spider-chart', label: 'Performance Analysis', icon: Crosshair, key: 'performance-analysis' },
+    ]
+  },
+  {
+    id: 'coaching',
+    label: 'Coaching',
+    icon: Target,
+    key: 'group-coaching',
     defaultOpen: false,
     links: [
       { href: '/planner', label: 'Session Planner', icon: ClipboardList, key: 'session-planner' },
       { href: '/drills', label: 'Drill Library', icon: Dumbbell, key: 'drill-library' },
       { href: '/coaches', label: 'Player Development', icon: Target, key: 'player-development' },
-      { href: '/spider-chart', label: 'Performance Analysis', icon: Crosshair, key: 'performance-analysis' },
     ]
   },
   {
-    id: 'resources-logistics',
-    label: 'Resources & Logistics',
+    id: 'operations',
+    label: 'Operations',
     icon: Tractor,
-    key: 'group-resources-logistics',
+    key: 'group-operations',
     defaultOpen: false,
     links: [
       { href: '/fields', label: 'Fields', icon: MapPin, key: 'fields' },
       { href: '/equipment', label: 'Equipment', icon: Tractor, key: 'equipment' },
       { href: '/transport', label: 'Transport', icon: Truck, key: 'transport' },
-    ]
-  },
-  {
-    id: 'finance-partnerships',
-    label: 'Finance & Partnerships',
-    icon: Wallet,
-    key: 'group-finance-partnerships',
-    defaultOpen: false,
-    links: [
       { href: '/sponsors', label: 'Sponsors', icon: Handshake, key: 'sponsors' },
       { href: '/financials', label: 'Financials', icon: Wallet, key: 'financials' },
+      { href: '/inbox', label: 'Inbox & Newsfeed', icon: MessageSquare, key: 'inbox-newsfeed' },
     ]
   },
   {
-    id: 'system-administration',
-    label: 'System Administration',
+    id: 'administration',
+    label: 'Administration',
     icon: Settings,
-    key: 'group-system-administration',
+    key: 'group-administration',
     defaultOpen: false,
-    highlighted: true, // Special styling
+    highlighted: true,
     links: [
       { href: '/user-management', label: 'User Management', icon: UserCog, key: 'user-management' },
       { href: '/data-management', label: 'Data Management', icon: Database, key: 'data-management' },
-      { href: '/testing-arena', label: 'Testing Arena', icon: Terminal, key: 'testing-arena' },
       { href: '/audit-log', label: 'Audit Log', icon: FilePenLine, key: 'audit-log' },
-      { href: '/pitch-deck', label: 'Pitch Deck', icon: Presentation, key: 'pitch-deck' },
-    ]
-  },
-  {
-    id: 'reference',
-    label: 'Reference',
-    icon: BookOpen,
-    key: 'group-reference',
-    defaultOpen: false,
-    highlighted: true, // Green border styling
-    links: [
-      { href: '/features', label: 'Features', icon: ListChecks, key: 'features' },
+      { href: '/strategic-calendar', label: 'Strategic Calendar', icon: Calendar, key: 'strategic-calendar' },
       { href: '/roles', label: 'User Roles', icon: UserCheck, key: 'user-roles' },
       { href: '/rulebook', label: 'Rule Book', icon: BookOpen, key: 'rulebook' },
+      { href: '/testing-arena', label: 'Testing Arena', icon: Terminal, key: 'testing-arena' },
+      { href: '/pitch-deck', label: 'Pitch Deck', icon: Presentation, key: 'pitch-deck' },
+      { href: '/features', label: 'Features', icon: ListChecks, key: 'features' },
       { href: '/help', label: 'Help & Onboarding', icon: CircleHelp, key: 'help-onboarding' },
     ]
-  },
+  }
 ];
 
 // Legacy export for backwards compatibility (flatten all groups)

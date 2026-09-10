@@ -109,6 +109,36 @@ export interface Field {
     notes?: string;
 }
 
+export interface GroundStatusLog {
+    id: UUID;
+    fieldId: UUID;
+    fixtureId?: UUID;
+    conditionStatus: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unplayable';
+    pitchReadiness: number; // 0-100
+    outfieldReadiness: number; // 0-100
+    equipmentReadiness: number; // 0-100
+    moistureLevel?: number; // 0-100
+    grassCover?: number; // 0-100
+    notes?: string;
+    loggedByPersonId: UUID;
+    loggedAt: ISO8601Timestamp;
+}
+
+export interface MaintenanceTask {
+    id: UUID;
+    fieldId: UUID;
+    title: string;
+    description?: string;
+    taskType: 'Mowing' | 'Rolling' | 'Watering' | 'Marking' | 'Repair' | 'Fertilizing' | 'Other';
+    priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+    dueDate: ISO8601Date;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+    assignedToPersonId?: UUID;
+    completedAt?: ISO8601Timestamp;
+    createdAt: ISO8601Timestamp;
+    updatedAt: ISO8601Timestamp;
+}
+
 // --- Layer 3: Season, Competition and Team Hierarchy ---
 
 export interface Season {
@@ -188,31 +218,130 @@ export interface CompetitionEntry {
 
 // --- Layer 4: Roles and Access ---
 
+export type GlobalRole =
+    | 'Super Admin'
+    | 'Platform Operations Admin'
+    | 'Support Admin'
+    | 'Compliance / Safeguarding Officer'
+    | 'Audit / Read-Only Compliance Reviewer'
+    | 'Player'
+    | 'Parent'
+    | 'Adult Player-Payer';
+
+export type ScopeType =
+    | 'platform'
+    | 'league'
+    | 'school'
+    | 'team'
+    | 'fixture'
+    | 'player-self'
+    | 'linked-child';
+
+export type ScopedRole =
+    | 'League Admin'
+    | 'Tournament Director'
+    | 'Competition Operations Manager'
+    | 'Regional Selector / Provincial Admin'
+    | 'School Owner / Executive Head'
+    | 'School Admin'
+    | 'School Staff / Registrar'
+    | 'Finance Admin'
+    | 'Welfare / Medical Officer'
+    | 'Transport / Logistics Admin'
+    | 'Facilities / Grounds Admin'
+    | 'Communications / Media Admin'
+    | 'Head Coach'
+    | 'Assistant Coach'
+    | 'Team Manager'
+    | 'Strength & Conditioning Coach'
+    | 'Analyst / Performance Analyst'
+    | 'Scorer'
+    | 'Umpire'
+    | 'Match Referee / Match Commissioner'
+    | 'Groundsman / Match-Day Ops'
+    | 'Selector'
+    | 'Scout'
+    | 'Sponsor / Partner Viewer'
+    | 'Photographer / Media Contributor'
+    | 'Spectator / Fan'
+    | 'Alumni / Old Boy Viewer';
+
+export interface ScopedRoleAssignment {
+    role: ScopedRole;
+    scopeType: ScopeType;
+    scopeId: UUID;
+    assignedByPersonId?: UUID;
+    createdAt: ISO8601Timestamp;
+}
+
+export type Permission =
+    | 'person.read.self'
+    | 'person.read.school'
+    | 'person.read.linked_child'
+    | 'person.update.self_basic'
+    | 'person.update.school_operational'
+    | 'person.update.sensitive_identity'
+    | 'guardian_link.create'
+    | 'guardian_link.verify'
+    | 'guardian_link.read.linked'
+    | 'guardian_link.remove'
+    | 'team.create.school'
+    | 'team.update.school'
+    | 'team.archive.school'
+    | 'assignment.create.team_role'
+    | 'assignment.update.team_role'
+    | 'fixture.create.school'
+    | 'fixture.update.school'
+    | 'fixture.manage.competition'
+    | 'lineup.update.team'
+    | 'score.update.assigned_fixture'
+    | 'score.submit.assigned_fixture'
+    | 'score.amend.approved'
+    | 'training_log.create.team'
+    | 'skill_rating.update.team'
+    | 'stats.read.own'
+    | 'stats.read.school'
+    | 'analytics.read.programme'
+    | 'medical.read.summary'
+    | 'medical.read.full'
+    | 'medical.update'
+    | 'availability.override.medical'
+    | 'discipline.create'
+    | 'discipline.review'
+    | 'discipline.read.own_case'
+    | 'invoice.create'
+    | 'invoice.read.payer'
+    | 'invoice.read.school'
+    | 'transaction.reconcile'
+    | 'audit.read'
+    | 'role.assign.school'
+    | 'role.assign.platform'
+    | 'access.override.emergency';
+
+export interface GuardianLink {
+    id: UUID;
+    guardianPersonId: UUID;
+    childPersonId: UUID;
+    relationship: 'Parent' | 'Legal Guardian' | 'Other';
+    verificationStatus: 'Pending' | 'Verified' | 'Rejected' | 'Revoked';
+    verifiedByPersonId?: UUID;
+    verifiedAt?: ISO8601Timestamp;
+    consentGiven: boolean;
+    safeguardingAccepted: boolean;
+    createdAt: ISO8601Timestamp;
+    updatedAt: ISO8601Timestamp;
+}
+
 export interface UserAccount {
     id: UUID;
     personId: UUID;
     authProvider?: 'Firebase' | 'Google' | 'Apple';
     authIdentifier?: string;
     lastLoginAt?: ISO8601Timestamp;
+    globalRoles: GlobalRole[];
+    scopedRoles: ScopedRoleAssignment[];
     isActive: boolean;
     createdAt: ISO8601Timestamp;
-}
-
-export interface SystemRole {
-    id: UUID;
-    code: string;
-    label: string;
-}
-
-export interface UserRoleAssignment {
-    id: UUID;
-    userAccountId: UUID;
-    systemRoleId: UUID;
-    organisationId?: UUID;
-    teamId?: UUID;
-    startDate: ISO8601Date;
-    endDate?: ISO8601Date;
-    status: 'active' | 'expired' | 'revoked';
 }
 
 export interface TeamMembership {
@@ -301,6 +430,8 @@ export interface MatchTeamSheet {
     battingOrderLocked: boolean;
     bowlingRosterLocked: boolean;
     status: 'draft' | 'confirmed' | 'verified';
+    versionNo: number;
+    updatedAt: ISO8601Timestamp;
 }
 
 export interface MatchTeamSheetPlayer {
@@ -317,6 +448,22 @@ export interface MatchTeamSheetPlayer {
     isViceCaptain: boolean;
     availabilityStatus: 'available' | 'injured' | 'away';
     notes?: string;
+}
+
+// --- Layer 6.5: Match Readiness ---
+
+export interface FixtureReadinessCheck {
+    id: UUID;
+    fixtureId: UUID;
+    squadReady: boolean;
+    transportReady: boolean;
+    facilitiesReady: boolean;
+    officialsReady: boolean;
+    medicalChecked: boolean;
+    equipmentReady: boolean;
+    overallStatus: 'Pending' | 'Ready' | 'Caution' | 'Issue';
+    notes?: string;
+    updatedAt: ISO8601Timestamp;
 }
 
 // --- Layer 7: Innings, Overs and Ball-by-Ball Scoring ---
@@ -486,7 +633,7 @@ export interface MatchInsight {
     source: string;
 }
 
-// --- Layer 10: Statistics and Analytics ---
+// --- Layer 10: Statistics and Analytics (Base) ---
 
 export interface PlayerMatchStats {
     id: UUID;
@@ -553,55 +700,139 @@ export interface TeamSeasonStats {
     lastUpdatedAt: ISO8601Timestamp;
 }
 
-export interface TeamHeadToHeadStats {
+// --- Layer 11: Player Intelligence & Development ---
+
+export type BattingArchetype =
+    | 'Opener'
+    | 'Top-order Anchor'
+    | 'Middle-order Stabiliser'
+    | 'Aggressive Middle-order Batter'
+    | 'Finisher'
+    | 'Batting All-rounder';
+
+export type BowlingArchetype =
+    | 'New-ball Seamer'
+    | 'Strike Pace Bowler'
+    | 'Containment Seamer'
+    | 'Finger Spinner'
+    | 'Wrist Spinner'
+    | 'Middle-over Control Bowler'
+    | 'Death Bowler'
+    | 'Bowling All-rounder';
+
+export type SpecialistArchetype =
+    | 'Specialist Wicketkeeper'
+    | 'Wicketkeeper-Batter'
+    | 'Wicketkeeper-Finisher'
+    | 'Fielding Specialist';
+
+export type RoleArchetype = BattingArchetype | BowlingArchetype | SpecialistArchetype;
+
+export type SkillDomain =
+    | 'Physical'
+    | 'Mental'
+    | 'Tactical'
+    | 'Batting'
+    | 'Bowling'
+    | 'Fielding'
+    | 'Wicketkeeping';
+
+export type RatingScale1to9 = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export interface SkillAttribute {
+    domain: SkillDomain;
+    name: string;
+    description?: string;
+}
+
+export interface SkillAssessment {
     id: UUID;
-    teamAId: UUID;
-    teamBId: UUID;
-    matchesPlayed: number;
-    teamAWins: number;
-    teamBWins: number;
-    ties: number;
-    noResults: number;
-    highestTeamAScore?: number;
-    highestTeamBScore?: number;
-    lastMeetingMatchId?: UUID;
+    personId: UUID;
+    assessorId: UUID; // PersonId of the coach/scout
+    domain: SkillDomain;
+    attributeName: string;
+    rating: RatingScale1to9;
+    confidence: 'Low' | 'Moderate' | 'High';
+    note?: string;
+    assessedAt: ISO8601Timestamp;
+}
+
+export interface PerformanceIndex {
+    id: UUID;
+    personId: UUID;
+    seasonId: UUID;
+    roleArchetype: RoleArchetype;
+    battingScore: number;    // 0-100
+    bowlingScore: number;    // 0-100
+    fieldingScore: number;   // 0-100
+    overallScore: number;   // 0-100
+    confidenceLevel: 'Low' | 'Moderate' | 'High';
     updatedAt: ISO8601Timestamp;
 }
 
-// --- Layer 11: Player Development ---
+export interface DevelopmentTrend {
+    id: UUID;
+    personId: UUID;
+    seasonId: UUID;
+    trendStatus: 'Improving Strongly' | 'Improving Steadily' | 'Stable' | 'Slight Regression' | 'Needs Intervention';
+    movementScore: number; // e.g., points gained/lost in a period
+    summary?: string;
+    updatedAt: ISO8601Timestamp;
+}
+
+export interface ReadinessScore {
+    id: UUID;
+    personId: UUID;
+    seasonId: UUID;
+    fixtureId?: UUID; // Optional, can be fixture-specific or daily
+    score: number;    // 0-100
+    status: 'Ready' | 'Caution' | 'Restricted' | 'Unavailable';
+    injuryModifier: number;
+    workloadModifier: number;
+    fatigueModifier: number;
+    notes?: string;
+    updatedAt: ISO8601Timestamp;
+}
 
 export interface PlayerProfile {
     id: UUID;
     personId: UUID;
-    preferredRole?: string;
+    primaryRoleArchetype?: RoleArchetype;
+    secondaryRoleArchetype?: RoleArchetype;
     battingStyle?: string;
     bowlingStyle?: string;
+    dominantHand?: 'Right' | 'Left' | 'Ambidextrous';
     debutDate?: ISO8601Date;
     playerIdCode?: string;
     profileStatus: 'Prospect' | 'Active' | 'Retired';
+    status: 'active' | 'inactive' | 'suspended';
+    createdAt: ISO8601Timestamp;
+    updatedAt: ISO8601Timestamp;
 }
 
-export interface SkillRating {
+export interface TrainingSession {
     id: UUID;
-    personId: UUID;
-    ratedByPersonId: UUID;
-    seasonId?: UUID;
-    category: 'Physical' | 'Tactical' | 'Technical' | 'Mental';
-    attributeName: string;
-    ratingValue: number; // 1-20
-    notes?: string;
-    ratedAt: ISO8601Timestamp;
+    teamId?: UUID;
+    seasonId: UUID;
+    scheduledAt: ISO8601Timestamp;
+    venueId?: UUID;
+    theme?: string;
+    objective?: string;
+    status: 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
 }
 
 export interface TrainingLog {
     id: UUID;
     personId: UUID;
-    teamId?: UUID;
+    sessionId?: UUID;
     sessionDate: ISO8601Date;
     sessionType: string;
+    drillsCompleted: string[];
     workload: number;
-    notes?: string;
-    coachComments?: string;
+    coachObservation?: string;
+    playerResponse?: string; // Player's self-reflection
+    effectivenessScore?: number; // 0-100
+    loggedAt: ISO8601Timestamp;
 }
 
 export interface InjuryRecord {
@@ -610,24 +841,73 @@ export interface InjuryRecord {
     injuryType: string;
     bodyArea: string;
     severity: 'Low' | 'Medium' | 'High';
+    status: 'Active' | 'Recovering' | 'Cleared' | 'Permanent';
     occurredOn?: ISO8601Date;
     expectedReturnDate?: ISO8601Date;
-    status: 'Active' | 'Recovering' | 'Cleared' | 'Permanent';
     rehabPlan?: string;
+    medicalNotes?: string;
+    clearedByPersonId?: UUID;
+    updatedAt: ISO8601Timestamp;
 }
 
 export interface PlayerAvailability {
     id: UUID;
     personId: UUID;
-    teamId: UUID;
-    fixtureId?: UUID;
-    availableFrom?: ISO8601Date;
-    availableTo?: ISO8601Date;
-    availabilityStatus: 'Available' | 'Away' | 'Injured' | 'Tentative';
+    fixtureId: UUID;
+    availabilityStatus: 'Available' | 'Away' | 'Injured' | 'Tentative' | 'Unknown';
+    responseAt?: ISO8601Timestamp;
     reason?: string;
+    notes?: string;
 }
 
-// --- Layer 12: Finance and Logistics ---
+// --- Layer 12: Recommendation Engine ---
+
+export interface Drill {
+    id: UUID;
+    sport: string;
+    name: string;
+    category: string;
+    subcategory?: string;
+    description: string;
+    intensity: 'Low' | 'Medium' | 'High';
+    durationMinutes: number;
+    format: 'Individual' | 'Pair' | 'Group' | 'Team';
+    equipmentNeeded: string[];
+    level: 'Foundation' | 'Intermediate' | 'Advanced';
+    videoUrl?: string;
+}
+
+export interface DevelopmentNeed {
+    id: UUID;
+    personId: UUID;
+    seasonId: UUID;
+    domain: SkillDomain;
+    attributeName: string;
+    priorityRank: number;
+    needScore: number;
+    generatedAt: ISO8601Timestamp;
+}
+
+export interface DrillRecommendation {
+    id: UUID;
+    personId: UUID;
+    needId: UUID;
+    drillId: UUID;
+    recommendationType: 'Weakness' | 'Strength Sharpening';
+    confidenceLevel: 'Low' | 'Moderate' | 'High';
+    generatedAt: ISO8601Timestamp;
+}
+
+export interface RecommendationFeedback {
+    id: UUID;
+    recommendationId: UUID;
+    coachId: UUID;
+    action: 'Accepted' | 'Modified' | 'Rejected';
+    note?: string;
+    timestamp: ISO8601Timestamp;
+}
+
+// --- Layer 13: Finance and Logistics ---
 
 export interface Invoice {
     id: UUID;

@@ -1,8 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Cloud, CloudRain, Sun, Wind, Thermometer } from "lucide-react";
+import { D } from "@/lib/scoring/theme";
 
 interface WeatherWidgetProps {
   date: string;
@@ -27,11 +26,9 @@ function getMockWeather(date: string, location?: string) {
 export function WeatherWidget({ date, location = "Match Location" }: WeatherWidgetProps) {
   if (!date) {
     return (
-      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-        <CardContent className="p-4 text-center text-muted-foreground text-sm">
-          Select a date to see weather forecast
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 text-center text-white/40 text-xs font-medium italic">
+        Select a date to see atmospheric intel
+      </div>
     );
   }
 
@@ -41,44 +38,42 @@ export function WeatherWidget({ date, location = "Match Location" }: WeatherWidg
   const isGoodForCricket = weather.precipitation < 40 && weather.temp > 15;
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-fade-in">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">
-              Weather Forecast {location && location !== "Match Location" && `• ${location}`}
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1" style={{ fontFamily: D.mono }}>
+              Atmospheric Intel {location && location !== "Match Location" && `• ${location}`}
             </p>
-            <p className="text-sm font-medium mt-1">
+            <p className="text-sm font-bold text-white/90" style={{ fontFamily: D.head }}>
               {new Date(date).toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'short' })}
             </p>
           </div>
-          <WeatherIcon className="h-10 w-10 text-blue-500" />
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <WeatherIcon className="h-6 w-6 text-primary" />
+          </div>
         </div>
         
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div>
-            <Thermometer className="h-4 w-4 mx-auto text-muted-foreground" />
-            <p className="text-lg font-bold">{weather.temp}°C</p>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="bg-white/5 rounded-xl p-2 border border-white/5 text-center">
+            <Thermometer className="h-3 w-3 mx-auto text-white/40 mb-1" />
+            <p className="text-sm font-black text-white">{weather.temp}°C</p>
           </div>
-          <div>
-            <CloudRain className="h-4 w-4 mx-auto text-muted-foreground" />
-            <p className="text-lg font-bold">{weather.precipitation}%</p>
+          <div className="bg-white/5 rounded-xl p-2 border border-white/5 text-center">
+            <CloudRain className="h-3 w-3 mx-auto text-white/40 mb-1" />
+            <p className="text-sm font-black text-white">{weather.precipitation}%</p>
           </div>
-          <div>
-            <Wind className="h-4 w-4 mx-auto text-muted-foreground" />
-            <p className="text-lg font-bold">12 km/h</p>
+          <div className="bg-white/5 rounded-xl p-2 border border-white/5 text-center">
+            <Wind className="h-3 w-3 mx-auto text-white/40 mb-1" />
+            <p className="text-sm font-black text-white">12<span className="text-[10px] opacity-50 ml-0.5">km/h</span></p>
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
-          <Badge 
-            variant={isGoodForCricket ? "default" : "destructive"}
-            className={isGoodForCricket ? "bg-green-500" : ""}
-          >
-            {isGoodForCricket ? "✓ Good for Cricket" : "⚠ Check Conditions"}
-          </Badge>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-[10px] font-bold uppercase tracking-wider text-green-400">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          {isGoodForCricket ? "Prime conditions for cricket" : "Check grounds status"}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

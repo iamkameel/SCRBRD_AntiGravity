@@ -1,21 +1,36 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Syne, DM_Mono, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import Providers from '@/components/layout/Providers';
 import { PermissionViewProvider } from '@/contexts/PermissionViewContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { DashboardProvider } from '@/contexts/DashboardContext';
 import { AppShell } from "@/components/layout/AppShell";
 
-const inter = Inter({
-  variable: '--font-geist-sans',
+// UIX Spec §3.1: Syne — headings/labels/UI chrome
+const syne = Syne({
+  variable: '--font-syne',
   subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  display: 'swap',
 });
 
-const outfit = Outfit({
-  variable: '--font-geist-mono',
+// UIX Spec §3.1: DM Mono — all numeric/data values
+const dmMono = DM_Mono({
+  variable: '--font-dm-mono',
   subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+});
+
+// UIX Spec §3.1: DM Sans — body copy, descriptions
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -30,20 +45,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} antialiased bg-background text-foreground`} suppressHydrationWarning>
+      <body className={`${syne.variable} ${dmMono.variable} ${dmSans.variable} font-body antialiased bg-background text-foreground`} suppressHydrationWarning>
         <Providers>
           <AuthProvider>
             <PermissionViewProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <AppShell>
-                  {children}
-                </AppShell>
-              </ThemeProvider>
+              <DashboardProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <AppShell>
+                    {children}
+                  </AppShell>
+                </ThemeProvider>
+              </DashboardProvider>
             </PermissionViewProvider>
           </AuthProvider>
         </Providers>

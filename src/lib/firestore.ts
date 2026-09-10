@@ -213,7 +213,7 @@ export async function fetchSchoolById(id: string) {
 }
 
 export async function fetchLeagues() {
-  return fetchCollection('leagues', [orderBy('name')]);
+  return fetchCollection<any>('leagues', [orderBy('name')]);
 }
 
 export async function fetchDivisions() {
@@ -229,7 +229,7 @@ export async function fetchFields() {
 }
 
 export async function fetchFieldById(id: string) {
-  return fetchDocument('fields', id);
+  return fetchDocument<any>('fields', id);
 }
 
 export async function fetchTransactions(limitCount = 50) {
@@ -255,11 +255,11 @@ export async function fetchEquipment() {
 }
 
 export async function fetchSeasons() {
-  return fetchCollection('seasons', [orderBy('startDate', 'desc')]);
+  return fetchCollection<Season>('seasons', [orderBy('startDate', 'desc')]);
 }
 
 export async function fetchSeasonById(id: string) {
-  return fetchDocument('seasons', id);
+  return fetchDocument<Season>('seasons', id);
 }
 
 export async function fetchSchoolStaff(schoolId: string) {
@@ -426,5 +426,20 @@ export async function getMatchesByScorer(scorerId: string) {
     where('scorer', '==', scorerId),
     orderBy('matchDate', 'desc'),
     limit(10)
+  ]);
+}
+
+export async function fetchPlayerMatchImpact(fixtureId: string) {
+  return fetchCollection<any>('player_match_impact', [
+    where('fixtureId', '==', fixtureId),
+    orderBy('totalImpact', 'desc')
+  ]);
+}
+
+export async function fetchMatchImpactEvents(fixtureId: string, limitCount = 10) {
+  return fetchCollection<any>('match_impact_events', [
+    where('fixtureId', '==', fixtureId),
+    orderBy('totalImpactValue', 'desc'),
+    limit(limitCount)
   ]);
 }

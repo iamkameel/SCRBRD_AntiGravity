@@ -91,10 +91,10 @@ export async function deleteSeasonAction(id: string): Promise<{ success: boolean
   try {
     await deleteDocument('seasons', id);
     revalidatePath('/seasons');
-    return { success: true };
+    return { success: true as const };
   } catch (error: unknown) {
     console.error('Delete season error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to delete season';
-    return { success: false, error: errorMessage };
+    return { success: false as const, error: errorMessage };
   }
 }

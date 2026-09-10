@@ -25,126 +25,75 @@ import { usePermissionView, type SimulatedRole } from '@/contexts/PermissionView
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { motion } from "framer-motion";
 
-import { USER_ROLES } from '@/lib/roles';
-
-const rolePermissions = {
-  // ADMINISTRATIVE
-  [USER_ROLES.SYSTEM_ARCHITECT]: [
-    "dashboard", "teams", "people", "suggest-role", "schools", "umpire-profiles",
-    "matches", "live-scoring", "head-to-head", "umpire-review", "competitions", "divisions", "seasons", "rankings",
-    "scouting", "awards", "analysis-hub",
-    "session-planner", "drill-library", "player-development", "performance-analysis",
-    "equipment", "fields", "transport", "financials", "sponsors",
-    "user-management", "audit-log", "data-management", "user-roles", "rulebook", "strategic-calendar",
-    "help-onboarding", "pitch-deck", "features"
-  ],
-  [USER_ROLES.ADMIN]: [
-    "dashboard", "teams", "people", "suggest-role", "schools",
-    "matches", "head-to-head", "umpire-review", "competitions", "divisions",
-    "scouting", "awards",
-    "session-planner", "drill-library", "player-development",
-    "equipment", "fields", "transport", "financials", "sponsors",
-    "user-management", "data-management", "rulebook", "strategic-calendar",
-    "help-onboarding"
-  ],
-  [USER_ROLES.SPORTSMASTER]: [
-    "dashboard", "teams", "people", "suggest-role", "schools",
-    "matches", "head-to-head", "competitions", "divisions",
-    "scouting", "awards",
-    "session-planner", "drill-library", "player-development",
-    "equipment", "fields", "transport",
-    "rulebook", "strategic-calendar",
-    "help-onboarding"
-  ],
-  [USER_ROLES.SCHOOL_ADMIN]: [
-    "dashboard", "teams", "people", "schools", 
-    "matches", "head-to-head", "awards", 
-    "help-onboarding"
-  ],
-
-  // TEAM STAFF
-  [USER_ROLES.COACH]: [
-    "dashboard", "teams", "people", "suggest-role", 
-    "matches", "head-to-head", "scouting", "analysis-hub",
-    "competitions", "divisions", "rankings", "seasons",
-    "session-planner", "drill-library", "player-development", "performance-analysis",
-    "help-onboarding"
-  ],
-  [USER_ROLES.ASSISTANT_COACH]: [
-    "dashboard", "teams", "people", 
-    "matches", "head-to-head",
-    "session-planner", "drill-library",
-    "help-onboarding"
-  ],
-  [USER_ROLES.TEAM_MANAGER]: [
-    "dashboard", "teams", "people", 
-    "matches", "head-to-head",
-    "transport", "equipment",
-    "help-onboarding"
-  ],
-  [USER_ROLES.CAPTAIN]: [
-    "dashboard", "teams", "people", 
-    "matches", "head-to-head",
-    "help-onboarding"
-  ],
-
-  // PLAYERS & SPECTATORS
-  [USER_ROLES.PLAYER]: [
-    "dashboard", "people", "teams", 
-    "matches", "head-to-head", 
-    "competitions", "divisions", "rankings", "seasons",
-    "help-onboarding"
-  ],
-  [USER_ROLES.GUARDIAN]: [
-    "dashboard", "people", "teams", 
-    "matches", "head-to-head", 
-    "help-onboarding"
-  ],
-  [USER_ROLES.SPECTATOR]: [
-    "dashboard", "matches", "head-to-head", "schools", "teams", "pitch-deck"
-  ],
-
-  // SUPPORT & MEDICAL
-  [USER_ROLES.TRAINER]: [
-    "dashboard", "teams", "people",
-    "session-planner", "drill-library",
-    "help-onboarding"
-  ],
-  [USER_ROLES.PHYSIOTHERAPIST]: [
-    "dashboard", "teams", "people",
-    "help-onboarding"
-  ],
-  [USER_ROLES.DOCTOR]: [
-    "dashboard", "teams", "people",
-    "help-onboarding"
-  ],
-  [USER_ROLES.FIRST_AID]: [
-    "dashboard", "teams", "people",
-    "help-onboarding"
-  ],
-
-  // OFFICIALS & GROUND STAFF
-  [USER_ROLES.UMPIRE]: [
-    "dashboard", "matches", "umpire-review", "rulebook"
-  ],
-  [USER_ROLES.SCORER]: [
-    "dashboard", "matches", "head-to-head", "live-scoring",
-    "teams", "people"
-  ],
-  [USER_ROLES.GROUNDS_KEEPER]: [
-    "dashboard", "fields", "equipment"
-  ],
-  [USER_ROLES.DRIVER]: [
-    "dashboard", "transport", "matches"
-  ]
-} satisfies Record<SimulatedRole, string[]>;
-
+import { usePermissions } from '@/lib/auth/usePermissions';
+import { Module } from '@/lib/auth/rbac';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
+
+// Maps NavLink.key to the unified RBAC Module
+const navKeyToModuleMap: Record<string, Module> = {
+  // Match Operations
+  'dashboard': 'dashboard',
+  'matches': 'matches', 
+  'matches-hub': 'matches',
+  'live-scoring': 'matches',
+  'analytics-dashboard': 'analytics',
+  'strategic-calendar': 'calendar',
+  'scouting': 'talent',
+  'ai-scouting': 'talent',
+  'umpire-review': 'matches',
+  'head-to-head': 'analytics',
+  'analysis-hub': 'analytics',
+
+  // Participants
+  'teams': 'squad',
+  'people': 'profiles',
+  'umpire-profiles': 'staff',
+  'suggest-role': 'management',
+  'schools': 'school',
+
+  // League Structure
+  'competitions': 'competitions',
+  'multi-fixture-tool': 'matches',
+  'seasons': 'leagues',
+  'divisions': 'leagues',
+  'rankings': 'powerindex',
+  'awards': 'rewards',
+
+  // Communications
+  'inbox-newsfeed': 'dashboard',
+
+  // Coaching & Training
+  'session-planner': 'training',
+  'drill-library': 'skills',
+  'player-development': 'passport',
+  'performance-analysis': 'analytics',
+
+  // Resources & Logistics
+  'fields': 'fields',
+  'equipment': 'logistics',
+  'transport': 'logistics',
+
+  // Finance & Partnerships
+  'sponsors': 'advertising',
+  'financials': 'management',
+
+  // System Administration
+  'user-management': 'settings',
+  'data-management': 'management',
+  'testing-arena': 'settings',
+  'audit-log': 'settings',
+  'pitch-deck': 'pitchdeck',
+
+  // Reference
+  'features': 'settings',
+  'user-roles': 'settings',
+  'rulebook': 'rulebook',
+  'help-onboarding': 'myprofile'
+};
 
 const SidebarNav = () => {
   const pathname = usePathname();
-  const { currentRole } = usePermissionView();
-  const allowedKeys = rolePermissions[currentRole] || [];
+  const { canAccess } = usePermissions();
   
   // Track which groups are open (use group ID as key)
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -164,7 +113,11 @@ const SidebarNav = () => {
     }));
   };
 
-  const isLinkAllowed = (key: string) => allowedKeys.includes(key);
+  const isLinkAllowed = (key: string) => {
+    const navModule = navKeyToModuleMap[key];
+    if (!navModule) return false; // Fail secure if unmapped
+    return canAccess(navModule);
+  };
   
   const isLinkActive = (href: string) => {
     if (href === '/home') return pathname === '/' || pathname === '/home';

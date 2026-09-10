@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import type { NavGroup } from '@/lib/nav-links';
+import { D } from '@/lib/design-system';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CollapsibleNavGroupProps {
   group: NavGroup;
@@ -15,71 +17,106 @@ export default function CollapsibleNavGroup({ group }: CollapsibleNavGroupProps)
   const pathname = usePathname();
   const GroupIcon = group.icon;
 
-  // Check if any link in this group is active
   const hasActiveLink = group.links.some(link => pathname === link.href);
 
   return (
-    <div className="nav-group">
-      {/* Group Header */}
+    <div className="flex flex-col gap-1">
+      {/* Strategic Group Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg
-          transition-all duration-200
-          ${group.highlighted 
-            ? 'bg-sidebar-primary/10 border border-sidebar-primary/20 hover:bg-sidebar-primary/20' 
-            : 'hover:bg-sidebar-accent'}
-          ${hasActiveLink && !isOpen ? 'bg-sidebar-accent/50' : ''}
-          ${hasActiveLink ? 'text-sidebar-primary' : 'text-sidebar-foreground/70'}
+          w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl
+          transition-all duration-300 group/nav
+          ${isOpen ? 'bg-black/5 dark:bg-white/5' : 'hover:bg-black/5 dark:hover:bg-white/5'}
+          ${hasActiveLink ? 'text-indigo-500' : ''}
         `}
+        style={{
+          color: hasActiveLink ? D.indigo : D.textMuted,
+        }}
       >
-        <div className="flex items-center gap-3">
-          {GroupIcon && <GroupIcon size={20} />}
-          <span className="font-medium text-sm">{group.label}</span>
+        <div className="flex items-center gap-3.5">
+          <div className={`p-1.5 rounded-lg transition-all ${hasActiveLink ? "bg-indigo-500/10 shadow-sm" : "group-hover/nav:bg-black/5 opacity-50"}`}>
+            {GroupIcon && <GroupIcon size={16} style={{ color: hasActiveLink ? D.indigo : 'inherit' }} />}
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ fontFamily: D.head }}>
+             {group.label}
+          </span>
         </div>
-        <ChevronDown 
-          size={16} 
-          className={`transition-transform duration-200 ${isOpen ?'rotate-180' : ''} opacity-70`}
-        />
+        <motion.div
+           animate={{ rotate: isOpen ? 180 : 0 }}
+           transition={{ duration: 0.3, ease: "anticipate" }}
+           className="opacity-40"
+        >
+          <ChevronDown size={14} />
+        </motion.div>
       </button>
 
-      {/* Group Links */}
-      <div
-        className={`
-          overflow-hidden transition-all duration-200 ease-in-out
-          ${isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}
-        `}
-      >
-        <ul className="flex flex-col gap-0.5 pl-2">
-          {group.links.map((link) => {
-            const isActive = pathname === link.href;
-            const Icon = link.icon;
-            
-            return (
-              <li key={link.key}>
-                <Link 
-                  href={link.href}
-                  className={`
-                    flex items-center gap-3 px-4 py-2.5 rounded-md
-                    text-sm transition-all duration-150
-                    ${isActive 
-                      ? 'bg-sidebar-primary/10 text-sidebar-primary font-medium border-l-2 border-sidebar-primary' 
-                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground border-l-2 border-transparent'}
-                  `}
-                >
-                  {Icon && <Icon size={16} />}
-                  <span>{link.label}</span>
-                  {link.badge && (
-                    <span className="ml-auto text-xs bg-sidebar-primary/20 text-sidebar-primary px-2 py-0.5 rounded-full">
-                      {link.badge}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      {/* Group Links Matrix */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "anticipate" }}
+            className="overflow-hidden"
+          >
+            <ul className="flex flex-col gap-1 py-1 pl-6 pr-2">
+              {group.links.map((link) => {
+                const isActive = pathname === link.href;
+                const Icon = link.icon;
+                
+                return (
+                  <li key={link.key}>
+                    <Link 
+                      href={link.href}
+                      className={`
+                        relative flex items-center gap-3.5 px-4 py-2.5 rounded-xl
+                        transition-all duration-300 group/link
+                        ${isActive 
+                          ? 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]' 
+                          : 'hover:bg-black/5 dark:hover:bg-white/5'}
+                      `}
+                      style={{
+                        background: isActive ? D.surf2 : 'transparent',
+                        color: isActive ? D.indigo : D.textMuted,
+                        border: isActive ? `1px solid ${D.border}` : '1px solid transparent'
+                      }}
+                    >
+                      {isActive && (
+                         <div 
+                           className="absolute left-1.5 w-1 h-3 rounded-full shadow-sm" 
+                           style={{ background: D.gradMain }}
+                         />
+                      )}
+                      
+                      {Icon && (
+                        <Icon 
+                          size={13} 
+                          className={`transition-all duration-300 ${isActive ? "opacity-100 scale-110" : "opacity-30 group-hover/link:opacity-60"}`}
+                        />
+                      )}
+                      
+                      <span className={`text-[10px] uppercase tracking-widest leading-none ${isActive ? 'font-bold' : 'font-medium opacity-70'}`}>
+                        {link.label}
+                      </span>
+                      
+                      {link.badge && (
+                        <span 
+                           className="ml-auto text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tighter shadow-sm animate-pulse"
+                           style={{ background: D.rose, color: 'white' }}
+                        >
+                          {link.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

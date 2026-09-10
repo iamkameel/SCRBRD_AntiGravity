@@ -33,9 +33,9 @@ dYeME3fp3OJ70lmKI8oHaxD+WS+8PE0er1bZqAQ71wWiIRgb4DKvBQ==
 
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID || "mock-project-id",
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "mock-client-email@example.com",
-        privateKey: (process.env.FIREBASE_PRIVATE_KEY || mockPrivateKey).replace(/\\n/g, '\n'),
+        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || "mock-project-id",
+        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL || "mock-client-email@example.com",
+        privateKey: (process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY || mockPrivateKey).replace(/\\n/g, '\n'),
       }),
     });
   } catch (error) {

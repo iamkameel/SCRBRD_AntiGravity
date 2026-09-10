@@ -2,13 +2,25 @@
 
 import { useState } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Bus, MapPin, Calendar as CalendarIcon, LayoutGrid, List, Table, Calendar, Search, Users, User, Clock } from "lucide-react";
+import { 
+  Bus, 
+  MapPin, 
+  Calendar as CalendarIcon, 
+  LayoutGrid, 
+  List, 
+  Table, 
+  Search, 
+  Users, 
+  Clock, 
+  ChevronRight,
+  TrendingUp,
+  Map,
+  ShieldCheck,
+  MoreVertical
+} from "lucide-react";
 import { Trip, Vehicle } from "@/types/firestore";
-
+import { D, GlobalStyles } from "@/lib/scoring/theme";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TransportClientProps {
@@ -23,8 +35,9 @@ export function TransportClient({ trips, vehicles }: TransportClientProps) {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'trips' | 'fleet'>('trips');
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
-  // Filter trips based on search
+  // Filter logic
   const filteredTrips = trips.filter(trip => {
     const vehicle = vehicles.find(v => v.vehicleId === trip.vehicleId);
     const searchLower = searchTerm.toLowerCase();
@@ -35,7 +48,6 @@ export function TransportClient({ trips, vehicles }: TransportClientProps) {
     );
   });
 
-  // Filter vehicles based on search
   const filteredVehicles = vehicles.filter(vehicle => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -45,376 +57,425 @@ export function TransportClient({ trips, vehicles }: TransportClientProps) {
     );
   });
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
+  // Design Primitives
+  const Lbl = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ fontFamily: D.head, fontSize: '10px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: D.textMuted }}>{children}</div>
+  );
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
+  const Card = ({ children, onClick, active }: { children: React.ReactNode, onClick?: () => void, active?: boolean }) => (
+    <div 
+      onClick={onClick}
+      style={{ 
+        background: D.surf1, 
+        border: `1px solid ${active ? D.sky : D.border}`, 
+        borderRadius: D.xl, 
+        padding: '20px', 
+        position: 'relative', 
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      {children}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-border">
-        <button 
-          onClick={() => setActiveTab('trips')}
-          className={`pb-3 px-4 font-medium transition-colors border-b-2 relative ${
-            activeTab === 'trips' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-          }`}
-        >
-          Trip Schedule
-          {activeTab === 'trips' && (
-            <motion.div 
-              layoutId="activeTab"
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-            />
-          )}
-        </button>
-        <button 
-          onClick={() => setActiveTab('fleet')}
-          className={`pb-3 px-4 font-medium transition-colors border-b-2 relative ${
-            activeTab === 'fleet' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-          }`}
-        >
-          Fleet Management
-          {activeTab === 'fleet' && (
-            <motion.div 
-              layoutId="activeTab"
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-            />
-          )}
-        </button>
-      </div>
-
-      {/* Search and View Mode Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={activeTab === 'trips' ? "Search trips..." : "Search vehicles..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div style={{ background: D.base, minHeight: '100vh', color: D.textPrimary }}>
+      <GlobalStyles />
+      
+      {/* Top Header */}
+      <div style={{ 
+        borderBottom: `1px solid ${D.border}`, 
+        padding: '16px 24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        background: 'rgba(9, 9, 11, 0.8)',
+        backdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <h1 style={{ fontFamily: D.head, fontWeight: 900, fontSize: '18px', letterSpacing: '-0.02em' }}>
+              TRANSPORT <span style={{ color: D.amber }}>HUB</span>
+            </h1>
+            <div style={{ fontSize: '11px', color: D.textMuted, letterSpacing: '0.05em' }}>LOGISTICS ENGINE</div>
+          </div>
         </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex gap-1 border border-border rounded-lg p-1">
-          <Button
-            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-            className="h-8 px-3"
-            title="Grid View"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-            className="h-8 px-3"
-            title="List View"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('table')}
-            className="h-8 px-3"
-            title="Table View"
-          >
-            <Table className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('calendar')}
-            className="h-8 px-3"
-            title="Calendar View"
-          >
-            <Calendar className="h-4 w-4" />
-          </Button>
+        
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: D.textMuted }} />
+            <input 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search logistics..."
+              style={{ 
+                background: D.surf2, 
+                border: `1px solid ${D.border}`, 
+                color: D.textPrimary,
+                borderRadius: D.md,
+                padding: '8px 12px 8px 34px',
+                fontSize: '13px',
+                width: '240px'
+              }}
+            />
+          </div>
+          <button style={{ background: D.surf2, border: `1px solid ${D.border}`, borderRadius: D.md, padding: '8px 12px', color: D.textPrimary }}>
+            <CalendarIcon size={16} />
+          </button>
         </div>
       </div>
 
-      {/* Results Count */}
-      {searchTerm && (
-        <div className="text-sm text-muted-foreground">
-          Found {activeTab === 'trips' ? filteredTrips.length : filteredVehicles.length} {activeTab === 'trips' ? (filteredTrips.length === 1 ? 'trip' : 'trips') : (filteredVehicles.length === 1 ? 'vehicle' : 'vehicles')}
+      <div className="container mx-auto px-4 py-8">
+        
+        {/* Navigation Tabs */}
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', borderBottom: `1px solid ${D.border}` }}>
+          {(['trips', 'fleet'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '12px 4px',
+                fontFamily: D.head,
+                fontSize: '13px',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                background: 'none',
+                border: 'none',
+                color: activeTab === tab ? D.textPrimary : D.textMuted,
+                borderBottom: `2px solid ${activeTab === tab ? D.amber : 'transparent'}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {tab === 'trips' ? 'Next Trips' : 'Fleet Management'}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* Trips Content */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'trips' && (
-          <motion.div
-            key="trips"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* List View (Default) */}
-            {viewMode === 'list' && (
-              <motion.div 
-                className="space-y-4"
-                variants={container}
-                initial="hidden"
-                animate="show"
-              >
-                {filteredTrips.map(trip => {
-                  const vehicle = vehicles.find(v => v.vehicleId === trip.vehicleId);
-                  return (
-                    <motion.div key={trip.tripId} variants={item}>
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row gap-6 items-start">
-                            <div className="flex flex-col items-center justify-center w-16 h-16 bg-primary/10 rounded-lg shrink-0">
-                              <span className="text-2xl font-bold">{new Date(trip.date).getDate()}</span>
-                              <span className="text-xs text-muted-foreground uppercase">
-                                {new Date(trip.date).toLocaleDateString('en-US', { month: 'short' })}
-                              </span>
-                            </div>
-
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-lg font-bold">{trip.purpose}</h3>
-                                <Badge variant={trip.status === 'Completed' ? 'secondary' : 'default'}>
-                                  {trip.status}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>{trip.destination}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <Bus className="h-4 w-4" />
-                                  <span>{vehicle?.name || 'No vehicle'}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <Users className="h-4 w-4" />
-                                  <span>{trip.passengerCount || 0} passengers</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-
-            {/* Grid View */}
-            {viewMode === 'grid' && (
-              <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                variants={container}
-                initial="hidden"
-                animate="show"
-              >
-                {filteredTrips.map(trip => {
-                  const vehicle = vehicles.find(v => v.vehicleId === trip.vehicleId);
-                  return (
-                    <motion.div key={trip.tripId} variants={item}>
-                      <Card className="hover:shadow-md transition-shadow h-full">
-                        <CardContent className="p-6 space-y-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold text-lg mb-1">{trip.purpose}</h3>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <CalendarIcon className="h-4 w-4" />
-                                <span>{new Date(trip.date).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                            <Badge variant={trip.status === 'Completed' ? 'secondary' : 'default'}>
-                              {trip.status}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              <span>{trip.destination}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Bus className="h-4 w-4" />
-                              <span>{vehicle?.name || 'No vehicle'}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Users className="h-4 w-4" />
-                              <span>{trip.passengerCount || 0} passengers</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-
-            {/* Table View */}
-            {viewMode === 'table' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b bg-muted/50">
-                            <th className="text-left p-4 font-medium">Date</th>
-                            <th className="text-left p-4 font-medium">Purpose</th>
-                            <th className="text-left p-4 font-medium">Destination</th>
-                            <th className="text-left p-4 font-medium">Vehicle</th>
-                            <th className="text-left p-4 font-medium">Passengers</th>
-                            <th className="text-left p-4 font-medium">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredTrips.map(trip => {
-                            const vehicle = vehicles.find(v => v.vehicleId === trip.vehicleId);
-                            return (
-                              <tr key={trip.tripId} className="border-b hover:bg-muted/30">
-                                <td className="p-4">{new Date(trip.date).toLocaleDateString()}</td>
-                                <td className="p-4 font-medium">{trip.purpose}</td>
-                                <td className="p-4 text-muted-foreground">{trip.destination}</td>
-                                <td className="p-4 text-muted-foreground">{vehicle?.name || '-'}</td>
-                                <td className="p-4 text-muted-foreground">{trip.passengerCount || 0}</td>
-                                <td className="p-4">
-                                  <Badge variant={trip.status === 'Completed' ? 'secondary' : 'default'}>
-                                    {trip.status}
-                                  </Badge>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Calendar View */}
-            {viewMode === 'calendar' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-center py-12">
-                      <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Calendar View</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Trip schedule calendar
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Calendar view coming soon - will show trip schedules
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Fleet Content */}
-        {activeTab === 'fleet' && (
-          <motion.div
-            key="fleet"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {filteredVehicles.map((vehicle, index) => (
-              <motion.div
-                key={vehicle.vehicleId}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="hover:shadow-md transition-shadow h-full">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-lg mb-1">{vehicle.name}</h3>
-                        <p className="text-sm text-muted-foreground">{vehicle.type}</p>
-                      </div>
-                      <Badge variant={vehicle.status === 'Active' ? 'default' : 'secondary'}>
-                        {vehicle.status}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Capacity:</span>
-                        <span className="font-medium">{vehicle.capacity} seats</span>
-                      </div>
-                      {vehicle.licensePlate && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">License:</span>
-                          <span className="font-medium font-mono">{vehicle.licensePlate}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '32px' }}>
+          
+          {/* Main List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {activeTab === 'trips' ? (
+              filteredTrips.map(trip => {
+                const vehicle = vehicles.find(v => v.vehicleId === trip.vehicleId);
+                return (
+                  <Card key={trip.tripId} onClick={() => setSelectedTripId(trip.tripId)} active={selectedTripId === trip.tripId}>
+                    <div style={{ display: 'flex', gap: '24px' }}>
+                      <div style={{ 
+                        width: '60px', 
+                        height: '60px', 
+                        background: D.surf2, 
+                        borderRadius: D.lg, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                      }}>
+                        <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: D.head }}>{new Date(trip.date).getDate()}</div>
+                        <div style={{ fontSize: '10px', fontWeight: 800, color: D.textMuted, textTransform: 'uppercase' }}>
+                          {new Date(trip.date).toLocaleString('default', { month: 'short' })}
                         </div>
-                      )}
+                      </div>
+                      
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <h3 style={{ fontSize: '16px', fontWeight: 800, fontFamily: D.head }}>{trip.destination}</h3>
+                          <div style={{ 
+                            padding: '4px 8px', 
+                            background: trip.status === 'Completed' ? D.surf2 : D.amber, 
+                            color: trip.status === 'Completed' ? D.textMuted : '#000',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                            textTransform: 'uppercase'
+                          }}>
+                            {trip.status}
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: '24px', marginTop: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: D.textMuted }}>
+                            <Clock size={14} /> 08:30 AM
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: D.textMuted }}>
+                            <Bus size={14} /> {vehicle?.name || 'Bus Pending'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: D.textMuted }}>
+                            <Users size={14} /> {trip.passengerCount || 0} manifest
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <ChevronRight size={20} color={D.border} />
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  </Card>
+                );
+              })
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                {filteredVehicles.map(vehicle => (
+                  <Card key={vehicle.vehicleId}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: D.surf2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Bus size={20} color={D.amber} />
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '12px', fontFamily: D.head, fontWeight: 900 }}>{vehicle.licensePlate}</div>
+                        <div style={{ fontSize: '10px', color: D.textMuted }}>{vehicle.status}</div>
+                      </div>
+                    </div>
+                    <h4 style={{ fontSize: '15px', fontWeight: 800, fontFamily: D.head }}>{vehicle.name}</h4>
+                    <p style={{ fontSize: '12px', color: D.textMuted, marginTop: '2px' }}>{vehicle.type} • {vehicle.capacity} Seats</p>
+                    
+                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                      <div style={{ height: '4px', flex: 1, background: D.emerald, borderRadius: '2px' }} />
+                      <div style={{ height: '4px', flex: 1, background: D.emerald, borderRadius: '2px' }} />
+                      <div style={{ height: '4px', flex: 1, background: D.border, borderRadius: '2px' }} />
+                    </div>
+                    <div style={{ fontSize: '10px', color: D.textMuted, marginTop: '8px' }}>Next Service: 12 Oct 2026</div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
 
-      {/* Empty States */}
-      {activeTab === 'trips' && filteredTrips.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Bus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No trips found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Try adjusting your search terms' : 'No trips scheduled'}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+          {/* Details Sidebar / Manifest */}
+          <div>
+            <AnimatePresence mode="wait">
+              {selectedTripId ? (
+                <motion.div
+                  key="manifest"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                >
+                  <Card active>
+                    <div style={{ borderBottom: `1px solid ${D.border}`, paddingBottom: '20px', marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Lbl>TRIP MANIFEST</Lbl>
+                        <button 
+                          onClick={() => setSelectedTripId(null)} 
+                          style={{ 
+                            background: D.surf2, 
+                            border: `1px solid ${D.border}`, 
+                            borderRadius: '4px', 
+                            padding: '4px 8px',
+                            fontSize: '10px',
+                            fontFamily: D.head,
+                            fontWeight: 900,
+                            color: D.textMuted,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          CLOSE
+                        </button>
+                      </div>
+                      <h2 style={{ fontSize: '20px', fontWeight: 900, fontFamily: D.head, marginTop: '12px', letterSpacing: '-0.02em' }}>
+                        {trips.find(t => t.tripId === selectedTripId)?.destination}
+                      </h2>
+                      <div style={{ fontSize: '12px', color: D.textMuted, marginTop: '4px' }}>
+                        {trips.find(t => t.tripId === selectedTripId)?.purpose}
+                      </div>
+                    </div>
 
-      {activeTab === 'fleet' && filteredVehicles.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Bus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No vehicles found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Try adjusting your search terms' : 'No vehicles in fleet'}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {/* Driver Section */}
+                      <div>
+                        <Lbl>DRIVER ASSIGNMENT</Lbl>
+                        <div style={{ 
+                          background: 'linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(17, 24, 39, 0.4) 100%)',
+                          borderRadius: D.lg, 
+                          padding: '16px',
+                          marginTop: '8px',
+                          border: `1px solid rgba(255,255,255,0.05)`,
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1 }}>
+                            <ShieldCheck size={80} />
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                            <div style={{ 
+                              width: '40px', 
+                              height: '40px', 
+                              borderRadius: '12px', 
+                              background: `linear-gradient(45deg, ${D.amber}, #f59e0b)`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontFamily: D.head,
+                              fontWeight: 900,
+                              color: '#000'
+                            }}>
+                              JP
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: D.head }}>
+                                {trips.find(t => t.tripId === selectedTripId)?.driverName || 'Unassigned'}
+                              </div>
+                              <div style={{ fontSize: '11px', color: D.textMuted, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <ShieldCheck size={10} color={D.emerald} /> Verified Professional
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Passenger List */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <Lbl>PASSENGER MANIFEST ({trips.find(t => t.tripId === selectedTripId)?.passengerCount || 0})</Lbl>
+                          <div style={{ 
+                            fontSize: '10px', 
+                            color: D.sky, 
+                            fontWeight: 900, 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <Users size={12} /> ADD ALL
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {[
+                            { name: "M. Boucher", role: "Coach", status: "Boarded", id: 'p1' },
+                            { name: "A. Markram", role: "Captain", status: "Boarded", id: 'p2' },
+                            { name: "H. Klaasen", role: "Wicketkeeper", status: "Confirmed", id: 'p3' },
+                            { name: "M. Jansen", role: "All-rounder", status: "Awaiting", id: 'p4' },
+                            { name: "K. Rabada", role: "Bowler", status: "Awaiting", id: 'p5' }
+                          ].map((p, i) => (
+                            <div key={p.id} style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center', 
+                              padding: '12px', 
+                              background: D.surf2, 
+                              borderRadius: D.md, 
+                              border: `1px solid ${D.border}`,
+                              opacity: p.status === 'Awaiting' ? 0.6 : 1,
+                              transition: 'all 0.2s ease'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ 
+                                  width: '24px', 
+                                  height: '24px', 
+                                  borderRadius: '6px', 
+                                  background: D.border,
+                                  fontSize: '9px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 800
+                                }}>
+                                  {p.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: D.head }}>{p.name}</div>
+                                  <div style={{ fontSize: '9px', color: D.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{p.role}</div>
+                                </div>
+                              </div>
+                              <div style={{ 
+                                fontSize: '10px', 
+                                fontWeight: 900, 
+                                color: p.status === 'Boarded' ? D.emerald : (p.status === 'Confirmed' ? D.sky : D.textMuted),
+                                background: 'rgba(0,0,0,0.2)',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                textTransform: 'uppercase'
+                              }}>
+                                {p.status}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+                        <button style={{ 
+                          background: D.surf2, 
+                          color: D.textPrimary, 
+                          border: `1px solid ${D.border}`, 
+                          borderRadius: D.md, 
+                          padding: '14px', 
+                          fontFamily: D.head, 
+                          fontWeight: 800, 
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}>
+                          <Map size={14} /> VIEW ROUTE
+                        </button>
+                        <button style={{ 
+                          background: `linear-gradient(to right, ${D.sky}, #60a5fa)`, 
+                          color: '#000', 
+                          border: 'none', 
+                          borderRadius: D.md, 
+                          padding: '14px', 
+                          fontFamily: D.head, 
+                          fontWeight: 800, 
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: `0 4px 14px -4px ${D.sky}`
+                        }}>
+                          <TrendingUp size={14} /> LIVE TRACK
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <Card>
+                    <div style={{ textAlign: 'center', padding: '80px 40px' }}>
+                      <div style={{ 
+                        width: '80px', 
+                        height: '80px', 
+                        borderRadius: '40px', 
+                        background: D.surf2, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        margin: '0 auto 24px'
+                      }}>
+                        <MapPin size={32} color={D.textMuted} style={{ opacity: 0.5 }} />
+                      </div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 800, fontFamily: D.head }}>NO TRIP SELECTED</h3>
+                      <p style={{ fontSize: '13px', color: D.textMuted, marginTop: '12px', lineHeight: 1.6 }}>
+                        Select a trip from the schedule to view the passenger manifest, driver details, and live tracking routes.
+                      </p>
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+
+        </div>
+      </div>
     </div>
   );
 }

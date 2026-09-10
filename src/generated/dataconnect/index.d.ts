@@ -179,6 +179,16 @@ export interface GetPersonVariables {
   id: UUIDString;
 }
 
+export interface ImpactAttribution_Key {
+  id: UUIDString;
+  __typename?: 'ImpactAttribution_Key';
+}
+
+export interface ImpactModelVersion_Key {
+  id: UUIDString;
+  __typename?: 'ImpactModelVersion_Key';
+}
+
 export interface InjuryRecord_Key {
   id: UUIDString;
   __typename?: 'InjuryRecord_Key';
@@ -197,6 +207,11 @@ export interface InningsBowlingScorecard_Key {
 export interface InningsFallOfWicket_Key {
   id: UUIDString;
   __typename?: 'InningsFallOfWicket_Key';
+}
+
+export interface InningsMomentumSegment_Key {
+  id: UUIDString;
+  __typename?: 'InningsMomentumSegment_Key';
 }
 
 export interface InningsPartnership_Key {
@@ -332,6 +347,11 @@ export interface ListVenuesData {
   } & Venue_Key)[];
 }
 
+export interface MatchImpactEvent_Key {
+  id: UUIDString;
+  __typename?: 'MatchImpactEvent_Key';
+}
+
 export interface MatchInsight_Key {
   id: UUIDString;
   __typename?: 'MatchInsight_Key';
@@ -402,6 +422,11 @@ export interface PlayerAvailability_Key {
   __typename?: 'PlayerAvailability_Key';
 }
 
+export interface PlayerMatchImpact_Key {
+  id: UUIDString;
+  __typename?: 'PlayerMatchImpact_Key';
+}
+
 export interface PlayerMatchStats_Key {
   id: UUIDString;
   __typename?: 'PlayerMatchStats_Key';
@@ -415,6 +440,26 @@ export interface PlayerProfile_Key {
 export interface PlayerSeasonStats_Key {
   id: UUIDString;
   __typename?: 'PlayerSeasonStats_Key';
+}
+
+export interface PotentialProjection_Key {
+  id: UUIDString;
+  __typename?: 'PotentialProjection_Key';
+}
+
+export interface RankingComponent_Key {
+  id: UUIDString;
+  __typename?: 'RankingComponent_Key';
+}
+
+export interface RankingSnapshot_Key {
+  id: UUIDString;
+  __typename?: 'RankingSnapshot_Key';
+}
+
+export interface ScoutReport_Key {
+  id: UUIDString;
+  __typename?: 'ScoutReport_Key';
 }
 
 export interface Season_Key {

@@ -11,19 +11,22 @@ import { Label } from "@/components/ui/label";
 import { 
   MapPin, Users, Ruler, Sun, CloudRain, Wind, 
   Calendar, Settings, Info, Navigation, Share2,
-  TrendingUp, Plus
+  TrendingUp, Plus, Loader2
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { PitchCondition } from "./PitchCondition";
+import { FieldMatchHistory } from "./FieldMatchHistory";
+import { FieldMap } from "./FieldMap";
 import { FieldBookingCalendar } from "./FieldBookingCalendar";
 import { CapacityGauge } from "./CapacityGauge";
 import { CapacityTrendChart } from "./CapacityTrendChart";
-import { PitchCondition } from "./PitchCondition";
-import { FieldMatchHistory } from "./FieldMatchHistory";
-import { MaintenanceHistory } from "./MaintenanceHistory";
 import { WeatherWidget } from "@/components/weather/WeatherWidget";
-import { FieldMap } from "./FieldMap";
 import { getCapacityHistoryAction, logCapacityAction } from "@/app/actions/fieldCapacityActions";
+import { getMaintenanceTasksByFieldAction } from "@/app/actions/fieldActions";
+import { MaintenanceTaskList } from "@/components/facilities/MaintenanceTaskList";
+import { MaintenanceTaskForm } from "@/components/facilities/MaintenanceTaskForm";
+import { MaintenanceTask } from "@/types/schema_v4";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -45,22 +48,40 @@ export function FieldDetailClient({ field }: FieldDetailClientProps) {
   const [currentOccupancy, setCurrentOccupancy] = useState(0);
   const [isLogCapacityOpen, setIsLogCapacityOpen] = useState(false);
   const [newCapacityLog, setNewCapacityLog] = useState({ occupancy: 0, date: new Date().toISOString().split('T')[0] });
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
-  // Fetch capacity history
+  // Fetch data
   useEffect(() => {
-    const fetchCapacity = async () => {
-      const result = await getCapacityHistoryAction(field.id);
-      if (result.success && result.history) {
-        const historyData = result.history as unknown as CapacityHistoryItem[];
+    const fetchData = async () => {
+      setLoadingTasks(true);
+      const [capacityResult, maintenanceResult] = await Promise.all([
+        getCapacityHistoryAction(field.id),
+        getMaintenanceTasksByFieldAction(field.id)
+      ]);
+
+      if (capacityResult.success && capacityResult.history) {
+        const historyData = capacityResult.history as unknown as CapacityHistoryItem[];
         setCapacityHistory(historyData);
-        // Set current occupancy from last entry if available
         if (historyData.length > 0) {
           setCurrentOccupancy(historyData[historyData.length - 1].occupancy);
         }
       }
+
+      if (maintenanceResult.success && maintenanceResult.data) {
+        setMaintenanceTasks(maintenanceResult.data as unknown as MaintenanceTask[]);
+      }
+      setLoadingTasks(false);
     };
-    fetchCapacity();
+    fetchData();
   }, [field.id]);
+
+  const refreshTasks = async () => {
+    const result = await getMaintenanceTasksByFieldAction(field.id);
+    if (result.success && result.data) {
+      setMaintenanceTasks(result.data as unknown as MaintenanceTask[]);
+    }
+  };
 
   const handleLogCapacity = async () => {
     try {
@@ -358,59 +379,30 @@ export function FieldDetailClient({ field }: FieldDetailClientProps) {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Maintenance Status</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Maintenance & Tasks</CardTitle>
+                      </div>
+                      <MaintenanceTaskForm 
+                        fields={[{ id: field.id, name: field.name }]} 
+                        onSuccess={refreshTasks}
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-4 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 mb-6">
-                      <Info className="h-5 w-5" />
-                      <span className="font-medium">Field is in excellent condition and match-ready.</span>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b">
-                        <span className="text-muted-foreground">Last Mowed</span>
-                        <span className="font-medium">2 days ago</span>
+                    {loadingTasks ? (
+                      <div className="py-10 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary mb-2" />
+                        <p className="text-sm text-muted-foreground">Loading maintenance schedule...</p>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b">
-                        <span className="text-muted-foreground">Last Rolled</span>
-                        <span className="font-medium">Yesterday</span>
-                      </div>
-                      <div className="flex justify-between items-center py-3 border-b">
-                        <span className="text-muted-foreground">Next Scheduled Maintenance</span>
-                        <span className="font-medium">Friday, 10:00 AM</span>
-                      </div>
-                    </div>
+                    ) : (
+                      <MaintenanceTaskList 
+                        tasks={maintenanceTasks} 
+                        onTaskUpdate={refreshTasks}
+                      />
+                    )}
                   </CardContent>
                 </Card>
-
-                <MaintenanceHistory 
-                  logs={[
-                    {
-                      id: '1',
-                      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                      type: 'Mowing',
-                      description: 'Regular grass cutting to 12mm height. All areas covered.',
-                      performedBy: 'John Smith',
-                      status: 'Completed'
-                    },
-                    {
-                      id: '2',
-                      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                      type: 'Rolling',
-                      description: 'Pitch rolled to ensure even surface for upcoming match.',
-                      performedBy: 'Mike Johnson',
-                      status: 'Completed'
-                    },
-                    {
-                      id: '3',
-                      date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                      type: 'Fertilizing',
-                      description: 'Scheduled fertilizer application for grass health.',
-                      performedBy: 'Maintenance Team',
-                      status: 'Scheduled'
-                    },
-                  ]}
-                />
               </div>
             </TabsContent>
           </Tabs>

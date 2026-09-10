@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { 
   getMatchDetailsAction, 
   getTeamSquadAction, 
+  getDivisionAction,
   saveTeamSelectionAction, 
   saveTossResultAction,
   saveScorerChecklistAction,
@@ -25,6 +26,10 @@ import {
   initializeLiveMatchAction,
   updateMatchAction
 } from "@/app/actions/matchActions";
+import { Division } from "@/types/firestore";
+import { checkPlayerEligibility } from "@/lib/utils/EligibilityValidator";
+import { calculateAge } from "@/lib/utils/dateUtils";
+import { getTeamAction } from "@/app/actions/teamActions";
 
 import { BattingOrderEditor } from "@/components/matches/BattingOrderEditor";
 
@@ -35,8 +40,11 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
   
   // Match Data
   const [match, setMatch] = useState<Match | null>(null);
+  const [division, setDivision] = useState<Division | null>(null);
   const [homeSquad, setHomeSquad] = useState<Person[]>([]);
   const [awaySquad, setAwaySquad] = useState<Person[]>([]);
+  const [homeTeamName, setHomeTeamName] = useState<string>("Home Team");
+  const [awayTeamName, setAwayTeamName] = useState<string>("Away Team");
 
   // Workflow State
   const [homeTeamConfirmed, setHomeTeamConfirmed] = useState(false);
@@ -67,14 +75,21 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
           });
         }
 
-        // 2. Fetch Squads
-        const [home, away] = await Promise.all([
+        // 2. Fetch Division, Squads and Team names
+        const [home, away, divData, homeTeamData, awayTeamData] = await Promise.all([
           getTeamSquadAction(matchData.homeTeamId),
-          getTeamSquadAction(matchData.awayTeamId)
+          getTeamSquadAction(matchData.awayTeamId),
+          matchData.divisionId ? getDivisionAction(matchData.divisionId) : Promise.resolve(null),
+          getTeamAction(matchData.homeTeamId),
+          getTeamAction(matchData.awayTeamId)
         ]);
         
         setHomeSquad(home);
         setAwaySquad(away);
+        setDivision(divData);
+        if (homeTeamData?.name) setHomeTeamName(homeTeamData.name);
+        if (awayTeamData?.name) setAwayTeamName(awayTeamData.name);
+        setDivision(divData);
         
       } catch (error) {
         console.error("Error fetching pre-match data:", error);
@@ -228,13 +243,19 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
   );
 
   // Helper to map Person to TeamSelection player format
-  const mapSquadToPlayers = (squad: Person[]) => squad.map(p => ({
-    id: p.id,
-    firstName: p.firstName,
-    lastName: p.lastName,
-    role: p.playingRole || 'Player',
-    profileImageUrl: p.profileImageUrl
-  }));
+  const mapSquadToPlayers = (squad: Person[]) => squad.map(p => {
+    const age = calculateAge(p.dateOfBirth);
+    const eligibility = division ? checkPlayerEligibility(age, division) : { isEligible: true };
+    
+    return {
+      id: p.id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      role: p.playingRole || 'Player',
+      profileImageUrl: p.profileImageUrl,
+      eligibility
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -249,8 +270,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
           <div>
             <h1 className="text-2xl font-bold">Pre-Match Workflow</h1>
             <p className="text-muted-foreground text-sm">
-              {match.homeTeamId} vs {match.awayTeamId} 
-              {/* Note: In real app, we'd fetch team names. For now using IDs or we need to fetch Team docs too */}
+              {homeTeamName} vs {awayTeamName}
             </p>
           </div>
         </div>
@@ -347,13 +367,13 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
           {/* Home Team Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Home Team ({match.homeTeamId})</h3>
+              <h3 className="text-lg font-semibold">{homeTeamName}</h3>
               {!canViewHomeTeam && <Badge variant="outline">Hidden</Badge>}
             </div>
             
             {canViewHomeTeam ? (
               <TeamSelection 
-                teamName="Home Team"
+                teamName={homeTeamName}
                 squad={mapSquadToPlayers(homeSquad)}
                 initialSelection={match.teamSelection?.home?.playingXI}
                 initialReserves={match.teamSelection?.home?.reserves}
@@ -363,7 +383,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
                 onSave={(selection) => handleTeamSave('home', selection)}
               />
             ) : (
-              <PrivacyPlaceholder teamName="Home Team" />
+              <PrivacyPlaceholder teamName={homeTeamName} />
             )}
           </div>
 
@@ -372,13 +392,13 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
           {/* Away Team Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Away Team ({match.awayTeamId})</h3>
+              <h3 className="text-lg font-semibold">{awayTeamName}</h3>
               {!canViewAwayTeam && <Badge variant="outline">Hidden</Badge>}
             </div>
 
             {canViewAwayTeam ? (
               <TeamSelection 
-                teamName="Away Team"
+                teamName={awayTeamName}
                 squad={mapSquadToPlayers(awaySquad)}
                 initialSelection={match.teamSelection?.away?.playingXI}
                 initialReserves={match.teamSelection?.away?.reserves}
@@ -388,7 +408,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
                 onSave={(selection) => handleTeamSave('away', selection)}
               />
             ) : (
-              <PrivacyPlaceholder teamName="Away Team" />
+              <PrivacyPlaceholder teamName={awayTeamName} />
             )}
           </div>
         </TabsContent>
@@ -396,8 +416,8 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
         <TabsContent value="order">
           <BattingOrderEditor 
             matchId={match.id}
-            homeTeamName="Home Team"
-            awayTeamName="Away Team"
+            homeTeamName={homeTeamName}
+            awayTeamName={awayTeamName}
             homePlayingXI={homeSquad.filter(p => match.teamSelection?.home?.playingXI?.includes(p.id)).map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, role: p.playingRole || 'Player' }))}
             awayPlayingXI={awaySquad.filter(p => match.teamSelection?.away?.playingXI?.includes(p.id)).map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, role: p.playingRole || 'Player' }))}
             onComplete={handleBattingOrderComplete}
@@ -407,8 +427,8 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
         <TabsContent value="toss">
           <div className="max-w-2xl mx-auto">
             <TossSimulator 
-              homeTeamName="Home Team"
-              awayTeamName="Away Team"
+              homeTeamName={homeTeamName}
+              awayTeamName={awayTeamName}
               onComplete={handleTossComplete}
               existingResult={tossResult || undefined}
               isReadOnly={!!tossResult}

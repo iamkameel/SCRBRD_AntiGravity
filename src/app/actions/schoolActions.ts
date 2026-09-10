@@ -44,7 +44,7 @@ export async function createSchoolAction(
     await createDocument<Omit<School, 'id'>>('schools', validatedData as any);
 
     revalidatePath('/schools');
-    return { success: true };
+    return { success: true as const };
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {
       const zodError = error as { issues: Array<{ path: (string | number)[]; message: string }> };
@@ -97,7 +97,7 @@ export async function updateSchoolAction(
 
     revalidatePath('/schools');
     revalidatePath(`/schools/${schoolId}`);
-    return { success: true };
+    return { success: true as const };
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'issues' in error) {
       const zodError = error as { issues: Array<{ path: (string | number)[]; message: string }> };

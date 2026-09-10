@@ -1,10 +1,12 @@
 'use server';
 
 import { teamService } from '@/services/teamService';
+import { personService } from '@/services/personService';
 import { TeamSchema } from '@/lib/validations/teamSchema';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
+import { serializeData } from '@/lib/serialize';
 
 export type TeamActionState = {
   error?: string;
@@ -73,11 +75,36 @@ export async function createTeamAction(
 }
 
 /**
- * Legacy compatibility mock for local filtering in prototype
+ * Get teams for a specific organisation
+ */
+export async function getTeamsBySchoolAction(schoolId: string) {
+  try {
+    const teams = await teamService.getByOrganisation(schoolId);
+    return serializeData(teams);
+  } catch (error) {
+    console.error('Get teams by school error:', error);
+    return [];
+  }
+}
+
+/**
+ * Get coaches for a specific organisation
  */
 export async function getCoachesBySchoolAction(schoolId: string) {
-  // In a real implementation this would query Data Connect
-  return [];
+  try {
+    const people = await personService.getAll();
+    const coaches = people.filter(p => {
+      const assignments = p.userAccount_on_person?.userRoleAssignments_on_userAccount || [];
+      return assignments.some(a =>
+        a.organisation?.id === schoolId &&
+        (a.systemRole?.label?.toLowerCase() === 'coach' || a.systemRole?.label?.toLowerCase() === 'head_coach')
+      );
+    });
+    return serializeData(coaches);
+  } catch (error) {
+    console.error('Get coaches by school error:', error);
+    return [];
+  }
 }
 
 export async function deleteTeamAction(id: string): Promise<TeamActionState> {
@@ -149,4 +176,14 @@ export async function updateTeamAction(
     return { error: error instanceof Error ? error.message : 'Failed to update team' };
   }
   redirect(`/teams/${id}`);
+}
+
+export async function getTeamAction(id: string) {
+  try {
+    const team = await teamService.getOne(id);
+    return team;
+  } catch (error) {
+    console.error('Get team error:', error);
+    return null;
+  }
 }

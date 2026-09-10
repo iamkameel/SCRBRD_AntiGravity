@@ -8,6 +8,7 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: ['./tests/setup.ts'],
+        exclude: ['**/e2e/**', '**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**'],
     },
     resolve: {
         alias: {
@@ -16,3 +17,4 @@ export default defineConfig({
         extensions: ['.ts', '.tsx', '.js', '.jsx'],
     },
 });
+

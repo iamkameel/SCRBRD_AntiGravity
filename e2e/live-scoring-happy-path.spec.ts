@@ -136,12 +136,20 @@ test.describe('Live Scoring - Happy Path', () => {
         await page.waitForTimeout(3000);
 
         // Get match ID
+        await page.waitForURL(/\/matches\//, { timeout: 10000 });
         const currentUrl = page.url();
+        console.log(`📍 Current URL after creation: ${currentUrl}`);
+
+        let matchId = '';
+
         if (currentUrl.includes('/matches/') && !currentUrl.includes('/add')) {
             const urlParts = currentUrl.split('/');
-            const matchesIndex = urlParts.findIndex(p => p === 'matches');
+            const matchesIndex = urlParts.findIndex((p: string) => p === 'matches');
             matchId = urlParts[matchesIndex + 1] || '';
+            console.log(`🔗 Extracted matchId from URL: ${matchId}`);
         } else {
+            console.log('📋 Redirected to list or same page, looking for match in list...');
+            await page.screenshot({ path: 'test-results/happy-path-creation-failed.png' });
             // Redirected to list - find the match
             const matchLinks = page.locator('a[href^="/matches/"]');
             const count = await matchLinks.count();
@@ -149,12 +157,13 @@ test.describe('Live Scoring - Happy Path', () => {
                 const href = await matchLinks.nth(i).getAttribute('href');
                 if (href && !href.includes('/add') && href !== '/matches') {
                     matchId = href.split('/').pop() || '';
+                    console.log(`🔎 Found matchId in list: ${matchId}`);
                     break;
                 }
             }
         }
 
-        console.log(`✅ Match created: ${matchId}`);
+        console.log(`✅ Final Match ID: "${matchId}"`);
         expect(matchId).toBeTruthy();
         expect(matchId).not.toContain('add');
 
@@ -169,39 +178,46 @@ test.describe('Live Scoring - Happy Path', () => {
         // ========================================
         // STEP 4: Handle Toss (if button exists)
         // ========================================
-        const tossButton = page.locator('button:has-text("Start Match"), button:has-text("Toss")').first();
-        if (await tossButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-            console.log('\n🎲 Handling toss...');
+        console.log('\n🎲 Looking for toss button...');
+        // Match the button with "Start Match" or "Toss"
+        const tossButton = page.getByRole('button', { name: /Start Match|Toss/i });
+
+        try {
+            await expect(tossButton).toBeVisible({ timeout: 10000 });
+            console.log('✅ Toss button found, clicking...');
             await tossButton.click();
-            await page.waitForTimeout(500);
+        } catch (e) {
+            console.log('ℹ️ No toss button found within 10s. Logging page state...');
+            const html = await page.content();
+            console.log('Page content snippet:', html.substring(0, 1000));
+            await page.screenshot({ path: 'test-results/toss-button-not-found.png' });
+        }
+        await page.waitForTimeout(1000);
 
-            // Select toss winner
-            const tossWinnerTrigger = page.locator('[data-testid="toss-winner-select"], button[role="combobox"]').first();
-            if (await tossWinnerTrigger.isVisible({ timeout: 2000 }).catch(() => false)) {
-                await tossWinnerTrigger.click();
-                await page.waitForTimeout(300);
-                await page.keyboard.press('ArrowDown');
-                await page.keyboard.press('Enter');
-                console.log('✅ Selected toss winner');
-            }
+        // Select toss winner
+        const tossWinnerTrigger = page.locator('[data-testid="toss-winner-select"], button[role="combobox"]').first();
+        if (await tossWinnerTrigger.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await tossWinnerTrigger.click();
+            await page.waitForTimeout(300);
+            await page.keyboard.press('ArrowDown');
+            await page.keyboard.press('Enter');
+            console.log('✅ Selected toss winner');
+        }
 
-            // Select to bat first
-            const batOption = page.locator('text=Bat, button:has-text("Bat")').first();
-            if (await batOption.isVisible({ timeout: 2000 }).catch(() => false)) {
-                await batOption.click();
-                console.log('✅ Selected to bat first');
-            }
+        // Select to bat first
+        const batOption = page.locator('text=Bat, button:has-text("Bat")').first();
+        if (await batOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await batOption.click();
+            console.log('✅ Selected to bat first');
+        }
 
-            // Confirm toss
-            const confirmBtn = page.locator('button:has-text("Confirm"), button:has-text("Start")').first();
-            if (await confirmBtn.isVisible()) {
-                await confirmBtn.click();
-                await page.waitForTimeout(1000);
-                console.log('✅ Toss confirmed');
-                await page.screenshot({ path: 'test-results/happy-path-04-toss-completed.png' });
-            }
-        } else {
-            console.log('ℹ️ No toss button - match may already be started');
+        // Confirm toss
+        const confirmBtn = page.locator('button:has-text("Confirm"), button:has-text("Start")').first();
+        if (await confirmBtn.isVisible()) {
+            await confirmBtn.click();
+            await page.waitForTimeout(1000);
+            console.log('✅ Toss confirmed');
+            await page.screenshot({ path: 'test-results/happy-path-04-toss-completed.png' });
         }
 
         // ========================================
@@ -396,10 +412,6 @@ test.describe('Live Scoring - Happy Path', () => {
 
             console.log('\n✅ Happy path test completed successfully!');
             console.log(`📊 Final score: ${(await getCurrentScore(page)).runs}/${(await getCurrentScore(page)).wickets}`);
-        } else {
-            console.log('⚠️ Scoring interface not available - test incomplete');
-            console.log('This may indicate the match needs additional setup (toss, player selection)');
-            await page.screenshot({ path: 'test-results/happy-path-scoring-not-available.png' });
         }
     });
 });

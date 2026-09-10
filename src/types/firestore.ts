@@ -5,7 +5,8 @@ import { FieldValue, Timestamp, GeoPoint } from 'firebase/firestore';
 // See /docs/SCHEMA_V3_PROPOSAL.md for architecture details
 export * from './scoring';
 import * as V4 from './schema_v4';
-export { V4 };
+import * as Rankings from './rankings';
+export { V4, Rankings };
 
 
 // Re-export types from store for convenience (used by transport module)
@@ -66,6 +67,7 @@ export interface Division extends FirestoreEntity {
   leagueId: string;
   ageGroup: AgeGroup;
   divisionType?: DivisionType;
+  maxAge?: number | null;
   season?: string;
 }
 
@@ -97,7 +99,7 @@ export interface Field extends FirestoreEntity {
   abbreviatedName?: string; // Short code, e.g. 'WDV Field'
   nickName?: string; // Local nickname
   location?: string; // Address or description
-  status?: 'Available' | 'Maintenance' | 'Booked' | 'Closed'; // Status from UI
+  status?: 'Available' | 'Maintenance' | 'Booked' | 'Closed' | 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unplayable'; // Status from UI
   address?: string; // Full street address
   coordinates?: { lat: number; lng: number }; // GPS coordinates for map integration
   geoLocation?: GeoPoint; // Center point for mapping
@@ -780,6 +782,9 @@ export interface Match extends FirestoreEntity {
   matchTime?: Timestamp;
   fieldId?: string;
   isDayNight?: boolean;
+  umpire1Id?: string;
+  umpire2Id?: string;
+  scorerId?: string;
 
   // V3 STATE MACHINE
   state?: 'SCHEDULED' | 'TEAM_SELECTION' | 'PRE_MATCH' | 'LIVE' | 'INNINGS_BREAK' | 'COMPLETED' | 'CANCELLED' | 'POSTPONED';
@@ -969,7 +974,8 @@ export interface Groundskeeper extends FirestoreEntity {
 }
 
 // --- 6. Primary Scoring Actions & Live Scoring Tools ---
-export interface ScoringAction extends FirestoreEntity {
+/** @deprecated Use V3 ScoringAction from './scoring' */
+export interface LegacyScoringAction extends FirestoreEntity {
   fixtureId: string;
   inningsId: string;
   overNumber: number;

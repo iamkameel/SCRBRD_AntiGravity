@@ -2,6 +2,7 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Calendar, MapPin, Users } from "lucide-react";
+import { D } from "@/lib/scoring/theme";
 
 interface ConflictAlertProps {
   conflicts: string[];
@@ -17,14 +18,14 @@ export function ConflictAlert({ conflicts }: ConflictAlertProps) {
   };
 
   return (
-    <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
-      <AlertTriangle className="h-5 w-5" />
-      <AlertTitle className="font-semibold">Scheduling Conflicts Detected</AlertTitle>
+    <Alert className="bg-red-500/10 border-red-500/20 backdrop-blur-xl text-white rounded-2xl sh-slide-up">
+      <AlertTriangle className="h-5 w-5 text-red-400" />
+      <AlertTitle className="font-bold text-red-400" style={{ fontFamily: D.head }}>Conflict Resolution Required</AlertTitle>
       <AlertDescription>
-        <ul className="mt-2 space-y-1">
+        <ul className="mt-3 space-y-2">
           {conflicts.map((conflict, index) => (
-            <li key={index} className="flex items-center gap-2 text-sm">
-              {getConflictIcon(conflict)}
+            <li key={index} className="flex items-center gap-3 text-xs font-medium text-white/70 bg-white/5 p-2 rounded-lg border border-white/5">
+              <div className="text-red-400/60">{getConflictIcon(conflict)}</div>
               {conflict}
             </li>
           ))}

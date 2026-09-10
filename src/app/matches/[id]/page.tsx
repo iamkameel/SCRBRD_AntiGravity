@@ -1,4 +1,4 @@
-import { fetchDocument, fetchPlayersForMatch } from "@/lib/firestore";
+import { fetchDocument, fetchPlayersForMatch, fetchPlayerMatchImpact, fetchMatchImpactEvents } from "@/lib/firestore";
 import { Match, Team } from "@/types/firestore";
 import { MatchDetailClient } from "@/components/match/MatchDetailClient";
 import { notFound } from "next/navigation";
@@ -20,11 +20,17 @@ export default async function MatchDetailPage(props: { params: Promise<{ id: str
   // Fetch players for both teams
   const playersRaw = await fetchPlayersForMatch(matchRaw.homeTeamId, matchRaw.awayTeamId);
 
+  // Fetch impact data
+  const playerImpactRaw = await fetchPlayerMatchImpact(id);
+  const matchImpactEventsRaw = await fetchMatchImpactEvents(id, 10);
+
   // Serialize data for Client Component
   const match = serializeFirestoreData(matchRaw);
   const homeTeam = homeTeamRaw ? serializeFirestoreData(homeTeamRaw) : undefined;
   const awayTeam = awayTeamRaw ? serializeFirestoreData(awayTeamRaw) : undefined;
   const players = playersRaw.map(p => serializeFirestoreData(p));
+  const playerImpact = playerImpactRaw.map(pi => serializeFirestoreData(pi));
+  const matchImpactEvents = matchImpactEventsRaw.map(me => serializeFirestoreData(me));
 
   return (
     <MatchDetailClient 
@@ -32,6 +38,8 @@ export default async function MatchDetailPage(props: { params: Promise<{ id: str
       homeTeam={homeTeam}
       awayTeam={awayTeam}
       players={players}
+      playerImpact={playerImpact}
+      matchImpactEvents={matchImpactEvents}
     />
   );
 }

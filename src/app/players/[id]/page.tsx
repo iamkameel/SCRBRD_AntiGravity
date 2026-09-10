@@ -1,9 +1,16 @@
 import { redirect, notFound } from 'next/navigation';
-import { fetchPersonById } from "@/lib/firestore";
+import { fetchPersonById, fetchDocument } from "@/lib/firestore";
 import { PlayerDetailClient } from "@/components/players/PlayerDetailClient";
+import { RewardsWallet } from "@/types/rewards";
+import { getPlayerAssessmentsAction, getPlayerReadinessAction } from "@/app/actions/skillActions";
 
 export default async function PlayerProfilePage({ params }: { params: { id: string } }) {
-  const person = await fetchPersonById(params.id);
+  const [person, wallet, assessments, readiness] = await Promise.all([
+    fetchPersonById(params.id),
+    fetchDocument<RewardsWallet>('rewards_wallets', params.id),
+    getPlayerAssessmentsAction(params.id),
+    getPlayerReadinessAction(params.id)
+  ]);
   
   if (!person) {
     notFound();
@@ -17,5 +24,12 @@ export default async function PlayerProfilePage({ params }: { params: { id: stri
     redirect(`/people/${params.id}`);
   }
   
-  return <PlayerDetailClient player={person} />;
+  return (
+    <PlayerDetailClient 
+      player={person} 
+      rewardsWallet={wallet || undefined} 
+      assessments={assessments.success ? assessments.assessments : []}
+      readiness={readiness.success ? (readiness.readiness || undefined) : undefined}
+    />
+  );
 }

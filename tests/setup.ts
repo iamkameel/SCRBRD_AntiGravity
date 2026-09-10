@@ -40,3 +40,25 @@ beforeAll(() => {
 afterAll(() => {
     console.error = originalError;
 });
+
+// Mock DataConnect
+vi.mock('@/lib/dataconnect', () => ({
+    dc: {
+        _app: {},
+        _config: {}
+    }
+}));
+
+// Mock generated SDK
+vi.mock('@/generated/dataconnect', () => ({
+    connectorConfig: {
+        service: 'scrbrd-service',
+        location: 'us-central1',
+        connector: 'default'
+    },
+    listPeople: vi.fn(() => Promise.resolve({ data: { people: [] } })),
+    getPerson: vi.fn(() => Promise.resolve({ data: { person: null } })),
+    createPerson: vi.fn(() => Promise.resolve({ data: { create_person: {} } })),
+    deletePerson: vi.fn(() => Promise.resolve({ data: { delete_person: {} } })),
+    listPeopleRef: vi.fn(),
+}));

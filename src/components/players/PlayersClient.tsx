@@ -12,6 +12,7 @@ import Link from "next/link";
 import { User, LayoutGrid, List, BarChart3, Search, Edit, Filter, ArrowUpDown, Activity } from "lucide-react";
 import { Player as Person } from "@/lib/store";
 import { PlayerCard } from "./PlayerCard";
+import { D } from "@/lib/design-system";
 
 interface PlayersClientProps {
   players: any[];
@@ -64,12 +65,13 @@ export function PlayersClient({ players }: PlayersClientProps) {
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         {/* Search Bar */}
         <div className="relative flex-1 max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: D.textMuted }} />
           <Input
             placeholder="Search players..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
+            style={{ background: D.surf2, border: `1px solid ${D.border}`, color: D.textPrimary }}
           />
         </div>
 
@@ -118,41 +120,34 @@ export function PlayersClient({ players }: PlayersClientProps) {
           </Select>
 
           {/* View Mode Toggle */}
-          <div className="flex gap-1 border border-border rounded-lg p-1 bg-muted/20 self-start sm:self-auto">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="h-8 px-3"
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 px-3"
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'stats' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('stats')}
-              className="h-8 px-3"
-              title="Stats View"
-            >
-              <BarChart3 className="h-4 w-4" />
-            </Button>
+          <div
+            className="flex gap-1 p-1 self-start sm:self-auto"
+            style={{ background: D.surf2, border: `1px solid ${D.border}`, borderRadius: D.lg }}
+          >
+            {([['grid', LayoutGrid], ['list', List], ['stats', BarChart3]] as const).map(([mode, Icon]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className="h-8 px-3 rounded-md transition-all"
+                style={{
+                  background: viewMode === mode ? D.surf3 : 'transparent',
+                  color: viewMode === mode ? D.textPrimary : D.textMuted,
+                  border: viewMode === mode ? `1px solid ${D.border}` : '1px solid transparent',
+                }}
+                title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View`}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
-        Found {filteredPlayers.length} {filteredPlayers.length === 1 ? 'player' : 'players'}
+      <div style={{ fontFamily: D.body, fontSize: 12, color: D.textMuted, letterSpacing: '0.04em' }}>
+        {filteredPlayers.length === 1
+          ? `1 player found`
+          : `${filteredPlayers.length} players found`}
       </div>
 
       {/* Grid View */}
@@ -183,99 +178,124 @@ export function PlayersClient({ players }: PlayersClientProps) {
 
       {/* Stats Table View */}
       {viewMode === 'stats' && (
-        <Card className="overflow-hidden border-t-4 border-t-primary">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50 border-b border-border">
-                  <tr>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Player</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Role</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Matches</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Runs</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Wickets</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Avg</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">SR</th>
-                    <th className="text-center p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Status</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPlayers.map((p) => (
-                    <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                      <td className="p-4">
-                        <Link href={`/players/${p.id}`} className="flex items-center gap-3 hover:text-primary group">
-                          <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden border border-border/50">
-                            <Image 
-                              src={p.profileImageUrl || `https://ui-avatars.com/api/?name=${p.firstName}+${p.lastName}&background=22c55e&color=fff`} 
-                              alt={`${p.firstName} ${p.lastName}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div>
-                            <div className="font-semibold group-hover:text-primary transition-colors">{p.firstName} {p.lastName}</div>
-                          </div>
-                        </Link>
-                      </td>
-                      <td className="p-4 text-muted-foreground">{p.role}</td>
-                      <td className="p-4 text-center font-semibold">{p.stats?.matchesPlayed || 0}</td>
-                      <td className="p-4 text-center font-semibold">{p.stats?.totalRuns || 0}</td>
-                      <td className="p-4 text-center font-semibold">{p.stats?.wicketsTaken || 0}</td>
-                      <td className="p-4 text-center">{p.stats?.battingAverage?.toFixed(2) || '-'}</td>
-                      <td className="p-4 text-center">{p.stats?.strikeRate?.toFixed(2) || '-'}</td>
-                      <td className="p-4 text-center">
-                        {p.status && (
-                          <Badge variant={p.status === 'active' ? 'default' : 'secondary'}>
-                            {p.status}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link href={`/players/${p.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <User className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                          <Link href={`/players/${p.id}/edit`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
+        <div
+          className="overflow-hidden"
+          style={{ background: D.surf1, border: `1px solid ${D.border}`, borderRadius: D.xl, borderTop: `3px solid ${D.emerald}` }}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead style={{ background: D.surf2, borderBottom: `1px solid ${D.border}` }}>
+                <tr>
+                  {['Player','Role','M','Runs','Wkts','Avg','SR','Status',''].map((h, i) => (
+                    <th
+                      key={i}
+                      className={`p-4 ${i === 0 || i === 1 ? 'text-left' : i === 8 ? 'text-right' : 'text-center'}`}
+                      style={{ fontFamily: D.head, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.textMuted }}
+                    >
+                      {h}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPlayers.map((p) => (
+                  <tr
+                    key={p.id}
+                    className="transition-colors"
+                    style={{ borderBottom: `1px solid ${D.border}` }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = D.surf2)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <td className="p-4">
+                      <Link href={`/players/${p.id}`} className="flex items-center gap-3 group">
+                        <div className="relative w-10 h-10 flex-shrink-0 rounded-full overflow-hidden" style={{ border: `1px solid ${D.border}` }}>
+                          <Image
+                            src={p.profileImageUrl || `https://ui-avatars.com/api/?name=${p.firstName}+${p.lastName}&background=10b981&color=fff`}
+                            alt={`${p.firstName} ${p.lastName}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div
+                          style={{ fontFamily: D.head, fontSize: 14, fontWeight: 600, color: D.textPrimary }}
+                          className="group-hover:text-emerald-400 transition-colors"
+                        >
+                          {p.firstName} {p.lastName}
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="p-4" style={{ fontFamily: D.body, fontSize: 13, color: D.textSecondary }}>{p.role}</td>
+                    <td className="p-4 text-center" style={{ fontFamily: D.mono, fontSize: 14, fontWeight: 600, color: D.textPrimary }}>{p.stats?.matchesPlayed || 0}</td>
+                    <td className="p-4 text-center" style={{ fontFamily: D.mono, fontSize: 14, fontWeight: 700, color: D.sky }}>{p.stats?.totalRuns || 0}</td>
+                    <td className="p-4 text-center" style={{ fontFamily: D.mono, fontSize: 14, fontWeight: 700, color: D.rose }}>{p.stats?.wicketsTaken || 0}</td>
+                    <td className="p-4 text-center" style={{ fontFamily: D.mono, fontSize: 13, color: D.textSecondary }}>{p.stats?.battingAverage?.toFixed(2) || '—'}</td>
+                    <td className="p-4 text-center" style={{ fontFamily: D.mono, fontSize: 13, color: D.textSecondary }}>{p.stats?.strikeRate?.toFixed(2) || '—'}</td>
+                    <td className="p-4 text-center">
+                      {p.status && (
+                        <span
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider"
+                          style={{
+                            fontFamily: D.head,
+                            background: p.status === 'active' ? `${D.emerald}18` : p.status === 'injured' ? `${D.rose}18` : `${D.amber}18`,
+                            color: p.status === 'active' ? D.emerald : p.status === 'injured' ? D.rose : D.amber,
+                            border: `1px solid ${p.status === 'active' ? D.emerald : p.status === 'injured' ? D.rose : D.amber}30`,
+                          }}
+                        >
+                          {p.status}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/players/${p.id}`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <User className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/players/${p.id}/edit`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Empty State */}
       {filteredPlayers.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No players found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
-                ? 'Try adjusting your filters' 
-                : 'Get started by adding your first player'}
-            </p>
-            {(!searchTerm && roleFilter === 'all' && statusFilter === 'all') && (
-              <Link href="/players/add">
-                <Button>
-                  Add Player
-                </Button>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
+        <div
+          className="p-12 text-center"
+          style={{ background: D.surf1, border: `2px dashed ${D.border}`, borderRadius: D.xl }}
+        >
+          <div
+            className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full"
+            style={{ background: D.surf2 }}
+          >
+            <User className="h-8 w-8" style={{ color: D.textMuted }} />
+          </div>
+          <h3 style={{ fontFamily: D.head, fontWeight: 700, fontSize: 16, color: D.textPrimary, marginBottom: 8 }}>No players found</h3>
+          <p style={{ fontFamily: D.body, fontSize: 14, color: D.textSecondary, marginBottom: 24 }}>
+            {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+              ? 'Try adjusting your filters'
+              : 'Get started by adding your first player'}
+          </p>
+          {(!searchTerm && roleFilter === 'all' && statusFilter === 'all') && (
+            <Link href="/players/add">
+              <button
+                className="press-btn inline-flex items-center gap-2 px-5 py-2.5 font-bold text-white"
+                style={{ background: D.gradMain, fontFamily: D.head, fontSize: 12, borderRadius: D.pill }}
+              >
+                Add Player
+              </button>
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );

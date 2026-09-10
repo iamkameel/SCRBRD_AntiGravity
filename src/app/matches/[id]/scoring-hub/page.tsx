@@ -1,10 +1,15 @@
 import { getMatchDetailsAction, getTeamSquadAction } from '@/app/actions/matchActions';
 import { ScoringHubClient } from './client';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
 interface ScoringHubPageProps {
   params: Promise<{ id: string }>;
 }
+
+export const metadata: Metadata = {
+  title: 'Scoring Hub — SCRBRD',
+};
 
 export default async function ScoringHubPage({ params }: ScoringHubPageProps) {
   const { id } = await params;
@@ -20,12 +25,10 @@ export default async function ScoringHubPage({ params }: ScoringHubPageProps) {
   ]);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <ScoringHubClient 
-        match={match}
-        homePlayers={homePlayers}
-        awayPlayers={awayPlayers}
-      />
-    </div>
+    <ScoringHubClient
+      match={match}
+      homePlayers={homePlayers}
+      awayPlayers={awayPlayers}
+    />
   );
 }

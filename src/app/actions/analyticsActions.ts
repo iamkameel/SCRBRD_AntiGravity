@@ -4,6 +4,15 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit, Timestamp } from 'firebase/firestore';
 import { Team, Person, Season } from '@/types/firestore';
 import { normalizePeople } from '@/lib/normalizePerson';
+import { serializeData } from '@/lib/serialize';
+import {
+  fetchPersonById,
+  getMatchesByTeam,
+  fetchMatchesByDateRange,
+  fetchMatches,
+  fetchTopRunScorers,
+  fetchTopWicketTakers
+} from '@/lib/firestore';
 
 export interface TeamCreationContext {
   historicalTeams: Team[];
@@ -83,11 +92,11 @@ export async function getTeamCreationContextAction(
       }
     });
 
-    return {
+    return serializeData({
       historicalTeams,
       playerDepth,
       coachWorkload
-    };
+    });
 
   } catch (error) {
     console.error('Error fetching team creation context:', error);
@@ -124,7 +133,6 @@ export interface AnalyticsResult {
   error?: string;
 }
 
-import { fetchTopRunScorers, fetchTopWicketTakers, fetchMatches, getMatchesByTeam, fetchPersonById, fetchMatchesByDateRange } from '@/lib/firestore';
 
 /**
  * Fetch analytics data for the analytics dashboard
@@ -293,7 +301,7 @@ export async function getAnalyticsDataAction(filters?: AnalyticsFilters): Promis
         fetchTopWicketTakers(5)
       ]);
 
-      return {
+      return serializeData({
         success: true,
         data: {
           totalMatches,
@@ -315,10 +323,10 @@ export async function getAnalyticsDataAction(filters?: AnalyticsFilters): Promis
           bestBowlingEconomy: [],
           mostCatches: []
         }
-      };
+      });
     }
 
-    return {
+    return serializeData({
       success: true,
       data: {
         totalMatches,
@@ -330,7 +338,7 @@ export async function getAnalyticsDataAction(filters?: AnalyticsFilters): Promis
         bestBowlingEconomy: [],
         mostCatches: []
       }
-    };
+    });
   } catch (error) {
     console.error('Error fetching analytics data:', error);
     return {
@@ -525,7 +533,7 @@ export async function getAnalyticsFilterOptionsAction(): Promise<{ success: bool
       { id: '2022', name: '2022 Season' }
     ];
 
-    return {
+    return serializeData({
       success: true,
       data: {
         seasons,
@@ -533,7 +541,7 @@ export async function getAnalyticsFilterOptionsAction(): Promise<{ success: bool
         leagues,
         teams
       }
-    };
+    });
   } catch (error) {
     console.error('Error fetching filter options:', error);
     return {

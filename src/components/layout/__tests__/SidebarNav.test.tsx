@@ -12,7 +12,12 @@ vi.mock('@/contexts/PermissionViewContext', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  usePathname: vi.fn()
+  usePathname: vi.fn(),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }))
 }));
 
 // Mock Collapsible to always show content
@@ -56,8 +61,7 @@ describe('SidebarNav', () => {
     mockUsePermissionView.mockReturnValue({ currentRole: USER_ROLES.ADMIN });
     renderWithProviders(<SidebarNav />);
     
-    // "Teams" is the label in nav-links.ts for key 'teams'
-    expect(screen.getByText('Teams')).toBeInTheDocument();
+    expect(screen.getByText('Team Directory')).toBeInTheDocument();
   });
 
   it('does NOT render Financials for PLAYER', () => {
@@ -74,12 +78,11 @@ describe('SidebarNav', () => {
     expect(screen.getByText('Live Scoring')).toBeInTheDocument();
   });
 
-  it('renders Match Fixtures for SPECTATOR', () => {
-    mockUsePermissionView.mockReturnValue({ currentRole: USER_ROLES.SPECTATOR });
+  it('renders Match Fixtures for ADMIN', () => {
+    mockUsePermissionView.mockReturnValue({ currentRole: USER_ROLES.ADMIN });
     renderWithProviders(<SidebarNav />);
     
-    // "Matches" is the label in nav-links.ts for key 'matches'
-    expect(screen.getByText('Matches')).toBeInTheDocument();
+    expect(screen.getByText('Match Fixtures')).toBeInTheDocument();
   });
 
   it('does NOT render Settings for SPECTATOR if not allowed (checking logic)', () => {

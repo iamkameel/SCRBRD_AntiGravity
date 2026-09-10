@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getPlayerStatsAction, PlayerStats } from "@/app/actions/playerStatsActions";
 import { ComparisonChart } from "./ComparisonChart";
+import { PlayerComparisonTool } from "./PlayerComparisonTool";
 import { Users, X, TrendingUp, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -113,6 +114,34 @@ export function PlayerComparison({ availablePlayers }: PlayerComparisonProps) {
       {/* Comparison Stats */}
       {comparisonData.length >= 2 && (
         <>
+          {/* Battle Card — shown when exactly 2 players are selected */}
+          {comparisonData.length === 2 && (() => {
+            const [pa, pb] = comparisonData;
+            const toToolStats = (p: typeof pa) => ({
+              name: p.name,
+              role: p.stats.batting.runs > 100 ? 'Batter' : 'All-Rounder',
+              avatar: p.name.split(' ').map((s: string) => s[0]).join('').slice(0, 2),
+              domains: {
+                batting: Math.min(100, Math.round(p.stats.batting.average * 2.5)),
+                bowling: Math.min(100, p.stats.bowling.wickets > 0 ? Math.round(100 - p.stats.bowling.economy * 10) : 20),
+                physical: 70,
+                tactical: Math.min(100, Math.round(p.stats.batting.strikeRate * 0.6)),
+                mental: Math.min(100, 60 + (p.stats.batting.fifties * 5)),
+              },
+              metrics: {
+                avg: p.stats.batting.average,
+                sr: p.stats.batting.strikeRate,
+                eco: p.stats.bowling.economy,
+              },
+            });
+            return (
+              <PlayerComparisonTool
+                playerA={toToolStats(pa)}
+                playerB={toToolStats(pb)}
+              />
+            );
+          })()}
+
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {comparisonData.map((player, index) => (

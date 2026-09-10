@@ -9,6 +9,8 @@ import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBann
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Loader2 } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { BackgroundEffects } from "@/components/layout/BackgroundEffects";
+import { CommandMenu } from "@/components/dashboard/CommandMenu";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,9 +31,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Landing page or not logged in - show navbar only
   if (!user || isPublicPage) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col relative">
+        <BackgroundEffects />
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 relative z-10">{children}</main>
       </div>
     );
   }
@@ -39,15 +42,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Authenticated users on app pages - show responsive sidebar
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full relative">
+        <BackgroundEffects />
         <Sidebar />
-        <main className="flex-1 lg:ml-[280px] transition-all duration-300">
+        <main className="flex-1 lg:ml-[280px] transition-all duration-300 relative z-10">
           <Header />
           <EmailVerificationBanner />
           <div className="p-4 sm:p-6 md:p-8">
             <Breadcrumbs />
             {children}
           </div>
+          <CommandMenu />
         </main>
       </div>
     </SidebarProvider>

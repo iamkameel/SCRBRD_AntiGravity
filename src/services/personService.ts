@@ -42,5 +42,23 @@ export const personService = {
      */
     async delete(id: string) {
         return deletePerson(dc, { id });
+    },
+
+    /**
+     * Get coaches for a specific school
+     */
+    async getCoachesBySchool(schoolId: string): Promise<ListPeopleData['people']> {
+        try {
+            const all = await this.getAll();
+            return all.filter(person =>
+                person.userAccount_on_person?.userRoleAssignments_on_userAccount.some(
+                    role => role.organisation?.id === schoolId &&
+                        (role.systemRole.label === 'Coach' || role.systemRole.label === 'Head Coach')
+                )
+            );
+        } catch (error) {
+            console.error('Error fetching coaches:', error);
+            return [];
+        }
     }
 };

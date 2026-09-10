@@ -48,11 +48,11 @@ type PersonEmergencyContact @table(name: "person_emergency_contacts") {
 type PersonDocument @table(name: "person_documents") {
   id: UUID! @default(expr: "uuidV4()") @col(name: "document_id")
   person: Person!
-  documentType: String @col(name: "document_type") # 'ID', 'Passport', 'License', 'Certificate'
+  documentType: String @col(name: "document_type")
   fileUrl: String! @col(name: "file_url")
   issuedOn: Date @col(name: "issued_on")
   expiresOn: Date @col(name: "expires_on")
-  verifiedBy: Person
+  verifiedByPersonId: UUID
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
 
@@ -287,8 +287,7 @@ type MatchOfficialAssignment @table(name: "match_official_assignments") {
   notes: String
 }
 
-type MatchTeamSheet @table(name: "match_team_sheets") {
-  id: UUID! @default(expr: "uuidV4()") @col(name: "match_team_sheet_id")
+type MatchTeamSheet @table(name: "match_team_sheets", key: ["match", "team"]) {
   match: Match!
   team: Team!
   confirmedBy: Person
@@ -304,7 +303,7 @@ type MatchTeamSheet @table(name: "match_team_sheets") {
 
 type MatchTeamSheetPlayer @table(name: "match_team_sheet_players") {
   id: UUID! @default(expr: "uuidV4()") @col(name: "match_team_sheet_player_id")
-  matchTeamSheet: MatchTeamSheet!
+  matchTeamSheet: MatchTeamSheet! @ref(constraintName: "fk_mts_player")
   teamMembership: TeamMembership
   person: Person!
   shirtNumber: String @col(name: "shirt_number")
@@ -550,8 +549,7 @@ type PlayerSeasonStats @table(name: "player_season_stats") {
   runOuts: Int @default(value: 0) @col(name: "run_outs")
 }
 
-type TeamSeasonStats @table(name: "team_season_stats") {
-  id: UUID! @default(expr: "uuidV4()") @col(name: "team_season_stat_id")
+type TeamSeasonStats @table(name: "team_season_stats", key: ["team", "season"]) {
   season: Season!
   team: Team!
   competition: Competition
@@ -568,8 +566,7 @@ type TeamSeasonStats @table(name: "team_season_stats") {
     @col(name: "last_updated_at")
 }
 
-type TeamHeadToHeadStats @table(name: "team_h2h_stats") {
-  id: UUID! @default(expr: "uuidV4()") @col(name: "team_h2h_stat_id")
+type TeamHeadToHeadStats @table(name: "team_h2h_stats", key: ["teamA", "teamB"]) {
   teamA: Team!
   teamB: Team!
   matchesPlayed: Int @default(value: 0) @col(name: "matches_played")
@@ -743,3 +740,195 @@ type AuditLog @table(name: "audit_logs") {
   ipAddress: String @col(name: "ip_address")
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
+
+# --- 14) Rankings & Intelligence Layer ---
+
+type RankingSnapshot @table(name: "ranking_snapshots") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "snapshot_id")
+  entityType: String! @col(name: "entity_type") # 'School', 'Team', 'Person'
+  entityId: UUID! @col(name: "entity_id")
+  rankingType: String! @col(name: "ranking_type") # 'TeamRank', 'PlayerPower', 'ScoutGrade', 'PotentialIndex'
+  score: Float! @default(value: 0.0) # 0-100 normalized score
+  rank: Int!
+  previousRank: Int @col(name: "previous_rank")
+  movement: Int @default(value: 0)
+  confidence: Float @default(value: 1.0) # 0.0 to 1.0
+  season: Season
+  competition: Competition
+  ageGroup: String @col(name: "age_group")
+  province: String
+  format: String
+  modelVersionId: UUID @col(name: "model_version_id")
+  computedAt: Timestamp! @default(expr: "request.time") @col(name: "computed_at")
+}
+
+type RankingComponent @table(name: "ranking_components") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "ranking_component_id")
+  rankingSnapshot: RankingSnapshot!
+  componentName: String! @col(name: "component_name") # e.g., 'Recent Form', 'Opposition Strength'
+  rawValue: Float! @col(name: "raw_value")
+  normalisedValue: Float! @col(name: "normalised_value")
+  weight: Float!
+  contribution: Float! # weight * normalisedValue
+}
+
+type MatchImpactEvent @table(name: "match_impact_events") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "impact_event_id")
+  fixture: Fixture!
+  innings: Innings!
+  ballEvent: BallEvent
+  overNumber: Int! @col(name: "over_number")
+  ballNumber: Int! @col(name: "ball_number")
+  eventType: String! @col(name: "event_type") # 'Wicket', 'Runs', 'Dot', 'Extra'
+  subEventType: String @col(name: "sub_event_type")
+  phase: String! # 'Powerplay', 'Middle', 'Death', etc.
+  pressureState: String! @col(name: "pressure_state") # 'Low', 'Normal', 'Elevated', 'High', 'Extreme'
+  baseImpactValue: Float! @col(name: "base_impact_value")
+  contextMultiplier: Float @default(value: 1.0) @col(name: "context_multiplier")
+  pressureMultiplier: Float @default(value: 1.0) @col(name: "pressure_multiplier")
+  oppositionMultiplier: Float @default(value: 1.0) @col(name: "opposition_multiplier")
+  swingAdjustment: Float @default(value: 0.0) @col(name: "swing_adjustment") # Expected State Delta
+  totalImpactValue: Float! @col(name: "total_impact_value")
+  battingTeamImpact: Float @default(value: 0.0) @col(name: "batting_team_impact")
+  bowlingTeamImpact: Float @default(value: 0.0) @col(name: "bowling_team_impact")
+  explanation: String
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type ImpactAttribution @table(name: "impact_attributions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "attribution_id")
+  matchImpactEvent: MatchImpactEvent!
+  person: Person!
+  roleType: String! @col(name: "role_type") # 'Batter', 'Bowler', 'Fielder', 'Keeper', 'Non-Striker'
+  impactCategory: String! @col(name: "impact_category") # 'Batting', 'Bowling', 'Fielding', 'Clutch', 'Momentum'
+  impactValue: Float! @col(name: "impact_value")
+  explanation: String
+}
+
+type PlayerMatchImpact @table(name: "player_match_impacts") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "player_match_impact_id")
+  fixture: Fixture!
+  person: Person!
+  team: Team!
+  battingImpact: Float @default(value: 0.0) @col(name: "batting_impact")
+  bowlingImpact: Float @default(value: 0.0) @col(name: "bowling_impact")
+  fieldingImpact: Float @default(value: 0.0) @col(name: "fielding_impact")
+  clutchImpact: Float @default(value: 0.0) @col(name: "clutch_impact")
+  momentumShiftImpact: Float @default(value: 0.0) @col(name: "momentum_shift_impact")
+  totalImpact: Float @default(value: 0.0) @col(name: "total_impact")
+  mvpScore: Float @default(value: 0.0) @col(name: "mvp_score")
+  badgesJson: Any @col(name: "badges_json") # ['Clutch Master', 'Partnership Breaker']
+  rankInMatch: Int @col(name: "rank_in_match")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type InningsMomentumSegment @table(name: "innings_momentum_segments") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "segment_id")
+  innings: Innings!
+  startOver: Int! @col(name: "start_over")
+  endOver: Int! @col(name: "end_over")
+  dominantTeam: Team!
+  momentumScore: Float! @col(name: "momentum_score")
+  reasonCode: String @col(name: "reason_code") # 'BOUNDARY_CLUSTER', 'WICKET_MAIDEN'
+  summaryText: String @col(name: "summary_text")
+}
+
+type ScoutReport @table(name: "scout_reports") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "scout_report_id")
+  person: Person!
+  scout: Person!
+  fixture: Fixture
+  technicalScore: Int @col(name: "technical_score") # /20
+  tacticalScore: Int @col(name: "tactical_score") # /15
+  physicalScore: Int @col(name: "physical_score") # /15
+  mentalScore: Int @col(name: "mental_score") # /20
+  competitivenessScore: Int @col(name: "competitiveness_score") # /10
+  statisticalEvidenceScore: Int @col(name: "statistical_evidence_score") # /20
+  scoutGrade: String! @col(name: "scout_grade") # 'A+', 'A', 'B+', 'B', 'C'
+  prospectCategory: String! @col(name: "prospect_category") # 'Immediate Impact', 'Long-term Project', etc.
+  confidenceLevel: String @col(name: "confidence_level") # 'High', 'Medium', 'Low'
+  projectionNotes: String @col(name: "projection_notes")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type PotentialProjection @table(name: "potential_projections") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "projection_id")
+  person: Person!
+  season: Season!
+  ceilingScore: Int @col(name: "ceiling_score") # 0-100 target ability
+  readinessScore: Int @col(name: "readiness_score") # Current ability relative to ceiling
+  riskScore: Int @col(name: "risk_score") # 0-100 risk of not reaching potential
+  potentialTier: Int @col(name: "potential_tier") # 1 (Elite) to 5 (Monitor)
+  projectedRole: String @col(name: "projected_role")
+  projectionWindowMonths: Int @col(name: "projection_window_months")
+  riskNotes: String @col(name: "risk_notes")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type ImpactModelVersion @table(name: "impact_model_versions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "model_version_id")
+  versionName: String! @col(name: "version_name")
+  configJson: Any! @col(name: "config_json") # Stores weights and multipliers
+  isActive: Boolean! @default(value: true) @col(name: "is_active")
+  activatedAt: Timestamp! @default(expr: "request.time") @col(name: "activated_at")
+  retiredAt: Timestamp @col(name: "retired_at")
+}
+
+# --- 15) Rewards and Incentives Layer ---
+
+type RewardsWallet @table(name: "rewards_wallets") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "wallet_id")
+  person: Person! @unique
+  currentPoints: Float! @default(value: 0.0) @col(name: "current_points")
+  lifetimePoints: Float! @default(value: 0.0) @col(name: "lifetime_points")
+  redeemedPoints: Float! @default(value: 0.0) @col(name: "redeemed_points")
+  tier: String! @default(value: "Bronze")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type RewardTransaction @table(name: "reward_transactions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "transaction_id")
+  person: Person!
+  fixture: Fixture
+  eventType: String! @col(name: "event_type")
+  basePoints: Float! @col(name: "base_points")
+  multiplier: Float! @default(value: 1.0)
+  finalPoints: Float! @col(name: "final_points")
+  status: String! @default(value: "processed")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type RewardRule @table(name: "reward_rules") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "rule_id")
+  name: String!
+  category: String!
+  trigger: String!
+  pointsValue: Float! @col(name: "points_value")
+  multiplierEligible: Boolean! @default(value: true) @col(name: "multiplier_eligible")
+  activeFrom: Timestamp @col(name: "active_from")
+  activeTo: Timestamp @col(name: "active_to")
+}
+
+type SponsorOffer @table(name: "sponsor_offers") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "offer_id")
+  sponsor: Organisation!
+  title: String!
+  description: String
+  pointsCost: Float! @col(name: "points_cost")
+  discountValue: String @col(name: "discount_value")
+  redemptionLimit: Int @col(name: "redemption_limit")
+  validFrom: Timestamp @col(name: "valid_from")
+  validTo: Timestamp @col(name: "valid_to")
+}
+
+type RewardRedemption @table(name: "reward_redemptions") {
+  id: UUID! @default(expr: "uuidV4()") @col(name: "redemption_id")
+  person: Person!
+  offer: SponsorOffer!
+  pointsSpent: Float! @col(name: "points_spent")
+  voucherCode: String @col(name: "voucher_code")
+  status: String! @default(value: "issued")
+  redeemedAt: Timestamp! @default(expr: "request.time") @col(name: "redeemed_at")
+}
+

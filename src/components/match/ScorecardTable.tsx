@@ -1,22 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import type { Innings } from "@/types/firestore";
+import type { Innings, Rankings } from "@/types/firestore";
+import { Zap } from "lucide-react";
+import { D } from "@/lib/scoring/theme";
 
 interface ScorecardTableProps {
   innings: Innings;
   teamName: string;
   allPlayers: Array<{ id: string; firstName: string; lastName: string }>;
+  playerImpact?: Rankings.PlayerMatchImpact[];
 }
 
-export function ScorecardTable({ innings, teamName, allPlayers }: ScorecardTableProps) {
-  // Helper to get player name
+export function ScorecardTable({ innings, teamName, allPlayers, playerImpact = [] }: ScorecardTableProps) {
   const getPlayerName = (playerId: string) => {
     const player = allPlayers.find(p => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
   };
 
-  // Extract data
+  const getPlayerImpact = (playerId: string) => {
+    return playerImpact.find(pi => pi.personId === playerId);
+  };
+
   const batsmen = innings.batsmen || [];
   const bowlers = innings.bowlers || [];
   const extras = innings.extras || { wides: 0, noballs: 0, byes: 0, legbyes: 0 };
@@ -25,113 +27,107 @@ export function ScorecardTable({ innings, teamName, allPlayers }: ScorecardTable
   const totalWickets = innings.wickets || 0;
   const totalOvers = innings.overs || 0;
 
+  const Lbl = ({ children }: { children: React.ReactNode }) => (
+    <div style={{ fontFamily: D.head, fontSize: '10px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: D.textMuted }}>{children}</div>
+  );
+
+  const HeaderRow = ({ headers }: { headers: string[] }) => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr auto auto auto auto auto auto', gap: '16px', padding: '12px 16px', borderBottom: `1px solid ${D.border}`, background: `${D.surf2}44` }}>
+      {headers.map((h, i) => (
+        <div key={i} style={{ fontFamily: D.head, fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: D.textMuted, textAlign: i === 0 || i === 1 ? 'left' : 'right' }}>{h}</div>
+      ))}
+    </div>
+  );
+
+  const BowlingHeaderRow = ({ headers }: { headers: string[] }) => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto auto auto auto', gap: '16px', padding: '12px 16px', borderBottom: `1px solid ${D.border}`, background: `${D.surf2}44` }}>
+      {headers.map((h, i) => (
+        <div key={i} style={{ fontFamily: D.head, fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: D.textMuted, textAlign: i === 0 ? 'left' : 'right' }}>{h}</div>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Batting Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{teamName} Batting</span>
-            <Badge variant="outline">{totalRuns}/{totalWickets} ({totalOvers} ov)</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">Batsman</TableHead>
-                <TableHead className="w-[200px]">Dismissal</TableHead>
-                <TableHead className="text-right">R</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">4s</TableHead>
-                <TableHead className="text-right">6s</TableHead>
-                <TableHead className="text-right">SR</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {batsmen.map((batsman, idx) => (
-                <TableRow key={idx}>
-                  <TableCell className="font-medium">
-                    {getPlayerName(batsman.playerId)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {batsman.isOut ? (batsman.dismissal || 'out') : 'not out'}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">{batsman.runs}</TableCell>
-                  <TableCell className="text-right">{batsman.ballsFaced}</TableCell>
-                  <TableCell className="text-right">{batsman.fours || 0}</TableCell>
-                  <TableCell className="text-right">{batsman.sixes || 0}</TableCell>
-                  <TableCell className="text-right">{batsman.strikeRate?.toFixed(2) || '0.00'}</TableCell>
-                </TableRow>
-              ))}
-              {/* Extras Row */}
-              <TableRow className="bg-muted/50">
-                <TableCell className="font-medium">Extras</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  (w {extras.wides || 0}, nb {extras.noballs || 0}, b {extras.byes || 0}, lb {extras.legbyes || 0})
-                </TableCell>
-                <TableCell className="text-right font-semibold">{totalExtras}</TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-              {/* Total Row */}
-              <TableRow className="font-bold bg-primary/10">
-                <TableCell>Total</TableCell>
-                <TableCell>({totalOvers} overs)</TableCell>
-                <TableCell className="text-right">{totalRuns}</TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div style={{ background: D.surf1, borderRadius: D.xl, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${D.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: `${D.surf2}22` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+             <Lbl>{teamName} Batting</Lbl>
+          </div>
+          <div style={{ fontFamily: D.mono, fontSize: '14px', fontWeight: 700, color: D.emerald }}>
+            {totalRuns}/{totalWickets} <span style={{ color: D.textMuted, fontSize: '11px', fontWeight: 400 }}>({totalOvers} ov)</span>
+          </div>
+        </div>
+        
+        <HeaderRow headers={['Batsman', 'Dismissal', 'R', 'B', '4s', '6s', 'SR', 'Imp']} />
+        
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {batsmen.map((batsman, idx) => {
+            const impact = getPlayerImpact(batsman.playerId)?.battingImpact;
+            return (
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr auto auto auto auto auto auto', gap: '16px', padding: '12px 16px', borderBottom: `1px solid ${D.border}44`, alignItems: 'center' }}>
+                <div style={{ fontFamily: D.head, fontSize: '13px', fontWeight: 700, color: D.textPrimary }}>{getPlayerName(batsman.playerId)}</div>
+                <div style={{ fontFamily: D.body, fontSize: '11px', color: D.textSecondary }}>{batsman.isOut ? (batsman.dismissal || 'out') : <span style={{ color: D.emerald, fontWeight: 700 }}>not out</span>}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '14px', fontWeight: 700, textAlign: 'right', color: D.textPrimary, minWidth: '24px' }}>{batsman.runs}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '24px' }}>{batsman.ballsFaced}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '18px' }}>{batsman.fours || 0}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: (batsman.sixes || 0) > 0 ? D.amber : D.textSecondary, minWidth: '18px' }}>{batsman.sixes || 0}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '40px' }}>{batsman.strikeRate?.toFixed(1) || '0.0'}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', fontWeight: 700, textAlign: 'right', color: D.amber, minWidth: '32px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
+                  <Zap className="w-2.5 h-2.5" />
+                  {impact?.toFixed(1) || '0.0'}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Extras and Total */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr auto', gap: '16px', padding: '12px 16px', background: `${D.surf2}44`, alignItems: 'center' }}>
+            <div style={{ fontFamily: D.head, fontSize: '12px', fontWeight: 700, color: D.textMuted }}>Extras</div>
+            <div style={{ fontFamily: D.body, fontSize: '10px', color: D.textMuted }}>w {extras.wides || 0}, nb {extras.noballs || 0}, b {extras.byes || 0}, lb {extras.legbyes || 0}</div>
+            <div style={{ fontFamily: D.mono, fontSize: '14px', fontWeight: 700, textAlign: 'right', color: D.textPrimary, gridColumn: 3 }}>{totalExtras}</div>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr auto', gap: '16px', padding: '16px', background: `${D.emerald}11`, borderTop: `1px solid ${D.emerald}33` }}>
+            <div style={{ fontFamily: D.head, fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', color: D.emerald }}>Total</div>
+            <div style={{ fontFamily: D.body, fontSize: '12px', fontWeight: 500, color: D.textSecondary }}>{totalOvers} Overs</div>
+            <div style={{ fontFamily: D.mono, fontSize: '18px', fontWeight: 800, textAlign: 'right', color: D.emerald }}>{totalRuns}/{totalWickets}</div>
+          </div>
+        </div>
+      </div>
 
       {/* Bowling Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bowling</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">Bowler</TableHead>
-                <TableHead className="text-right">O</TableHead>
-                <TableHead className="text-right">M</TableHead>
-                <TableHead className="text-right">R</TableHead>
-                <TableHead className="text-right">W</TableHead>
-                <TableHead className="text-right">Econ</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bowlers.map((bowler, idx) => (
-                <TableRow key={idx}>
-                  <TableCell className="font-medium">
-                    {getPlayerName(bowler.playerId)}
-                  </TableCell>
-                  <TableCell className="text-right">{bowler.overs?.toFixed(1) || '0.0'}</TableCell>
-                  <TableCell className="text-right">{bowler.maidens || 0}</TableCell>
-                  <TableCell className="text-right">{bowler.runsConceded}</TableCell>
-                  <TableCell className="text-right font-semibold">{bowler.wickets || 0}</TableCell>
-                  <TableCell className="text-right">{bowler.economy?.toFixed(2) || '0.00'}</TableCell>
-                </TableRow>
-              ))}
-              {bowlers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No bowling data available
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div style={{ background: D.surf1, borderRadius: D.xl, border: `1px solid ${D.border}`, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${D.border}`, background: `${D.surf2}22` }}>
+          <Lbl>Bowling</Lbl>
+        </div>
+        
+        <BowlingHeaderRow headers={['Bowler', 'O', 'M', 'R', 'W', 'Econ', 'Imp']} />
+        
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {bowlers.map((bowler, idx) => {
+            const impact = getPlayerImpact(bowler.playerId)?.bowlingImpact;
+            return (
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto auto auto auto', gap: '16px', padding: '12px 16px', borderBottom: `1px solid ${D.border}44`, alignItems: 'center' }}>
+                <div style={{ fontFamily: D.head, fontSize: '13px', fontWeight: 700, color: D.textPrimary }}>{getPlayerName(bowler.playerId)}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '14px', fontWeight: 700, textAlign: 'right', color: D.textPrimary, minWidth: '24px' }}>{bowler.overs?.toFixed(1) || '0.0'}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '18px' }}>{bowler.maidens || 0}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '24px' }}>{bowler.runsConceded}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '14px', fontWeight: 700, textAlign: 'right', color: D.rose, minWidth: '18px' }}>{bowler.wickets || 0}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', textAlign: 'right', color: D.textSecondary, minWidth: '40px' }}>{bowler.economy?.toFixed(1) || '0.0'}</div>
+                <div style={{ fontFamily: D.mono, fontSize: '12px', fontWeight: 700, textAlign: 'right', color: D.sky, minWidth: '32px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
+                  <Zap className="w-2.5 h-2.5" />
+                  {impact?.toFixed(1) || '0.0'}
+                </div>
+              </div>
+            );
+          })}
+          {bowlers.length === 0 && (
+            <div style={{ padding: '24px', textAlign: 'center', color: D.textMuted, fontFamily: D.body }}>No bowling data available</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

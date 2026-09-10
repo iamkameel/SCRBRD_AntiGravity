@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import admin from "@/lib/firebase-admin";
 import { leagueSchema } from "@/lib/validations/leagueSchema";
 import { League } from "@/types/firestore";
+import { serializeData } from "@/lib/serialize";
 
 interface LeagueFormState {
   errors?: {
@@ -48,7 +49,7 @@ export async function createLeagueAction(
 
     await admin.firestore().collection("leagues").add(leagueData);
     revalidatePath("/leagues");
-    return { success: true };
+    return { success: true as const };
   } catch (error) {
     console.error('Create league error:', error);
     return {
@@ -112,7 +113,7 @@ export async function getLeagueAction(id: string) {
     if (!doc.exists) {
       return null;
     }
-    return { id: doc.id, ...doc.data() } as League;
+    return serializeData({ id: doc.id, ...doc.data() } as League);
   } catch (error) {
     console.error('Get league error:', error);
     return null;

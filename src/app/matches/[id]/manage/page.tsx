@@ -3,6 +3,8 @@ import { Match, Team, Person } from '@/types/firestore';
 import { MatchManagementClient } from './client';
 import { notFound } from 'next/navigation';
 import { where } from 'firebase/firestore';
+import { fetchPreMatchProcedure } from '@/app/actions/preMatchActions';
+import { fetchManagementContextAction } from '@/app/actions/preMatchActions_v2';
 
 interface PageProps {
   params: {
@@ -20,10 +22,11 @@ export default async function MatchManagePage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch teams
-  const [homeTeam, awayTeam] = await Promise.all([
+  // Fetch teams and pre-match procedure in parallel
+  const [homeTeam, awayTeam, preMatchProcedure] = await Promise.all([
     fetchDocument<Team>('teams', match.homeTeamId),
-    fetchDocument<Team>('teams', match.awayTeamId)
+    fetchDocument<Team>('teams', match.awayTeamId),
+    fetchPreMatchProcedure(matchId)
   ]);
 
   if (!homeTeam || !awayTeam) {
@@ -31,7 +34,6 @@ export default async function MatchManagePage({ params }: PageProps) {
   }
 
   // Fetch players for both teams
-  // Note: In a real app, we might want to optimize this or paginate
   const homePlayers = await fetchCollection<Person>('people', [
     where('teamIds', 'array-contains', match.homeTeamId)
   ]);
@@ -40,6 +42,16 @@ export default async function MatchManagePage({ params }: PageProps) {
     where('teamIds', 'array-contains', match.awayTeamId)
   ]);
 
+  // Fetch management context (readiness, squads, availability)
+  const context = await fetchManagementContextAction(matchId, match.homeTeamId);
+
+  if (!context.success) {
+    return <div>Error loading match context: {("error" in context) ? context.error : "Unknown"}</div>;
+  }
+
+  // Help TypeScript narrow the type
+  const ctx = context as Extract<typeof context, { success: true }>;
+
   return (
     <MatchManagementClient
       match={match}
@@ -47,6 +59,7 @@ export default async function MatchManagePage({ params }: PageProps) {
       awayTeam={awayTeam}
       homePlayers={homePlayers}
       awayPlayers={awayPlayers}
+      context={ctx}
     />
   );
 }

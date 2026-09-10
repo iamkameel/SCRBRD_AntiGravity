@@ -36,6 +36,10 @@ export const matchSchema = z.object({
       return !isNaN(num) && num >= 1 && num <= 100;
     }, 'Overs must be between 1 and 100'),
 
+  leagueId: z.string().optional(),
+  seasonId: z.string().optional(),
+  divisionId: z.string().optional(),
+
   competition: z.string()
     .optional(),
 
@@ -59,6 +63,11 @@ export const matchSchema = z.object({
   notes: z.string()
     .max(500, 'Notes must be less than 500 characters')
     .optional(),
+
+  isDayNight: z.boolean().optional().default(false),
+
+  status: z.enum(['scheduled', 'live', 'completed', 'cancelled', 'postponed']).optional().default('scheduled'),
+  state: z.enum(['SCHEDULED', 'TEAM_SELECTION', 'PRE_MATCH', 'LIVE', 'INNINGS_BREAK', 'COMPLETED', 'CANCELLED', 'POSTPONED']).optional().default('SCHEDULED'),
 });
 
 // Refinement to ensure home and away teams are different

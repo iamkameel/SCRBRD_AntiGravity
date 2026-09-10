@@ -18,7 +18,7 @@ import {
   RefreshCw,
   Eye
 } from "lucide-react";
-import { getAnalyticsDataAction, predictMatchOutcomeAction, getAnalyticsFilterOptionsAction, AnalyticsData, FilterOptions } from "@/app/actions/analyticsActions";
+import { getAnalyticsDataAction, getAnalyticsFilterOptionsAction, AnalyticsData, FilterOptions } from "@/app/actions/analyticsActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { AnalyticsFiltersPanel, AnalyticsFilters } from "./AnalyticsFilters";
@@ -29,6 +29,7 @@ import { TeamStrengthAnalysis } from "./TeamStrengthAnalysis";
 import { WinLossGauge } from "@/components/charts/WinLossGauge";
 import { PerformanceTimeline } from "@/components/charts/PerformanceTimeline";
 import { motion } from "framer-motion";
+import { D } from "@/lib/design-system";
 
 export function AnalyticsDashboardClient() {
   const { userRole } = useAuth();
@@ -88,12 +89,14 @@ export function AnalyticsDashboardClient() {
     };
     loadOptions();
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!loading) {
        loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   if (loading && !analytics) {
@@ -127,23 +130,23 @@ export function AnalyticsDashboardClient() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto">
-          <TabsTrigger value="overview">
-            <BarChart3 className="h-4 w-4 mr-2" />
+        <TabsList style={{ background: D.surf1, border: `1px solid ${D.border}`, padding: 4, borderRadius: 14, height: 'auto' }}>
+          <TabsTrigger value="overview" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 gap-2">
+            <BarChart3 className="h-3.5 w-3.5" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="performance">
-            <TrendingUp className="h-4 w-4 mr-2" />
+          <TabsTrigger value="performance" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-sky-500/20 data-[state=active]:text-sky-400 gap-2">
+            <TrendingUp className="h-3.5 w-3.5" />
             Performance
           </TabsTrigger>
           {!isPlayer && (
-            <TabsTrigger value="predictions">
-              <Brain className="h-4 w-4 mr-2" />
+            <TabsTrigger value="predictions" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 gap-2">
+              <Brain className="h-3.5 w-3.5" />
               AI Predictions
             </TabsTrigger>
           )}
-          <TabsTrigger value="insights">
-            <Zap className="h-4 w-4 mr-2" />
+          <TabsTrigger value="insights" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 gap-2">
+            <Zap className="h-3.5 w-3.5" />
             Insights
           </TabsTrigger>
         </TabsList>
@@ -152,36 +155,16 @@ export function AnalyticsDashboardClient() {
         <TabsContent value="overview" className="space-y-6">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Matches"
-              value={analytics.totalMatches}
-              icon={<Trophy className="h-5 w-5 text-amber-500" />}
-              gradient="from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20"
-            />
-            <StatCard
-              title="Total Runs"
-              value={analytics.totalRuns.toLocaleString()}
-              icon={<Target className="h-5 w-5 text-blue-500" />}
-              gradient="from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20"
-            />
-            <StatCard
-              title="Total Wickets"
-              value={analytics.totalWickets}
-              icon={<Activity className="h-5 w-5 text-red-500" />}
-              gradient="from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20"
-            />
-            <StatCard
-              title="Fielding Marks"
-              value={analytics.mostCatches.reduce((sum, p) => sum + p.value, 0)}
-              icon={<Shield className="h-5 w-5 text-green-500" />}
-              gradient="from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20"
-            />
+            <StatCard title="Total Matches" value={analytics.totalMatches} accent={D.amber} icon={<Trophy className="h-5 w-5" />} />
+            <StatCard title="Total Runs" value={analytics.totalRuns.toLocaleString()} accent={D.sky} icon={<Target className="h-5 w-5" />} />
+            <StatCard title="Total Wickets" value={analytics.totalWickets} accent={D.rose} icon={<Activity className="h-5 w-5" />} />
+            <StatCard title="Fielding Marks" value={analytics.mostCatches.reduce((sum, p) => sum + p.value, 0)} accent={D.emerald} icon={<Shield className="h-5 w-5" />} />
           </div>
 
           {/* Top Performers Grid */}
           <div>
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-amber-500" />
+            <h2 style={{ fontFamily: D.head, fontWeight: 800, fontSize: 18, textTransform: 'uppercase', letterSpacing: '-0.01em', color: D.textPrimary, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Trophy className="h-5 w-5" style={{ color: D.amber }} />
               Top Performers
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -283,15 +266,17 @@ export function AnalyticsDashboardClient() {
 
         {/* Insights Tab */}
         <TabsContent value="insights" className="space-y-6">
-          <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20 border-indigo-100 dark:border-indigo-900">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                Smart Insights
-              </CardTitle>
-              <CardDescription>AI-generated observations and recommendations</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div style={{ background: D.surf1, border: `1px solid ${D.indigo}33`, borderRadius: D.xl, padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${D.indigo}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap className="h-5 w-5" style={{ color: D.indigo }} />
+              </div>
+              <div>
+                <div style={{ fontFamily: D.head, fontWeight: 800, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.05em', color: D.textPrimary }}>Smart Insights</div>
+                <div style={{ fontFamily: D.body, fontSize: 12, color: D.textMuted }}>AI-generated observations and recommendations</div>
+              </div>
+            </div>
+            <div className="space-y-4">
               {analytics.topRunScorers.length > 0 && (
                 <InsightCard
                   type="success"
@@ -303,7 +288,7 @@ export function AnalyticsDashboardClient() {
                 <InsightCard
                   type="info"
                   title="Bowling Strength"
-                  description={`${analytics.topWicketTakers[0].name} leads the wicket-taking charts with ${analytics.topWicketTakers[0].value} wickets. Utilize them in crucial overs.`}
+                  description={`${analytics.topWicketTakers[0].name} leads the wicket-taking charts with ${analytics.topWicketTakers[0].value} wickets. Utilise them in crucial overs.`}
                 />
               )}
               <InsightCard
@@ -311,58 +296,55 @@ export function AnalyticsDashboardClient() {
                 title="Team Balance"
                 description="Consider strengthening the middle order batting lineup based on recent performance trends."
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function StatCard({ title, value, icon, gradient }: { title: string; value: string | number; icon: React.ReactNode; gradient: string }) {
+function StatCard({ title, value, icon, accent }: { title: string; value: string | number; icon: React.ReactNode; accent: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className={`bg-gradient-to-br ${gradient} border-0 shadow-lg`}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-              <p className="text-3xl font-bold">{value}</p>
-            </div>
-            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-              {icon}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div style={{ background: D.surf1, border: `1px solid ${D.border}`, borderRadius: D.xl, padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: accent, borderRadius: '18px 0 0 18px' }} />
+        <div style={{ paddingLeft: 8 }}>
+          <div style={{ fontFamily: D.head, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: D.textMuted, marginBottom: 6 }}>{title}</div>
+          <div style={{ fontFamily: D.mono, fontSize: 30, fontWeight: 700, color: D.textPrimary, lineHeight: 1 }}>{value}</div>
+        </div>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent }}>
+          {icon}
+        </div>
+      </div>
     </motion.div>
   );
 }
 
 function MetricItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 bg-muted/50 rounded-lg">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <div style={{ padding: 16, background: D.surf2, borderRadius: D.lg, border: `1px solid ${D.border}` }}>
+      <div style={{ fontFamily: D.head, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: D.textMuted, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: D.mono, fontSize: 22, fontWeight: 700, color: D.textPrimary }}>{value}</div>
     </div>
   );
 }
 
 function InsightCard({ type, title, description }: { type: 'success' | 'info' | 'warning'; title: string; description: string }) {
-  const colors = {
-    success: 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900',
-    info: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900',
-    warning: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900'
+  const palette = {
+    success: { color: D.emerald, bg: `${D.emerald}12`, border: `${D.emerald}30` },
+    info:    { color: D.indigo,  bg: `${D.indigo}12`,  border: `${D.indigo}30` },
+    warning: { color: D.amber,   bg: `${D.amber}12`,   border: `${D.amber}30` },
   };
-
+  const { color, bg, border } = palette[type];
   return (
-    <div className={`p-4 rounded-lg border ${colors[type]}`}>
-      <h4 className="font-semibold mb-1">{title}</h4>
-      <p className="text-sm text-muted-foreground">{description}</p>
+    <div style={{ padding: '14px 16px', borderRadius: D.lg, background: bg, border: `1px solid ${border}`, borderLeft: `3px solid ${color}` }}>
+      <div style={{ fontFamily: D.head, fontSize: 13, fontWeight: 700, color: D.textPrimary, marginBottom: 4 }}>{title}</div>
+      <p style={{ fontFamily: D.body, fontSize: 12, color: D.textSecondary, lineHeight: 1.5, margin: 0 }}>{description}</p>
     </div>
   );
 }

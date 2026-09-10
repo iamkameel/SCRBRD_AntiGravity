@@ -3,6 +3,9 @@ import { UserService } from '../userService';
 
 // Mock Firebase
 vi.mock('@/lib/firebase', () => ({
+    default: {
+        apiKey: 'mock-api-key',
+    },
     db: {},
     auth: {}
 }));

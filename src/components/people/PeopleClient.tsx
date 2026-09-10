@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useMemo, useOptimistic, useTransition, useEffect } from "react";
@@ -396,7 +397,7 @@ export default function PeopleClient({ initialPeople, userRole = 'Player' }: Peo
                             <td className="p-6">
                               <Link href={`/people/${person.id}`} className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/10 overflow-hidden">
-                                   {person.profileImageUrl ? <img src={person.profileImageUrl} className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-primary" />}
+                                   {person.profileImageUrl ? <img src={person.profileImageUrl} alt={person.firstName} className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-primary" />}
                                 </div>
                                 <span className="font-bold text-lg font-heading italic group-hover:text-primary transition-colors">{person.firstName} {person.lastName}</span>
                               </Link>

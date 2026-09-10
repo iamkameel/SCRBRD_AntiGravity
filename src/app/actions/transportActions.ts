@@ -1,53 +1,65 @@
 'use server';
 
-import { adminDb } from '@/lib/firebase-admin';
-import { Trip, Vehicle } from '@/types/firestore';
+import { transportService, TransportTrip, Vehicle } from '@/lib/services/transportService';
+import { recordAuditAction } from './auditActions';
+import { revalidatePath } from 'next/cache';
 
-export async function getDriverTripsAction(driverEmail: string) {
-    try {
-        const peopleRef = adminDb.collection('people');
-        const personSnapshot = await peopleRef.where('email', '==', driverEmail).limit(1).get();
-
-        if (personSnapshot.empty) return [];
-
-        const person = personSnapshot.docs[0].data();
-        const driverName = `${person.firstName} ${person.lastName}`;
-
-        // Also try to match by exact name or partial?
-        // For now exact match on driverName field.
-        const tripsRef = adminDb.collection('trips');
-        const snapshot = await tripsRef.where('driverName', '==', driverName).get();
-
-        const trips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Trip));
-
-        // Sort by date
-        return trips.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    } catch (error) {
-        console.error('Error fetching driver trips:', error);
-        return [];
-    }
+// --- Vehicle Actions ---
+export async function getVehiclesAction(schoolId?: string): Promise<Vehicle[]> {
+    return await transportService.getVehicles(schoolId);
 }
 
-export async function getAllVehiclesAction() {
-    try {
-        const vehiclesRef = adminDb.collection('vehicles');
-        const snapshot = await vehiclesRef.get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Vehicle));
-    } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        return [];
-    }
+export async function updateVehicleStatusAction(id: string, status: Vehicle['status'], load?: number) {
+    await transportService.updateVehicleStatus(id, status, load);
+
+    await recordAuditAction({
+        actionType: 'LOGISTICS_UPDATE',
+        entityType: 'vehicle',
+        entityId: id,
+        description: `Vehicle status updated to ${status}${load !== undefined ? ` with ${load}% load` : ''}.`,
+        actorId: 'system-ops', // In a real app, get from session
+        actorName: 'Logistics Coordinator'
+    });
+
+    revalidatePath('/transport');
 }
 
-export async function getVehicleByIdAction(vehicleId: string) {
-    try {
-        const doc = await adminDb.collection('vehicles').doc(vehicleId).get();
-        if (doc.exists) {
-            return { id: doc.id, ...doc.data() } as unknown as Vehicle;
-        }
-        return null;
-    } catch (error) {
-        console.error('Error fetching vehicle:', error);
-        return null;
-    }
+// --- Trip Actions ---
+export async function getUpcomingTripsAction(schoolId?: string): Promise<TransportTrip[]> {
+    return await transportService.getUpcomingTrips(schoolId);
+}
+
+export async function createTripAction(trip: Omit<TransportTrip, 'id'>) {
+    const id = await transportService.createTrip(trip);
+
+    await recordAuditAction({
+        actionType: 'LOGISTICS_CREATE',
+        entityType: 'transport_trip',
+        entityId: id,
+        description: `New transport trip created for ${trip.fixture || trip.fixtureId} to ${trip.destination}.`,
+        actorId: 'system-ops',
+        actorName: 'Logistics Coordinator'
+    });
+
+    revalidatePath('/transport');
+    return id;
+}
+
+export async function updateTripStatusAction(id: string, status: TransportTrip['status'], fixtureName: string) {
+    await transportService.updateTripStatus(id, status);
+
+    await recordAuditAction({
+        actionType: 'LOGISTICS_UPDATE',
+        entityType: 'transport_trip',
+        entityId: id,
+        description: `Trip status for ${fixtureName} updated to ${status}.`,
+        actorId: 'system-ops',
+        actorName: 'Logistics Coordinator'
+    });
+
+    revalidatePath('/transport');
+}
+
+export async function getDriverTripsAction(driverId: string): Promise<TransportTrip[]> {
+    return await transportService.getDriverTrips(driverId);
 }

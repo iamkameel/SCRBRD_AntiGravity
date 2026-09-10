@@ -2,8 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home, Activity } from "lucide-react";
 import { Fragment } from "react";
+import { D } from "@/lib/design-system";
 
 interface BreadcrumbItem {
   label: string;
@@ -34,7 +35,6 @@ const segmentLabels: Record<string, string> = {
 
 // Special handling for dynamic routes
 const getDynamicLabel = (segment: string, index: number, segments: string[]): string => {
-  // If it's a UUID or ID-like segment, try to infer from context
   if (segment.match(/^[a-z0-9-]{20,}$/i) || segment.match(/^[a-z]\d+$/i)) {
     const parentSegment = segments[index - 1];
     if (parentSegment === "matches") return "Match Details";
@@ -60,65 +60,66 @@ export function Breadcrumbs() {
     return null;
   }
 
-  // Parse pathname into segments
   const segments = pathname.split("/").filter(Boolean);
 
-  // Build breadcrumb items
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: "Home", href: "/home" },
+    { label: "OS HUB", href: "/home" },
   ];
 
   let currentPath = "";
   segments.forEach((segment, index) => {
     currentPath += `/${segment}`;
     
-    // Skip if path is /home to avoid duplicate keys (Home is already added)
     if (currentPath === "/home") return;
 
     const label = getDynamicLabel(segment, index, segments);
     breadcrumbs.push({
-      label,
-      href: currentPath,
+        label: label.toUpperCase(),
+        href: currentPath,
     });
   });
 
-  // Don't show if only home
   if (breadcrumbs.length <= 1) {
     return null;
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
+    <nav aria-label="Breadcrumb" className="mb-6 px-1">
+      <ol className="flex items-center space-x-3 overflow-x-auto no-scrollbar scroll-smooth">
         {breadcrumbs.map((crumb, index) => {
           const isLast = index === breadcrumbs.length - 1;
           const isFirst = index === 0;
 
           return (
             <Fragment key={crumb.href}>
-              <li className="flex items-center">
+              <li className="flex items-center shrink-0">
                 {isLast ? (
-                  <span className="font-medium text-foreground flex items-center">
-                    {isFirst && <Home className="h-4 w-4 mr-1" />}
+                  <span 
+                    className="flex items-center gap-2 text-[9px] font-black tracking-[0.25em] italic" 
+                    style={{ fontFamily: D.head, color: D.textPrimary }}
+                  >
+                    {isFirst ? <Home size={11} className="text-indigo-500" /> : <div className="w-1.5 h-1.5 rounded-full" style={{ background: D.indigo }} />}
                     {crumb.label}
                   </span>
                 ) : (
                   <Link
                     href={crumb.href}
-                    className="hover:text-foreground transition-colors flex items-center"
+                    className="flex items-center gap-2 text-[9px] font-black tracking-[0.25em] transition-all hover:text-indigo-500 opacity-40 hover:opacity-100"
+                    style={{ fontFamily: D.head, color: D.textMuted }}
                   >
-                    {isFirst && <Home className="h-4 w-4 mr-1" />}
+                    {isFirst && <Home size={11} />}
                     {crumb.label}
                   </Link>
                 )}
               </li>
               {!isLast && (
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                <ChevronRight size={10} className="opacity-20 translate-y-[-0.5px]" style={{ color: D.textMuted }} />
               )}
             </Fragment>
           );
         })}
       </ol>
+      <div className="h-px w-full mt-3 opacity-5" style={{ background: `linear-gradient(90deg, ${D.indigo}, transparent)` }} />
     </nav>
   );
 }

@@ -1,293 +1,169 @@
 "use client";
 
-import { useState } from 'react';
-import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from 'react';
+import { 
+  Plus, 
+  MapPin, 
+  Globe, 
+  Calendar, 
+  Search, 
+  Filter, 
+  Map as MapIcon, 
+  LayoutGrid, 
+  Droplets, 
+  CloudRain, 
+  ShieldCheck, 
+  AlertCircle,
+  MoreVertical,
+  Activity,
+  ArrowUpRight,
+  Wind
+} from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { MapPin, LayoutGrid, List, Table, Calendar, Search } from "lucide-react";
-import { Field } from "@/types/firestore";
+import { motion, AnimatePresence } from "framer-motion";
 import { FieldCard } from "./FieldCard";
-import { FieldBookingCalendar } from "./FieldBookingCalendar";
+import { D } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
-interface FieldsClientProps {
-  fields: Field[];
-}
+const MOCK_FIELDS = [
+  { id: '1', name: 'MAIN OVAL (THE RIDGE)', surface: 'NATURAL GRASS', status: 'AVAILABLE', condition: 'PRISTINE', maintenance: '02 MAR', bookings: 4 },
+  { id: '2', name: 'NORTH ACADEMY OVAL', surface: 'HYBRID TURF', status: 'IN USE', condition: 'EXCELLENT', maintenance: '05 MAR', bookings: 6 },
+  { id: '3', name: 'SOUTH PRACTICE NETS', surface: 'ASTRO TURF', status: 'AVAILABLE', condition: 'STABLE', maintenance: '01 MAR', bookings: 12 },
+  { id: '4', name: 'CENTRAL SQUARE (TURF)', surface: 'TURF SQUARES', status: 'MAINTENANCE', condition: 'CRITICAL', maintenance: 'HEAVILY WIP', bookings: 0 },
+];
 
-export function FieldsClient({ fields }: FieldsClientProps) {
-  const { viewMode, setViewMode } = useViewMode({ 
-    storageKey: 'fields-view-mode',
-    defaultMode: 'grid'
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPitchType, setSelectedPitchType] = useState<string>('all');
-  const [sortOrder, setSortOrder] = useState<'name' | 'capacity'>('name');
-
-  // Filter fields based on search and filters
-  const filteredFields = fields.filter(field => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = (
-      field.name.toLowerCase().includes(searchLower) ||
-      field.location?.toLowerCase().includes(searchLower) ||
-      (typeof field.pitchType === 'string' && field.pitchType.toLowerCase().includes(searchLower))
-    );
-
-    const matchesPitchType = selectedPitchType === 'all' || field.pitchType === selectedPitchType;
-
-    return matchesSearch && matchesPitchType;
-  }).sort((a, b) => {
-    if (sortOrder === 'capacity') {
-      return (b.capacity || 0) - (a.capacity || 0);
-    }
-    return a.name.localeCompare(b.name);
-  });
-
-  // Get unique pitch types
-  const pitchTypes = Array.from(new Set(fields.map(f => f.pitchType).filter(Boolean)));
+export function FieldsClient() {
+  const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [search, setSearch] = useState('');
 
   return (
-    <div className="space-y-6">
-      {/* Search and View Mode Toolbar */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-sm w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search fields, locations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="space-y-12 pb-24">
+      {/* Strategic Command Header */}
+      <div className="relative p-10 rounded-[3rem] border overflow-hidden shadow-2xl" 
+           style={{ background: D.surf1, borderColor: D.border }}>
+        <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
+        <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
+          <div className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner" 
+               style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
+             <MapIcon className="h-12 w-12 text-emerald-500" />
           </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex gap-1 border border-border rounded-lg p-1 bg-muted/20 self-end sm:self-auto">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="h-8 px-3"
-              title="Grid View"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 px-3"
-              title="List View"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className="h-8 px-3"
-              title="Table View"
-            >
-              <Table className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('calendar')}
-              className="h-8 px-3"
-              title="Calendar View"
-            >
-              <Calendar className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center bg-muted/10 p-4 rounded-lg border border-border/50">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Pitch Type:</span>
-            <select 
-              className="h-9 w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={selectedPitchType}
-              onChange={(e) => setSelectedPitchType(e.target.value)}
-            >
-              <option value="all">All Types</option>
-              {pitchTypes.map(type => (
-                <option key={type as string} value={type as string}>{type as string}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Sort By:</span>
-            <select 
-              className="h-9 w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'name' | 'capacity')}
-            >
-              <option value="name">Name (A-Z)</option>
-              <option value="capacity">Capacity (High-Low)</option>
-            </select>
-          </div>
-
-          {(selectedPitchType !== 'all' || searchTerm) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                setSelectedPitchType('all');
-                setSearchTerm('');
-              }}
-              className="ml-auto text-muted-foreground hover:text-foreground"
-            >
-              Reset Filters
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
-        Found {filteredFields.length} {filteredFields.length === 1 ? 'field' : 'fields'}
-        {(selectedPitchType !== 'all') && ' matching filters'}
-      </div>
-
-      {/* Grid View */}
-      {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFields.map((field) => (
-            <FieldCard 
-              key={field.id} 
-              field={field} 
-              viewMode="grid" 
-            />
-          ))}
-        </div>
-      )}
-
-      {/* List View */}
-      {viewMode === 'list' && (
-        <div className="space-y-4">
-          {filteredFields.map((field) => (
-            <FieldCard 
-              key={field.id} 
-              field={field} 
-              viewMode="list" 
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Table View */}
-      {viewMode === 'table' && (
-        <Card className="overflow-hidden border-t-4 border-t-primary">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Name</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Location</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Pitch Type</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Capacity</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground uppercase text-xs tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFields.map((field) => (
-                    <tr key={field.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="p-4 font-medium">{field.name}</td>
-                      <td className="p-4 text-muted-foreground">{field.location || '-'}</td>
-                      <td className="p-4">
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{field.pitchType || 'Turf'}</Badge>
-                      </td>
-                      <td className="p-4 text-muted-foreground">{field.capacity || '-'}</td>
-                      <td className="p-4 text-right">
-                        <Link href={`/fields/${field.id}`}>
-                          <Button size="sm" variant="outline" className="hover:bg-primary hover:text-primary-foreground">View</Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Calendar View */}
-      {viewMode === 'calendar' && (
-        <div className="space-y-4">
-          {filteredFields.length > 0 ? (
-            <div className="space-y-6">
-              {filteredFields.map((field) => (
-                <Card key={field.id} className="border-t-4 border-t-primary">
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">{field.name}</h3>
-                        <p className="text-sm text-muted-foreground">{field.location}</p>
-                      </div>
-                      <Badge variant="secondary">{field.pitchType || 'Turf'}</Badge>
-                    </div>
-                    <FieldBookingCalendar fieldId={field.id} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="p-12 text-center">
-                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <h3 className="text-lg font-semibold mb-2">No fields to display</h3>
-                <p className="text-muted-foreground">
-                  {searchTerm || selectedPitchType !== 'all'
-                    ? 'Adjust your filters to see field calendars'
-                    : 'Add fields to start managing bookings'}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {filteredFields.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <MapPin className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No fields found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || selectedPitchType !== 'all' 
-                ? 'Try adjusting your filters or search terms' 
-                : 'Get started by adding your first field'}
+          <div className="text-center lg:text-left">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" 
+                style={{ fontFamily: D.head, color: D.textPrimary }}>
+              FACILITY <span style={{ color: D.emerald }}>MAPPING</span>
+            </h1>
+            <p className="text-[12px] font-black uppercase tracking-[0.4em] mt-4 opacity-60 italic" style={{ color: D.textMuted }}>
+                SITUATIONAL GROUNDS & INFRASTRUCTURE DIRECTORY
             </p>
-            {(!searchTerm && selectedPitchType === 'all') && (
-              <Link href="/fields/new">
-                <Button>
-                  Add Field
-                </Button>
-              </Link>
-            )}
-            {(searchTerm || selectedPitchType !== 'all') && (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedPitchType('all');
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <div className="lg:ml-auto flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+             <div className="flex items-center gap-4 p-1 rounded-2xl border" style={{ background: D.surf2, borderColor: D.border }}>
+                <button 
+                  onClick={() => setView('grid')}
+                  className={cn(
+                    "h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-3",
+                    view === 'grid' ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20" : "text-white/40 hover:text-white"
+                  )}>
+                  <LayoutGrid size={16} /> GRID
+                </button>
+                <button 
+                  onClick={() => setView('map')}
+                  className={cn(
+                    "h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-3",
+                    view === 'map' ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/20" : "text-white/40 hover:text-white"
+                  )}>
+                  <Globe size={16} /> RADAR
+                </button>
+             </div>
+             <Button className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl" style={{ background: D.emerald }}>
+                <Plus className="mr-2 h-4 w-4" /> ADD FACILITY
+             </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+         {/* Filter Hub */}
+         <div className="lg:col-span-1 space-y-8">
+            <div className="p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl relative" 
+                 style={{ background: D.surf1, borderColor: D.border }}>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-8 pb-4 border-b" style={{ borderColor: D.border }}>FILTER INTEL</h4>
+               
+               <div className="space-y-10">
+                  <div className="space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">SEARCH REGISTRY</label>
+                     <div className="relative group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
+                        <input 
+                           value={search}
+                           onChange={(e) => setSearch(e.target.value)}
+                           className="w-full h-14 pl-14 pr-6 rounded-xl bg-black/10 border border-white/5 focus:border-emerald-500/50 outline-none transition-all font-bold text-sm" 
+                           placeholder="FIELD NAME / ID..." 
+                        />
+                     </div>
+                  </div>
+
+                  <div className="space-y-6">
+                     <div className="space-y-4">
+                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">SURFACE TOPOLOGY</label>
+                        {['NATURAL GRASS', 'HYBRID TURF', 'TURF SQUARES', 'ASTRO TURF'].map(type => (
+                           <label key={type} className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:border-emerald-500/30 transition-all group">
+                              <input type="checkbox" className="accent-emerald-500 h-4 w-4" />
+                              <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{type}</span>
+                           </label>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+                     <div className="flex items-center gap-3">
+                        <Droplets size={16} className="text-emerald-500" />
+                        <h5 className="text-[10px] font-black uppercase tracking-widest">IRRIGATION STATUS</h5>
+                     </div>
+                     <p className="text-[9px] font-bold text-emerald-400 italic leading-relaxed">AUTOMATIC CYCLES DELAYED BY 12 HOURS DUE TO PREDICTED PRECIPITATION.</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* Grid View */}
+         <div className="lg:col-span-3">
+            <AnimatePresence mode="wait">
+               {view === 'grid' ? (
+                 <motion.div 
+                   key="grid"
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: -20 }}
+                   className="grid grid-cols-1 md:grid-cols-2 gap-10"
+                 >
+                    {MOCK_FIELDS.map((field, i) => (
+                       <FieldCard key={field.id} field={field} index={i} />
+                    ))}
+                 </motion.div>
+               ) : (
+                 <motion.div 
+                   key="map"
+                   initial={{ opacity: 0, scale: 0.95 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.95 }}
+                   className="h-[600px] rounded-[3rem] border border-dashed flex flex-col items-center justify-center gap-6"
+                   style={{ background: D.surf1, borderColor: D.border }}
+                 >
+                    <div className="relative">
+                       <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/10" />
+                       <Globe className="h-24 w-24 text-emerald-500/20" />
+                    </div>
+                    <div className="text-center space-y-2">
+                       <h3 className="text-2xl font-black italic uppercase tracking-tighter" style={{ fontFamily: D.head }}>RADAR OFFLINE</h3>
+                       <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 italic">GEOSPATIAL COORDINATES NOT FOUND IN DATABASE</p>
+                    </div>
+                 </motion.div>
+               )}
+            </AnimatePresence>
+         </div>
+      </div>
     </div>
   );
 }

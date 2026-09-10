@@ -3,6 +3,7 @@
 import admin from '@/lib/firebase-admin';
 import { TeamStanding, calculateNRR, sortStandings, calculatePoints, extractMatchScores } from '@/lib/utils/pointsTableUtils';
 import { Match } from '@/types/firestore';
+import { serializeData } from '@/lib/serialize';
 
 export async function getPointsTableAction(
   leagueId?: string,
@@ -132,7 +133,7 @@ export async function getPointsTableAction(
     // Sort standings
     const sortedStandings = sortStandings(standings);
 
-    return { success: true, standings: sortedStandings };
+    return serializeData({ success: true, standings: sortedStandings });
   } catch (error) {
     console.error('Get points table error:', error);
     return { success: false, error: (error as Error).message || 'Failed to calculate points table' };

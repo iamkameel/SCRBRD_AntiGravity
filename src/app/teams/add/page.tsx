@@ -4,6 +4,8 @@ import { ageDivisionService } from "@/services/ageDivisionService";
 import { seasonService } from "@/services/seasonService";
 import { teamClassService } from "@/services/teamClassService";
 
+export const dynamic = "force-dynamic";
+
 export default async function AddTeamPage() {
   const [organisations, ageDivisions, activeSeason, teamClasses] = await Promise.all([
     organisationService.getAll(),

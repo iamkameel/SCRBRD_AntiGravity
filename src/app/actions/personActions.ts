@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { setDocument, deleteDocument, fetchPersonById } from '@/lib/firestore';
 import { Person } from '@/types/firestore';
 import { hasHigherOrEqualRole, USER_ROLES, UserRole } from '@/lib/roles';
+import { serializeData } from '@/lib/serialize';
 
 /**
  * Check if user has permission to perform action
@@ -22,7 +23,7 @@ export async function createPersonAction(formData: FormData) {
         const hasPermission = await checkPermission(USER_ROLES.COACH);
         if (!hasPermission) {
             return {
-                success: false,
+                success: false as const,
                 error: 'You do not have permission to create people'
             };
         }
@@ -48,11 +49,11 @@ export async function createPersonAction(formData: FormData) {
         await setDocument('people', personId, personData);
 
         revalidatePath('/people');
-        return { success: true, id: personId };
+        return serializeData({ success: true as const, id: personId });
     } catch (error) {
         console.error('Error creating person:', error);
         return {
-            success: false,
+            success: false as const,
             error: error instanceof Error ? error.message : 'Failed to create person'
         };
     }
@@ -64,14 +65,14 @@ export async function updatePersonAction(personId: string, formData: FormData) {
         const hasPermission = await checkPermission(USER_ROLES.COACH);
         if (!hasPermission) {
             return {
-                success: false,
+                success: false as const,
                 error: 'You do not have permission to update people'
             };
         }
 
         const existingPerson = await fetchPersonById(personId);
         if (!existingPerson) {
-            return { success: false, error: 'Person not found' };
+            return { success: false as const, error: 'Person not found' };
         }
 
         const personData: any = {
@@ -92,11 +93,11 @@ export async function updatePersonAction(personId: string, formData: FormData) {
 
         revalidatePath('/people');
         revalidatePath(`/people/${personId}`);
-        return { success: true };
+        return serializeData({ success: true as const });
     } catch (error) {
         console.error('Error updating person:', error);
         return {
-            success: false,
+            success: false as const,
             error: error instanceof Error ? error.message : 'Failed to update person'
         };
     }
@@ -160,7 +161,7 @@ export async function fetchPersonByEmail(email: string) {
         if (snapshot.empty) return null;
 
         const doc = snapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Person;
+        return serializeData({ id: doc.id, ...doc.data() }) as Person;
     } catch (error) {
         console.error('Error fetching person by email:', error);
         return null;
@@ -174,7 +175,7 @@ export async function fetchInjuredPlayers() {
             .where('status', '==', 'injured')
             .get();
 
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Person[];
+        return serializeData(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))) as Person[];
     } catch (error) {
         console.error('Error fetching injured players:', error);
         return [];

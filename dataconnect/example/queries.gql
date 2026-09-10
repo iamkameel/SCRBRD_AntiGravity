@@ -56,12 +56,23 @@ query ListFixtures @auth(level: PUBLIC) {
     id
     scheduledStartAt
     homeTeam {
+      id
       name
+      organisation {
+        id
+        name
+      }
     }
     awayTeam {
+      id
       name
+      organisation {
+        id
+        name
+      }
     }
     venue {
+      id
       name
     }
     status
@@ -141,5 +152,74 @@ query ListTeams @auth(level: PUBLIC) {
       label
       code
     }
+  }
+}
+
+# --- Intelligence & Rankings Layer ---
+
+query GetPlayerIntelligence($personId: UUID!) @auth(level: PUBLIC) {
+  person(id: $personId) {
+    id
+    firstName
+    lastName
+    playerProfile_on_person {
+      id
+      preferredRole
+      battingStyle
+      bowlingStyle
+      profileStatus
+      playerIdCode
+    }
+    skillRatings_on_person(orderBy: [{ratedAt: DESC}]) {
+      id
+      category
+      attributeName
+      ratingValue
+      notes
+      ratedAt
+    }
+  }
+  rankingSnapshots(where: {
+    entityId: {eq: $personId},
+    entityType: {eq: "Person"}
+  }, orderBy: [{computedAt: DESC}]) {
+    id
+    rankingType
+    score
+    rank
+    previousRank
+    movement
+    confidence
+    computedAt
+    rankingComponents_on_rankingSnapshot {
+      componentName
+      rawValue
+      normalisedValue
+      weight
+      contribution
+    }
+  }
+}
+
+query GetEcosystemOverview @auth(level: PUBLIC) {
+  schoolRankings: rankingSnapshots(where: {
+    entityType: {eq: "School"},
+    rankingType: {eq: "TeamRank"}
+  }, orderBy: [{score: DESC}], limit: 10) {
+    id
+    entityId
+    score
+    rank
+    movement
+  }
+  playerRankings: rankingSnapshots(where: {
+    entityType: {eq: "Person"},
+    rankingType: {eq: "PlayerPower"}
+  }, orderBy: [{score: DESC}], limit: 10) {
+    id
+    entityId
+    score
+    rank
+    movement
   }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { D } from "@/lib/scoring/theme";
 import { Player as Person } from "@/lib/store";
+import { Activity, Target } from "lucide-react";
 import {
   Radar,
   RadarChart,
@@ -38,18 +38,21 @@ export function PlayerSkillsDisplay({ player }: PlayerSkillsDisplayProps) {
   const skillsData = getSkillsData(player);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Radar Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Skills Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up">
+        <div className="p-8 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary" style={{ fontFamily: D.mono }}>
+            Tactical Radar
+          </h3>
+          <Target className="h-4 w-4 text-white/20" />
+        </div>
+        <div className="p-8">
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skillsData}>
-                <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={skillsData}>
+                <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900, fontFamily: 'DM Mono, monospace' }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                 <Radar
                   name={player.firstName}
@@ -57,38 +60,44 @@ export function PlayerSkillsDisplay({ player }: PlayerSkillsDisplayProps) {
                   stroke="#10b981"
                   strokeWidth={2}
                   fill="#10b981"
-                  fillOpacity={0.3}
+                  fillOpacity={0.2}
                 />
               </RadarChart>
             </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Skill Bars */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Skill Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up" style={{ animationDelay: '100ms' }}>
+        <div className="p-8 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary" style={{ fontFamily: D.mono }}>
+            Skill Matrix Breakdown
+          </h3>
+          <Activity className="h-4 w-4 text-white/20" />
+        </div>
+        <div className="p-8 space-y-6">
           {skillsData.map((skill) => (
             <div key={skill.subject} className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">{skill.subject}</span>
-                <span className="text-muted-foreground">{skill.A}/100</span>
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50" style={{ fontFamily: D.mono }}>{skill.subject}</span>
+                <span className="text-sm font-bold text-white/90">{skill.A} <span className="text-[10px] text-white/30">/ 100</span></span>
               </div>
-              <Progress 
-                value={skill.A} 
-                className={`h-2 ${
-                  skill.A >= 80 ? "[&>div]:bg-emerald-500" :
-                  skill.A >= 60 ? "[&>div]:bg-blue-500" :
-                  skill.A >= 40 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-red-500"
-                }`}
-              />
+              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full ${
+                    skill.A >= 80 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" :
+                    skill.A >= 60 ? "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" :
+                    skill.A >= 40 ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" : 
+                    "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                  }`}
+                  style={{ width: `${skill.A}%` }} 
+                />
+              </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

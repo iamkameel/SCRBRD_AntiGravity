@@ -4,7 +4,7 @@ import { updatePlayerAction } from "@/app/actions/playerActions";
 import { updateCoachAction, CoachActionState } from "@/app/actions/coachActions";
 import { updateUmpireAction } from "@/app/actions/umpireActions";
 import { updateScorerAction } from "@/app/actions/scorerActions";
-import { updateMedicalAction } from "@/app/actions/medicalActions";
+import { updateMedicalPersonAction } from "@/app/actions/medicalActions";
 import { updateGroundskeeperAction } from "@/app/actions/groundskeeperActions";
 import { notFound } from "next/navigation";
 import { PlayerActionState } from "@/app/actions/playerActions";
@@ -88,7 +88,7 @@ export default async function EditPersonPage(props: { params: Promise<{ id: stri
           mode="edit"
           medicalAction={async (prevState, formData) => {
             'use server';
-            return updateMedicalAction(id, prevState, formData);
+            return updateMedicalPersonAction(id, prevState, formData);
           }}
           initialState={{ success: false }}
           initialData={person as any}

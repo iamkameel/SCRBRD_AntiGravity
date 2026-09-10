@@ -2,18 +2,19 @@
 
 import { useState } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   LayoutGrid, 
   List, 
-  Table, 
-  Calendar, 
   Search, 
   Filter,
   X,
-  Layers
+  Layers,
+  Plus,
+  ChevronRight,
+  Globe,
+  Award,
+  Shield
 } from "lucide-react";
 import Link from 'next/link';
 import { 
@@ -23,6 +24,9 @@ import {
 } from "@/generated/dataconnect";
 import { TeamCard } from "./TeamCard";
 import { Badge } from "@/components/ui/badge";
+import { D } from '@/lib/design-system';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from "@/lib/utils";
 
 interface TeamsClientProps {
   teams: ListTeamsData['teams'];
@@ -40,7 +44,6 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
   const [selectedOrg, setSelectedOrg] = useState<string>('all');
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
 
-  // Filter teams based on search and relational links
   const filteredTeams = teams.filter(team => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = (
@@ -56,152 +59,131 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
   });
 
   return (
-    <div className="space-y-8">
-      {/* Search and View Mode Toolbar */}
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-xl w-full group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
-            <Input
-              placeholder="Search teams, organisations, divisions..."
+    <div className="space-y-12 pb-24">
+      {/* View & Filter Hub */}
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6 p-4 rounded-[2rem] border" 
+           style={{ background: D.surf1, borderColor: D.border }}>
+        
+        <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-all" size={18} />
+            <input 
+              type="text" 
+              placeholder="SEARCH TEAMS, ORGANISATIONS, DIVISIONS..."
+              className="w-full h-16 pl-16 pr-8 rounded-2xl bg-black/5 border-transparent focus:border-indigo-500/30 focus:bg-white/5 outline-none transition-all text-xs font-black tracking-widest uppercase"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 bg-card/50 border-primary/10 transition-all focus:ring-primary/20 focus:border-primary/30 text-lg rounded-2xl"
             />
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex gap-1 border border-primary/10 rounded-2xl p-1.5 bg-card/50 backdrop-blur-sm self-end md:self-auto shadow-sm">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className={`h-10 px-4 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'}`}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Grid
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className={`h-10 px-4 rounded-xl transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'}`}
-            >
-              <List className="h-4 w-4 mr-2" />
-              List
-            </Button>
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl" style={{ background: D.surf2 }}>
+            {[
+              { id: 'grid', icon: LayoutGrid, label: 'GRID' },
+              { id: 'list', icon: List, label: 'LIST' }
+            ].map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setViewMode(v.id as any)}
+                className={cn(
+                  "flex items-center gap-3 px-6 py-3 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest",
+                  viewMode === v.id ? "text-white shadow-xl" : "opacity-40 hover:opacity-100"
+                )}
+                style={{ background: viewMode === v.id ? D.indigo : 'transparent' }}
+              >
+                <v.icon size={14} />
+                {v.label}
+              </button>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center bg-primary/5 p-6 rounded-3xl border border-primary/10">
-          <div className="flex items-center gap-3">
-            <Filter className="h-4 w-4 text-primary" />
-            <span className="text-sm font-heading italic font-bold uppercase tracking-widest text-primary/60">Filters</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-3 flex-1">
-             <select 
-              className="h-10 min-w-[180px] rounded-xl border border-primary/10 bg-card px-4 py-1 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
-              value={selectedOrg}
-              onChange={(e) => setSelectedOrg(e.target.value)}
-            >
-              <option value="all">All Organisations</option>
-              {organisations.map(org => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
+      {/* Advanced Filter Strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex items-center gap-4 p-4 rounded-2xl border" style={{ background: D.surf1, borderColor: D.border }}>
+           <Globe size={18} className="text-indigo-500 ml-2" />
+           <select 
+            className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
+            value={selectedOrg}
+            onChange={(e) => setSelectedOrg(e.target.value)}
+          >
+            <option value="all">ALL ORGANISATIONS</option>
+            {organisations.map(org => (
+              <option key={org.id} value={org.id}>{org.name.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
 
-            <select 
-              className="h-10 min-w-[180px] rounded-xl border border-primary/10 bg-card px-4 py-1 text-sm shadow-sm transition-all focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
-              value={selectedDivision}
-              onChange={(e) => setSelectedDivision(e.target.value)}
-            >
-              <option value="all">All Divisions</option>
-              {ageDivisions.map(div => (
-                <option key={div.id} value={div.id}>{div.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="flex items-center gap-4 p-4 rounded-2xl border" style={{ background: D.surf1, borderColor: D.border }}>
+           <Award size={18} className="text-sky-500 ml-2" />
+           <select 
+            className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
+            value={selectedDivision}
+            onChange={(e) => setSelectedDivision(e.target.value)}
+          >
+            <option value="all">ALL DIVISIONS</option>
+            {ageDivisions.map(div => (
+              <option key={div.id} value={div.id}>{div.name.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
 
-          {(selectedOrg !== 'all' || selectedDivision !== 'all' || searchTerm) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                setSelectedOrg('all');
-                setSelectedDivision('all');
-                setSearchTerm('');
-              }}
-              className="text-primary hover:bg-primary/10 rounded-xl"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
+        {(selectedOrg !== 'all' || selectedDivision !== 'all' || searchTerm) && (
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              setSelectedOrg('all');
+              setSelectedDivision('all');
+              setSearchTerm('');
+            }}
+            className="h-16 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-500"
+            style={{ borderColor: D.border }}
+          >
+            <X className="h-4 w-4 mr-3" />
+            CLEAR ENGINE FILTERS
+          </Button>
+        )}
+      </div>
+
+      {/* Results HUD */}
+      <div className="flex items-center justify-between px-10">
+        <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+           IDENTITY RESULTS: <span className="text-white opacity-100 italic" style={{ color: D.indigo }}>{filteredTeams.length} UNIT(S)</span>
+        </div>
+        <div className="px-3 py-1 rounded-lg border text-[9px] font-black uppercase tracking-[0.2em]" 
+             style={{ background: `${D.indigo}08`, borderColor: `${D.indigo}20`, color: D.indigo }}>
+          V4 RELATIONAL ENGINE
+        </div>
+      </div>
+
+      {/* Dynamic View Engine */}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={viewMode}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className={cn(
+            viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "space-y-6"
           )}
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-muted-foreground italic font-medium">
-          Showing <span className="text-foreground font-bold">{filteredTeams.length}</span> {filteredTeams.length === 1 ? 'Relational Team' : 'Relational Teams'}
-        </div>
-        <Badge variant="outline" className="font-heading italic py-1 border-primary/20">
-          V4 Data Connect
-        </Badge>
-      </div>
-
-      {/* Grid View */}
-      {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredTeams.map((team) => (
-            <TeamCard 
-              key={team.id} 
-              team={team} 
-              viewMode="grid" 
-            />
-          ))}
-        </div>
-      )}
-
-      {/* List View */}
-      {viewMode === 'list' && (
-        <div className="space-y-6">
-          {filteredTeams.map((team) => (
-            <TeamCard 
-              key={team.id} 
-              team={team} 
-              viewMode="list" 
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {filteredTeams.length === 0 && (
-        <Card className="border-dashed border-primary/20 bg-primary/5 rounded-3xl">
-          <CardContent className="p-16 text-center">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Layers className="h-10 w-10 text-primary animate-pulse" />
+        >
+          {filteredTeams.length === 0 ? (
+            <div className="col-span-full py-24 text-center rounded-[3rem] border border-dashed flex flex-col items-center gap-4" 
+                 style={{ borderColor: D.border }}>
+               <Shield className="h-12 w-12 opacity-10 animate-pulse" />
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">NO RELATIONAL CORES FOUND FOR SELECTED TOPOLOGY</p>
             </div>
-            <h3 className="text-2xl font-heading italic font-bold mb-3">No teams identified</h3>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto italic font-medium">
-              {searchTerm || selectedOrg !== 'all' || selectedDivision !== 'all' 
-                ? 'The relational engine couldn\'t find matches for the active filters. Keep exploring!' 
-                : 'Your relational database is clean and ready. Start building your first V4 team now.'}
-            </p>
-            {(!searchTerm && selectedOrg === 'all' && selectedDivision === 'all') && (
-              <Link href="/teams/add">
-                <Button className="bg-primary hover:bg-primary/90 rounded-2xl px-10 h-12 text-lg font-heading italic shadow-xl shadow-primary/20">
-                  Build Team
-                </Button>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            filteredTeams.map((team) => (
+              <TeamCard 
+                key={team.id} 
+                team={team} 
+                viewMode={viewMode} 
+              />
+            ))
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

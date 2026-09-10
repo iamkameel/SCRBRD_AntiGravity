@@ -60,7 +60,7 @@ export function UmpireTraitsManager({ initialData = [], onChange }: { initialDat
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          Add tags to describe the umpire's style and characteristics.
+          Add tags to describe the umpire&apos;s style and characteristics.
         </p>
       </div>
     </Card>

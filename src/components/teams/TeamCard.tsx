@@ -1,103 +1,137 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import Link from "next/link";
-import { Shield, Layers } from "lucide-react";
-import { Team } from "@/lib/store";
+import { Building2, Calendar, Users, ChevronRight, Layers, Award, Shield, Globe } from "lucide-react";
+import { D } from '@/lib/design-system';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface TeamCardProps {
   team: any;
-  school?: any;
-  viewMode?: 'grid' | 'list';
+  viewMode?: 'grid' | 'list' | 'table' | 'calendar' | 'stats';
 }
 
 export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
-  const organisationName = team.organisation?.name || 'Unknown Organisation';
-  const divisionName = team.ageDivision?.name || 'Unknown Division';
-  
-  // Generate fallback avatar if no logo is available
-  const fallbackSchoolLogo = team.organisation?.name 
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(team.organisation.name)}&background=random&color=fff`
-    : '';
-    
-  // In V4, we use organisation logo as primary fallback
-  const displayLogoUrl = fallbackSchoolLogo;
-
-  if (viewMode === 'list') {
+  if (viewMode === 'grid') {
     return (
-      <Card className="hover:shadow-md transition-shadow group border-l-4 border-l-transparent hover:border-l-primary overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-              <Layers className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-lg group-hover:text-primary transition-colors font-heading italic">{team.name}</h3>
-              <p className="text-sm text-muted-foreground">{organisationName}</p>
-            </div>
-            <div className="hidden md:flex items-center gap-6 mr-4">
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Division</div>
-                <div className="font-medium text-sm">{divisionName}</div>
+      <motion.div
+        whileHover={{ y: -10 }}
+        className="group"
+      >
+        <div 
+          className="relative p-10 rounded-[2.5rem] border overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
+          style={{ background: D.surf1, borderColor: D.border }}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between mb-10">
+            <div className="space-y-4">
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-none transition-colors group-hover:text-indigo-400" 
+                  style={{ fontFamily: D.head, color: D.textPrimary }}>
+                {team.name}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <div className="px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest opacity-60" 
+                     style={{ background: D.surf2, borderColor: D.border, color: D.textPrimary }}>
+                  {team.ageDivision?.name || 'OPEN UNIT'}
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Class</div>
-                <div className="font-medium text-sm">{team.teamClass?.label || '-'}</div>
-              </div>
             </div>
-            <Link href={`/teams/${team.id}`}>
-              <Button variant="outline" size="sm" className="hover:bg-primary hover:text-primary-foreground font-heading italic">View</Button>
-            </Link>
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center border shadow-inner transition-colors duration-500 group-hover:bg-indigo-500/10" 
+                 style={{ background: D.surf2, borderColor: D.border }}>
+               <Layers className="h-8 w-8 text-indigo-500" />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Meta Hub */}
+          <div className="grid grid-cols-1 gap-4 mb-10 pb-10 border-b" style={{ borderColor: D.border }}>
+             <div className="flex items-center gap-4 px-4 py-3 rounded-2xl" style={{ background: D.surf2 }}>
+                <Globe size={18} className="text-indigo-500 opacity-40" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-0.5" style={{ color: D.textMuted }}>INSTITUTIONal SCOPE</span>
+                  <span className="text-xs font-black uppercase tracking-tight" style={{ color: D.textPrimary }}>{team.organisation?.name || 'INDEPENDENT'}</span>
+                </div>
+             </div>
+             <div className="flex items-center gap-4 px-4 py-3 rounded-2xl" style={{ background: D.surf2 }}>
+                <Calendar size={18} className="text-sky-500 opacity-40" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-0.5" style={{ color: D.textMuted }}>ACTIVE SEASON</span>
+                  <span className="text-xs font-black uppercase tracking-tight" style={{ color: D.textPrimary }}>{team.season?.name || 'N/A'}</span>
+                </div>
+             </div>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 opacity-40">
+                <Users size={14} />
+                <span className="text-[9px] font-black uppercase tracking-widest italic">SQUAD MONITORING STATUS: ACTIVE</span>
+             </div>
+             <Link href={`/teams/${team.id}`}>
+               <Button variant="ghost" className="h-12 w-12 rounded-xl border flex items-center justify-center transition-all group-hover:bg-indigo-500 group-hover:text-white" 
+                       style={{ borderColor: D.border }}>
+                  <ChevronRight size={18} />
+               </Button>
+             </Link>
+          </div>
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-500 group border border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
-            <Layers className="h-8 w-8 text-primary" />
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      className="group"
+    >
+      <div 
+        className="p-8 rounded-[2rem] border overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
+        style={{ background: D.surf1, borderColor: D.border }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-10">
+          <div className="flex items-center gap-8 min-w-[280px]">
+            <div className="h-20 w-20 rounded-[1.5rem] flex items-center justify-center border shadow-inner transition-colors duration-500 group-hover:bg-indigo-500/10" 
+                 style={{ background: D.surf2, borderColor: D.border }}>
+               <Layers className="h-10 w-10 text-indigo-500" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-none transition-colors group-hover:text-indigo-400" 
+                  style={{ fontFamily: D.head, color: D.textPrimary }}>
+                {team.name}
+              </h3>
+              <div className="px-3 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest w-fit opacity-60" 
+                   style={{ background: D.surf2, borderColor: D.border, color: D.textPrimary }}>
+                {team.ageDivision?.name || 'OPEN UNIT'}
+              </div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-xl truncate group-hover:text-primary transition-colors font-heading italic tracking-tight">{team.name}</h3>
-            <p className="text-sm text-muted-foreground truncate italic">
-              {organisationName}
-            </p>
+
+          <div className="hidden xl:grid grid-cols-2 gap-12 flex-1 px-12 border-x transition-colors" style={{ borderColor: D.border }}>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1" style={{ color: D.textMuted }}>ORGANISATION</span>
+              <span className="text-xs font-black uppercase tracking-tight" style={{ color: D.textPrimary }}>{team.organisation?.name || 'INDEPENDENT'}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1" style={{ color: D.textMuted }}>SEASON</span>
+              <span className="text-xs font-black uppercase tracking-tight" style={{ color: D.textPrimary }}>{team.season?.name || 'N/A'}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+             <Link href={`/teams/${team.id}`}>
+               <Button variant="ghost" className="h-14 px-8 rounded-2xl border text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-black/5" 
+                       style={{ borderColor: D.border, color: D.textPrimary }}>
+                  MANAGE DETAILS
+               </Button>
+             </Link>
+             <Link href={`/teams/${team.id}/roster`}>
+               <Button className="h-14 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105" 
+                       style={{ background: D.indigo, color: 'white' }}>
+                  VIEW ROSTER
+               </Button>
+             </Link>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-          <div>
-            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Division</div>
-            <div className="font-medium text-sm truncate">{divisionName}</div>
-          </div>
-          <div>
-            <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-bold">Class</div>
-            <div className="font-medium text-sm">{team.teamClass?.label || '-'}</div>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Badge variant="outline" className="flex-1 justify-center py-1.5 bg-background/50 text-xs font-heading italic">
-            Relational V4
-          </Badge>
-          {team.teamClass?.code && (
-            <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0 text-xs">
-              {team.teamClass.code}
-            </Badge>
-          )}
-        </div>
-
-        <Link href={`/teams/${team.id}`} className="block pt-2">
-          <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-heading italic group-hover:translate-y-[-2px] transition-transform">
-            Manage Squad
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+      </div>
+    </motion.div>
   );
 }

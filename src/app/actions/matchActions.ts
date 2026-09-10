@@ -3,12 +3,18 @@
 import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
 import { MatchSchema } from '@/lib/validations/matchSchema';
 import admin from '@/lib/firebase-admin';
-import { Match, Person } from '@/types/firestore';
+import { Match, Person, Division } from '@/types/firestore';
 import { ScoringAction, WicketType, ShotType, PitchLength, BowlingLine, ScoringActionSource } from '@/types/scoring';
 import { computeProjection } from '@/lib/scoring/projectionService';
+import { ImpactEngine } from '@/services/impact/ImpactEngine';
+import { ImpactAttributor } from '@/services/impact/ImpactAttributor';
+import { RewardsEngine } from '@/services/rewards/RewardsEngine';
+import { RewardService } from '@/services/rewards/RewardService';
+import { recordAuditLog } from '@/lib/services/auditService';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
+import { serializeData } from '@/lib/serialize';
 
 export type MatchActionState = {
   error?: string;
@@ -24,17 +30,23 @@ export async function createMatchAction(
     const rawData = {
       homeTeamId: formData.get('homeTeamId'),
       awayTeamId: formData.get('awayTeamId'),
-      matchDate: formData.get('matchDate'),
-      matchTime: formData.get('matchTime') || undefined,
-      fieldId: formData.get('fieldId') || undefined,
+      scheduledDate: formData.get('matchDate'),
+      scheduledTime: formData.get('matchTime') || undefined,
+      venueId: formData.get('fieldId') || undefined,
+      format: formData.get('matchType') || 'T20',
+      overs: formData.get('overs') || undefined,
       leagueId: formData.get('leagueId') || undefined,
       seasonId: formData.get('seasonId') || undefined,
-      isDayNight: formData.get('isDayNight') === 'on',
-      status: formData.get('status') || 'scheduled',
-      matchType: formData.get('matchType') || 'T20',
-      overs: formData.get('overs') ? Number(formData.get('overs')) : undefined,
-      scorer: formData.get('scorer') || undefined,
+      divisionId: formData.get('divisionId') || undefined,
+      competition: formData.get('competition') || undefined,
+      round: formData.get('round') || undefined,
+      umpire1Id: formData.get('umpire1Id') || undefined,
+      umpire2Id: formData.get('umpire2Id') || undefined,
+      scorerId: formData.get('scorer') || undefined,
       notes: formData.get('notes') || undefined,
+      isDayNight: formData.get('isDayNight') === 'true', // Passed as hidden input in wizard
+      status: formData.get('status') || 'scheduled',
+      state: (formData.get('status') || 'scheduled').toString().toUpperCase() as any,
     };
 
     const validatedData = MatchSchema.parse(rawData);
@@ -64,11 +76,15 @@ export async function createMatchAction(
       }
     });
 
-    await createDocument<Omit<Match, 'id'>>('matches', newMatchData);
+    const matchId = await createDocument<Omit<Match, 'id'>>('matches', newMatchData);
 
     revalidatePath('/matches');
+    if (matchId) {
+      redirect(`/matches/${matchId}`);
+    }
   } catch (error) {
     if (error instanceof ZodError) {
+      console.error('Validation error details:', JSON.stringify(error.issues, null, 2));
       const fieldErrors: Record<string, string[]> = {};
       error.issues.forEach((err: any) => {
         const field = String(err.path[0]);
@@ -76,6 +92,10 @@ export async function createMatchAction(
         fieldErrors[field].push(err.message);
       });
       return { fieldErrors };
+    }
+    // Handle redirect "error" which is special in Next.js
+    if ((error as any).digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
     }
     console.error('Create match error:', error);
     return { error: (error as Error).message || 'Failed to create match' };
@@ -210,6 +230,17 @@ export async function updateTossAction(
       lastUpdated: new Date().toISOString()
     });
 
+    // Record Audit Log
+    await recordAuditLog({
+      actorId: 'SYSTEM', // In practice, get from session
+      actorName: 'Official Scorer',
+      actionType: 'MATCH_RESULT_VERIFIED', // Close enough for toss start
+      entityType: 'match',
+      entityId: matchId,
+      description: `Toss won by ${tossResult.winnerId === match.homeTeamId ? 'Home Team' : 'Away Team'}. Elected to ${tossResult.decision}.`,
+      afterState: { tossWinnerId: tossResult.winnerId, tossDecision: tossResult.decision }
+    });
+
     revalidatePath(`/matches/${matchId}`);
     console.log('updateTossAction successful for match:', matchId);
     return { success: true };
@@ -319,6 +350,19 @@ export async function updateLivePlayersAction(
     updateData.lastUpdated = new Date().toISOString();
 
     await liveScoreRef.update(updateData);
+
+    // Record Audit Log for replacement/update
+    if (updates.strikerId || updates.nonStrikerId || updates.bowlerId) {
+      await recordAuditLog({
+        actorId: 'SCORER',
+        actorName: 'Scorer',
+        actionType: 'PLAYER_REPLACED',
+        entityType: 'match',
+        entityId: matchId,
+        description: `Live players updated: ${updates.strikerId ? 'Striker: ' + updates.strikerId : ''} ${updates.nonStrikerId ? 'Non-Striker: ' + updates.nonStrikerId : ''} ${updates.bowlerId ? 'Bowler: ' + updates.bowlerId : ''}`,
+        afterState: updates
+      });
+    }
 
     return { success: true };
 
@@ -484,6 +528,62 @@ export async function recordBallAction(matchId: string, ballData: any) {
     // Save projection
     batch.set(matchRef.collection('live').doc('score'), projection);
 
+    // 4.5. Match Impact Engine Integration
+    try {
+      const matchContext: any = {
+        runs: projection.currentInnings.runs,
+        wickets: projection.currentInnings.wickets,
+        balls: projection.currentInnings.balls,
+        inningsNumber: (projection.innings2 ? 2 : 1) as 1 | 2,
+        target: (projection.currentInnings as any).target,
+      };
+
+      const impactEvent = ImpactEngine.calculateBallImpact(newAction, matchContext, match as any);
+      const attributions = ImpactAttributor.attributeImpact(impactEvent, newAction);
+
+      // Save Impact Event
+      const impactEventRef = matchRef.collection('impact_events').doc(impactEvent.id);
+      batch.set(impactEventRef, impactEvent);
+
+      // Save Attributions and Update Player Totals
+      for (const attr of attributions) {
+        const attrRef = impactEventRef.collection('attributions').doc(attr.id);
+        batch.set(attrRef, attr);
+
+        // Update aggregated player impact for THIS match
+        const playerImpactRef = matchRef.collection('player_impact').doc(attr.personId);
+        batch.set(playerImpactRef, {
+          personId: attr.personId,
+          fixtureId: matchId,
+          totalImpactValue: admin.firestore.FieldValue.increment(attr.impactValue),
+          [`${attr.impactCategory.toLowerCase()}Impact`]: admin.firestore.FieldValue.increment(attr.impactValue),
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+    } catch (impactError) {
+      // Log impact errors but don't fail the ball recording
+      console.error('Impact Engine Error:', impactError);
+    }
+
+    // 4.6. Rewards Engine Integration
+    try {
+      const rewardTransactions = await RewardsEngine.processBallRewards(newAction, projection, match as any);
+
+      // Group transactions by player and apply via RewardService
+      const playerIds = Array.from(new Set(rewardTransactions.map(t => t.playerId)));
+      for (const pId of playerIds) {
+        const playerTxs = rewardTransactions.filter(t => t.playerId === pId).map(t => ({
+          ...t,
+          walletId: `wallet_${t.playerId}`,
+          sourceEventId: matchId,
+          metadata: { ...t.metadata, ballActionId: actionId }
+        }));
+        await RewardService.applyTransactions(pId, playerTxs, batch);
+      }
+    } catch (rewardsError) {
+      console.error('Rewards Engine Error:', rewardsError);
+    }
+
     await batch.commit();
 
     // 5. Calculate Return Values for Client (Milestones, etc.)
@@ -616,15 +716,39 @@ export async function endInningsAction(matchId: string) {
     // Update live/score
     await matchRef.collection('live').doc('score').set(projection);
 
-    // Update match status if match is complete
-    if (projection.status === 'completed') {
-      await matchRef.update({
-        status: 'completed',
-        result: projection.result?.resultText,
-        winnerId: projection.result?.winnerId,
-        completedAt: new Date().toISOString()
-      });
+    // 4.7. End of Innings Rewards Integration
+    try {
+      const batch = db.batch();
+      const rewardTransactions = await RewardsEngine.processInningsRewards(projection, match as any);
 
+      const playerIds = Array.from(new Set(rewardTransactions.map(t => t.playerId)));
+      for (const pId of playerIds) {
+        const playerTxs = rewardTransactions.filter(t => t.playerId === pId).map(t => ({
+          ...t,
+          walletId: `wallet_${t.playerId}`,
+          sourceEventId: matchId,
+          metadata: { ...t.metadata, inningsNumber: projection.inningsNumber }
+        }));
+        await RewardService.applyTransactions(pId, playerTxs, batch);
+      }
+
+      await batch.commit();
+    } catch (rewardsError) {
+      console.error('Innings Rewards Error:', rewardsError);
+    }
+
+    // Record Audit Log
+    await recordAuditLog({
+      actorId: 'SCORER',
+      actorName: 'Scorer',
+      actionType: 'MATCH_RESULT_VERIFIED',
+      entityType: 'match',
+      entityId: matchId,
+      description: `Innings ${currentInningsNumber} ended. ${projection.status === 'completed' ? 'Match Completed.' : 'Target set: ' + (projection.currentInnings as any).target}`,
+      afterState: { status: projection.status, winnerId: projection.result?.winnerId }
+    });
+
+    if (projection.status === 'completed') {
       return {
         success: true,
         isMatchComplete: true,
@@ -635,7 +759,7 @@ export async function endInningsAction(matchId: string) {
       return {
         success: true,
         isMatchComplete: false,
-        target: projection.currentInnings?.target
+        target: (projection.currentInnings as any).target
       };
     }
 
@@ -735,7 +859,7 @@ export async function undoLastBallAction(matchId: string, reason: string) {
   }
 }
 
-export async function fetchOfficialMatches(userId: string) {
+export async function fetchOfficialMatches(userId: string): Promise<MatchFetchResult> {
   'use server';
   try {
     const matchesRef = admin.firestore().collection('matches');
@@ -793,15 +917,20 @@ export async function fetchOfficialMatches(userId: string) {
       return dateB - dateA;
     });
 
-    return { success: true, upcoming, past, total: allMatches.length };
+    const result = { success: true, upcoming, past, total: allMatches.length };
+    return serializeData(result) as { success: true; upcoming: Match[]; past: Match[]; total: number };
 
   } catch (error) {
     console.error('fetchOfficialMatches error:', error);
-    return { success: false, error: (error as Error).message };
+    return { success: false, error: (error as Error).message } as { success: false; error: string };
   }
 }
 
-export async function fetchMatchesForTeams(teamIds: string[]) {
+export type MatchFetchResult =
+  | { success: true; upcoming: Match[]; past: Match[]; total: number }
+  | { success: false; error: string };
+
+export async function fetchMatchesForTeams(teamIds: string[]): Promise<MatchFetchResult> {
   'use server';
   try {
     if (!teamIds || teamIds.length === 0) {
@@ -858,11 +987,12 @@ export async function fetchMatchesForTeams(teamIds: string[]) {
       return dateB - dateA;
     });
 
-    return { success: true, upcoming, past, total: allMatches.length };
+    const result = { success: true, upcoming, past, total: allMatches.length };
+    return serializeData(result) as { success: true; upcoming: Match[]; past: Match[]; total: number };
 
   } catch (error) {
     console.error('fetchMatchesForTeams error:', error);
-    return { success: false, error: (error as Error).message };
+    return { success: false, error: (error as Error).message } as { success: false; error: string };
   }
 }
 
@@ -911,9 +1041,21 @@ export async function getMatchDetailsAction(matchId: string) {
   try {
     const doc = await admin.firestore().collection('matches').doc(matchId).get();
     if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as Match;
+    return serializeData({ id: doc.id, ...doc.data() }) as Match;
   } catch (error) {
     console.error('Error fetching match:', error);
+    return null;
+  }
+}
+
+export async function getDivisionAction(divisionId: string) {
+  'use server';
+  try {
+    const doc = await admin.firestore().collection('divisions').doc(divisionId).get();
+    if (!doc.exists) return null;
+    return serializeData({ id: doc.id, ...doc.data() }) as Division;
+  } catch (error) {
+    console.error('Error fetching division:', error);
     return null;
   }
 }
@@ -926,7 +1068,7 @@ export async function getTeamSquadAction(teamId: string) {
       .where('teamIds', 'array-contains', teamId)
       .get();
 
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person));
+    return serializeData(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Person)));
   } catch (error) {
     console.error('Error fetching squad:', error);
     return [];
@@ -1310,11 +1452,19 @@ export async function selectNewBowlerAction(matchId: string, playerId: string) {
 
 export async function getLiveMatchesAction(): Promise<Match[]> {
   try {
+    console.log('[matchActions] Fetching live matches...');
+    // Check for mock project
+    if (admin.app().options.credential && (admin.app().options as any).projectId === 'mock-project-id') {
+      console.warn('WARNING: Running with mock-project-id. Match data will be empty.');
+    }
+
     const snapshot = await admin.firestore().collection('matches')
-      .where('status', '==', 'live')
+      .where('status', 'in', ['live', 'LIVE', 'in_progress', 'IN_PROGRESS', 'scoring', 'SCORING'])
       .get();
 
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+    const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+    console.log(`[matchActions] Found ${matches.length} live matches`);
+    return serializeData(matches);
   } catch (error) {
     console.error('Error fetching live matches:', error);
     return [];
@@ -1323,12 +1473,15 @@ export async function getLiveMatchesAction(): Promise<Match[]> {
 
 export async function getRecentMatchesAction(limitCount = 5): Promise<Match[]> {
   try {
+    console.log('[matchActions] Fetching recent matches...');
     const snapshot = await admin.firestore().collection('matches')
-      .where('status', '==', 'completed')
+      .where('status', 'in', ['completed', 'COMPLETED', 'finished', 'FINISHED', 'closed', 'CLOSED'])
       .orderBy('dateTime', 'desc')
       .limit(limitCount)
       .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+    const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+    console.log(`[matchActions] Found ${matches.length} recent matches`);
+    return serializeData(matches);
   } catch (error) {
     console.error('Error fetching recent matches:', error);
     return [];
@@ -1337,14 +1490,24 @@ export async function getRecentMatchesAction(limitCount = 5): Promise<Match[]> {
 
 export async function getUpcomingMatchesAction(limitCount = 5): Promise<Match[]> {
   try {
-    const now = new Date().toISOString();
+    console.log('[matchActions] Fetching upcoming matches...');
+    // We'll broaden the query to any scheduled match regardless of date for debugging
     const snapshot = await admin.firestore().collection('matches')
-      .where('status', '==', 'scheduled')
-      .where('dateTime', '>=', now)
-      .orderBy('dateTime', 'asc')
+      .where('status', 'in', ['scheduled', 'SCHEDULED', 'upcoming', 'UPCOMING', 'pre_match', 'PRE_MATCH', 'confirmed', 'CONFIRMED'])
       .limit(limitCount)
       .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+
+    let matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
+
+    // Sort manually if we can't trust the dateTime field format in the query
+    matches.sort((a, b) => {
+      const dateA = a.dateTime ? new Date(a.dateTime).getTime() : 0;
+      const dateB = b.dateTime ? new Date(b.dateTime).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    console.log(`[matchActions] Found ${matches.length} upcoming matches (total matching status)`);
+    return serializeData(matches);
   } catch (error) {
     console.error('Error fetching upcoming matches:', error);
     return [];

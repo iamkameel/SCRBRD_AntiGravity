@@ -1,231 +1,140 @@
 "use client";
 
-import { useState, useOptimistic, useTransition } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from 'react';
+import { 
+  Shield, 
+  Settings, 
+  Wrench, 
+  Activity, 
+  Box, 
+  Trash2, 
+  CheckCircle2, 
+  Plus, 
+  MoreVertical,
+  ArrowUpRight,
+  Zap,
+  Tag
+} from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AlertCircle, PenTool, Trash2, Loader2, UserPlus, RotateCcw } from "lucide-react";
-import Link from "next/link";
-import { Equipment } from "@/types/firestore";
-import { deleteEquipmentItemAction, assignEquipmentAction, returnEquipmentAction } from "@/lib/actions/equipment";
-import { toast } from "sonner";
-import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
+import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { D } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
-interface EquipmentListProps {
-  initialEquipment: Equipment[];
-}
+const INITIAL_EQUIPMENT = [
+  { id: 'EQ-001', name: 'TITAN CRICKET BATS', category: 'BATTING', condition: 'PRISTINE', lifespan: '95%', location: 'LOCKER A' },
+  { id: 'EQ-002', name: 'PREMIUM BALL SET (30)', category: 'BOWLING', condition: 'WORN', lifespan: '40%', location: 'STORAGE 1' },
+  { id: 'EQ-003', name: 'KEEPER GAUNTLETS', category: 'FIELDING', condition: 'STABLE', lifespan: '70%', location: 'LOCKER B' },
+  { id: 'EQ-004', name: 'BATTING HELMETS (L)', category: 'PROTECTION', condition: 'CRITICAL', lifespan: '15%', location: 'LOCKER C' },
+];
 
-type OptimisticAction = 
-  | { type: "delete"; id: string }
-  | { type: "update"; id: string; updates: Partial<Equipment> };
-
-export function EquipmentList({ initialEquipment }: EquipmentListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<'All' | 'Available' | 'In Use' | 'Maintenance'>('All');
-  const [isPending, startTransition] = useTransition();
-  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
-
-  // Optimistic state management
-  const [optimisticEquipment, setOptimisticEquipment] = useOptimistic<Equipment[], OptimisticAction>(
-    initialEquipment,
-    (currentItems, action) => {
-      switch (action.type) {
-        case "delete":
-          return currentItems.filter((item) => item.id !== action.id);
-        case "update":
-          return currentItems.map((item) =>
-            item.id === action.id ? { ...item, ...action.updates } : item
-          );
-        default:
-          return currentItems;
-      }
-    }
-  );
-
-  const filteredEquipment = optimisticEquipment.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.brand?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === 'All' || item.status === filter;
-    return matchesSearch && matchesFilter;
-  });
-
-  const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-    case 'Available': return 'secondary';
-    case 'In Use': return 'default';
-    case 'Maintenance': return 'destructive';
-    case 'Retired': return 'outline';
-    default: return 'outline';
-  }
-  };
-
-  const handleDelete = async (id: string) => {
-    startTransition(async () => {
-      setOptimisticEquipment({ type: "delete", id });
-    });
-    
-    const result = await deleteEquipmentItemAction(id);
-    if (result.success) {
-      toast.success("Equipment deleted successfully");
-    } else {
-      toast.error(result.message || "Failed to delete equipment");
-    }
-  };
-
-  const handleAssign = async (id: string) => {
-    setPendingItemId(id);
-    startTransition(async () => {
-      setOptimisticEquipment({ type: "update", id, updates: { status: "In Use" } });
-    });
-    
-    // Quick demo assign - in real app would show a modal to select person
-    const result = await assignEquipmentAction(id, "demo-person-id");
-    if (result.success) {
-      toast.success("Equipment assigned");
-    } else {
-      toast.error(result.message || "Failed to assign equipment");
-    }
-    setPendingItemId(null);
-  };
-
-  const handleReturn = async (id: string) => {
-    setPendingItemId(id);
-    startTransition(async () => {
-      setOptimisticEquipment({ type: "update", id, updates: { status: "Available", assignedTo: null } });
-    });
-    
-    const result = await returnEquipmentAction(id);
-    if (result.success) {
-      toast.success("Equipment returned");
-    } else {
-      toast.error(result.message || "Failed to return equipment");
-    }
-    setPendingItemId(null);
-  };
+export default function EquipmentList() {
+  const [equipment, setEquipment] = useState(INITIAL_EQUIPMENT);
 
   return (
-    <div className="space-y-8">
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <Input 
-            placeholder="Search equipment..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
-          {(['All', 'Available', 'In Use', 'Maintenance'] as const).map(f => (
-            <Button
-              key={f}
-              variant={filter === f ? 'default' : 'outline'}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </Button>
-          ))}
+    <div className="space-y-12 pb-24">
+      {/* Strategic Command Header */}
+      <div className="relative p-10 rounded-[3rem] border overflow-hidden shadow-2xl" 
+           style={{ background: D.surf1, borderColor: D.border }}>
+        <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
+        <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
+          <div className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner" 
+               style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
+             <Box className="h-12 w-12 text-indigo-500" />
+          </div>
+          <div className="text-center lg:text-left">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" 
+                style={{ fontFamily: D.head, color: D.textPrimary }}>
+              INVENTORY <span style={{ color: D.sky }}>LOGS</span>
+            </h1>
+            <p className="text-[12px] font-black uppercase tracking-[0.4em] mt-4 opacity-60 italic" style={{ color: D.textMuted }}>
+                CRITICAL ASSET MANAGEMENT & EQUIPMENT LIFECYCLE ENGINE
+            </p>
+          </div>
+          <div className="lg:ml-auto flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+             <div className="flex items-center gap-6 px-10 h-16 rounded-2xl border" style={{ background: D.surf2, borderColor: D.border }}>
+                <div className="flex flex-col">
+                   <span className="text-[9px] font-black uppercase tracking-widest opacity-40 italic">ASSETS TRACKED</span>
+                   <span className="text-xl font-black italic uppercase leading-none mt-1" style={{ fontFamily: D.mono }}>248 UNITS</span>
+                </div>
+                <div className="h-8 w-px bg-white/5" />
+                <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 text-[9px]">SYNCED</Badge>
+             </div>
+             <Button className="h-16 px-10 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl" style={{ background: D.indigo }}>
+                <Plus className="mr-3 h-4 w-4" /> ADD ASSET
+             </Button>
+          </div>
         </div>
       </div>
 
-      {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredEquipment.length} items
-        {filter !== 'All' && ` (${filter})`}
-      </div>
-
-      {/* Inventory Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEquipment.map(item => {
-          const isItemPending = pendingItemId === item.id;
-          
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {equipment.map((item, idx) => {
+          const conditionColor = item.condition === 'PRISTINE' ? D.emerald : item.condition === 'STABLE' ? D.sky : item.condition === 'WORN' ? D.amber : D.rose;
           return (
-            <Card key={item.id || item.itemId} className={isItemPending ? "opacity-70" : ""}>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <Badge variant="outline">{item.type}</Badge>
-                    <h3 className="text-xl font-bold">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.brand}</p>
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              className="group relative p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
+               <div className="flex justify-between items-start mb-10">
+                  <div className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110 duration-500" 
+                       style={{ background: D.surf2, borderColor: D.border }}>
+                     <Zap className="h-6 w-6 text-indigo-400 group-hover:scale-125 transition-transform" />
                   </div>
-                  <Badge variant={getStatusColor(item.status)}>{item.status}</Badge>
-                </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-xl border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 group/btn transition-all">
+                     <Trash2 size={16} className="text-white/20 group-hover/btn:text-rose-500" />
+                  </div>
+               </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                    <span>Condition: <span className={item.condition === 'New' ? 'text-emerald-500 font-medium' : ''}>{item.condition}</span></span>
+               <div className="mb-10">
+                  <div className="flex items-center gap-2 mb-2">
+                     <Tag size={12} className="text-indigo-500" />
+                     <span className="text-[10px] font-black italic opacity-20 uppercase" style={{ fontFamily: D.mono }}>{item.category}</span>
                   </div>
-                  {item.assignedTo && (
-                    <div className="text-muted-foreground">
-                      Assigned
-                    </div>
-                  )}
-                </div>
+                  <h3 className="text-2xl font-black italic uppercase tracking-tighter group-hover:text-indigo-400 transition-colors" 
+                      style={{ fontFamily: D.head, color: D.textPrimary }}>
+                    {item.name}
+                  </h3>
+               </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <span className="font-bold text-primary">R {item.cost}</span>
-                  <div className="flex gap-1">
-                    {/* Quick Actions */}
-                    {item.status === 'Available' && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleAssign(item.id!)}
-                        disabled={isItemPending}
-                        title="Assign to person"
-                      >
-                        {isItemPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <UserPlus className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                    {item.status === 'In Use' && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleReturn(item.id!)}
-                        disabled={isItemPending}
-                        title="Return equipment"
-                      >
-                        {isItemPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <RotateCcw className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                    <Link href={`/equipment/${item.id || item.itemId}/edit`}>
-                      <Button variant="ghost" size="sm">
-                        <PenTool className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <DeleteConfirmationDialog
-                      entityName={item.name}
-                      onDelete={() => handleDelete(item.id!)}
-                      trigger={
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
+               <div className="space-y-6">
+                  <div className="space-y-2">
+                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                        <span className="opacity-40">INTEGRITY LIFESPAN</span>
+                        <span style={{ fontFamily: D.mono, color: conditionColor }}>{item.lifespan}</span>
+                     </div>
+                     <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <motion.div 
+                           initial={{ width: 0 }}
+                           animate={{ width: item.lifespan }}
+                           className="h-full opacity-60" 
+                           style={{ background: conditionColor }} 
+                        />
+                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <div className="grid grid-cols-2 gap-4 p-4 rounded-xl border bg-black/10" style={{ borderColor: D.border }}>
+                     <div className="space-y-1">
+                        <p className="text-[8px] font-black uppercase tracking-tighter opacity-40 text-center">LOCATION</p>
+                        <p className="text-[10px] font-black italic text-center" style={{ fontFamily: D.mono }}>{item.location}</p>
+                     </div>
+                     <div className="space-y-1 border-l border-white/5">
+                        <p className="text-[8px] font-black uppercase tracking-tighter opacity-40 text-center">HEALTH</p>
+                        <p className="text-[10px] font-black italic text-center uppercase" style={{ fontFamily: D.mono, color: conditionColor }}>{item.condition}</p>
+                     </div>
+                  </div>
+               </div>
+
+               <button className="mt-8 w-full h-12 rounded-xl border flex items-center justify-center gap-3 transition-all hover:bg-indigo-500 hover:text-white font-black text-[9px] uppercase tracking-widest" style={{ borderColor: D.border }}>
+                  VIEW ASSET SPECS
+               </button>
+            </motion.div>
           );
         })}
       </div>
-
-      {filteredEquipment.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">No equipment found matching your criteria.</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

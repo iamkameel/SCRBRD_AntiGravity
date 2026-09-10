@@ -111,6 +111,7 @@ export function MatchWizard({ teams, fields, schools = [], divisions = [], match
   const [leagueId, setLeagueId] = useState(initialData.leagueId || "");
   const [seasonId, setSeasonId] = useState(initialData.seasonId || "");
   const [division, setDivision] = useState(initialData.division || "");
+  const [divisionId, setDivisionId] = useState(initialData.divisionId || "");
   const [round, setRound] = useState(initialData.round || "");
   const [broadcastUrl, setBroadcastUrl] = useState(initialData.broadcastUrl || "");
   const [notes, setNotes] = useState(initialData.notes || "");
@@ -217,6 +218,7 @@ export function MatchWizard({ teams, fields, schools = [], divisions = [], match
           <input type="hidden" name="leagueId" value={leagueId} />
           <input type="hidden" name="seasonId" value={seasonId} />
           <input type="hidden" name="division" value={division} />
+          <input type="hidden" name="divisionId" value={divisionId} />
           <input type="hidden" name="round" value={round} />
           <input type="hidden" name="broadcastUrl" value={broadcastUrl} />
           <input type="hidden" name="notes" value={notes} />
@@ -430,13 +432,31 @@ export function MatchWizard({ teams, fields, schools = [], divisions = [], match
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Division</Label>
+                    <Label>Division (Link to formal list)</Label>
+                    <Select value={divisionId || "none"} onValueChange={(val) => setDivisionId(val === "none" ? "" : val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Division" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None / Other</SelectItem>
+                        {divisions.map((div: any) => (
+                          <SelectItem key={div.id} value={div.id}>
+                            {div.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Custom Division Name (Optional)</Label>
                     <Input 
                       value={division} 
                       onChange={(e) => setDivision(e.target.value)}
-                      placeholder="e.g. U19A"
+                      placeholder="e.g. U19A (Custom)"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Round/Stage</Label>
                     <Input 
@@ -445,15 +465,15 @@ export function MatchWizard({ teams, fields, schools = [], divisions = [], match
                       placeholder="e.g. Quarter Final"
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Broadcast/Stream URL</Label>
-                  <Input 
-                    type="url"
-                    value={broadcastUrl} 
-                    onChange={(e) => setBroadcastUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
+                  <div className="space-y-2">
+                    <Label>Broadcast/Stream URL</Label>
+                    <Input 
+                      type="url"
+                      value={broadcastUrl} 
+                      onChange={(e) => setBroadcastUrl(e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Notes</Label>
@@ -769,7 +789,7 @@ function TeamSelectionWidget({
         setSelectedDivisionId(team.divisionId);
       }
     }
-  }, [selectedTeamId, teams]);
+  }, [selectedTeamId, teams, selectedSchoolId]);
 
   // Dynamic filtering for Schools based on selected Division
   const availableSchools = useMemo(() => {

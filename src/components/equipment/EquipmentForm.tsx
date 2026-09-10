@@ -3,17 +3,27 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { EquipmentActionState } from "@/app/actions/equipmentActions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Save, CheckCircle2, AlertTriangle, Package } from "lucide-react";
+import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { 
+  Loader2, 
+  Save, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Package,
+  ArrowLeft,
+  ChevronRight,
+  Box,
+  Tag,
+  Hash,
+  Activity,
+  Calendar,
+  ShieldAlert,
+  Edit3
+} from "lucide-react";
 import { useFormStatus } from "react-dom";
-import { equipmentSchema, EquipmentFormData } from "@/lib/validations/equipmentSchema";
+import { equipmentSchema } from "@/lib/validations/equipmentSchema";
 import { z } from "zod";
+import Link from "next/link";
 
 interface EquipmentFormProps {
   mode: 'create' | 'edit';
@@ -26,19 +36,41 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
   const { pending } = useFormStatus();
   
   return (
-    <Button type="submit" disabled={pending}>
+    <button 
+      type="submit" 
+      disabled={pending}
+      style={{ 
+        background: D.sky, 
+        color: '#000', 
+        border: 'none', 
+        borderRadius: D.lg, 
+        padding: '12px 24px', 
+        fontFamily: D.head, 
+        fontWeight: 900, 
+        fontSize: '14px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '8px',
+        cursor: pending ? 'not-allowed' : 'pointer',
+        opacity: pending ? 0.7 : 1,
+        transition: 'transform 0.2s ease',
+        width: 'auto'
+      }}
+      className="hover:scale-105 active:scale-95"
+    >
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {mode === 'create' ? 'Adding...' : 'Saving...'}
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {mode === 'create' ? 'ADDING...' : 'SAVING...'}
         </>
       ) : (
         <>
-          <Save className="mr-2 h-4 w-4" />
-          {mode === 'create' ? 'Add Equipment' : 'Save Changes'}
+          <Save size={18} />
+          {mode === 'create' ? 'GENERATE RESOURCE' : 'UPDATE RESOURCE'}
+          <ChevronRight size={18} />
         </>
       )}
-    </Button>
+    </button>
   );
 }
 
@@ -46,263 +78,249 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
   const [state, action] = useFormState(equipmentAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
-  // Client-side validation
   const validateField = (name: string, value: string) => {
     try {
       const field = name as keyof typeof equipmentSchema.shape;
       if (field in equipmentSchema.shape) {
-        equipmentSchema.shape[field].parse(value);
+        (equipmentSchema.shape as any)[field].parse(value);
         setClientErrors(prev => {
           const newErrors = { ...prev };
           delete newErrors[name];
           return newErrors;
         });
       }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+    } catch (err) {
+      const error = err as z.ZodError;
+      if (error.issues) {
         setClientErrors(prev => ({
           ...prev,
-          [name]: (error as any).errors[0].message
+          [name]: error.issues[0].message
         }));
       }
     }
   };
 
-  const showSuccess = state.success;
+  const InputWrapper = ({ label, error, children, icon: Icon }: any) => (
+    <div style={{ marginBottom: '24px' }}>
+      <label style={{ 
+        display: 'block', 
+        fontSize: '11px', 
+        fontWeight: 900, 
+        color: D.textMuted, 
+        textTransform: 'uppercase', 
+        letterSpacing: '0.05em',
+        marginBottom: '8px',
+        fontFamily: D.head
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {Icon && <Icon size={12} />}
+          {label}
+        </div>
+      </label>
+      {children}
+      {error && (
+        <p style={{ color: D.rose, fontSize: '11px', marginTop: '4px', fontWeight: 600 }}>{error}</p>
+      )}
+    </div>
+  );
+
+  const inputStyle = {
+    width: '100%',
+    background: D.surf2,
+    border: `1px solid ${D.border}`,
+    borderRadius: D.lg,
+    padding: '12px 16px',
+    fontSize: '14px',
+    color: D.textPrimary,
+    fontFamily: D.body,
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+  };
 
   return (
-    <form action={action} className="space-y-6">
-      {showSuccess && (
-        <Alert className="bg-emerald-500/10 border-emerald-500/20 text-emerald-600">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>
-            Equipment {mode === 'create' ? 'added' : 'updated'} successfully!
-          </AlertDescription>
-        </Alert>
-      )}
+    <div style={{ color: D.textPrimary }}>
+      <GlobalStyles />
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+        <button 
+          onClick={() => window.history.back()}
+          style={{ 
+            background: D.surf1, 
+            border: `1px solid ${D.border}`, 
+            borderRadius: '50%', 
+            width: '40px', 
+            height: '40px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: D.textMuted
+          }} className="hover:text-white hover:border-white/50">
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h1 style={{ fontFamily: D.head, fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em' }}>
+            {mode === 'create' ? 'GENERATE' : 'EDIT'} <span style={{ color: D.textMuted }}>RESOURCE</span>
+          </h1>
+          <p style={{ color: D.textMuted, fontSize: '14px' }}>Assign operational parameters to school assets.</p>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            {mode === 'create' ? 'Add New Equipment' : 'Edit Equipment'}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Fill in the equipment details below. Fields marked with * are required.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Equipment Name *</Label>
-                <Input 
-                  id="name" 
-                  name="name" 
-                  defaultValue={initialData.name}
-                  onBlur={(e) => validateField('name', e.target.value)}
-                  placeholder="e.g. Cricket Bat - Senior"
-                  required 
-                />
-                {(clientErrors.name || state.fieldErrors?.name) && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    {clientErrors.name || state.fieldErrors?.name[0]}
-                  </p>
-                )}
-              </div>
+      <form action={action} style={{ 
+        background: D.surf1, 
+        border: `1px solid ${D.border}`, 
+        borderRadius: D.xl, 
+        padding: '32px',
+        backdropFilter: 'blur(20px)'
+      }}>
+        
+        {state.success && (
+          <div style={{ background: `${D.emerald}15`, border: `1px solid ${D.emerald}30`, borderRadius: D.lg, padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+            <CheckCircle2 size={18} color={D.emerald} />
+            <span style={{ fontSize: '13px', fontWeight: 800, color: D.emerald }}>
+              Asset {mode === 'create' ? 'registered' : 'updated'} successfully in OS ledger.
+            </span>
+          </div>
+        )}
 
-              <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
-                <Select name="category" defaultValue={initialData.category} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Bats">Bats</SelectItem>
-                    <SelectItem value="Balls">Balls</SelectItem>
-                    <SelectItem value="Protective Gear">Protective Gear</SelectItem>
-                    <SelectItem value="Stumps & Bails">Stumps & Bails</SelectItem>
-                    <SelectItem value="Training Equipment">Training Equipment</SelectItem>
-                    <SelectItem value="Groundskeeping">Groundskeeping</SelectItem>
-                    <SelectItem value="Scoreboard">Scoreboard</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                {state.fieldErrors?.category && (
-                  <p className="text-sm text-destructive">{state.fieldErrors.category[0]}</p>
-                )}
-              </div>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          
+          {/* Left Column */}
+          <div>
+            <h3 style={{ fontFamily: D.head, fontSize: '14px', fontWeight: 900, marginBottom: '24px', opacity: 0.5 }}>IDENTIFICATION</h3>
+            
+            <InputWrapper label="Resource Name *" error={clientErrors.name || state.fieldErrors?.name?.[0]} icon={Box}>
+              <input 
+                name="name" 
+                defaultValue={initialData.name}
+                onBlur={(e) => validateField('name', e.target.value)}
+                placeholder="e.g. Premium Match Balls"
+                style={inputStyle}
+                required 
+              />
+            </InputWrapper>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity *</Label>
-                <Input 
-                  id="quantity" 
+            <InputWrapper label="Category *" error={state.fieldErrors?.category?.[0]} icon={Tag}>
+              <select name="category" defaultValue={initialData.category} style={inputStyle} required>
+                <option value="">Select category...</option>
+                <option value="Bats">Bats</option>
+                <option value="Balls">Balls</option>
+                <option value="Protective Gear">Protective Gear</option>
+                <option value="Stumps & Bails">Stumps & Bails</option>
+                <option value="Training Equipment">Training Equipment</option>
+                <option value="Groundskeeping">Groundskeeping</option>
+                <option value="Scoreboard">Scoreboard</option>
+                <option value="Other">Other</option>
+              </select>
+            </InputWrapper>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+               <InputWrapper label="Quantity *" error={clientErrors.quantity || state.fieldErrors?.quantity?.[0]} icon={Hash}>
+                <input 
                   name="quantity"
                   type="number"
-                  min="0"
-                  max="10000"
                   defaultValue={initialData.quantity}
                   onBlur={(e) => validateField('quantity', e.target.value)}
-                  placeholder="0"
+                  style={inputStyle}
                   required 
                 />
-                {(clientErrors.quantity || state.fieldErrors?.quantity) && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    {clientErrors.quantity || state.fieldErrors?.quantity[0]}
-                  </p>
-                )}
-              </div>
+              </InputWrapper>
 
-              <div className="space-y-2">
-                <Label htmlFor="condition">Condition *</Label>
-                <Select name="condition" defaultValue={initialData.condition || 'Good'} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Condition" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Excellent">Excellent</SelectItem>
-                    <SelectItem value="Good">Good</SelectItem>
-                    <SelectItem value="Fair">Fair</SelectItem>
-                    <SelectItem value="Poor">Poor</SelectItem>
-                    <SelectItem value="Damaged">Damaged</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">Location *</Label>
-                <Input 
-                  id="location" 
-                  name="location"
-                  defaultValue={initialData.location}
-                  onBlur={(e) => validateField('location', e.target.value)}
-                  placeholder="e.g. Equipment Room A"
-                  required 
-                />
-                {(clientErrors.location || state.fieldErrors?.location) && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    {clientErrors.location || state.fieldErrors?.location[0]}
-                  </p>
-                )}
-              </div>
+              <InputWrapper label="Condition *" icon={Activity}>
+                <select name="condition" defaultValue={initialData.condition || 'Good'} style={inputStyle} required>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Poor">Poor</option>
+                  <option value="Damaged">Damaged</option>
+                </select>
+              </InputWrapper>
             </div>
           </div>
 
-          {/* Purchase Details */}
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Purchase Details (Optional)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="purchaseDate">Purchase Date</Label>
-                <Input 
-                  id="purchaseDate" 
+          {/* Right Column */}
+          <div>
+            <h3 style={{ fontFamily: D.head, fontSize: '14px', fontWeight: 900, marginBottom: '24px', opacity: 0.5 }}>LOGISTICS</h3>
+
+            <InputWrapper label="Storage Location *" error={clientErrors.location || state.fieldErrors?.location?.[0]} icon={ShieldAlert}>
+              <input 
+                name="location"
+                defaultValue={initialData.location}
+                onBlur={(e) => validateField('location', e.target.value)}
+                placeholder="e.g. South Pavilion"
+                style={inputStyle}
+                required 
+              />
+            </InputWrapper>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <InputWrapper label="Acquisition Date" error={clientErrors.purchaseDate} icon={Calendar}>
+                <input 
                   name="purchaseDate"
                   type="date"
                   defaultValue={initialData.purchaseDate?.split('T')[0]}
                   onBlur={(e) => validateField('purchaseDate', e.target.value)}
+                  style={inputStyle}
                 />
-                {clientErrors.purchaseDate && (
-                  <p className="text-sm text-destructive">{clientErrors.purchaseDate}</p>
-                )}
-              </div>
+              </InputWrapper>
 
-              <div className="space-y-2">
-                <Label htmlFor="purchasePrice">Purchase Price</Label>
-                <Input 
-                  id="purchasePrice" 
+              <InputWrapper label="Unit Cost (ZAR)" error={clientErrors.purchasePrice} icon={Hash}>
+                <input 
                   name="purchasePrice"
                   type="number"
-                  min="0"
                   step="0.01"
                   defaultValue={initialData.purchasePrice}
                   onBlur={(e) => validateField('purchasePrice', e.target.value)}
                   placeholder="0.00"
+                  style={inputStyle}
                 />
-                {clientErrors.purchasePrice && (
-                  <p className="text-sm text-destructive">{clientErrors.purchasePrice}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="supplier">Supplier</Label>
-                <Input 
-                  id="supplier" 
-                  name="supplier"
-                  defaultValue={initialData.supplier}
-                  onBlur={(e) => validateField('supplier', e.target.value)}
-                  placeholder="e.g. Kookaburra"
-                />
-                {clientErrors.supplier && (
-                  <p className="text-sm text-destructive">{clientErrors.supplier}</p>
-                )}
-              </div>
+              </InputWrapper>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="serialNumber">Serial Number</Label>
-                <Input 
-                  id="serialNumber" 
-                  name="serialNumber"
-                  defaultValue={initialData.serialNumber}
-                  onBlur={(e) => validateField('serialNumber', e.target.value)}
-                  placeholder="Optional"
-                />
-                {clientErrors.serialNumber && (
-                  <p className="text-sm text-destructive">{clientErrors.serialNumber}</p>
-                )}
-              </div>
-            </div>
+            <InputWrapper label="Internal Ledger Notes" error={clientErrors.notes}>
+              <textarea 
+                name="notes"
+                defaultValue={initialData.notes}
+                onBlur={(e) => validateField('notes', e.target.value)}
+                placeholder="Maintenance logs, serial numbers, etc."
+                style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }}
+                maxLength={500}
+              />
+            </InputWrapper>
           </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea 
-              id="notes" 
-              name="notes"
-              defaultValue={initialData.notes}
-              onBlur={(e) => validateField('notes', e.target.value)}
-              placeholder="Additional information..."
-              rows={3}
-              maxLength={500}
-            />
-            {clientErrors.notes && (
-              <p className="text-sm text-destructive">{clientErrors.notes}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {initialData.notes?.length || 0}/500 characters
-            </p>
-          </div>
+        </div>
 
-          {state.error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between bg-muted/50">
-          {mode === 'edit' && initialData.id ? (
-            <div></div>
-          ) : (
-            <div></div> 
-          )}
-          <div className="flex gap-2">
-            <Button variant="outline" type="button" onClick={() => window.history.back()}>
-              Cancel
-            </Button>
-            <SubmitButton mode={mode} />
+        {state.error && (
+          <div style={{ background: `${D.rose}15`, border: `1px solid ${D.rose}30`, borderRadius: D.lg, padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
+            <AlertTriangle size={18} color={D.rose} />
+            <span style={{ fontSize: '13px', fontWeight: 800, color: D.rose }}>{state.error}</span>
           </div>
-        </CardFooter>
-      </Card>
-    </form>
+        )}
+
+        <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: `1px solid ${D.border}`, paddingTop: '32px' }}>
+          <button 
+            type="button" 
+            onClick={() => window.history.back()}
+            style={{ 
+              background: 'transparent', 
+              color: D.textMuted, 
+              border: `1px solid ${D.border}`, 
+              borderRadius: D.lg, 
+              padding: '12px 24px', 
+              fontFamily: D.head, 
+              fontWeight: 900, 
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+            className="hover:text-white hover:border-white/50"
+          >
+            DISCARD
+          </button>
+          <SubmitButton mode={mode} />
+        </div>
+
+      </form>
+    </div>
   );
 }
