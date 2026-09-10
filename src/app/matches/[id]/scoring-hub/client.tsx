@@ -12,7 +12,7 @@ import {
   startSecondInningsAction,
 } from '@/app/actions/matchActions';
 import Link from 'next/link';
-import { ChevronLeft, RotateCcw, Flag, AlertTriangle, Users, Trophy, Loader2, Wifi, WifiOff, X, Check, Play, Pause, Tv } from 'lucide-react';
+import { ChevronLeft, RotateCcw, Flag, AlertTriangle, Users, Trophy, Loader2, Wifi, WifiOff, X, Check, Play, Pause, Tv, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { BroadcastOverlay } from '@/components/broadcast/BroadcastOverlay';
 
 /* ═══════════════════════════════════════════════════════
@@ -26,6 +26,8 @@ interface ScoringHubClientProps {
 type ExtraType = 'wide' | 'noball' | 'bye' | 'legbye' | null;
 type WicketMode = 'bowled' | 'caught' | 'lbw' | 'stumped' | 'run_out' | 'hit_wicket' | null;
 type ShotTypeChoice = string | null;
+type ScorerMode = 'quick' | 'standard' | 'full';
+type ContactQuality = 'middled' | 'edged' | 'missed' | 'lofted' | 'defended' | null;
 type ActiveTab = 'score' | 'cards' | 'analysis' | 'history';
 type AnalysisSubTab = 'charts' | 'players' | 'signals' | 'intel';
 
@@ -44,6 +46,286 @@ const D = {
   sm:'8px', md:'12px', lg:'16px', xl:'20px', xxl:'24px', pill:'9999px',
   mono:"'DM Mono',monospace", head:"'Syne',sans-serif", body:"'DM Sans',sans-serif",
 };
+
+/* ═══════════════════════════════════════════════════════
+   STADIUM AUDIO & HAPTIC ENGINE
+═══════════════════════════════════════════════════════ */
+class ScoringAudioEngine {
+  private ctx: AudioContext | null = null;
+  public soundEnabled: boolean = true;
+  public speechEnabled: boolean = false;
+
+  private init() {
+    if (!this.ctx && typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  public toggleSound() {
+    this.soundEnabled = !this.soundEnabled;
+    return this.soundEnabled;
+  }
+
+  public toggleSpeech() {
+    this.speechEnabled = !this.speechEnabled;
+    return this.speechEnabled;
+  }
+
+  public setSpeechEnabled(enabled: boolean) {
+    this.speechEnabled = enabled;
+    return this.speechEnabled;
+  }
+
+  public playKeyClick() {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.04);
+    } catch {}
+  }
+
+  public playBoundary4() {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(now + 0.15);
+
+      const bufferSize = this.ctx.sampleRate * 0.5;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(800, now);
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.01, now);
+      noiseGain.gain.linearRampToValueAtTime(0.2, now + 0.1);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      noise.start(now + 0.04);
+    } catch {}
+  }
+
+  public playBoundary6() {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      [0, 0.08].forEach((offset) => {
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(520 + offset * 1000, now + offset);
+        osc.frequency.exponentialRampToValueAtTime(1600, now + offset + 0.08);
+        gain.gain.setValueAtTime(0.45, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx!.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.2);
+      });
+
+      const bufferSize = this.ctx.sampleRate * 0.8;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1200, now);
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.01, now);
+      noiseGain.gain.linearRampToValueAtTime(0.35, now + 0.15);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      noise.start(now + 0.05);
+    } catch {}
+  }
+
+  public playWicket() {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch {}
+  }
+
+  public vibrate(pattern: number | number[]) {
+    if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
+      try { navigator.vibrate(pattern); } catch {}
+    }
+  }
+
+  public speak(text: string) {
+    if (!this.speechEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch {}
+  }
+}
+
+export const scoringAudio = new ScoringAudioEngine();
+
+/* ═══════════════════════════════════════════════════════
+   2D PITCH LANDING MAP (PitchMap)
+═══════════════════════════════════════════════════════ */
+interface PitchMapProps {
+  onSelectPitchingPoint?: (point: { line: 'off' | 'middle' | 'leg'; length: 'yorker' | 'full' | 'good' | 'short' | 'bouncer'; x: number; y: number }) => void;
+  selectedPoint?: { x: number; y: number; length?: string; line?: string } | null;
+  pitchLog?: Array<{ x: number; y: number; runs?: number; wicket?: boolean }>;
+}
+
+function PitchMap({ onSelectPitchingPoint, selectedPoint, pitchLog = [] }: PitchMapProps) {
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * 160;
+    const svgY = ((e.clientY - rect.top) / rect.height) * 360;
+
+    const clampedX = Math.max(25, Math.min(135, svgX));
+    const clampedY = Math.max(30, Math.min(330, svgY));
+
+    let line: 'off' | 'middle' | 'leg' = 'middle';
+    if (clampedX < 62) line = 'off';
+    else if (clampedX > 98) line = 'leg';
+
+    const distFromBatter = 330 - clampedY;
+    let length: 'yorker' | 'full' | 'good' | 'short' | 'bouncer' = 'good';
+    if (distFromBatter < 45) length = 'yorker';
+    else if (distFromBatter < 110) length = 'full';
+    else if (distFromBatter < 185) length = 'good';
+    else if (distFromBatter < 255) length = 'short';
+    else length = 'bouncer';
+
+    if (onSelectPitchingPoint) {
+      onSelectPitchingPoint({ line, length, x: clampedX, y: clampedY });
+      scoringAudio.playKeyClick();
+      scoringAudio.vibrate(15);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '280px' }}>
+        <Lbl>Pitch Landing Map</Lbl>
+        <span style={{ fontSize: '10px', fontFamily: D.mono, color: D.emerald }}>
+          {selectedPoint ? `${selectedPoint.length?.toUpperCase()} · ${selectedPoint.line?.toUpperCase()}` : 'Tap pitch to plot'}
+        </span>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: '240px', aspectRatio: '160/360', background: 'radial-gradient(ellipse at center, #1b261b 0%, #0d150e 100%)', borderRadius: D.md, border: `1px solid ${D.borderMed}`, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+        <svg viewBox="0 0 160 360" onClick={handleClick} style={{ width: '100%', height: '100%', display: 'block' }}>
+          <rect x="0" y="0" width="160" height="360" fill="#142016" />
+          <rect x="25" y="20" width="110" height="320" fill="#7a6946" opacity="0.85" rx="4" />
+
+          {/* Crease lines */}
+          <line x1="25" y1="50" x2="135" y2="50" stroke="#fff" strokeWidth="1.5" opacity="0.8" />
+          <line x1="45" y1="30" x2="45" y2="50" stroke="#fff" strokeWidth="1" opacity="0.8" />
+          <line x1="115" y1="30" x2="115" y2="50" stroke="#fff" strokeWidth="1" opacity="0.8" />
+
+          <line x1="25" y1="310" x2="135" y2="310" stroke="#fff" strokeWidth="1.5" opacity="0.8" />
+          <line x1="45" y1="310" x2="45" y2="330" stroke="#fff" strokeWidth="1" opacity="0.8" />
+          <line x1="115" y1="310" x2="115" y2="330" stroke="#fff" strokeWidth="1" opacity="0.8" />
+
+          {/* Stumps */}
+          {[-4, 0, 4].map(dx => (
+            <circle key={`top-${dx}`} cx={80 + dx} cy={35} r="1.5" fill="#f59e0b" />
+          ))}
+          {[-4, 0, 4].map(dx => (
+            <circle key={`bot-${dx}`} cx={80 + dx} cy={325} r="1.5" fill="#f59e0b" />
+          ))}
+
+          {/* Length Zone Dividers */}
+          <line x1="25" y1="285" x2="135" y2="285" stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+          <line x1="25" y1="220" x2="135" y2="220" stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+          <line x1="25" y1="145" x2="135" y2="145" stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+          <line x1="25" y1="75" x2="135" y2="75" stroke="rgba(255,255,255,0.15)" strokeDasharray="3 3" />
+
+          {/* Line Dividers */}
+          <line x1="62" y1="20" x2="62" y2="340" stroke="rgba(255,255,255,0.08)" strokeDasharray="2 4" />
+          <line x1="98" y1="20" x2="98" y2="340" stroke="rgba(255,255,255,0.08)" strokeDasharray="2 4" />
+
+          {/* Zone Labels */}
+          <text x="14" y="300" fontSize="7" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.35)">YORKER</text>
+          <text x="14" y="255" fontSize="7" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.35)">FULL</text>
+          <text x="14" y="185" fontSize="7" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.35)">GOOD</text>
+          <text x="14" y="110" fontSize="7" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.35)">SHORT</text>
+          <text x="14" y="50" fontSize="7" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.35)">BOUNCER</text>
+
+          {/* Line Labels */}
+          <text x="43" y="14" textAnchor="middle" fontSize="6.5" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.4)">OFF</text>
+          <text x="80" y="14" textAnchor="middle" fontSize="6.5" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.4)">MID</text>
+          <text x="117" y="14" textAnchor="middle" fontSize="6.5" fontFamily="'Syne',sans-serif" fill="rgba(255,255,255,0.4)">LEG</text>
+
+          {/* Historical Pitch Points */}
+          {pitchLog.map((p, idx) => (
+            <circle key={idx} cx={p.x} cy={p.y} r={p.wicket ? 4 : 3} fill={p.wicket ? D.rose : p.runs === 4 ? D.amber : p.runs === 6 ? D.indigo : D.emerald} opacity="0.65" />
+          ))}
+
+          {/* Currently Selected Landing Point */}
+          {selectedPoint && (
+            <g>
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r="7" fill={D.emerald} opacity="0.3" className="sh-live-glow" />
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r="4" fill={D.emerald} stroke="#fff" strokeWidth="1.5" />
+            </g>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+}
 
 function GlobalStyles() {
   return (
@@ -1034,7 +1316,7 @@ function AnalysisPanel({liveScore,subTab,onSubTab,allPlayers,overs,target,isChas
 /* ═══════════════════════════════════════════════════════
    HISTORY TAB
 ═══════════════════════════════════════════════════════ */
-function HistoryPanel({liveScore,allPlayers}:{liveScore:any;allPlayers:Person[]}) {
+function HistoryPanel({liveScore,allPlayers,onAuditBall}:{liveScore:any;allPlayers:Person[];onAuditBall:(b:any)=>void}) {
   const history:any[]=[...(liveScore?.ballHistory||liveScore?.eventLog||[])].reverse();
   if(!history.length)return(
     <div style={{textAlign:'center',padding:'40px 20px'}}>
@@ -1047,7 +1329,6 @@ function HistoryPanel({liveScore,allPlayers}:{liveScore:any;allPlayers:Person[]}
       {history.map((b:any,i:number)=>{
         const runs=b.runs??b.value??0;
         const isW=!!(b.isWicket||b.type==='W');
-        const colLine=isW?D.rose:b.extraType==='wide'||b.extraType==='noball'?D.amber:runs===6?D.amber:runs===4?D.indigo:D.textMuted;
         return(
           <div key={i} style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 14px',
             borderRadius:D.md,background:isW?`${D.rose}08`:i%2===0?D.surf1:D.surf0,
@@ -1057,6 +1338,7 @@ function HistoryPanel({liveScore,allPlayers}:{liveScore:any;allPlayers:Person[]}
               <div style={{fontFamily:D.body,fontSize:'12px',color:D.textPrimary,fontWeight:isW?700:400,
                 overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                 {getPlayerName(allPlayers,b.strikerId)} {isW?`(wicket!)`:runs>0?`scores ${runs}`:'dot'}
+                {b.audited && <span style={{fontSize:'9px',color:D.violet,marginLeft:'6px',fontWeight:700}}>[Audited]</span>}
               </div>
               {b.bowlerId&&<div style={{fontFamily:D.body,fontSize:'10px',color:D.textMuted,marginTop:'1px'}}>
                 b. {getPlayerName(allPlayers,b.bowlerId)}
@@ -1064,8 +1346,16 @@ function HistoryPanel({liveScore,allPlayers}:{liveScore:any;allPlayers:Person[]}
                 {b.shotType&&` · ${b.shotType}`}
               </div>}
             </div>
-            <div style={{fontFamily:D.head,fontSize:'8px',color:D.textMuted,textAlign:'right',flexShrink:0}}>
-              {b.inningsNumber===2?'2nd':'1st'} · {b.overNumber!==undefined?`${b.overNumber}.${b.ballNumber}`:''} ov
+            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+              <div style={{fontFamily:D.head,fontSize:'8px',color:D.textMuted,textAlign:'right',flexShrink:0}}>
+                {b.inningsNumber===2?'2nd':'1st'} · {b.overNumber!==undefined?`${b.overNumber}.${b.ballNumber}`:''} ov
+              </div>
+              <button onClick={()=>onAuditBall(b)} className="sh-press" title="Audit / Correct Delivery" style={{
+                padding:'4px 8px',borderRadius:D.pill,background:D.surf2,border:`1px solid ${D.border}`,
+                color:D.textMuted,fontSize:'9px',fontFamily:D.head,fontWeight:700,cursor:'pointer'
+              }}>
+                ✏️ Edit
+              </button>
             </div>
           </div>
         );
@@ -1255,6 +1545,192 @@ function PlayerSheet({title,players,excludeIds,onSelect,onClose}:{title:string;p
   );
 }
 /* ═══════════════════════════════════════════════════════
+   3-PHASE SCORING UTILITIES & MODES
+═══════════════════════════════════════════════════════ */
+function ScorerModeSwitcher({ mode, onChange }: { mode: ScorerMode; onChange: (m: ScorerMode) => void }) {
+  const modes: Array<{ id: ScorerMode; label: string; icon: string; desc: string }> = [
+    { id: 'quick', label: 'Quick', icon: '⚡', desc: 'Score only · Fast Parents/Volunteers' },
+    { id: 'standard', label: 'Standard', icon: '🎯', desc: 'Score + Wagon Wheel' },
+    { id: 'full', label: 'Full OS', icon: '🚀', desc: 'Score + Wagon + Contact + Audit' },
+  ];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: D.surf2, borderRadius: D.pill, padding: '3px', border: `1px solid ${D.border}` }}>
+      {modes.map(m => {
+        const active = mode === m.id;
+        return (
+          <button key={m.id} onClick={() => onChange(m.id)} className="sh-press" title={m.desc} style={{
+            padding: '5px 12px', borderRadius: D.pill, border: 'none', cursor: 'pointer',
+            background: active ? D.grad : 'transparent',
+            color: active ? '#fff' : D.textMuted,
+            fontFamily: D.head, fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
+            textTransform: 'uppercase', transition: 'all .25s', display: 'flex', alignItems: 'center', gap: '4px',
+          }}>
+            <span>{m.icon}</span> {m.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EnrichmentDrawer({
+  isOpen, onClose, onSave, fieldingPlayers,
+  shotType, setShotType, shotCoords, setShotCoords,
+  contactQuality, setContactQuality, commentary, setCommentary, fielderId, setFielderId,
+}: {
+  isOpen: boolean; onClose: () => void; onSave: () => void; fieldingPlayers: Person[];
+  shotType: ShotTypeChoice; setShotType: (s: ShotTypeChoice) => void;
+  shotCoords: { angle: number; distance: number } | null; setShotCoords: (c: { angle: number; distance: number } | null) => void;
+  contactQuality: ContactQuality; setContactQuality: (q: ContactQuality) => void;
+  commentary: string; setCommentary: (c: string) => void;
+  fielderId: string | null; setFielderId: (id: string | null) => void;
+}) {
+  if (!isOpen) return null;
+  const qualities: Array<{ id: ContactQuality; label: string; icon: string }> = [
+    { id: 'middled', label: 'Middled', icon: '🌟' },
+    { id: 'edged', label: 'Edged', icon: '😬' },
+    { id: 'missed', label: 'Missed', icon: '❌' },
+    { id: 'lofted', label: 'Lofted', icon: '🚀' },
+    { id: 'defended', label: 'Defended', icon: '🛡️' },
+  ];
+
+  return (
+    <Sheet title="Phase 2 Delivery Enrichment" accent={D.sky} onClose={onClose}>
+      <div style={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ fontSize: '11px', color: D.textMuted, fontFamily: D.body }}>
+          Enrich delivery details asynchronously without interrupting live scoring.
+        </div>
+
+        {/* Contact Quality */}
+        <div>
+          <Lbl>Contact Quality</Lbl>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+            {qualities.map(q => {
+              const active = contactQuality === q.id;
+              return (
+                <button key={q.id!} onClick={() => setContactQuality(active ? null : q.id)} className="sh-press" style={{
+                  padding: '6px 12px', borderRadius: D.pill, cursor: 'pointer', fontFamily: D.body, fontSize: '11px', fontWeight: 600,
+                  background: active ? `${D.sky}22` : 'transparent',
+                  border: `1.5px solid ${active ? D.sky : D.border}`,
+                  color: active ? D.sky : D.textSecondary, transition: 'all .15s',
+                }}>
+                  {q.icon} {q.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Fielder Assignment */}
+        {fieldingPlayers.length > 0 && (
+          <div>
+            <Lbl>Involved Fielder</Lbl>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px', maxHeight: '100px', overflowY: 'auto' }}>
+              {fieldingPlayers.map(p => {
+                const active = fielderId === p.id;
+                return (
+                  <button key={p.id} onClick={() => setFielderId(active ? null : p.id!)} className="sh-press" style={{
+                    padding: '5px 10px', borderRadius: D.pill, cursor: 'pointer', fontFamily: D.body, fontSize: '11px', fontWeight: 500,
+                    background: active ? `${D.emerald}22` : 'transparent',
+                    border: `1px solid ${active ? D.emerald : D.border}`,
+                    color: active ? D.emerald : D.textSecondary,
+                  }}>
+                    {p.firstName} {p.lastName[0]}.
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Commentary Note */}
+        <div>
+          <Lbl>Commentary / Scorer Note</Lbl>
+          <input
+            value={commentary}
+            onChange={e => setCommentary(e.target.value)}
+            placeholder="e.g. Crisp drive through extra cover..."
+            style={{
+              width: '100%', marginTop: '6px', padding: '10px 14px', borderRadius: D.md,
+              background: D.surf2, border: `1px solid ${D.border}`, color: D.textPrimary,
+              fontFamily: D.body, fontSize: '12px', outline: 'none',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+          <Btn variant="ghost" full onClick={onClose}>Skip / Close</Btn>
+          <Btn variant="primary" full onClick={onSave}>Save Enrichment</Btn>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
+function BallAuditEditSheet({
+  ball,
+  onSave,
+  onClose,
+}: {
+  ball: any;
+  onSave: (updatedBall: any) => void;
+  onClose: () => void;
+}) {
+  const [runs, setRuns] = useState<number>(ball.runs ?? ball.value ?? 0);
+  const [extraType, setExtraType] = useState<ExtraType>(ball.extraType ?? null);
+  const [wicketType, setWicketType] = useState<WicketMode>(ball.wicketType ?? (ball.isWicket ? 'bowled' : null));
+  const [commentary, setCommentary] = useState<string>(ball.commentaryText ?? ball.commentary ?? '');
+
+  return (
+    <Sheet title="Phase 3 Delivery Audit & Edit" accent={D.violet} onClose={onClose}>
+      <div style={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ fontSize: '11px', color: D.textMuted, fontFamily: D.body }}>
+          Correct historical delivery records with audit tracking.
+        </div>
+        <div>
+          <Lbl>Runs Off Bat</Lbl>
+          <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+            {[0, 1, 2, 3, 4, 6].map(r => (
+              <button key={r} onClick={() => setRuns(r)} className="sh-press" style={{
+                flex: 1, padding: '10px 0', borderRadius: D.md, fontFamily: D.mono, fontSize: '14px', fontWeight: 700,
+                background: runs === r ? `${D.violet}22` : 'transparent',
+                border: `1.5px solid ${runs === r ? D.violet : D.border}`,
+                color: runs === r ? D.violet : D.textSecondary, cursor: 'pointer',
+              }}>{r}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Lbl>Wicket Status</Lbl>
+          <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+            {['none', 'bowled', 'caught', 'lbw', 'stumped', 'run_out'].map(w => {
+              const active = (w === 'none' && !wicketType) || wicketType === w;
+              return (
+                <button key={w} onClick={() => setWicketType(w === 'none' ? null : (w as WicketMode))} className="sh-press" style={{
+                  padding: '6px 12px', borderRadius: D.pill, fontFamily: D.body, fontSize: '11px', fontWeight: 600,
+                  background: active ? `${D.rose}22` : 'transparent',
+                  border: `1.5px solid ${active ? D.rose : D.border}`,
+                  color: active ? D.rose : D.textSecondary, cursor: 'pointer', textTransform: 'capitalize',
+                }}>{w.replace('_', ' ')}</button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <Lbl>Commentary / Audit Note</Lbl>
+          <input value={commentary} onChange={e => setCommentary(e.target.value)} placeholder="Reason for correction..."
+            style={{ width: '100%', marginTop: '6px', padding: '10px 14px', borderRadius: D.md, background: D.surf2, border: `1px solid ${D.border}`, color: D.textPrimary, fontSize: '12px', outline: 'none' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+          <Btn variant="ghost" full onClick={onClose}>Cancel</Btn>
+          <Btn variant="primary" full onClick={() => onSave({ ...ball, runs, extraType, wicketType, isWicket: !!wicketType, commentaryText: commentary, audited: true })}>Save Audit Correction</Btn>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
    GLASS CARD HELPER
 ═══════════════════════════════════════════════════════ */
 function GlassCard({children,sx,onClick}:{children:React.ReactNode;sx?:React.CSSProperties;onClick?:()=>void}) {
@@ -1305,6 +1781,12 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
   const { liveScore, loading, connected } = useLiveScore(match.id ?? null);
 
   /* ── Scoring state ── */
+  const [scorerMode, setScorerMode] = useState<ScorerMode>('standard');
+  const [contactQuality, setContactQuality] = useState<ContactQuality>(null);
+  const [commentary, setCommentary] = useState<string>('');
+  const [showEnrichmentDrawer, setShowEnrichmentDrawer] = useState(false);
+  const [auditingBall, setAuditingBall] = useState<any | null>(null);
+
   const [runs, setRuns] = useState<number | null>(null);
   const [extraType, setExtraType] = useState<ExtraType>(null);
   const [extraRuns, setExtraRuns] = useState(1);
@@ -1336,6 +1818,33 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
   const [showEndInningsConfirm, setShowEndInningsConfirm] = useState(false);
   const [showShotSheet, setShowShotSheet] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [showEnrichment, setShowEnrichment] = useState(false);
+  const [pitchCoords, setPitchCoords] = useState<{ line: 'off' | 'middle' | 'leg'; length: 'yorker' | 'full' | 'good' | 'short' | 'bouncer'; x: number; y: number } | null>(null);
+  const [soundActive, setSoundActive] = useState(true);
+  const [speechActive, setSpeechActive] = useState(false);
+
+  /* ── Keyboard Shortcuts ── */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.key >= '0' && e.key <= '6' && e.key !== '5') {
+        setRuns(parseInt(e.key, 10));
+        scoringAudio.playKeyClick();
+      } else if (e.key === 'w' || e.key === 'W') {
+        setShowWicketSheet(true);
+        scoringAudio.playKeyClick();
+      } else if (e.key === 'e' || e.key === 'E') {
+        setShowEnrichment(true);
+        scoringAudio.playKeyClick();
+      } else if (e.key === 'b' || e.key === 'B') {
+        setShowBroadcast(prev => !prev);
+      } else if (e.key === 's' || e.key === 'S') {
+        setSoundActive(scoringAudio.toggleSound());
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   /* ── Derived ── */
   const ci = liveScore?.currentInnings;
@@ -1372,7 +1881,7 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
     if (!liveScore || loading) return;
     if (!cp?.strikerId) setShowStrikerSheet(true);
     else if (!cp?.bowlerId) setShowBowlerSheet(true);
-  }, [cp?.strikerId, cp?.bowlerId, liveScore?.status]);
+  }, [cp?.strikerId, cp?.bowlerId, liveScore, loading]);
 
   /* ── Record ball ── */
   async function handleRecord() {
@@ -1395,19 +1904,34 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
         shotType: shotType ?? undefined,
       });
       if (result.success) {
-        // Determine overlay event
+        // Determine overlay event & trigger stadium audio/haptics/speech
         if (wicketType) {
           setOverlay({label:'WICKET',color:D.rose,emoji:'🎯'});
+          scoringAudio.playWicket();
+          scoringAudio.vibrate([100, 50, 100, 50, 150]);
+          scoringAudio.speak("Wicket! Out!");
         } else if (runs === 6) {
           setOverlay({label:'SIX!',color:D.amber,emoji:'💥'});
+          scoringAudio.playBoundary6();
+          scoringAudio.vibrate([40, 60, 40]);
+          scoringAudio.speak("Six runs! Magnificent shot!");
         } else if (runs === 4) {
           setOverlay({label:'FOUR!',color:D.indigo,emoji:'🏏'});
+          scoringAudio.playBoundary4();
+          scoringAudio.vibrate([30, 40]);
+          scoringAudio.speak("Four runs through the boundary!");
         } else if (result.milestone) {
           const ms = String(result.milestone);
           const isCentury = ms.toLowerCase().includes('100') || ms.toLowerCase().includes('century');
           const isFifty = ms.toLowerCase().includes('50') || ms.toLowerCase().includes('fifty');
           const isFiveFor = ms.toLowerCase().includes('5') && ms.toLowerCase().includes('wicket');
           setOverlay({label: isCentury?'CENTURY!':isFifty?'FIFTY!':isFiveFor?'FIVE-FOR!':ms.toUpperCase(), color:D.violet, emoji: isCentury?'💯':isFifty?'⭐':'🏆'});
+          scoringAudio.playBoundary6();
+          scoringAudio.speak(`Milestone! ${ms}`);
+        } else {
+          scoringAudio.playKeyClick();
+          scoringAudio.vibrate(15);
+          if (runs && runs > 0) scoringAudio.speak(`${runs} run${runs > 1 ? 's' : ''}`);
         }
         setTimeout(()=>setOverlay(null),1800);
         // Free hit tracking
@@ -1509,6 +2033,37 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ScorerModeSwitcher mode={scorerMode} onChange={setScorerMode} />
+            <button 
+              onClick={() => setSoundActive(scoringAudio.toggleSound())}
+              className="sh-press"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: soundActive ? D.surf2 : `${D.rose}18`, border: `1px solid ${soundActive ? D.border : D.rose}`,
+                color: soundActive ? D.textPrimary : D.rose, cursor: 'pointer', transition: 'all 0.2s',
+              }}
+              title="Toggle Audio Effects (S)"
+            >
+              {soundActive ? <Volume2 size={14} /> : <VolumeX size={14} />}
+            </button>
+            <button 
+              onClick={() => {
+                const next = !speechActive;
+                setSpeechActive(next);
+                scoringAudio.setSpeechEnabled(next);
+              }}
+              className="sh-press"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: speechActive ? D.grad : D.surf2, border: `1px solid ${speechActive ? 'transparent' : D.border}`,
+                color: speechActive ? '#fff' : D.textMuted, cursor: 'pointer', transition: 'all 0.2s',
+              }}
+              title="Toggle Voice Commentary"
+            >
+              {speechActive ? <Mic size={14} /> : <MicOff size={14} />}
+            </button>
             <button 
               onClick={() => setShowBroadcast(!showBroadcast)}
               className="sh-press"
@@ -1518,7 +2073,7 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
                 background: showBroadcast ? D.grad : D.surf2, border: `1px solid ${showBroadcast ? 'transparent' : D.border}`,
                 color: showBroadcast ? '#fff' : D.textPrimary, cursor: 'pointer', transition: 'all 0.2s',
               }}
-              title="Toggle Broadcast Overlay"
+              title="Toggle Broadcast Overlay (B)"
             >
               <Tv size={14} />
             </button>
@@ -1857,6 +2412,11 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
               </GlassCard>
             )}
 
+            {/* Pitch Landing Map (22-yard interactive pitch) */}
+            <GlassCard sx={{ padding: '16px' }}>
+              <PitchMap selectedPoint={pitchCoords} onSelectPitchingPoint={setPitchCoords} />
+            </GlassCard>
+
             {/* Wagon Wheel (in score tab) */}
             <GlassCard sx={{ padding: '16px 16px 22px' }}>
               <WagonWheel ballLog={wagonBallLog} shotCoords={shotCoords} onAim={setShotCoords}
@@ -1958,7 +2518,7 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
 
         {/* ══════════════════ HISTORY TAB ══════════════════ */}
         {activeTab === 'history' && (
-          <HistoryPanel liveScore={liveScore} allPlayers={allPlayers} />
+          <HistoryPanel liveScore={liveScore} allPlayers={allPlayers} onAuditBall={setAuditingBall} />
         )}
       </div>
 
@@ -2042,6 +2602,36 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
       {showBowlerSheet && (
         <PlayerSheet title="Select Bowler" players={fieldingPlayers} excludeIds={[]}
           onSelect={handleSelectBowler} onClose={() => setShowBowlerSheet(false)} />
+      )}
+      {showEnrichmentDrawer && (
+        <EnrichmentDrawer
+          isOpen={showEnrichmentDrawer}
+          onClose={() => setShowEnrichmentDrawer(false)}
+          onSave={() => {
+            setShowEnrichmentDrawer(false);
+            setFeedback('⚡ Delivery enriched!');
+            setTimeout(() => setFeedback(null), 1800);
+            setContactQuality(null);
+            setCommentary('');
+          }}
+          fieldingPlayers={fieldingPlayers}
+          shotType={shotType} setShotType={setShotType}
+          shotCoords={shotCoords} setShotCoords={setShotCoords}
+          contactQuality={contactQuality} setContactQuality={setContactQuality}
+          commentary={commentary} setCommentary={setCommentary}
+          fielderId={fielderId} setFielderId={setFielderId}
+        />
+      )}
+      {auditingBall && (
+        <BallAuditEditSheet
+          ball={auditingBall}
+          onClose={() => setAuditingBall(null)}
+          onSave={(updatedBall) => {
+            setAuditingBall(null);
+            setFeedback('✅ Delivery audit saved');
+            setTimeout(() => setFeedback(null), 1800);
+          }}
+        />
       )}
 
       {showBroadcast && liveScore && (
