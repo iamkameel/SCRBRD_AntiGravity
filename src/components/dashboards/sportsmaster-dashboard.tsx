@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { PageHeader } from '../dashboard/PageHeader';
 import MetricCard from '../dashboard/MetricCard';
 import FixtureCentreCard from '../dashboard/FixtureCentreCard';
-import { ClipboardList, Shield, CalendarDays, Users, ChevronRight, CheckCircle2, History, Activity, AlertCircle, TrendingUp, ShieldCheck, Zap, ArrowUpRight } from "lucide-react";
+import { Shield, CalendarDays, Users, CheckCircle2, History, Activity, TrendingUp, ArrowUpRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchPersonByEmail } from '@/app/actions/personActions';
@@ -60,104 +59,108 @@ export default function SportsmasterDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-6">
-        <Activity className="h-12 w-12 animate-spin" style={{ color: D.indigo }} />
-        <p className="text-[12px] font-black uppercase tracking-[0.4em] italic opacity-40" style={{ color: D.textMuted }}>SYNCHRONIZING DEPARTMENTAL OPS...</p>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Activity className="h-8 w-8 animate-spin text-indigo-400" />
+        <p className="text-xs font-semibold text-slate-400">Synchronizing Departmental Ops...</p>
       </div>
     );
   }
 
   const STATUS_COLOURS = {
-    ready: { bg: `${D.emerald}10`, text: D.emerald, border: `${D.emerald}30`, glow: D.emerald },
-    pending: { bg: `${D.amber}10`, text: D.amber, border: `${D.amber}30`, glow: D.amber },
-    critical: { bg: `${D.rose}10`, text: D.rose, border: `${D.rose}30`, glow: D.rose },
+    ready: { bg: `${D.emerald}15`, text: D.emerald, border: `${D.emerald}30` },
+    pending: { bg: `${D.amber}15`, text: D.amber, border: `${D.amber}30` },
+    critical: { bg: `${D.rose}15`, text: D.rose, border: `${D.rose}30` },
   };
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
       {/* Strategic Command Header */}
-      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl" 
-           style={{ background: D.surf1, borderColor: D.border }}>
-        <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group" 
-               style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
-             <Shield className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
+      <div 
+        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl" 
+        style={{ background: D.surf1, borderColor: D.border }}
+      >
+        <div className="absolute inset-0 opacity-[0.05]" style={{ background: D.gradMain }} />
+        <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+          <div 
+            className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm shrink-0" 
+            style={{ background: D.surf2, borderColor: D.border }}
+          >
+             <Shield className="h-7 w-7 text-indigo-400" />
           </div>
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
-              SPORTS <span style={{ color: D.indigo }}>MASTER</span>
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+              Sportsmaster <span className="text-indigo-400">Command</span>
             </h1>
-            <p className="text-[12px] font-black uppercase tracking-[0.4em] mt-3 opacity-60 italic" style={{ color: D.textMuted }}>
-                INSTITUTION: {person?.schoolId?.toUpperCase() || 'UNALLOCATED'} · OPERATIONAL CLEARANCE: LEVEL 5
+            <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>
+              Institution: <span className="text-slate-200 font-semibold uppercase">{person?.schoolId || 'Unallocated'}</span> · Operational Clearance Level 5
             </p>
           </div>
-          <div className="md:ml-auto flex gap-4 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5" style={{ background: D.surf2 }}>DEPARTMENT LOGS</Button>
-             <Button className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl border border-indigo-500/50" style={{ background: D.indigo, color: 'white' }}>CREATE FIXTURE</Button>
+          <div className="md:ml-auto flex gap-3 w-full md:w-auto">
+             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border hover:bg-white/5 text-white" style={{ background: D.surf2, borderColor: D.border }}>
+               Department Logs
+             </Button>
+             <Button className="flex-1 md:flex-none rounded-xl font-bold text-xs px-5 h-10 shadow-lg text-white" style={{ background: D.indigo }}>
+               Create Fixture
+             </Button>
           </div>
         </div>
       </div>
 
-       {/* Performance Matrix */}
-       <div className="space-y-8">
-        <SectionHeader title="DEPARTMENT OVERVIEW" sub="REAL-TIME INSTITUTIONAL CAPACITY & FIXTURE VELOCITY" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard icon={Shield} label="TOTAL TEAMS" value={stats?.teamCount || 0} subtitle="ACTIVE DIVISION SQUADS" color={D.indigo} />
-          <MetricCard icon={CalendarDays} label="UPCOMING FIXTURES" value={stats?.upcomingFixtures || 0} subtitle="NEXT 30-DAY OPERATIONAL CYCLE" color={D.emerald} />
-          <MetricCard icon={Users} label="ACTIVE COACHES" value={stats?.coachCount || 0} subtitle="ALLOCATED STAFF UNITS" color={D.amber} />
-          <MetricCard icon={CheckCircle2} label="OPS COMPLETED" value={stats?.completedFixtures || 0} subtitle="CURRENT SEASON BATCH" color={D.sky} />
+      {/* Performance Matrix */}
+      <div className="space-y-4">
+        <SectionHeader title="Department Overview" sub="Real-time institutional capacity & fixture velocity." />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <MetricCard icon={Shield} label="TOTAL TEAMS" value={stats?.teamCount || 0} subtitle="Active squad units" color={D.indigo} />
+          <MetricCard icon={CalendarDays} label="UPCOMING FIXTURES" value={stats?.upcomingFixtures || 0} subtitle="Next 30-day window" color={D.emerald} />
+          <MetricCard icon={Users} label="ACTIVE COACHES" value={stats?.coachCount || 0} subtitle="Allocated staff" color={D.amber} />
+          <MetricCard icon={CheckCircle2} label="COMPLETED OPS" value={stats?.completedFixtures || 0} subtitle="Current season batch" color={D.sky} />
         </div>
       </div>
 
       {/* Strategic Match Readiness Board */}
       <div
-        className="overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+        className="overflow-hidden rounded-2xl border shadow-xl flex flex-col"
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <div
-          className="flex flex-row items-center justify-between p-8 border-b"
+          className="flex flex-row items-center justify-between p-5 border-b"
           style={{ borderColor: D.border, background: D.surf2 }}
         >
           <div>
-            <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>READINESS STATUS BOARD</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>OPERATIONAL HEALTH FOR UPCOMING FIXTURE CYCLES</p>
+            <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Readiness Status Board</h3>
+            <p className="text-xs text-slate-400">Operational health for upcoming fixture cycles.</p>
           </div>
-          <Button variant="ghost" className="h-10 text-[10px] font-black uppercase tracking-[0.2em] px-6 rounded-xl border" style={{ color: D.indigo, background: D.surf1, borderColor: D.border }}>
-            FULL BOARD MONITOR
+          <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-indigo-400 hover:bg-white/5" style={{ background: D.surf1 }}>
+            Full Monitor
           </Button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr style={{ borderBottom: `1px solid ${D.border}`, background: D.surf2 }}>
-                {['MATCHUP', 'SQUAD', 'VENUE', 'TRANSPORT', 'OFFICIALS', 'OPS'].map((col) => (
-                  <th
-                    key={col}
-                    className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em]"
-                    style={{ fontFamily: D.head, color: D.textMuted }}
-                  >
-                    {col}
-                  </th>
-                ))}
+              <tr className="border-b text-slate-400 text-xs font-bold uppercase tracking-wider" style={{ borderColor: D.border, background: D.surf2 }}>
+                <th className="px-6 py-3.5">Matchup</th>
+                <th className="px-6 py-3.5">Squad</th>
+                <th className="px-6 py-3.5">Venue</th>
+                <th className="px-6 py-3.5">Transport</th>
+                <th className="px-6 py-3.5">Officials</th>
+                <th className="px-6 py-3.5">Ops</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {readiness.slice(0, 5).map((fixture, i) => (
                 <motion.tr
                   key={fixture.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group transition-colors hover:bg-black/5"
-                  style={{ borderBottom: `1px solid ${D.border}` }}
+                  transition={{ delay: i * 0.04 }}
+                  className="hover:bg-white/[0.02] transition-colors"
                 >
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-black uppercase italic tracking-tighter" style={{ color: D.textPrimary }}>{fixture.homeTeam} vs {fixture.awayTeam}</span>
-                      <div className="flex items-center gap-2">
-                        <CalendarDays size={10} className="text-indigo-500" />
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>{new Date(fixture.date).toLocaleDateString()}</span>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white" style={{ fontFamily: D.head }}>{fixture.homeTeam} vs {fixture.awayTeam}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+                        <CalendarDays className="h-3 w-3 text-indigo-400" />
+                        <span>{new Date(fixture.date).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </td>
@@ -165,21 +168,20 @@ export default function SportsmasterDashboard() {
                     const status = (fixture.readiness[key] === 'ready' ? 'ready' : fixture.readiness[key] === 'pending' ? 'pending' : 'critical') as keyof typeof STATUS_COLOURS;
                     const c = STATUS_COLOURS[status];
                     return (
-                      <td key={key} className="px-8 py-6">
-                        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full border shadow-sm transition-all group-hover:shadow-[0_0_15px_-5px_rgba(255,255,255,0.1)]"
-                             style={{ background: c.bg, borderColor: c.border }}>
-                            <div className="w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px]" style={{ background: c.text, boxShadow: `0 0 10px ${c.glow}` }} />
-                            <span className="text-[9px] font-black uppercase tracking-[0.15em] italic" style={{ color: c.text }}>{fixture.readiness[key]?.toUpperCase()}</span>
+                      <td key={key} className="px-6 py-4">
+                        <div 
+                          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider"
+                          style={{ background: c.bg, borderColor: c.border, color: c.text }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.text }} />
+                          <span>{fixture.readiness[key]}</span>
                         </div>
                       </td>
                     );
                   })}
-                  <td className="px-8 py-6">
-                    <button
-                      className="h-10 w-10 rounded-xl flex items-center justify-center transition-all bg-black/5 border border-white/5 hover:border-indigo-500/50 group/btn"
-                      style={{ color: D.textMuted }}
-                    >
-                      <ArrowUpRight className="h-4 w-4 group-hover/btn:text-indigo-500 transition-colors" />
+                  <td className="px-6 py-4">
+                    <button className="h-8 w-8 rounded-lg flex items-center justify-center border border-white/10 hover:bg-white/10 text-slate-300 transition-colors">
+                      <ArrowUpRight className="h-4 w-4" />
                     </button>
                   </td>
                 </motion.tr>
@@ -190,96 +192,92 @@ export default function SportsmasterDashboard() {
       </div>
 
       {/* Content Grid Integration */}
-      <div className="grid gap-10 md:grid-cols-5 lg:grid-cols-7">
+      <div className="grid gap-8 md:grid-cols-5 lg:grid-cols-7">
         {/* Division League Integration (4/7) */}
         <div
-          className="lg:col-span-4 overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+          className="lg:col-span-4 overflow-hidden rounded-2xl border shadow-xl flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div
-            className="flex flex-row items-center justify-between p-8 border-b"
+            className="flex flex-row items-center justify-between p-5 border-b"
             style={{ borderColor: D.border, background: D.surf2 }}
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl border border-white/5 opacity-40">
-                  <TrendingUp size={20} className="text-emerald-500" />
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg border border-white/10 bg-emerald-500/10 text-emerald-400">
+                <TrendingUp className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>DIVISION STANDINGS</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>ACTIVE COMPETITION RECAP</p>
+                <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Division Standings</h3>
+                <p className="text-xs text-slate-400">Active competition summary.</p>
               </div>
             </div>
-            <Button variant="ghost" className="h-10 text-[10px] font-black uppercase tracking-[0.2em] px-6 rounded-xl border" style={{ color: D.indigo, background: D.surf1, borderColor: D.border }}>
-              FULL TABLE
+            <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-indigo-400 hover:bg-white/5" style={{ background: D.surf1 }}>
+              Full Table
             </Button>
           </div>
-          <div className="p-8">
+          <div className="p-6">
             <LeagueTable standings={mockStandings} />
           </div>
         </div>
 
         {/* OS Event Topology Stream (3/7) */}
         <div
-          className="lg:col-span-3 overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+          className="lg:col-span-3 overflow-hidden rounded-2xl border shadow-xl flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div
-            className="flex flex-row items-center justify-between p-8 border-b"
+            className="flex flex-row items-center justify-between p-5 border-b"
             style={{ borderColor: D.border, background: D.surf2 }}
           >
-            <div className="flex items-center gap-4">
-               <div className="p-3 rounded-xl border border-white/5 opacity-40 shadow-inner">
-                  <History size={20} className="text-indigo-500" />
+            <div className="flex items-center gap-3">
+               <div className="p-2 rounded-lg border border-white/10 bg-indigo-500/10 text-indigo-400">
+                  <History className="h-4 w-4" />
                </div>
                <div>
-                  <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>OS EVENT STREAM</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>REAL-TIME SYSTEM AUDIT LOG</p>
+                  <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>OS Event Stream</h3>
+                  <p className="text-xs text-slate-400">Real-time audit log.</p>
                </div>
             </div>
-            <div className="flex items-center gap-2.5 px-3 py-1 rounded-full border border-emerald-500/20" style={{ background: `${D.emerald}08` }}>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500">LIVE</span>
+            <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>LIVE</span>
             </div>
           </div>
-          <div className="p-8 space-y-6 flex-1 overflow-y-auto max-h-[500px]">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto max-h-[450px]">
              <AnimatePresence>
                 {auditLogs.length > 0 ? (
                 auditLogs.map((log, i) => (
                     <motion.div
-                    key={log.id || i}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="relative pl-8 pb-6 last:pb-0 border-l border-white/5"
+                      key={log.id || i}
+                      initial={{ opacity: 0, x: 15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      className="relative pl-6 pb-4 last:pb-0 border-l border-white/10"
                     >
                     <div
-                        className="absolute left-[-4.5px] top-1.5 w-2 h-2 rounded-full shadow-[0_0_10px]"
-                        style={{ background: D.indigo, boxShadow: `0 0 10px ${D.indigo}` }}
+                      className="absolute left-[-4.5px] top-1.5 w-2 h-2 rounded-full bg-indigo-400"
                     />
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">
-                        <span
-                            className="text-[9px] font-black uppercase tracking-[0.25em] italic"
-                            style={{ color: D.indigo }}
-                        >
-                            {log.actionType.replace(/_/g, ' ')}
+                        <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+                          {log.actionType.replace(/_/g, ' ')}
                         </span>
-                        <span className="text-[9px] font-bold opacity-30" style={{ color: D.textMuted }}>
-                            {log.timestamp && format(new Date(log.timestamp.seconds * 1000), 'HH:mm:ss')}
+                        <span className="text-[10px] text-slate-500">
+                          {log.timestamp && format(new Date(log.timestamp.seconds * 1000), 'HH:mm:ss')}
                         </span>
                         </div>
-                        <p className="text-[13px] font-bold tracking-tight leading-snug" style={{ color: D.textPrimary }}>{log.description.toUpperCase()}</p>
-                        <div className="flex items-center gap-2 opacity-40">
-                             <Zap size={10} className="text-amber-500" />
-                             <span className="text-[9px] font-black uppercase tracking-widest">ACTOR: {log.actorName.toUpperCase()}</span>
+                        <p className="text-xs font-semibold text-slate-200">{log.description}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                             <Zap className="h-3 w-3 text-amber-400" />
+                             <span>Actor: {log.actorName}</span>
                         </div>
                     </div>
                     </motion.div>
                 ))
                 ) : (
-                <div className="flex flex-col items-center justify-center py-20 opacity-20" style={{ color: D.textMuted }}>
-                    <Activity className="w-12 h-12 mb-4 animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">SYSTEM TOPOLOGY STABLE</p>
+                <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                    <Activity className="w-8 h-8 mb-2 opacity-40 animate-pulse" />
+                    <p className="text-xs font-medium">System topology stable.</p>
                 </div>
                 )}
              </AnimatePresence>
@@ -288,8 +286,8 @@ export default function SportsmasterDashboard() {
       </div>
 
       {/* Fixture Centre Integration */}
-      <div className="space-y-6">
-        <SectionHeader title="MATCH MONITOR" sub="INSTITUTIONAL FIXTURE HUB & SCHEDULING INTERFACE" />
+      <div className="space-y-4">
+        <SectionHeader title="Match Monitor" sub="Institutional fixture hub & scheduling interface." />
         <FixtureCentreCard role="Sports-Master" maxMatches={3} schoolId={person?.schoolId} />
       </div>
     </div>

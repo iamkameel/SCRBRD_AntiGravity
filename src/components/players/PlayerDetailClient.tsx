@@ -140,7 +140,7 @@ export function PlayerDetailClient({
               </span>
             </div>
             
-            <h1 className="text-6xl font-black text-white mb-6 tracking-tighter" style={{ fontFamily: D.head }}>
+            <h1 className="text-3xl md:text-4xl font-black text-white mb-6 tracking-tighter" style={{ fontFamily: D.head }}>
               {player.firstName} <span className="text-primary">{player.lastName}</span>
             </h1>
 

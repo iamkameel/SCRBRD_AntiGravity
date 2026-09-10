@@ -15,7 +15,7 @@ export default function PitchDeckPage() {
           <Badge variant="outline" className="mb-6 text-sm px-4 py-2">
             The Future of Cricket Management
           </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
             Transform Your Cricket League with{' '}
             <span className="bg-gradient-to-br from-primary to-emerald-400 bg-clip-text text-transparent">
               SCRBRD

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useState, useEffect, useActionState } from "react";
 import { LeagueActionState, deleteLeagueAction, getProvincesAction } from "@/app/actions/leagueActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +43,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function LeagueForm({ mode, leagueAction, initialState, initialData = {} }: LeagueFormProps) {
-  const [state, action] = useFormState(leagueAction, initialState);
+  const [state, action] = useActionState(leagueAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [provinces, setProvinces] = useState<any[]>([]);
 
@@ -69,7 +68,7 @@ export function LeagueForm({ mode, leagueAction, initialState, initialData = {} 
           return newErrors;
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         setClientErrors(prev => ({
           ...prev,

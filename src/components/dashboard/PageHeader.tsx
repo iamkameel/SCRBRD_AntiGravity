@@ -32,7 +32,7 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="space-y-3">
           <h1 
-            className="text-5xl font-black tracking-tighter uppercase italic leading-[0.9]"
+            className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-[0.9]"
             style={{ 
               fontFamily: D.head, 
               color: D.textPrimary,

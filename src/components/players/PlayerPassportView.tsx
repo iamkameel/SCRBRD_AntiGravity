@@ -124,7 +124,7 @@ export function PlayerPassportView({ player, profile }: PlayerPassportViewProps)
                    <Navigation className="h-3 w-3 text-primary" />
                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]" style={{ fontFamily: D.mono }}>Personnel Data Sheet v4.2</span>
                 </div>
-                <h1 className="text-7xl font-black text-white tracking-tighter" style={{ fontFamily: D.head }}>
+                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter" style={{ fontFamily: D.head }}>
                   {player.lastName.toUpperCase()}, <span className="text-primary/70">{player.firstName}</span>
                 </h1>
                 <div className="flex gap-4">

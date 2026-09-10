@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useState, useEffect, useActionState } from "react";
 import { MatchActionState } from "@/app/actions/matchActions";
 import { getLeaguesAction } from "@/app/actions/leagueActions";
 import { fetchSeasons } from "@/lib/firestore";
@@ -48,7 +47,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function MatchForm({ mode, matchAction, initialState, initialData = {}, teams, fields }: MatchFormProps) {
-  const [state, action] = useFormState(matchAction, initialState);
+  const [state, action] = useActionState(matchAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [selectedFormat, setSelectedFormat] = useState(initialData.format || 'T20');
   const [leagues, setLeagues] = useState<any[]>([]);
@@ -82,7 +81,7 @@ export function MatchForm({ mode, matchAction, initialState, initialData = {}, t
           return newErrors;
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         setClientErrors(prev => ({
           ...prev,

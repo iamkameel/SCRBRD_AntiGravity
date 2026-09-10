@@ -116,7 +116,7 @@ export default function CoachesPage() {
                    <Users className="h-12 w-12 text-indigo-500" />
                 </div>
                 <div className="text-center lg:text-left">
-                  <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" 
+                  <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-none" 
                       style={{ fontFamily: D.head, color: D.textPrimary }}>
                     COACHING <span style={{ color: D.indigo }}>STAFF</span>
                   </h1>

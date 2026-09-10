@@ -4,53 +4,31 @@ import { Trophy, Plus } from "lucide-react";
 import Link from "next/link";
 import { D } from "@/lib/design-system";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { LeagueCard } from "@/components/leagues/LeagueCard";
+import { LeaguesClient } from "@/components/leagues/LeaguesClient";
+
+export const dynamic = 'force-dynamic';
 
 export default async function LeaguesPage() {
-  const leagues = await getLeaguesAction();
+  const leagues = await getLeaguesAction().catch(() => []);
 
   return (
-    <div className="space-y-12 pb-24">
-      {/* Premium Header */}
+    <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Standardized Header */}
       <SectionHeader 
         title="Leagues & Series"
         sub="Competition management engine. Institutional leagues and regional series data."
         icon={<Trophy className="w-5 h-5 text-indigo-400" />}
         actions={
           <Link href="/leagues/add">
-            <Button className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
-                    style={{ background: D.indigo, color: 'white' }}>
-              <Plus className="mr-2 h-4 w-4" />
-              ADD COMPETITION
+            <Button className="h-10 px-5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Competition
             </Button>
           </Link>
         }
       />
 
-      {/* Leagues Grid */}
-      <div className="grid gap-6">
-        {leagues.map((league: any, index: number) => (
-          <LeagueCard key={league.id} league={league} index={index} />
-        ))}
-
-        {leagues.length === 0 && (
-          <div className="p-24 rounded-[3rem] border border-dashed text-center space-y-4"
-               style={{ background: D.surf1, borderColor: D.border }}>
-            <div className="h-20 w-20 rounded-3xl flex items-center justify-center mx-auto opacity-20"
-                 style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
-              <Trophy className="h-10 w-10 text-indigo-400" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold uppercase italic" style={{ color: D.textPrimary, fontFamily: D.head }}>
-                No Competitions Found
-              </h3>
-              <p className="text-sm font-medium" style={{ color: D.textMuted }}>
-                Initialize your first institutional league to begin tracking records.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      <LeaguesClient leagues={leagues} />
     </div>
   );
 }

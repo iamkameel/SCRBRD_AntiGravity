@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useState, useEffect, useActionState } from "react";
 import { FieldActionState } from "@/app/actions/fieldActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +51,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function FieldForm({ mode, fieldAction, initialState, initialData = {}, schools }: FieldFormProps) {
-  const [state, action] = useFormState(fieldAction, initialState);
+  const [state, action] = useActionState(fieldAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [conditionRating, setConditionRating] = useState([initialData.surfaceConditionRating || 3]);
   const [isLocating, setIsLocating] = useState(false);

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useState, useActionState } from "react";
 import { SeasonActionState, deleteSeasonAction } from "@/app/actions/seasonActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function SeasonForm({ mode, seasonAction, initialState, initialData = {} }: SeasonFormProps) {
-  const [state, action] = useFormState(seasonAction, initialState);
+  const [state, action] = useActionState(seasonAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [startDate, setStartDate] = useState(initialData.startDate || '');
   const [endDate, setEndDate] = useState(initialData.endDate || '');
@@ -87,7 +86,7 @@ export function SeasonForm({ mode, seasonAction, initialState, initialData = {} 
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         setClientErrors(prev => ({
           ...prev,

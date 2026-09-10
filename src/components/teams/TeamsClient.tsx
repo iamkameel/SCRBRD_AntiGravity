@@ -1,29 +1,34 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useViewMode } from '@/hooks/useViewMode';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { 
   LayoutGrid, 
-  List, 
+  List as ListIcon, 
   Search, 
-  Filter,
   X,
   Layers,
-  Plus,
-  ChevronRight,
   Globe,
   Award,
-  Shield
+  Shield,
+  Users,
+  SlidersHorizontal
 } from "lucide-react";
-import Link from 'next/link';
 import { 
   ListTeamsData, 
   ListOrganisationsData, 
   ListAgeDivisionsData 
 } from "@/generated/dataconnect";
 import { TeamCard } from "./TeamCard";
-import { Badge } from "@/components/ui/badge";
 import { D } from '@/lib/design-system';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from "@/lib/utils";
@@ -44,134 +49,186 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
   const [selectedOrg, setSelectedOrg] = useState<string>('all');
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
 
-  const filteredTeams = teams.filter(team => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = (
-      team.name.toLowerCase().includes(searchLower) ||
-      team.organisation?.name.toLowerCase().includes(searchLower) ||
-      team.ageDivision?.name.toLowerCase().includes(searchLower)
-    );
+  const filteredTeams = useMemo(() => {
+    return teams.filter(team => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = (
+        team.name.toLowerCase().includes(searchLower) ||
+        (team.organisation?.name && team.organisation.name.toLowerCase().includes(searchLower)) ||
+        (team.ageDivision?.name && team.ageDivision.name.toLowerCase().includes(searchLower))
+      );
 
-    const matchesOrg = selectedOrg === 'all' || team.organisation?.id === selectedOrg;
-    const matchesDivision = selectedDivision === 'all' || team.ageDivision?.id === selectedDivision;
+      const matchesOrg = selectedOrg === 'all' || team.organisation?.id === selectedOrg;
+      const matchesDivision = selectedDivision === 'all' || team.ageDivision?.id === selectedDivision;
 
-    return matchesSearch && matchesOrg && matchesDivision;
-  });
+      return matchesSearch && matchesOrg && matchesDivision;
+    });
+  }, [teams, searchTerm, selectedOrg, selectedDivision]);
+
+  const metrics = useMemo(() => {
+    const orgsSet = new Set(teams.map(t => t.organisation?.name).filter(Boolean));
+    const divsSet = new Set(teams.map(t => t.ageDivision?.name).filter(Boolean));
+    return {
+      total: teams.length,
+      organisationsCount: orgsSet.size,
+      divisionsCount: divsSet.size,
+      filteredCount: filteredTeams.length
+    };
+  }, [teams, filteredTeams]);
+
+  const hasActiveFilters = searchTerm !== '' || selectedOrg !== 'all' || selectedDivision !== 'all';
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedOrg('all');
+    setSelectedDivision('all');
+  };
 
   return (
-    <div className="space-y-12 pb-24">
-      {/* View & Filter Hub */}
-      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6 p-4 rounded-[2rem] border" 
-           style={{ background: D.surf1, borderColor: D.border }}>
-        
-        <div className="flex flex-col md:flex-row items-center gap-6 flex-1">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-all" size={18} />
-            <input 
-              type="text" 
-              placeholder="SEARCH TEAMS, ORGANISATIONS, DIVISIONS..."
-              className="w-full h-16 pl-16 pr-8 rounded-2xl bg-black/5 border-transparent focus:border-indigo-500/30 focus:bg-white/5 outline-none transition-all text-xs font-black tracking-widest uppercase"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="space-y-6">
+      {/* Top Metrics Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl border bg-surf1" style={{ background: D.surf1, borderColor: D.border }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Teams</span>
+            <Layers size={16} className="text-indigo-400" />
           </div>
+          <div className="text-2xl font-black text-primary font-mono">{metrics.total}</div>
+        </div>
 
-          <div className="flex items-center gap-2 p-1.5 rounded-2xl" style={{ background: D.surf2 }}>
-            {[
-              { id: 'grid', icon: LayoutGrid, label: 'GRID' },
-              { id: 'list', icon: List, label: 'LIST' }
-            ].map((v) => (
-              <button
-                key={v.id}
-                onClick={() => setViewMode(v.id as any)}
-                className={cn(
-                  "flex items-center gap-3 px-6 py-3 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest",
-                  viewMode === v.id ? "text-white shadow-xl" : "opacity-40 hover:opacity-100"
-                )}
-                style={{ background: viewMode === v.id ? D.indigo : 'transparent' }}
-              >
-                <v.icon size={14} />
-                {v.label}
-              </button>
-            ))}
+        <div className="p-4 rounded-2xl border bg-surf1" style={{ background: D.surf1, borderColor: D.border }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Institutions</span>
+            <Globe size={16} className="text-sky-400" />
           </div>
+          <div className="text-2xl font-black text-sky-400 font-mono">{metrics.organisationsCount}</div>
+        </div>
+
+        <div className="p-4 rounded-2xl border bg-surf1" style={{ background: D.surf1, borderColor: D.border }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Age Divisions</span>
+            <Award size={16} className="text-amber-400" />
+          </div>
+          <div className="text-2xl font-black text-amber-400 font-mono">{metrics.divisionsCount}</div>
+        </div>
+
+        <div className="p-4 rounded-2xl border bg-surf1" style={{ background: D.surf1, borderColor: D.border }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Filtered Units</span>
+            <Users size={16} className="text-emerald-400" />
+          </div>
+          <div className="text-2xl font-black text-emerald-400 font-mono">{metrics.filteredCount}</div>
         </div>
       </div>
 
-      {/* Advanced Filter Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="flex items-center gap-4 p-4 rounded-2xl border" style={{ background: D.surf1, borderColor: D.border }}>
-           <Globe size={18} className="text-indigo-500 ml-2" />
-           <select 
-            className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
-            value={selectedOrg}
-            onChange={(e) => setSelectedOrg(e.target.value)}
-          >
-            <option value="all">ALL ORGANISATIONS</option>
-            {organisations.map(org => (
-              <option key={org.id} value={org.id}>{org.name.toUpperCase()}</option>
-            ))}
-          </select>
+      {/* Control Strip (Search, Select Filters, View Toggle) */}
+      <div className="p-4 rounded-2xl border space-y-3 shadow-xl" style={{ background: D.surf1, borderColor: D.border }}>
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search team, institution, or division..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-9 h-11 rounded-xl border-white/10 bg-white/5 focus:bg-white/10 text-sm"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')} 
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filters & View Switcher */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Organisation Filter */}
+            <Select value={selectedOrg} onValueChange={setSelectedOrg}>
+              <SelectTrigger className="h-11 text-xs rounded-xl border-white/10 bg-white/5 w-[180px]">
+                <SelectValue placeholder="All Institutions" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-white/10">
+                <SelectItem value="all">All Institutions</SelectItem>
+                {organisations.map(org => (
+                  <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Age Division Filter */}
+            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+              <SelectTrigger className="h-11 text-xs rounded-xl border-white/10 bg-white/5 w-[170px]">
+                <SelectValue placeholder="All Divisions" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-white/10">
+                <SelectItem value="all">All Divisions</SelectItem>
+                {ageDivisions.map(div => (
+                  <SelectItem key={div.id} value={div.id}>{div.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10 flex-shrink-0">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={cn("p-2 rounded-lg transition-all", viewMode === 'grid' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+                title="Grid View"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+                title="List View"
+              >
+                <ListIcon size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-2xl border" style={{ background: D.surf1, borderColor: D.border }}>
-           <Award size={18} className="text-sky-500 ml-2" />
-           <select 
-            className="flex-1 bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
-            value={selectedDivision}
-            onChange={(e) => setSelectedDivision(e.target.value)}
-          >
-            <option value="all">ALL DIVISIONS</option>
-            {ageDivisions.map(div => (
-              <option key={div.id} value={div.id}>{div.name.toUpperCase()}</option>
-            ))}
-          </select>
-        </div>
-
-        {(selectedOrg !== 'all' || selectedDivision !== 'all' || searchTerm) && (
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              setSelectedOrg('all');
-              setSelectedDivision('all');
-              setSearchTerm('');
-            }}
-            className="h-16 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-500"
-            style={{ borderColor: D.border }}
-          >
-            <X className="h-4 w-4 mr-3" />
-            CLEAR ENGINE FILTERS
-          </Button>
+        {/* Reset Filter Action */}
+        {hasActiveFilters && (
+          <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+            <span className="text-muted-foreground">Showing {filteredTeams.length} of {teams.length} teams</span>
+            <button
+              onClick={resetFilters}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+            >
+              <X size={12} />
+              Reset Filters
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Results HUD */}
-      <div className="flex items-center justify-between px-10">
-        <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-           IDENTITY RESULTS: <span className="text-white opacity-100 italic" style={{ color: D.indigo }}>{filteredTeams.length} UNIT(S)</span>
-        </div>
-        <div className="px-3 py-1 rounded-lg border text-[9px] font-black uppercase tracking-[0.2em]" 
-             style={{ background: `${D.indigo}08`, borderColor: `${D.indigo}20`, color: D.indigo }}>
-          V4 RELATIONAL ENGINE
-        </div>
-      </div>
-
-      {/* Dynamic View Engine */}
+      {/* Dynamic View Display */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={viewMode}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className={cn(
-            viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "space-y-6"
+            viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" : "space-y-4"
           )}
         >
           {filteredTeams.length === 0 ? (
-            <div className="col-span-full py-24 text-center rounded-[3rem] border border-dashed flex flex-col items-center gap-4" 
-                 style={{ borderColor: D.border }}>
-               <Shield className="h-12 w-12 opacity-10 animate-pulse" />
-               <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">NO RELATIONAL CORES FOUND FOR SELECTED TOPOLOGY</p>
+            <div className="col-span-full py-16 text-center rounded-2xl border border-dashed flex flex-col items-center justify-center gap-3" style={{ borderColor: D.border }}>
+              <Shield className="h-10 w-10 text-muted-foreground/30 animate-pulse" />
+              <h3 className="text-sm font-bold text-primary">No Teams Found</h3>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                No team units match your current search terms or filter selections.
+              </p>
+              {hasActiveFilters && (
+                <Button size="sm" variant="outline" onClick={resetFilters} className="mt-2 text-xs rounded-xl border-white/10">
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             filteredTeams.map((team) => (

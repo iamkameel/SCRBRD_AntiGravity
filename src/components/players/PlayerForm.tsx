@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useState, useActionState } from "react";
 import { PlayerActionState } from "@/app/actions/playerActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,7 +109,7 @@ const ATTRIBUTE_GROUPS = {
 };
 
 export function PlayerForm({ mode, playerAction, initialState, initialData = {}, schools }: PlayerFormProps) {
-  const [state, action] = useFormState(playerAction, initialState);
+  const [state, action] = useActionState(playerAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   
   // Avatar and name state for live preview

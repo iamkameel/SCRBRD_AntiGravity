@@ -2,10 +2,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TeamForm } from '@/components/teams/TeamForm';
 import { describe, it, expect, vi } from 'vitest';
 
-// Mock useFormState and useFormStatus
+// Mock useActionState and useFormStatus
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    useActionState: (action: any, initialState: any) => [initialState, action],
+  };
+});
+
 vi.mock('react-dom', () => ({
   ...vi.importActual('react-dom'),
-  useFormState: (action: any, initialState: any) => [initialState, action],
   useFormStatus: () => ({ pending: false }),
 }));
 

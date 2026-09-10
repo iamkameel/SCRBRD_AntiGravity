@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState } from "react-dom";
+import { useState, useEffect, useActionState } from "react";
 import { TeamActionState, deleteTeamAction } from "@/app/actions/teamActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +57,7 @@ const COLOR_PRESETS = [
 ];
 
 export function TeamForm({ mode, teamAction, initialState, initialData = {}, schools, divisions }: TeamFormProps) {
-  const [state, action] = useFormState(teamAction, initialState);
+  const [state, action] = useActionState(teamAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   
   // Color state
@@ -79,7 +78,7 @@ export function TeamForm({ mode, teamAction, initialState, initialData = {}, sch
           return newErrors;
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         setClientErrors(prev => ({
           ...prev,

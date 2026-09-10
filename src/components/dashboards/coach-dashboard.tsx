@@ -10,14 +10,11 @@ import {
   Activity,
   Users,
   Trophy,
-  Calendar,
-  ArrowRight,
-  ChevronRight,
   Plus,
   Filter,
-  Zap,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FixtureCentreCard from '@/components/dashboard/FixtureCentreCard';
@@ -76,120 +73,117 @@ export default function CoachDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Activity className="h-8 w-8 animate-spin" style={{ color: D.indigo }} />
+      <div className="flex items-center justify-center py-20">
+        <Activity className="h-8 w-8 animate-spin text-indigo-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
       {/* OS Intelligence Banner — Strategic Unit */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2rem] border overflow-hidden shadow-2xl group"
+        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl"
         style={{ background: D.surf1, borderColor: D.border }}
       >
-        <div className="absolute inset-0 opacity-10 group-hover:opacity-[0.15] transition-opacity" style={{ background: D.gradMain }} />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ background: D.gradMain }} />
         <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
           <div
-            className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-inner shrink-0"
-            style={{ background: D.surf2, border: `1px solid ${D.border}` }}
+            className="h-14 w-14 rounded-2xl flex items-center justify-center border shrink-0"
+            style={{ background: D.surf2, borderColor: D.border }}
           >
-            <Activity className="h-8 w-8 animate-pulse" style={{ color: D.indigo }} />
+            <Activity className="h-7 w-7 text-indigo-400 animate-pulse" />
           </div>
-          <div>
-            <h3
-              className="text-[11px] font-black uppercase tracking-[0.4em] italic leading-none mb-3"
-              style={{ fontFamily: D.head, color: D.indigo }}
-            >
-              Intelligence Broadcast
-            </h3>
-            <p className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+              <Sparkles className="h-3 w-3" />
+              <span>Intelligence Broadcast</span>
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
               {intelligence?.watchlistFlags?.length > 0
-                ? `${intelligence.watchlistFlags.length} CRITICAL PLAYER FLAGS DETECTED`
-                : 'ALL SQUAD PARAMETERS WITHIN STABLE LIMITS'}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-2 opacity-50" style={{ color: D.textMuted }}>
-                SQUAD AT {intelligence?.avgReadiness || 0}% AGGREGATE CAPACITY · {intelligence?.availableCount || 0} OPERATIONAL ATHLETES
+                ? `${intelligence.watchlistFlags.length} Critical Player Flags Detected`
+                : 'All Squad Parameters Stable'}
+            </h3>
+            <p className="text-xs text-slate-400 font-medium" style={{ fontFamily: D.sans }}>
+              Squad at <span className="text-white font-bold">{intelligence?.avgReadiness || 0}%</span> aggregate capacity · {intelligence?.availableCount || 0} operational athletes
             </p>
           </div>
           <div className="md:ml-auto flex gap-3 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-black text-[9px] uppercase tracking-widest px-6 h-11 border transition-all hover:translate-y-[-2px] active:scale-95" style={{ background: D.surf2 }}>RESYNC DATA</Button>
+             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border text-white hover:bg-white/5" style={{ background: D.surf2, borderColor: D.border }}>
+               Resync Data
+             </Button>
           </div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Command Column (2/3) */}
-        <div className="lg:col-span-2 space-y-12">
+        <div className="lg:col-span-2 space-y-8">
           {/* Performance Matrix */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <MetricCard
               icon={Users}
               label="SQUAD CAPACITY"
               value={activePlayers}
-              subtitle={`${intelligence?.availableCount || 0} AVAILABLE · ${intelligence?.injuredCount || 0} INJURED`}
+              subtitle={`${intelligence?.availableCount || 0} available · ${intelligence?.injuredCount || 0} injured`}
               color={D.indigo}
             />
             <MetricCard
               icon={TrendingUp}
               label="AVG READINESS"
               value={`${intelligence?.avgReadiness || 0}%`}
-              subtitle={intelligence?.avgReadiness > 80 ? 'HIGH OPERATIONAL' : 'MONITOR FATIGUE'}
+              subtitle={intelligence?.avgReadiness > 80 ? 'High operational' : 'Monitor fatigue'}
               color={D.emerald}
             />
             <MetricCard 
                 icon={Trophy} 
                 label="WIN VELOCITY" 
                 value="68%" 
-                subtitle="LAST 5 MATCH CYCLE" 
+                subtitle="Last 5 match cycle" 
                 color={D.amber}
             />
           </div>
 
           {/* Strategic Fixture Centre */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <SectionHeader 
-                title="MATCH OPERATIONS" 
-                sub="LIVE FIXTURE MONITORING & SCHEDULING UNIT" 
+                title="Match Operations" 
+                sub="Live fixture monitoring & scheduling unit." 
             />
             <FixtureCentreCard role={ROLES.COACH} />
           </div>
 
           {/* Tactical Quick Actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-             <QuickAction icon={Plus} label="NEW MATCH" color={D.indigo} />
-             <QuickAction icon={Users} label="SELECT TEAM" color={D.amber} />
-             <QuickAction icon={Activity} label="READINESS" color={D.emerald} />
-             <QuickAction icon={Filter} label="REPORTS" color={D.sky} />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+             <QuickAction icon={Plus} label="New Match" color={D.indigo} />
+             <QuickAction icon={Users} label="Select Team" color={D.amber} />
+             <QuickAction icon={Activity} label="Readiness" color={D.emerald} />
+             <QuickAction icon={Filter} label="Reports" color={D.sky} />
           </div>
         </div>
 
         {/* Intelligence Sidebar (1/3) */}
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Squad Readiness Visualizer */}
           <div
-            className="rounded-[2.5rem] border shadow-2xl p-8 overflow-hidden"
+            className="rounded-2xl border shadow-xl p-6 overflow-hidden space-y-6"
             style={{ background: D.surf1, borderColor: D.border }}
           >
-            <div className="mb-8">
-              <h4
-                className="text-[11px] font-black uppercase tracking-[0.3em] italic mb-1.5"
-                style={{ fontFamily: D.head, color: D.textMuted }}
-              >
-                READINESS HEATMAP
+            <div>
+              <h4 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+                Readiness Heatmap
               </h4>
-              <p className="text-[10px] font-black uppercase opacity-40" style={{ color: D.textMuted }}>REAL-TIME FATIGUE DISTRIBUTION</p>
+              <p className="text-xs text-slate-400">Real-time fatigue distribution.</p>
             </div>
             
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="grid grid-cols-6 gap-2">
                 {intelligence?.playerReadiness?.map((p: any) => (
                   <div
                     key={p.playerId}
-                    className="aspect-square rounded-lg shadow-sm border border-white/5 transition-transform hover:scale-110 cursor-help"
+                    className="aspect-square rounded-lg shadow-sm border border-white/10 transition-transform hover:scale-110 cursor-help"
                     style={{
                       background: p.isInjured
                         ? D.rose
@@ -204,46 +198,42 @@ export default function CoachDashboard() {
                   Array.from({ length: 18 }).map((_, i) => (
                     <div
                       key={i}
-                      className="aspect-square rounded-lg transition-colors"
-                      style={{ background: D.surf3 }}
+                      className="aspect-square rounded-lg bg-white/5 border border-white/5"
                     />
                   ))}
               </div>
               
               <div
-                className="flex items-center justify-between p-4 rounded-xl border-white/5 shadow-inner"
-                style={{ background: D.surf2, color: D.textMuted }}
+                className="flex items-center justify-between p-3 rounded-xl border border-white/10 text-xs font-medium text-slate-300"
+                style={{ background: D.surf2 }}
               >
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: D.rose }} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">CRIT</span>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-rose-400" />
+                    <span>Crit</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: D.amber }} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">MONITOR</span>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span>Monitor</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: D.emerald }} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">OPTIMAL</span>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>Optimal</span>
                 </div>
               </div>
 
               <div
-                className="w-full text-center py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border shadow-2xl shadow-emerald-500/10"
-                style={{ background: `${D.emerald}08`, borderColor: `${D.emerald}20`, color: D.emerald, fontFamily: D.head }}
+                className="w-full text-center py-3 rounded-xl text-xs font-bold border text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                style={{ fontFamily: D.head }}
               >
-                {intelligence?.avgReadiness || 0}% AGGREGATE SEVERITY
+                {intelligence?.avgReadiness || 0}% Aggregate Severity
               </div>
             </div>
           </div>
 
           {/* Strategic Watchlist Flags */}
-          <div className="space-y-6">
-            <h3
-              className="text-[11px] font-black uppercase tracking-[0.3em] italic ml-1"
-              style={{ fontFamily: D.head, color: D.textMuted }}
-            >
-              WATCHLIST ALERTS
+          <div className="space-y-4">
+            <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+              Watchlist Alerts
             </h3>
             <div className="space-y-3">
                 <AnimatePresence>
@@ -252,16 +242,16 @@ export default function CoachDashboard() {
                         key={i}
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex items-center justify-between p-5 rounded-2xl border shadow-lg group transition-all hover:bg-black/5"
+                        transition={{ delay: i * 0.08 }}
+                        className="flex items-center justify-between p-4 rounded-xl border shadow-md transition-all hover:border-indigo-500/30"
                         style={{
                             background: D.surf2,
                             borderColor: D.border
                         }}
                     >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                         <div
-                            className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.2)]"
+                            className="w-2 h-2 rounded-full animate-pulse"
                             style={{
                             background:
                                 flag.severity === 'amber'
@@ -271,30 +261,22 @@ export default function CoachDashboard() {
                                 : D.emerald,
                             }}
                         />
-                        <span
-                            className="text-[10px] font-black uppercase tracking-tight italic"
-                            style={{ fontFamily: D.head, color: D.textPrimary }}
-                        >
+                        <span className="text-xs font-bold text-white" style={{ fontFamily: D.head }}>
                             {flag.name}
                         </span>
                         </div>
-                        <span className="text-[8px] font-bold uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: D.textMuted }}>
-                        {flag.rsn}
+                        <span className="text-xs text-slate-400 font-medium">
+                          {flag.rsn}
                         </span>
                     </motion.div>
                     ))}
                     {(!intelligence || intelligence.watchlistFlags.length === 0) && (
                     <div
-                        className="p-12 rounded-[2rem] text-center border border-dashed flex flex-col items-center gap-4"
+                        className="p-8 rounded-2xl text-center border border-dashed flex flex-col items-center gap-3 text-slate-400"
                         style={{ background: D.surf2, borderColor: D.border }}
                     >
-                        <ShieldCheck className="w-8 h-8 opacity-10" />
-                        <p
-                            className="text-[10px] font-black uppercase tracking-[0.25em]"
-                            style={{ color: D.textMuted }}
-                        >
-                        NO ACTIVE THREATS
-                        </p>
+                        <ShieldCheck className="w-6 h-6 text-slate-500" />
+                        <p className="text-xs font-semibold">No active threats detected.</p>
                     </div>
                     )}
                 </AnimatePresence>
@@ -309,16 +291,16 @@ export default function CoachDashboard() {
 function QuickAction({ icon: Icon, label, color }: { icon: any, label: string, color: string }) {
   return (
     <button
-      className="flex flex-col items-center gap-4 p-6 rounded-2xl border transition-all duration-300 group shadow-lg"
-      style={{ background: `${color}08`, borderColor: `${color}20`, color: color }}
+      className="flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all duration-300 group hover:border-white/20 shadow-sm"
+      style={{ background: `${color}10`, borderColor: `${color}20`, color: color }}
     >
       <div
-        className="h-12 w-12 rounded-2xl flex items-center justify-center group-hover:scale-110 shadow-lg border transition-all"
+        className="h-10 w-10 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105"
         style={{ background: D.surf1, borderColor: `${color}30` }}
       >
-        <Icon className="h-6 w-6" />
+        <Icon className="h-5 w-5" />
       </div>
-      <span className="text-[9px] font-black uppercase tracking-[0.2em] italic" style={{ fontFamily: D.head }}>
+      <span className="text-xs font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
         {label}
       </span>
     </button>

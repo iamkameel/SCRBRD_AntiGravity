@@ -4,62 +4,34 @@ import { Layers, Plus } from "lucide-react";
 import Link from "next/link";
 import { D } from "@/lib/design-system";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { DivisionCard } from "@/components/divisions/DivisionCard";
+import { DivisionsClient } from "@/components/divisions/DivisionsClient";
+
+export const dynamic = 'force-dynamic';
 
 export default async function DivisionsPage() {
   const [divisions, teams] = await Promise.all([
-    fetchDivisions(),
-    fetchTeams()
+    fetchDivisions().catch(() => []),
+    fetchTeams().catch(() => [])
   ]);
 
   return (
-    <div className="space-y-12 pb-24">
-      {/* Premium Header */}
+    <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Standardized Header */}
       <SectionHeader 
         title="Divisions & Units"
         sub="Institutional age groups and competitive divisions. Squad allocation management."
         icon={<Layers className="w-5 h-5 text-indigo-400" />}
         actions={
           <Link href="/divisions/add">
-            <Button className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
-                    style={{ background: D.indigo, color: 'white' }}>
-              <Plus className="mr-2 h-4 w-4" />
-              ADD DIVISION
+            <Button className="h-10 px-5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Division
             </Button>
           </Link>
         }
       />
 
-      {/* Divisions Grid */}
-      <div className="grid gap-6">
-        {divisions.map((division: any, index: number) => (
-          <DivisionCard 
-            key={division.id} 
-            division={division} 
-            teams={teams} 
-            index={index} 
-          />
-        ))}
-
-        {divisions.length === 0 && (
-          <div className="p-24 rounded-[3rem] border border-dashed text-center space-y-4"
-               style={{ background: D.surf1, borderColor: D.border }}>
-            <div className="h-20 w-20 rounded-3xl flex items-center justify-center mx-auto opacity-20"
-                 style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
-              <Layers className="h-10 w-10 text-indigo-400" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold uppercase italic" style={{ color: D.textPrimary, fontFamily: D.head }}>
-                No Divisions Found
-              </h3>
-              <p className="text-sm font-medium" style={{ color: D.textMuted }}>
-                Define your first age group division to start organizing squads.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      <DivisionsClient divisions={divisions} teams={teams} />
     </div>
   );
 }
-

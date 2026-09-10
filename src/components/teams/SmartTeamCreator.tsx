@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useState, useEffect, useMemo, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { 
   createTeamAction, 
   getCoachesBySchoolAction, 
@@ -99,7 +99,7 @@ export function SmartTeamCreator({ organisations, ageDivisions, activeSeason, te
 
   // Form State
   const initialState: TeamActionState = {};
-  const [state, action] = useFormState(createTeamAction, initialState);
+  const [state, action] = useActionState(createTeamAction, initialState);
   
   // Wizard State
   const [selectedOrganisationId, setSelectedOrganisationId] = useState<string>("");

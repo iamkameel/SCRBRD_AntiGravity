@@ -64,7 +64,7 @@ export function PublicLiveMatchCenter({ fixtureId }: { fixtureId?: string }) {
                 {matchState.battingTeamName}
               </h1>
               <div className="flex items-baseline gap-3">
-                <span className="text-5xl md:text-6xl font-black text-amber-400 font-mono tracking-tight">
+                <span className="text-3xl md:text-4xl font-black text-amber-400 font-mono tracking-tight">
                   {matchState.totalRuns}/{matchState.wickets}
                 </span>
                 <span className="text-xl font-bold text-slate-300 font-mono">

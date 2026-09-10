@@ -3,137 +3,151 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { EcosystemDiagram } from "@/components/ecosystem/EcosystemDiagram";
-import { D } from "@/lib/scoring/theme";
-import { ArrowLeft, User, Shield, GraduationCap, Microscope } from "lucide-react";
+import { D } from "@/lib/design-system";
+import { ArrowLeft, User, Shield, GraduationCap, Microscope, Network, Sparkles, Cpu, GitMerge } from "lucide-react";
 import Link from "next/link";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Button } from "@/components/ui/button";
 import { RankingsAlgorithm, MatchDataPipeline, RankingPyramid, AIBrainEngine } from "@/components/ecosystem/AlgorithmDiagrams";
 
 export default function EcosystemPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 py-20 px-6 lg:px-20 overflow-hidden">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-primary/5 blur-[150px] rounded-full -mr-500 -mt-500" />
-        <div className="absolute bottom-0 left-0 w-[1000px] h-[1000px] bg-blue-500/5 blur-[150px] rounded-full -ml-500 -mb-500" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
+    <div className="space-y-12 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Standardized Header */}
+      <SectionHeader 
+        title="Platform Ecosystem & AI Architecture"
+        sub="Unified data network and digital infrastructure for school cricket operations."
+        icon={<Network className="w-5 h-5 text-indigo-400" />}
+        actions={
+          <Link href="/home">
+            <Button variant="outline" className="h-10 px-4 rounded-xl font-bold text-xs border border-white/10 hover:bg-white/5 text-white" style={{ background: D.surf2 }}>
+              <ArrowLeft className="mr-1.5 h-4 w-4 text-indigo-400" />
+              Home Registry
+            </Button>
+          </Link>
+        }
+      />
+
+      {/* Hero Overview Card */}
+      <div 
+        className="p-8 rounded-2xl border relative overflow-hidden shadow-2xl"
+        style={{ background: D.surf1, borderColor: D.border }}
+      >
+        <div className="absolute inset-0 opacity-[0.05]" style={{ background: D.gradMain }} />
+        <div className="relative z-10 space-y-4 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+            <Sparkles className="w-3.5 h-3.5" />
+            System Architecture v6.2
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+            The Digital Infrastructure Engine
+          </h2>
+          <p className="text-sm md:text-base text-slate-300 leading-relaxed">
+            SCRBRD connects fixtures, squad selection, live scoring, analytics, player development, and institutional history into one durable ecosystem.
+          </p>
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Navigation */}
-        <div className="flex items-center justify-between mb-20">
-          <Link 
-            href="/"
-            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white/40 hover:text-primary transition-all group"
-            style={{ fontFamily: D.mono }}
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Home Registry
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 border border-primary/20 px-3 py-1 rounded-full bg-primary/5">
-              System Architecture v6.2
-            </span>
-          </div>
-        </div>
+      {/* The Ecosystem Diagram Container */}
+      <div 
+        className="rounded-2xl border p-6 shadow-2xl relative min-h-[700px] overflow-hidden"
+        style={{ background: D.surf1, borderColor: D.border }}
+      >
+        <EcosystemDiagram />
+      </div>
 
-        {/* Hero Section */}
-        <div className="text-center mb-0 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8" style={{ fontFamily: D.head }}>
-              THE <span className="text-primary">SCRBRD</span> <br />
-              ECOSYSTEM
-            </h1>
-            <p className="max-w-2xl mx-auto text-xl md:text-2xl text-white/50 leading-relaxed font-medium">
-              A unified data network + operating system for youth sport. 
-              The infrastructure layer for modern school cricket.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* The Diagram */}
-        <div className="relative mt-8 mb-32 h-[800px]">
-          <EcosystemDiagram />
-        </div>
-
-        {/* Intelligence Models */}
-        <div className="mt-40 space-y-32">
-          {/* AI Brain Section */}
-          <div className="space-y-12">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight" style={{ fontFamily: D.head }}>
-                THE AI <span className="text-primary">BRAIN</span> ENGINE
-              </h2>
-              <p className="text-white/40 max-w-2xl mx-auto font-medium">Connecting historical verified records with real-time match intelligence to power institutional growth.</p>
+      {/* Intelligence Models Section */}
+      <div className="space-y-12">
+        {/* AI Brain Section */}
+        <div 
+          className="p-8 rounded-2xl border space-y-6 shadow-xl"
+          style={{ background: D.surf1, borderColor: D.border }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center border" style={{ background: D.surf2, borderColor: D.border }}>
+              <Cpu className="w-5 h-5 text-indigo-400" />
             </div>
-            <AIBrainEngine />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-             <div className="space-y-8">
-                <h2 className="text-4xl font-black tracking-tight leading-tight" style={{ fontFamily: D.head }}>
-                  MULTIVARIATE <br />
-                  <span className="text-primary">PERFORMANCE</span> MODELS
-                </h2>
-                <p className="text-white/40 font-medium leading-relaxed">
-                  Our ranking engine doesn&apos;t just look at runs and wickets. Every action is weighted against quality of opposition, pressure windows, and historical consistency.
-                </p>
-                <RankingsAlgorithm />
-             </div>
-             <RankingPyramid />
-          </div>
-
-          <div className="space-y-16">
-            <div className="text-center">
-              <h3 className="text-2xl font-black text-white/40 uppercase tracking-[0.4em]" style={{ fontFamily: D.mono }}>Match Data Pipeline</h3>
+            <div>
+              <h3 className="text-xl font-bold text-white" style={{ fontFamily: D.head }}>
+                AI Brain Engine
+              </h3>
+              <p className="text-xs text-slate-400">Connecting verified historical logs with real-time telemetry.</p>
             </div>
-            <MatchDataPipeline />
+          </div>
+          <AIBrainEngine />
+        </div>
+
+        {/* Multivariate Performance Models */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div 
+            className="p-8 rounded-2xl border space-y-6 shadow-xl"
+            style={{ background: D.surf1, borderColor: D.border }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center border" style={{ background: D.surf2, borderColor: D.border }}>
+                <GitMerge className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white" style={{ fontFamily: D.head }}>
+                  Multivariate Performance Models
+                </h3>
+                <p className="text-xs text-slate-400">Weighted against opposition strength and pressure windows.</p>
+              </div>
+            </div>
+            <RankingsAlgorithm />
+          </div>
+
+          <div 
+            className="p-8 rounded-2xl border space-y-6 shadow-xl"
+            style={{ background: D.surf1, borderColor: D.border }}
+          >
+            <RankingPyramid />
           </div>
         </div>
 
-        {/* Who It's For */}
-        <div className="mt-60 pt-32 border-t border-white/5">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-              <PersonaCard 
-                icon={User}
-                title="For Players"
-                description="Own your official verified record. Track development pathways and unlock scout visibility."
-              />
-              <PersonaCard 
-                icon={Shield}
-                title="For Coaches"
-                description="Develop with data. Access elite analysis tools and provide targeted feedback at scale."
-              />
-              <PersonaCard 
-                icon={GraduationCap}
-                title="For Schools"
-                description="Preserve institutional memory and school sporting legacy across generations."
-              />
-              <PersonaCard 
-                icon={Microscope}
-                title="For Scouts"
-                description="Identify high-potential prospects with verified, deep-metric intelligence records."
-              />
-           </div>
+        {/* Match Data Pipeline */}
+        <div 
+          className="p-8 rounded-2xl border space-y-6 shadow-xl"
+          style={{ background: D.surf1, borderColor: D.border }}
+        >
+          <div className="border-b pb-4" style={{ borderColor: D.border }}>
+            <h3 className="text-lg font-bold text-white" style={{ fontFamily: D.head }}>
+              Match Data Pipeline Architecture
+            </h3>
+            <p className="text-xs text-slate-400">Event stream processing from scorer console to read models.</p>
+          </div>
+          <MatchDataPipeline />
         </div>
+      </div>
 
-        {/* Footer Detail */}
-        <div className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-12 text-center border-t border-white/5 pt-20">
-           <div>
-              <div className="text-3xl font-black text-white mb-2" style={{ fontFamily: D.mono }}>1 ID.</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-primary">Unified Persona</div>
-           </div>
-           <div>
-              <div className="text-3xl font-black text-white mb-2" style={{ fontFamily: D.mono }}>REAL-TIME.</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-primary">Data Aggregation</div>
-           </div>
-           <div>
-              <div className="text-3xl font-black text-white mb-2" style={{ fontFamily: D.mono }}>DURABLE.</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-primary">Institutional Memory</div>
-           </div>
+      {/* Stakeholder Personas */}
+      <div className="space-y-6">
+        <SectionHeader 
+          title="Stakeholder Value Matrix"
+          sub="Role-scoped intelligence capabilities built on the SCRBRD network."
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <PersonaCard 
+            icon={User}
+            title="For Players"
+            description="Own your verified athletic history. Track seasonal progression and unlock scout visibility."
+          />
+          <PersonaCard 
+            icon={Shield}
+            title="For Coaches"
+            description="Develop with data. Access elite analysis tools and targeted drill recommendations."
+          />
+          <PersonaCard 
+            icon={GraduationCap}
+            title="For Schools"
+            description="Preserve school sporting legacy across seasons and manage all sporting logistics."
+          />
+          <PersonaCard 
+            icon={Microscope}
+            title="For Scouts"
+            description="Identify prospects using verified, deep-metric performance records."
+          />
         </div>
       </div>
     </div>
@@ -141,13 +155,19 @@ export default function EcosystemPage() {
 }
 
 const PersonaCard = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
-  <div className="space-y-6 group">
-    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary/40 group-hover:text-primary group-hover:bg-primary/10 transition-all">
-       <Icon className="h-7 w-7" />
+  <div 
+    className="p-6 rounded-2xl border space-y-4 transition-all hover:border-indigo-500/40 hover:shadow-xl"
+    style={{ background: D.surf1, borderColor: D.border }}
+  >
+    <div 
+      className="w-11 h-11 rounded-xl flex items-center justify-center border text-indigo-400"
+      style={{ background: D.surf2, borderColor: D.border }}
+    >
+       <Icon className="h-5 w-5" />
     </div>
-    <div className="space-y-2">
-      <h4 className="text-xl font-black text-white" style={{ fontFamily: D.head }}>{title}</h4>
-      <p className="text-sm text-white/40 leading-relaxed font-medium">{description}</p>
+    <div className="space-y-1.5">
+      <h4 className="text-base font-bold text-white" style={{ fontFamily: D.head }}>{title}</h4>
+      <p className="text-xs text-slate-400 leading-relaxed">{description}</p>
     </div>
   </div>
 );

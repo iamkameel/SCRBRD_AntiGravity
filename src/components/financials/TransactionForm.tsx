@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useState, useActionState } from "react";
 import { TransactionActionState } from "@/app/actions/transactionActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function TransactionForm({ mode, transactionAction, initialState, initialData = {} }: TransactionFormProps) {
-  const [state, action] = useFormState(transactionAction, initialState);
+  const [state, action] = useActionState(transactionAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [type, setType] = useState(initialData.type || 'Expense');
 

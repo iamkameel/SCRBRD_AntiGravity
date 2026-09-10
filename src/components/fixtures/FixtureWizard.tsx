@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useState, useEffect, useMemo, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { 
   createSmartFixtureAction, 
   checkFixtureConflictsAction,
@@ -115,7 +115,7 @@ export function FixtureWizard({ teams, fields }: FixtureWizardProps) {
   const isAllowed = ALLOWED_ROLES.includes(currentRole);
 
   const initialState: FixtureActionState = {};
-  const [state, action] = useFormState(createSmartFixtureAction, initialState);
+  const [state, action] = useActionState(createSmartFixtureAction, initialState);
   
   // Wizard Step
   const [step, setStep] = useState(1);

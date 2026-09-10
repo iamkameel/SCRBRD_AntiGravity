@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useState, useActionState } from "react";
 import { EquipmentActionState } from "@/app/actions/equipmentActions";
 import { D, GlobalStyles } from "@/lib/scoring/theme";
 import { 
@@ -75,7 +74,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export function EquipmentForm({ mode, equipmentAction, initialState, initialData = {} }: EquipmentFormProps) {
-  const [state, action] = useFormState(equipmentAction, initialState);
+  const [state, action] = useActionState(equipmentAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
 
   const validateField = (name: string, value: string) => {

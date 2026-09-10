@@ -111,7 +111,7 @@ export function MedicalLog() {
              <HeartPulse className="h-12 w-12 text-rose-500" />
           </div>
           <div className="text-center lg:text-left">
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" 
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-none" 
                 style={{ fontFamily: D.head, color: D.textPrimary }}>
               MEDICAL <span style={{ color: D.rose }}>INTEL</span>
             </h1>

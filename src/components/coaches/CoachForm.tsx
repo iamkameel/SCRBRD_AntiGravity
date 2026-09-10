@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useState, useActionState } from "react";
 import { CoachActionState } from "@/app/actions/coachActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +95,7 @@ const COACH_ATTRIBUTE_GROUPS = {
 };
 
 export function CoachForm({ mode, coachAction, initialState, initialData = {}, schools }: CoachFormProps) {
-  const [state, action] = useFormState(coachAction, initialState);
+  const [state, action] = useActionState(coachAction, initialState);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   
   // Avatar and name state for live preview

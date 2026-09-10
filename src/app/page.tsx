@@ -144,7 +144,7 @@ export default function LandingPage() {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter mb-8 animate-slide-in-up [animation-delay:100ms]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter mb-8 animate-slide-in-up [animation-delay:100ms]">
               CRICKET <span className="text-gradient">OPERATIONS</span>
               <br />
               UPGRADED.
@@ -193,7 +193,7 @@ export default function LandingPage() {
       <section className="py-32 relative overflow-hidden bg-muted/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-6">
               The Six Core Layers
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -239,7 +239,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
             {stats.map((stat, index) => (
               <div key={index} className="text-center group">
-                <div className="text-5xl md:text-7xl font-black text-gradient mb-3 transition-transform duration-500 group-hover:scale-110">{stat.value}</div>
+                <div className="text-4xl md:text-5xl font-black text-gradient mb-3 transition-transform duration-500 group-hover:scale-110">{stat.value}</div>
                 <div className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground opacity-70">{stat.label}</div>
               </div>
             ))}
@@ -252,7 +252,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
             <div className="max-w-2xl">
-              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
                 Powerhouse Capabilities
               </h2>
               <p className="text-xl text-muted-foreground leading-relaxed">
@@ -303,7 +303,7 @@ export default function LandingPage() {
         <div className="relative max-w-5xl mx-auto z-10 group">
           <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-1000 -z-10" />
           <div className="glass-morphism-premium rounded-[40px] p-12 md:p-24 text-center border border-white/10 backdrop-blur-xl">
-            <h2 className="text-5xl md:text-8xl font-black mb-10 tracking-tighter leading-none">
+            <h2 className="text-4xl md:text-5xl font-black mb-10 tracking-tighter leading-none">
               READY TO <span className="text-gradient">OPERATE</span>?
             </h2>
             <p className="text-xl md:text-3xl mb-16 opacity-80 max-w-2xl mx-auto leading-relaxed font-medium">

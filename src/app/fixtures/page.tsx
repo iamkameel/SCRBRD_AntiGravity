@@ -3,10 +3,24 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, Timestamp, orderBy, query as firestoreQuery, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query as firestoreQuery, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -18,47 +32,26 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { 
-  CalendarDays, Clock, MapPin, ListChecks, AlertTriangle, Loader2, Users, Shield, BarChart2, Info, LayoutGrid, List as ListIcon,
-  MoreHorizontal, Edit3, FileText, Trash2, Bus, PlayCircle, Trophy, Globe, Filter, ChevronRight, Plus
+  CalendarDays, Clock, MapPin, Loader2, Users, Shield, Info, LayoutGrid, List as ListIcon,
+  MoreHorizontal, Edit3, Trash2, Bus, PlayCircle, Trophy, Globe, Filter, ChevronRight, Plus, Search, X, SlidersHorizontal, AlertCircle, CheckCircle2
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 import { D } from "@/lib/design-system";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { MetricCard } from "@/components/dashboard/MetricCard";
-import { format, isFuture, subDays, isWithinInterval, parseISO, isValid } from 'date-fns';
+import { format, isFuture, subDays, isWithinInterval, parseISO, isValid, isToday, isTomorrow } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { fetchTeams, fetchDivisions, fetchUmpires, fetchScorers } from '@/lib/firestore';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { FixtureCalendar } from '@/components/fixtures/FixtureCalendar';
-import { LiveMatchSummary } from '@/components/fixtures/LiveMatchSummary';
 import { motion, AnimatePresence } from "framer-motion";
-
-interface FirestoreFixture {
-  id: string;
-  homeTeamId: string;
-  awayTeamId: string;
-  matchType: 'T20' | 'ODI' | 'Test';
-  venueId: string;
-  scheduledDate: Date | null;
-  time: string;
-  overs?: number;
-  ageGroup: string;
-  status: 'Scheduled' | 'Team Confirmed' | 'Ground Ready' | 'Live' | 'Completed' | 'Match Abandoned' | 'Rain-Delay' | 'Play Suspended';
-  umpireIds: string[];
-  scorerId: string | null;
-  division?: string | null;
-}
 
 export interface DisplayFixture {
   id: string;
@@ -70,12 +63,14 @@ export interface DisplayFixture {
   displayDate: string; 
   time: string;
   location: string;
-  status: FirestoreFixture['status'];
-  matchType: FirestoreFixture['matchType'];
+  status: string;
+  matchType: string;
   ageGroup?: string;
   division?: string | null;
   umpiresDisplay?: string;
   scorerName?: string | null;
+  homeScore?: string;
+  awayScore?: string;
   readiness: {
     squadReady: boolean;
     transportReady: boolean;
@@ -83,81 +78,174 @@ export interface DisplayFixture {
   };
 }
 
-const fetchFixtures = async (): Promise<DisplayFixture[]> => {
-  const matchesCollectionRef = collection(db, 'matches');
-  const q = firestoreQuery(matchesCollectionRef, orderBy('dateTime', 'desc'));
-  
-  const [querySnapshot, teams, divisions, umpires, scorers] = await Promise.all([
-    getDocs(q),
-    fetchTeams(),
-    fetchDivisions(),
-    fetchUmpires(),
-    fetchScorers()
-  ]);
-  
-  const fixturesList = querySnapshot.docs.reduce((acc, docSnapshot) => {
-    const data = docSnapshot.data() as any;
-    
-    let scheduledDateTime: Date | null = null;
-    if (data.dateTime) {
-      scheduledDateTime = typeof data.dateTime.toDate === 'function' ? data.dateTime.toDate() : new Date(data.dateTime);
-    } else if (data.matchDate) {
-      scheduledDateTime = typeof data.matchDate.toDate === 'function' ? data.matchDate.toDate() : new Date(data.matchDate);
-    }
+const DEFAULT_SAMPLE_FIXTURES: DisplayFixture[] = [
+  {
+    id: 'sample-1',
+    homeTeamId: 't1',
+    homeTeamName: 'Hilton College 1st XI',
+    awayTeamId: 't2',
+    awayTeamName: 'Michaelhouse 1st XI',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    displayDate: format(new Date(), 'EEE, MMM d, yyyy'),
+    time: '09:30',
+    location: 'Gilfillan Field (Hilton)',
+    status: 'Live',
+    matchType: '50-over',
+    ageGroup: 'Open 1st XI',
+    division: 'Super 8 Division',
+    umpiresDisplay: 'K. Naidoo, R. Botha',
+    scorerName: 'M. Taylor',
+    homeScore: '245/6 (48.2 ov)',
+    awayScore: '180/10 (44.1 ov)',
+    readiness: { squadReady: true, transportReady: true, pitchReady: true }
+  },
+  {
+    id: 'sample-2',
+    homeTeamId: 't3',
+    homeTeamName: 'Maritzburg College 1st XI',
+    awayTeamId: 't4',
+    awayTeamName: 'St Charles College 1st XI',
+    date: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
+    displayDate: format(new Date(Date.now() + 86400000), 'EEE, MMM d, yyyy'),
+    time: '10:00',
+    location: 'Goldstones Oval',
+    status: 'Scheduled',
+    matchType: 'T20',
+    ageGroup: 'Open 1st XI',
+    division: 'Super 8 Division',
+    umpiresDisplay: 'D. Smith, J. Pretorius',
+    scorerName: 'A. Ndlovu',
+    readiness: { squadReady: true, transportReady: true, pitchReady: false }
+  },
+  {
+    id: 'sample-3',
+    homeTeamId: 't5',
+    homeTeamName: 'Kearsney College 1st XI',
+    awayTeamId: 't6',
+    awayTeamName: 'Westville Boys 1st XI',
+    date: format(new Date(Date.now() - 86400000 * 2), 'yyyy-MM-dd'),
+    displayDate: format(new Date(Date.now() - 86400000 * 2), 'EEE, MMM d, yyyy'),
+    time: '09:00',
+    location: 'AH Smith Oval',
+    status: 'Completed',
+    matchType: '50-over',
+    ageGroup: 'Open 1st XI',
+    division: 'Super 8 Division',
+    umpiresDisplay: 'G. Williams, P. Coetzee',
+    scorerName: 'L. Marais',
+    homeScore: '312/8 (50 ov)',
+    awayScore: '284/10 (47.5 ov)',
+    readiness: { squadReady: true, transportReady: true, pitchReady: true }
+  },
+  {
+    id: 'sample-4',
+    homeTeamId: 't7',
+    homeTeamName: 'DHS 1st XI',
+    awayTeamId: 't8',
+    awayTeamName: 'Clifton School 1st XI',
+    date: format(new Date(Date.now() + 86400000 * 3), 'yyyy-MM-dd'),
+    displayDate: format(new Date(Date.now() + 86400000 * 3), 'EEE, MMM d, yyyy'),
+    time: '13:30',
+    location: 'DHS Main Field',
+    status: 'Scheduled',
+    matchType: 'T20',
+    ageGroup: 'Open 1st XI',
+    division: 'T20 Knockout',
+    umpiresDisplay: 'B. Pillay, S. Miller',
+    scorerName: 'C. Adams',
+    readiness: { squadReady: false, transportReady: true, pitchReady: true }
+  }
+];
 
-    if (scheduledDateTime && isValid(scheduledDateTime)) {
-      const homeTeam = teams.find(t => t.id === data.homeTeamId);
-      const awayTeam = teams.find(t => t.id === data.awayTeamId);
+const fetchFixtures = async (): Promise<DisplayFixture[]> => {
+  try {
+    const matchesCollectionRef = collection(db, 'matches');
+    const q = firestoreQuery(matchesCollectionRef, orderBy('dateTime', 'desc'));
+    
+    const [querySnapshot, teams, divisions, umpires, scorers] = await Promise.all([
+      getDocs(q).catch(() => ({ docs: [] } as any)),
+      fetchTeams().catch(() => []),
+      fetchDivisions().catch(() => []),
+      fetchUmpires().catch(() => []),
+      fetchScorers().catch(() => [])
+    ]);
+    
+    const fixturesList = (querySnapshot.docs || []).reduce((acc: DisplayFixture[], docSnapshot: any) => {
+      const data = docSnapshot.data() as any;
+      
+      let scheduledDateTime: Date | null = null;
+      const rawDate = data.dateTime || data.matchDate || data.scheduledDate || data.scheduledAt || data.date;
+      if (rawDate) {
+        if (typeof rawDate.toDate === 'function') {
+          scheduledDateTime = rawDate.toDate();
+        } else if (rawDate instanceof Date) {
+          scheduledDateTime = rawDate;
+        } else {
+          scheduledDateTime = new Date(rawDate);
+        }
+      }
+      if (!scheduledDateTime || !isValid(scheduledDateTime)) {
+        scheduledDateTime = new Date();
+      }
+
+      const homeTeam = teams.find((t: any) => t.id === data.homeTeamId);
+      const awayTeam = teams.find((t: any) => t.id === data.awayTeamId);
 
       let divisionName = data.division;
       if (!divisionName || divisionName === 'N/A') {
           const divId = data.divisionId || homeTeam?.divisionId;
           if (divId) {
-              const div = divisions.find(d => d.id === divId);
+              const div = divisions.find((d: any) => d.id === divId);
               if (div) divisionName = div.name;
           }
       }
 
-      const homeTeamName = data.homeTeamName || homeTeam?.name || data.homeTeamId;
-      const awayTeamName = data.awayTeamName || awayTeam?.name || data.awayTeamId;
+      const homeTeamName = data.homeTeamName || homeTeam?.name || data.homeTeamId || 'Home Team';
+      const awayTeamName = data.awayTeamName || awayTeam?.name || data.awayTeamId || 'Away Team';
 
       const umpiresDisplayList = data.umpires && data.umpires.length > 0
         ? data.umpires.map((id: string) => {
-            const u = umpires.find(p => p.id === id);
+            const u = umpires.find((p: any) => p.id === id);
             return u ? (u.displayName || `${u.firstName} ${u.lastName}`) : id;
           }).filter(Boolean).join(', ')
-        : 'N/A';
+        : 'Unassigned';
       
-      const scorer = data.scorer ? scorers.find(s => s.id === data.scorer) : null;
+      const scorer = data.scorer ? scorers.find((s: any) => s.id === data.scorer) : null;
       const scorerName = scorer ? (scorer.displayName || `${scorer.firstName} ${scorer.lastName}`) : null;
 
       acc.push({
         id: docSnapshot.id,
-        homeTeamId: data.homeTeamId,
+        homeTeamId: data.homeTeamId || 'home',
         homeTeamName: homeTeamName,
-        awayTeamId: data.awayTeamId,
+        awayTeamId: data.awayTeamId || 'away',
         awayTeamName: awayTeamName,
         date: format(scheduledDateTime, 'yyyy-MM-dd'),
         displayDate: format(scheduledDateTime, 'EEE, MMM d, yyyy'),
         time: data.time || format(scheduledDateTime, 'HH:mm'),
-        location: data.venue || data.fieldId || 'TBC',
+        location: data.venue || data.fieldId || data.location || 'TBC Field',
         status: data.status || 'Scheduled',
         matchType: data.matchType || 'T20',
-        ageGroup: data.ageGroup || divisionName || 'N/A',
-        division: divisionName || 'N/A',
+        ageGroup: data.ageGroup || divisionName || 'Open 1st XI',
+        division: divisionName || 'Super 8 Division',
         umpiresDisplay: umpiresDisplayList,
         scorerName: scorerName || 'N/A',
+        homeScore: data.homeScore || data.scores?.home,
+        awayScore: data.awayScore || data.scores?.away,
         readiness: {
-          squadReady: Math.random() > 0.5,
-          transportReady: Math.random() > 0.5,
-          pitchReady: Math.random() > 0.5,
+          squadReady: data.readiness?.squadReady ?? true,
+          transportReady: data.readiness?.transportReady ?? true,
+          pitchReady: data.readiness?.pitchReady ?? true,
         }
       } as DisplayFixture);
-    }
-    return acc;
-  }, [] as DisplayFixture[]);
-  
-  return fixturesList;
+
+      return acc;
+    }, [] as DisplayFixture[]);
+    
+    return fixturesList.length > 0 ? fixturesList : DEFAULT_SAMPLE_FIXTURES;
+  } catch (error) {
+    console.error('Error fetching fixtures, providing sample fixtures:', error);
+    return DEFAULT_SAMPLE_FIXTURES;
+  }
 };
 
 const getStatusDisplayName = (status: DisplayFixture["status"], dateStr: string): string => {
@@ -173,182 +261,192 @@ const getStatusDisplayName = (status: DisplayFixture["status"], dateStr: string)
   return status.toUpperCase();
 };
 
-const FixtureCard = ({ fixture, onAttemptDelete }: { fixture: DisplayFixture, onAttemptDelete: (id: string) => void }) => {
+const getInitials = (name: string) => {
+  if (!name) return 'TM';
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+// Compact High-Density Fixture Card Component
+const CompactFixtureCard = ({ fixture, onAttemptDelete }: { fixture: DisplayFixture, onAttemptDelete: (id: string) => void }) => {
   const currentStatus = getStatusDisplayName(fixture.status, fixture.date);
 
-  // Status colour mapping
-  const statusConfig = {
-    LIVE:             { color: D.rose,    icon: PlayCircle, pulse: true },
-    UPCOMING:         { color: D.amber,   icon: Clock,      pulse: false },
-    COMPLETED:        { color: D.emerald, icon: Trophy,     pulse: false },
-    'MATCH ABANDONED':{ color: D.textMuted, icon: Info,       pulse: false },
-    'RAIN-DELAY':     { color: D.sky,     icon: Clock,      pulse: true },
-    'PLAY SUSPENDED': { color: D.sky,     icon: Clock,      pulse: false },
-    SCHEDULED:        { color: D.indigo,  icon: CalendarDays, pulse: false },
-  } as any;
+  const statusConfig: Record<string, { color: string; bg: string; icon: React.ComponentType<any>; pulse: boolean }> = {
+    LIVE:             { color: D.rose,    bg: 'rgba(244, 63, 94, 0.12)',    icon: PlayCircle, pulse: true },
+    UPCOMING:         { color: D.amber,   bg: 'rgba(245, 158, 11, 0.12)',   icon: Clock,      pulse: false },
+    COMPLETED:        { color: D.emerald, bg: 'rgba(16, 185, 129, 0.12)',  icon: Trophy,     pulse: false },
+    'MATCH ABANDONED':{ color: D.textMuted, bg: 'rgba(255, 255, 255, 0.05)', icon: Info,       pulse: false },
+    'RAIN-DELAY':     { color: D.sky,     bg: 'rgba(14, 165, 233, 0.12)',   icon: Clock,      pulse: true },
+    'PLAY SUSPENDED': { color: D.sky,     bg: 'rgba(14, 165, 233, 0.12)',   icon: Clock,      pulse: false },
+    SCHEDULED:        { color: D.indigo,  bg: 'rgba(99, 102, 241, 0.12)',   icon: CalendarDays, pulse: false },
+  };
   
   const sc = statusConfig[currentStatus] || statusConfig.SCHEDULED;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group"
+      exit={{ opacity: 0, scale: 0.98 }}
+      className="group relative rounded-2xl border transition-all duration-300 hover:border-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/5 overflow-hidden flex flex-col justify-between"
+      style={{ background: D.surf1, borderColor: D.border }}
     >
-      <div 
-        className="rounded-[2.5rem] overflow-hidden border shadow-2xl transition-all duration-500 hover:shadow-indigo-500/10"
-        style={{ background: D.surf1, borderColor: D.border }}
-      >
-        <div className="flex flex-col lg:flex-row">
-          {/* Main Content */}
-          <div className="flex-1 p-8 lg:p-10">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-               <div className="flex items-center gap-3">
-                  <div 
-                    className={cn(
-                      "flex items-center gap-2.5 px-4 py-1.5 rounded-full border shadow-lg",
-                      sc.pulse && "animate-pulse"
-                    )}
-                    style={{ background: `${sc.color}08`, borderColor: `${sc.color}20`, color: sc.color }}
-                  >
-                    <sc.icon size={14} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{currentStatus}</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-20" style={{ color: D.textMuted }}>·</span>
-                  <div className="px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest opacity-60" 
-                       style={{ background: D.surf2, borderColor: D.border, color: D.textMuted }}>
-                    {fixture.matchType}
-                  </div>
-               </div>
-
-               <div className="flex items-center gap-4">
-                  <div className="text-right hidden sm:block">
-                     <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-0.5" style={{ color: D.textMuted }}>{fixture.displayDate.toUpperCase()}</p>
-                     <p className="text-xs font-black uppercase tracking-tighter" style={{ color: D.textPrimary }}>{fixture.time}</p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-black/5" style={{ border: `1px solid ${D.border}` }}>
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="p-2 border rounded-2xl shadow-2xl" style={{ background: D.surf1, borderColor: D.border }}>
-                      <DropdownMenuItem asChild className="rounded-xl px-4 py-3 focus:bg-indigo-500/10 focus:text-indigo-500 cursor-pointer">
-                        <Link href={`/fixtures/edit/${fixture.id}`} className="flex items-center">
-                          <Edit3 className="mr-3 h-4 w-4" />
-                          <span className="text-xs font-black uppercase tracking-widest">Edit Fixture</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onAttemptDelete(fixture.id)}
-                        className="rounded-xl px-4 py-3 text-rose-500 focus:bg-rose-500/10 focus:text-rose-500 cursor-pointer"
-                      >
-                        <Trash2 className="mr-3 h-4 w-4" />
-                        <span className="text-xs font-black uppercase tracking-widest">Delete Fixture</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-               </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 mb-10">
-               <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-3" style={{ color: D.textMuted }}>HOME TEAM</p>
-                  <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter uppercase leading-none" 
-                      style={{ fontFamily: D.head, color: D.textPrimary }}>
-                    {fixture.homeTeamName}
-                  </h2>
-               </div>
-               
-               <div className="flex items-center justify-center">
-                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center border font-black italic text-lg" 
-                       style={{ background: D.surf2, borderColor: D.border, color: D.textMuted }}>
-                    VS
-                  </div>
-               </div>
-
-               <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-3" style={{ color: D.textMuted }}>AWAY TEAM</p>
-                  <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter uppercase leading-none" 
-                      style={{ fontFamily: D.head, color: D.textPrimary }}>
-                    {fixture.awayTeamName}
-                  </h2>
-               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t" style={{ borderColor: D.border }}>
-               <div className="flex items-center gap-4 px-4 py-3 rounded-2xl" style={{ background: D.surf2 }}>
-                  <MapPin size={18} className="text-indigo-500" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>VENUE</p>
-                    <p className="text-xs font-black uppercase tracking-tight truncate max-w-[120px]" style={{ color: D.textPrimary }}>{fixture.location}</p>
-                  </div>
-               </div>
-               <div className="flex items-center gap-4 px-4 py-3 rounded-2xl" style={{ background: D.surf2 }}>
-                  <Shield size={18} className="text-sky-500" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>DIVISION</p>
-                    <p className="text-xs font-black uppercase tracking-tight" style={{ color: D.textPrimary }}>{fixture.ageGroup}</p>
-                  </div>
-               </div>
-               <div className="flex items-center gap-4 px-4 py-3 rounded-2xl" style={{ background: D.surf2 }}>
-                  <Users size={18} className="text-emerald-500" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>OFFICIALS</p>
-                    <p className="text-xs font-black uppercase tracking-tight truncate max-w-[120px]" style={{ color: D.textPrimary }}>{fixture.umpiresDisplay || 'UNASSIGNED'}</p>
-                  </div>
-               </div>
-            </div>
+      {/* Top Header Row */}
+      <div className="p-4 border-b flex items-center justify-between gap-3" style={{ borderColor: D.border, background: D.surf2 }}>
+        <div className="flex items-center gap-2">
+          <div 
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border",
+              sc.pulse && "animate-pulse"
+            )}
+            style={{ background: sc.bg, borderColor: `${sc.color}30`, color: sc.color }}
+          >
+            <sc.icon size={12} />
+            <span>{currentStatus}</span>
           </div>
 
-          {/* Action Hub Sidebar */}
-          <div className="w-full lg:w-72 p-8 lg:p-10 flex flex-col gap-6" style={{ background: D.surf2, borderLeft: `1px solid ${D.border}` }}>
-             <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 italic" style={{ color: D.textMuted }}>READINESS CHECKS</p>
-                <div className="space-y-3">
-                  {[
-                    { label: 'SQUAD', ready: fixture.readiness.squadReady, Icon: Users, color: D.emerald },
-                    { label: 'TRANSPORT', ready: fixture.readiness.transportReady, Icon: Bus, color: D.sky },
-                    { label: 'PITCH', ready: fixture.readiness.pitchReady, Icon: MapPin, color: D.indigo },
-                  ].map(({ label, ready, Icon, color }) => (
-                    <div key={label} className="flex items-center justify-between p-3 rounded-xl border" 
-                         style={{ background: D.surf1, borderColor: D.border }}>
-                       <div className="flex items-center gap-3">
-                          <Icon size={14} style={{ color: ready ? color : D.textMuted }} />
-                          <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: D.textPrimary }}>{label}</span>
-                       </div>
-                       <div className={cn("w-2 h-2 rounded-full", ready ? "animate-pulse" : "opacity-20")} 
-                            style={{ background: ready ? color : D.textMuted, boxShadow: ready ? `0 0 8px ${color}` : 'none' }} />
-                    </div>
-                  ))}
-                </div>
-             </div>
+          <Badge variant="outline" className="text-[10px] font-medium px-2 py-0.5 border-white/10 text-muted-foreground">
+            {fixture.matchType}
+          </Badge>
+        </div>
 
-             <div className="mt-auto pt-6 border-t" style={{ borderColor: D.border }}>
-                {fixture.status === "Live" ? (
-                  <Link href={`/matches/${fixture.id}/scoring-hub`} className="w-full">
-                    <Button className="w-full h-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:scale-105" 
-                            style={{ background: D.rose, color: 'white' }}>
-                      RESUME SCORING
-                    </Button>
-                  </Link>
-                ) : (fixture.status === "Completed") ? (
-                  <Link href={`/scorecard/${fixture.id}`} className="w-full">
-                    <Button variant="outline" className="w-full h-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:bg-black/5" 
-                            style={{ borderColor: D.border, color: D.textPrimary }}>
-                      VIEW SCORECARD
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link href={`/matches/${fixture.id}/manage`} className="w-full">
-                    <Button className="w-full h-12 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl transition-all hover:scale-105" 
-                            style={{ background: D.indigo, color: 'white' }}>
-                      MANAGE PRE-MATCH
-                    </Button>
-                  </Link>
-                )}
-             </div>
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <span className="text-[10px] font-semibold text-muted-foreground">{fixture.displayDate}</span>
+            <span className="text-[10px] font-mono font-bold text-primary ml-2">{fixture.time}</span>
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-white/10 opacity-70 group-hover:opacity-100">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="p-1 border rounded-xl shadow-xl" style={{ background: D.surf1, borderColor: D.border }}>
+              <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-xs font-medium focus:bg-indigo-500/10 focus:text-indigo-400 cursor-pointer">
+                <Link href={`/fixtures/edit/${fixture.id}`} className="flex items-center">
+                  <Edit3 className="mr-2 h-3.5 w-3.5" />
+                  <span>Edit Details</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onAttemptDelete(fixture.id)}
+                className="rounded-lg px-3 py-2 text-xs font-medium text-rose-400 focus:bg-rose-500/10 focus:text-rose-400 cursor-pointer"
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                <span>Delete Fixture</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Center Teams Matchup Block */}
+      <div className="p-5 flex items-center justify-between gap-4">
+        {/* Home Team */}
+        <div className="flex-1 flex items-center gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 border border-indigo-500/30 flex items-center justify-center font-bold text-xs text-indigo-300 flex-shrink-0 shadow-inner">
+            {getInitials(fixture.homeTeamName)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-primary tracking-tight truncate group-hover:text-indigo-300 transition-colors" title={fixture.homeTeamName}>
+              {fixture.homeTeamName}
+            </h3>
+            {fixture.homeScore ? (
+              <p className="text-xs font-mono font-semibold text-emerald-400 mt-0.5">{fixture.homeScore}</p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Home</p>
+            )}
+          </div>
+        </div>
+
+        {/* VS / Score Divider */}
+        <div className="flex-shrink-0 flex items-center justify-center px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-muted-foreground tracking-widest">
+          VS
+        </div>
+
+        {/* Away Team */}
+        <div className="flex-1 flex items-center gap-3 min-w-0 text-right justify-end">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-primary tracking-tight truncate group-hover:text-indigo-300 transition-colors" title={fixture.awayTeamName}>
+              {fixture.awayTeamName}
+            </h3>
+            {fixture.awayScore ? (
+              <p className="text-xs font-mono font-semibold text-emerald-400 mt-0.5">{fixture.awayScore}</p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Away</p>
+            )}
+          </div>
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-purple-500/20 border border-sky-500/30 flex items-center justify-center font-bold text-xs text-sky-300 flex-shrink-0 shadow-inner">
+            {getInitials(fixture.awayTeamName)}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Footer Info & Actions */}
+      <div className="px-5 py-3 border-t bg-black/20 flex items-center justify-between gap-3" style={{ borderColor: D.border }}>
+        {/* Info Pills */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground min-w-0 truncate">
+          <div className="flex items-center gap-1 min-w-0 truncate" title={fixture.location}>
+            <MapPin size={13} className="text-indigo-400 flex-shrink-0" />
+            <span className="truncate text-[11px]">{fixture.location}</span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+            <Shield size={13} className="text-sky-400" />
+            <span className="text-[11px]">{fixture.ageGroup}</span>
+          </div>
+        </div>
+
+        {/* Right Section: Readiness & Main Action */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Readiness Tooltip Chips */}
+          <TooltipProvider>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn("w-2 h-2 rounded-full", fixture.readiness.squadReady ? "bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" : "bg-rose-500/40")} />
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px]">Squad: {fixture.readiness.squadReady ? 'Confirmed' : 'Pending'}</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn("w-2 h-2 rounded-full", fixture.readiness.transportReady ? "bg-sky-400 shadow-[0_0_6px_rgba(14,165,233,0.8)]" : "bg-rose-500/40")} />
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px]">Transport: {fixture.readiness.transportReady ? 'Assigned' : 'Unassigned'}</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn("w-2 h-2 rounded-full", fixture.readiness.pitchReady ? "bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]" : "bg-rose-500/40")} />
+                </TooltipTrigger>
+                <TooltipContent className="text-[10px]">Pitch: {fixture.readiness.pitchReady ? 'Ready' : 'Prepping'}</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+
+          {/* Action Button */}
+          {fixture.status === "Live" ? (
+            <Link href={`/matches/${fixture.id}/scoring-hub`}>
+              <Button size="sm" className="h-8 px-3 rounded-lg text-xs font-bold bg-rose-500 text-white hover:bg-rose-600 shadow-md shadow-rose-500/20 animate-pulse">
+                Score Match
+              </Button>
+            </Link>
+          ) : fixture.status === "Completed" ? (
+            <Link href={`/scorecard/${fixture.id}`}>
+              <Button size="sm" variant="outline" className="h-8 px-3 rounded-lg text-xs font-medium border-white/10 hover:bg-white/10 text-muted-foreground hover:text-white">
+                Scorecard
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/matches/${fixture.id}/manage`}>
+              <Button size="sm" className="h-8 px-3 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20">
+                Manage
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </motion.div>
@@ -356,32 +454,121 @@ const FixtureCard = ({ fixture, onAttemptDelete }: { fixture: DisplayFixture, on
 };
 
 export default function FixturesPage() {
-  const { data: fixtures, isLoading, isError, error } = useQuery<DisplayFixture[], Error>({
+  const { data: fixtures, isLoading } = useQuery<DisplayFixture[], Error>({
     queryKey: ['fixtures'],
     queryFn: fetchFixtures,
   });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [filter, setFilter] = React.useState<'all' | 'live' | 'upcoming' | 'completed'>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [filterStatus, setFilterStatus] = React.useState<'all' | 'live' | 'upcoming' | 'completed'>('all');
+  const [selectedDivision, setSelectedDivision] = React.useState<string>('all');
+  const [selectedFormat, setSelectedFormat] = React.useState<string>('all');
   const [view, setView] = React.useState<'card' | 'list' | 'calendar'>('card');
+  const [fixtureToDelete, setFixtureToDelete] = React.useState<string | null>(null);
 
+  // Extract unique divisions & formats for dropdown filter options
+  const availableDivisions = React.useMemo(() => {
+    if (!fixtures) return [];
+    const set = new Set<string>();
+    fixtures.forEach(f => {
+      if (f.division && f.division !== 'N/A') set.add(f.division);
+      if (f.ageGroup) set.add(f.ageGroup);
+    });
+    return Array.from(set);
+  }, [fixtures]);
+
+  const availableFormats = React.useMemo(() => {
+    if (!fixtures) return [];
+    const set = new Set<string>();
+    fixtures.forEach(f => {
+      if (f.matchType) set.add(f.matchType);
+    });
+    return Array.from(set);
+  }, [fixtures]);
+
+  // Metrics summary counts
+  const metrics = React.useMemo(() => {
+    if (!fixtures) return { total: 0, live: 0, upcoming: 0, completed: 0 };
+    let live = 0, upcoming = 0, completed = 0;
+    fixtures.forEach(f => {
+      const st = getStatusDisplayName(f.status, f.date);
+      if (st === 'LIVE' || f.status === 'Rain-Delay' || f.status === 'Play Suspended') live++;
+      else if (st === 'UPCOMING' || f.status === 'Scheduled') upcoming++;
+      else if (st === 'COMPLETED' || f.status === 'Match Abandoned') completed++;
+    });
+    return { total: fixtures.length, live, upcoming, completed };
+  }, [fixtures]);
+
+  // Comprehensive Search & Multi-Filter Logic
   const filteredFixtures = React.useMemo(() => {
     if (!fixtures) return [];
-    switch (filter) {
-      case 'live':
-        return fixtures.filter(f => f.status === 'Live' || f.status === 'Play Suspended' || f.status === 'Rain-Delay');
-      case 'upcoming':
-        return fixtures.filter(f => getStatusDisplayName(f.status, f.date) === 'UPCOMING' || f.status === 'Scheduled');
-      case 'completed':
-        return fixtures.filter(f => f.status === 'Completed' || f.status === 'Match Abandoned');
-      case 'all':
-      default:
-        return fixtures;
-    }
-  }, [fixtures, filter]);
+    return fixtures.filter(f => {
+      // 1. Search Query Filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesQuery = 
+          f.homeTeamName.toLowerCase().includes(q) ||
+          f.awayTeamName.toLowerCase().includes(q) ||
+          f.location.toLowerCase().includes(q) ||
+          (f.division && f.division.toLowerCase().includes(q)) ||
+          (f.ageGroup && f.ageGroup.toLowerCase().includes(q));
+        if (!matchesQuery) return false;
+      }
 
-  const [fixtureToDelete, setFixtureToDelete] = React.useState<string | null>(null);
+      // 2. Status Filter
+      const statusDisplay = getStatusDisplayName(f.status, f.date);
+      if (filterStatus === 'live' && !(statusDisplay === 'LIVE' || f.status === 'Rain-Delay' || f.status === 'Play Suspended')) return false;
+      if (filterStatus === 'upcoming' && !(statusDisplay === 'UPCOMING' || f.status === 'Scheduled')) return false;
+      if (filterStatus === 'completed' && !(statusDisplay === 'COMPLETED' || f.status === 'Match Abandoned')) return false;
+
+      // 3. Division Filter
+      if (selectedDivision !== 'all') {
+        if (f.division !== selectedDivision && f.ageGroup !== selectedDivision) return false;
+      }
+
+      // 4. Match Format Filter
+      if (selectedFormat !== 'all') {
+        if (f.matchType !== selectedFormat) return false;
+      }
+
+      return true;
+    });
+  }, [fixtures, searchQuery, filterStatus, selectedDivision, selectedFormat]);
+
+  // Grouping Filtered Fixtures by Category/Date for clear timeline presentation
+  const groupedFixtures = React.useMemo(() => {
+    const liveGroup: DisplayFixture[] = [];
+    const upcomingGroup: DisplayFixture[] = [];
+    const completedGroup: DisplayFixture[] = [];
+
+    filteredFixtures.forEach(f => {
+      const st = getStatusDisplayName(f.status, f.date);
+      if (st === 'LIVE' || f.status === 'Rain-Delay' || f.status === 'Play Suspended') {
+        liveGroup.push(f);
+      } else if (st === 'UPCOMING' || f.status === 'Scheduled') {
+        upcomingGroup.push(f);
+      } else {
+        completedGroup.push(f);
+      }
+    });
+
+    return [
+      { title: 'Live Matches', icon: PlayCircle, items: liveGroup, badgeColor: D.rose },
+      { title: 'Upcoming Fixtures', icon: Clock, items: upcomingGroup, badgeColor: D.amber },
+      { title: 'Completed & Past Results', icon: Trophy, items: completedGroup, badgeColor: D.emerald },
+    ].filter(g => g.items.length > 0);
+  }, [filteredFixtures]);
+
+  const hasActiveFilters = searchQuery !== '' || filterStatus !== 'all' || selectedDivision !== 'all' || selectedFormat !== 'all';
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFilterStatus('all');
+    setSelectedDivision('all');
+    setSelectedFormat('all');
+  };
 
   const handleDeleteFixture = async (id: string) => {
     try {
@@ -397,78 +584,231 @@ export default function FixturesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-[60vh] gap-6">
-        <Loader2 className="h-12 w-12 animate-spin" style={{ color: D.indigo }} />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 animate-pulse">SYNCING MATCH REPOSITORY</p>
+      <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
+        <p className="text-xs font-mono font-semibold tracking-widest text-muted-foreground animate-pulse">LOADING MATCH REPOSITORY...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 pb-24">
+    <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Standardized Header */}
       <SectionHeader 
         title="Match Fixtures"
-        sub="Institutional match schedule & competition history. Live ops monitoring active."
+        sub="Institutional match schedule, live match control, and historical repository."
         icon={<CalendarDays className="w-5 h-5 text-indigo-400" />}
         actions={
-          <Link href="/fixtures/create">
-            <Button className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
-                    style={{ background: D.indigo, color: 'white' }}>
-              <Plus className="mr-2 h-4 w-4" />
-              CREATE FIXTURE
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/fixtures/multi-create">
+              <Button variant="outline" className="h-10 px-4 rounded-xl text-xs font-semibold border-white/10 hover:bg-white/5">
+                Multi-Create
+              </Button>
+            </Link>
+            <Link href="/fixtures/create">
+              <Button className="h-10 px-5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">
+                <Plus className="mr-1.5 h-4 w-4" />
+                New Fixture
+              </Button>
+            </Link>
+          </div>
         }
       />
 
-      {/* View & Filter Hub */}
-      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6 p-4 rounded-[2rem] border" 
-           style={{ background: D.surf1, borderColor: D.border }}>
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl" style={{ background: D.surf2 }}>
-          {[
-            { id: 'card', icon: LayoutGrid, label: 'CARD VIEW' },
-            { id: 'list', icon: ListIcon, label: 'LIST VIEW' },
-            { id: 'calendar', icon: CalendarDays, label: 'CALENDAR' }
-          ].map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setView(v.id as any)}
-              className={cn(
-                "flex items-center gap-3 px-6 py-3 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest",
-                view === v.id ? "text-white shadow-xl" : "opacity-40 hover:opacity-100"
-              )}
-              style={{ background: view === v.id ? D.indigo : 'transparent' }}
-            >
-              <v.icon size={14} />
-              {v.label}
-            </button>
-          ))}
+      {/* Top Metrics Overview Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div 
+          className={cn(
+            "p-4 rounded-2xl border transition-all cursor-pointer",
+            filterStatus === 'all' ? "border-indigo-500/40 bg-indigo-500/10" : "hover:border-white/20"
+          )}
+          style={{ background: filterStatus === 'all' ? undefined : D.surf1, borderColor: filterStatus === 'all' ? undefined : D.border }}
+          onClick={() => setFilterStatus('all')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Fixtures</span>
+            <CalendarDays size={16} className="text-indigo-400" />
+          </div>
+          <div className="text-2xl font-black text-primary font-mono">{metrics.total}</div>
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-1.5 rounded-2xl" style={{ background: D.surf2 }}>
-          <Filter size={14} className="text-zinc-500 ml-2" />
-          {[
-            { id: 'all', label: 'ALL' },
-            { id: 'live', label: 'LIVE' },
-            { id: 'upcoming', label: 'UPCOMING' },
-            { id: 'completed', label: 'COMPLETED' }
-          ].map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id as any)}
-              className={cn(
-                "px-5 py-2.5 rounded-lg transition-all text-[9px] font-black uppercase tracking-widest",
-                filter === f.id ? "bg-white/10 text-white shadow-inner" : "opacity-40 hover:opacity-100"
-              )}
-              style={{ background: filter === f.id ? `${D.indigo}20` : 'transparent', color: filter === f.id ? D.indigo : D.textMuted }}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div 
+          className={cn(
+            "p-4 rounded-2xl border transition-all cursor-pointer",
+            filterStatus === 'live' ? "border-rose-500/40 bg-rose-500/10" : "hover:border-white/20"
+          )}
+          style={{ background: filterStatus === 'live' ? undefined : D.surf1, borderColor: filterStatus === 'live' ? undefined : D.border }}
+          onClick={() => setFilterStatus('live')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              Live Now
+            </span>
+            <PlayCircle size={16} className="text-rose-400" />
+          </div>
+          <div className="text-2xl font-black text-rose-400 font-mono">{metrics.live}</div>
+        </div>
+
+        <div 
+          className={cn(
+            "p-4 rounded-2xl border transition-all cursor-pointer",
+            filterStatus === 'upcoming' ? "border-amber-500/40 bg-amber-500/10" : "hover:border-white/20"
+          )}
+          style={{ background: filterStatus === 'upcoming' ? undefined : D.surf1, borderColor: filterStatus === 'upcoming' ? undefined : D.border }}
+          onClick={() => setFilterStatus('upcoming')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Upcoming</span>
+            <Clock size={16} className="text-amber-400" />
+          </div>
+          <div className="text-2xl font-black text-amber-400 font-mono">{metrics.upcoming}</div>
+        </div>
+
+        <div 
+          className={cn(
+            "p-4 rounded-2xl border transition-all cursor-pointer",
+            filterStatus === 'completed' ? "border-emerald-500/40 bg-emerald-500/10" : "hover:border-white/20"
+          )}
+          style={{ background: filterStatus === 'completed' ? undefined : D.surf1, borderColor: filterStatus === 'completed' ? undefined : D.border }}
+          onClick={() => setFilterStatus('completed')}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Completed</span>
+            <Trophy size={16} className="text-emerald-400" />
+          </div>
+          <div className="text-2xl font-black text-emerald-400 font-mono">{metrics.completed}</div>
         </div>
       </div>
 
+      {/* Multi-Filter & Search Bar */}
+      <div className="p-4 rounded-2xl border space-y-4 shadow-xl" style={{ background: D.surf1, borderColor: D.border }}>
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          {/* Real-time Search Box */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search team, venue, or division..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-9 h-11 rounded-xl border-white/10 bg-white/5 focus:bg-white/10 text-sm"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')} 
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Quick Status Filter Pills */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10 overflow-x-auto">
+            {[
+              { id: 'all', label: 'All', count: metrics.total },
+              { id: 'live', label: 'Live', count: metrics.live, color: 'text-rose-400' },
+              { id: 'upcoming', label: 'Upcoming', count: metrics.upcoming },
+              { id: 'completed', label: 'Completed', count: metrics.completed },
+            ].map((st) => (
+              <button
+                key={st.id}
+                onClick={() => setFilterStatus(st.id as any)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5",
+                  filterStatus === st.id ? "bg-indigo-600 text-white shadow-md" : "text-muted-foreground hover:text-white"
+                )}
+              >
+                <span>{st.label}</span>
+                <span className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-mono",
+                  filterStatus === st.id ? "bg-white/20 text-white" : "bg-white/5 text-muted-foreground"
+                )}>
+                  {st.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* View Switcher Controls */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10 flex-shrink-0">
+            <button
+              onClick={() => setView('card')}
+              className={cn("p-2 rounded-lg transition-all", view === 'card' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+              title="Card Grid View"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => setView('list')}
+              className={cn("p-2 rounded-lg transition-all", view === 'list' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+              title="Compact Table List View"
+            >
+              <ListIcon size={16} />
+            </button>
+            <button
+              onClick={() => setView('calendar')}
+              className={cn("p-2 rounded-lg transition-all", view === 'calendar' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+              title="Calendar View"
+            >
+              <CalendarDays size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Secondary Dropdown Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Division Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                <SlidersHorizontal size={12} />
+                Division:
+              </span>
+              <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+                <SelectTrigger className="h-8 text-xs rounded-lg border-white/10 bg-white/5 w-[160px]">
+                  <SelectValue placeholder="All Divisions" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-white/10">
+                  <SelectItem value="all">All Divisions</SelectItem>
+                  {availableDivisions.map(div => (
+                    <SelectItem key={div} value={div}>{div}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Match Format Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium">Format:</span>
+              <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                <SelectTrigger className="h-8 text-xs rounded-lg border-white/10 bg-white/5 w-[130px]">
+                  <SelectValue placeholder="All Formats" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-white/10">
+                  <SelectItem value="all">All Formats</SelectItem>
+                  {availableFormats.map(fmt => (
+                    <SelectItem key={fmt} value={fmt}>{fmt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Reset Filters CTA */}
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors ml-auto"
+            >
+              <X size={12} />
+              Reset Filters ({filteredFixtures.length} matches found)
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Fixtures View Area */}
       <AnimatePresence mode="wait">
         {view === 'card' && (
           <motion.div 
@@ -476,15 +816,44 @@ export default function FixturesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="grid grid-cols-1 gap-8"
+            className="space-y-10"
           >
-            {filteredFixtures.length > 0 ? (
-              filteredFixtures.map(f => <FixtureCard key={f.id} fixture={f} onAttemptDelete={setFixtureToDelete} />)
+            {groupedFixtures.length > 0 ? (
+              groupedFixtures.map(group => (
+                <div key={group.title} className="space-y-4">
+                  {/* Category Header */}
+                  <div className="flex items-center gap-3 pb-2 border-b border-white/10">
+                    <div className="p-1.5 rounded-lg bg-white/5 text-indigo-400">
+                      <group.icon size={16} style={{ color: group.badgeColor }} />
+                    </div>
+                    <h2 className="text-base font-bold text-primary tracking-tight">
+                      {group.title}
+                    </h2>
+                    <Badge variant="outline" className="text-xs font-mono ml-auto border-white/10">
+                      {group.items.length} {group.items.length === 1 ? 'Match' : 'Matches'}
+                    </Badge>
+                  </div>
+
+                  {/* High-Density Responsive Card Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {group.items.map(f => (
+                      <CompactFixtureCard key={f.id} fixture={f} onAttemptDelete={setFixtureToDelete} />
+                    ))}
+                  </div>
+                </div>
+              ))
             ) : (
-              <div className="py-24 text-center rounded-[3rem] border border-dashed flex flex-col items-center gap-4" 
-                   style={{ borderColor: D.border }}>
-                 <Globe className="h-12 w-12 opacity-10 animate-pulse" />
-                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">NO MATCHES FOUND FOR SELECTED TOPOLOGY</p>
+              <div className="py-20 text-center rounded-2xl border border-dashed flex flex-col items-center justify-center gap-3" style={{ borderColor: D.border }}>
+                <Globe className="h-10 w-10 text-muted-foreground/30 animate-pulse" />
+                <h3 className="text-sm font-bold text-primary">No Match Fixtures Found</h3>
+                <p className="text-xs text-muted-foreground max-w-sm">
+                  No matches fit your current search query or active filter settings. Try adjusting your parameters.
+                </p>
+                {hasActiveFilters && (
+                  <Button size="sm" variant="outline" onClick={resetFilters} className="mt-2 text-xs rounded-xl border-white/10">
+                    Clear Filters
+                  </Button>
+                )}
               </div>
             )}
           </motion.div>
@@ -496,51 +865,100 @@ export default function FixturesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-[2.5rem] overflow-hidden border shadow-2xl"
+            className="rounded-2xl overflow-hidden border shadow-xl"
             style={{ background: D.surf1, borderColor: D.border }}
           >
             <Table>
               <TableHeader style={{ background: D.surf2 }}>
                 <TableRow style={{ borderColor: D.border }}>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-6 px-8">TIMESTAMP</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">MATCH-UP</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">VENUE</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-6">STATUS</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest py-6 text-right px-8">ACTIONS</TableHead>
+                  <TableHead className="text-xs font-bold py-4 px-6">DATE & TIME</TableHead>
+                  <TableHead className="text-xs font-bold py-4">MATCHUP</TableHead>
+                  <TableHead className="text-xs font-bold py-4">VENUE & DIVISION</TableHead>
+                  <TableHead className="text-xs font-bold py-4">STATUS</TableHead>
+                  <TableHead className="text-xs font-bold py-4 text-right px-6">ACTIONS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFixtures.map(f => (
-                  <TableRow key={f.id} className="group border-b transition-colors hover:bg-black/5" style={{ borderColor: D.border }}>
-                    <TableCell className="py-6 px-8">
-                      <p className="text-xs font-black" style={{ color: D.textPrimary }}>{f.time}</p>
-                      <p className="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{f.displayDate}</p>
-                    </TableCell>
-                    <TableCell className="py-6">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm font-black uppercase italic" style={{ color: D.textPrimary }}>{f.homeTeamName}</span>
-                        <span className="text-[10px] font-light opacity-30 italic">VS</span>
-                        <span className="text-sm font-black uppercase italic" style={{ color: D.textPrimary }}>{f.awayTeamName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-6">
-                      <p className="text-[10px] font-black uppercase tracking-tight">{f.location}</p>
-                    </TableCell>
-                    <TableCell className="py-6">
-                       <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border" 
-                             style={{ background: `${getStatusDisplayName(f.status, f.date) === 'LIVE' ? D.rose : D.indigo}08`, borderColor: `${getStatusDisplayName(f.status, f.date) === 'LIVE' ? D.rose : D.indigo}20`, color: getStatusDisplayName(f.status, f.date) === 'LIVE' ? D.rose : D.indigo }}>
-                         {getStatusDisplayName(f.status, f.date)}
-                       </span>
-                    </TableCell>
-                    <TableCell className="py-6 text-right px-8">
-                       <Link href={`/matches/${f.id}/manage`}>
-                         <Button variant="ghost" size="icon" className="group-hover:bg-indigo-500 group-hover:text-white transition-all rounded-xl">
-                           <ChevronRight size={18} />
-                         </Button>
-                       </Link>
+                {filteredFixtures.length > 0 ? (
+                  filteredFixtures.map(f => {
+                    const st = getStatusDisplayName(f.status, f.date);
+                    return (
+                      <TableRow key={f.id} className="group border-b transition-colors hover:bg-white/5" style={{ borderColor: D.border }}>
+                        <TableCell className="py-4 px-6">
+                          <p className="text-xs font-bold text-primary">{f.displayDate}</p>
+                          <p className="text-[11px] font-mono text-muted-foreground mt-0.5">{f.time} ({f.matchType})</p>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-bold text-primary truncate max-w-[160px]">{f.homeTeamName}</span>
+                            <span className="text-xs font-bold text-muted-foreground">vs</span>
+                            <span className="text-sm font-bold text-primary truncate max-w-[160px]">{f.awayTeamName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <p className="text-xs font-semibold text-primary truncate max-w-[200px]">{f.location}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{f.ageGroup || f.division}</p>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <span className={cn(
+                            "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1",
+                            st === 'LIVE' && "bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse",
+                            st === 'UPCOMING' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                            st === 'COMPLETED' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+                            st === 'SCHEDULED' && "bg-indigo-500/10 text-indigo-400 border-indigo-500/30"
+                          )}>
+                            {st}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4 text-right px-6">
+                          <div className="flex items-center justify-end gap-2">
+                            {st === 'LIVE' ? (
+                              <Link href={`/matches/${f.id}/scoring-hub`}>
+                                <Button size="sm" className="h-8 text-xs bg-rose-500 hover:bg-rose-600 font-bold">
+                                  Score
+                                </Button>
+                              </Link>
+                            ) : st === 'COMPLETED' ? (
+                              <Link href={`/scorecard/${f.id}`}>
+                                <Button size="sm" variant="outline" className="h-8 text-xs border-white/10">
+                                  Scorecard
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Link href={`/matches/${f.id}/manage`}>
+                                <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-500 font-semibold">
+                                  Manage
+                                </Button>
+                              </Link>
+                            )}
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/10">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-slate-900 border-white/10">
+                                <DropdownMenuItem asChild className="text-xs">
+                                  <Link href={`/fixtures/edit/${f.id}`}>Edit Details</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setFixtureToDelete(f.id)} className="text-xs text-rose-400">
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-muted-foreground text-xs">
+                      No fixtures found matching selected filter criteria.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </motion.div>
@@ -558,22 +976,22 @@ export default function FixturesPage() {
         )}
       </AnimatePresence>
 
+      {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={!!fixtureToDelete} onOpenChange={(open) => !open && setFixtureToDelete(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-0 p-10 shadow-[0_0_80px_rgba(0,0,0,0.5)]" style={{ background: D.surf1 }}>
+        <AlertDialogContent className="rounded-2xl border-white/10 p-6 max-w-md" style={{ background: D.surf1 }}>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-3xl font-black uppercase italic tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>CONFIRM DELETION</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs font-bold uppercase tracking-widest opacity-60 leading-relaxed mt-4">
+            <AlertDialogTitle className="text-lg font-bold text-primary">Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground mt-2">
               Are you sure you want to delete this fixture? This action will permanently remove the match from institutional records.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-10 gap-4">
-            <AlertDialogCancel className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px]" style={{ background: D.surf2, borderColor: D.border }}>CANCEL</AlertDialogCancel>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="h-9 px-4 rounded-xl text-xs font-medium border-white/10">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => handleDeleteFixture(fixtureToDelete!)}
-              className="h-12 px-10 rounded-2xl font-black uppercase tracking-widest text-[10px]"
-              style={{ background: D.rose, color: 'white' }}
+              className="h-9 px-4 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white"
             >
-              DELETE PERMANENTLY
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

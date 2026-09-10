@@ -162,7 +162,7 @@ export default function DashboardView() {
       {/* 5. Strategic 6-Layer OS Deck Navigation Tabs */}
       <div className="space-y-6">
         <div
-          className="flex items-center gap-2 p-1.5 rounded-2xl border overflow-x-auto shadow-lg"
+          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           {deckTabs.map((tab) => {
@@ -175,23 +175,34 @@ export default function DashboardView() {
                   setActiveDeck(tab.id);
                   setFilters({ activeDeckMode: tab.id });
                 }}
-                className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-xs transition-all duration-300 whitespace-nowrap ${
+                className={`relative flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
                   isActive
-                    ? "bg-white/10 text-white shadow-md border border-white/15"
+                    ? "text-white"
                     : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
                 }`}
                 style={{ fontFamily: D.sans }}
               >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeDeckTabPill"
+                    className="absolute inset-0 rounded-xl border border-indigo-500/30 bg-indigo-500/15 shadow-lg shadow-indigo-500/10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                
                 <div
-                  className="p-1.5 rounded-lg transition-transform"
-                  style={{
-                    background: isActive ? `${tab.color}20` : "transparent",
-                    color: isActive ? tab.color : "currentColor",
-                  }}
+                  className={`relative z-10 p-1.5 rounded-lg transition-colors duration-300 ${
+                    isActive ? "bg-indigo-500/20 text-indigo-400" : "bg-transparent text-current"
+                  }`}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
-                <span>{tab.label}</span>
+                
+                <span className="relative z-10">{tab.label}</span>
+
+                {isActive && (
+                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                )}
               </button>
             );
           })}
