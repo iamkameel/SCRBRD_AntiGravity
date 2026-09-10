@@ -4,12 +4,18 @@ import { PlayerDetailClient } from "@/components/players/PlayerDetailClient";
 import { RewardsWallet } from "@/types/rewards";
 import { getPlayerAssessmentsAction, getPlayerReadinessAction } from "@/app/actions/skillActions";
 
-export default async function PlayerProfilePage({ params }: { params: { id: string } }) {
+export default async function PlayerProfilePage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+
+  if (!id) {
+    notFound();
+  }
+
   const [person, wallet, assessments, readiness] = await Promise.all([
-    fetchPersonById(params.id),
-    fetchDocument<RewardsWallet>('rewards_wallets', params.id),
-    getPlayerAssessmentsAction(params.id),
-    getPlayerReadinessAction(params.id)
+    fetchPersonById(id),
+    fetchDocument<RewardsWallet>('rewards_wallets', id),
+    getPlayerAssessmentsAction(id),
+    getPlayerReadinessAction(id)
   ]);
   
   if (!person) {
@@ -21,7 +27,7 @@ export default async function PlayerProfilePage({ params }: { params: { id: stri
   
   if (!isPlayer) {
     // Not a player, redirect to generic people page
-    redirect(`/people/${params.id}`);
+    redirect(`/people/${id}`);
   }
   
   return (

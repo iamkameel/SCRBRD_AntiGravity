@@ -64,6 +64,10 @@ export async function fetchDocument<T>(
   collectionName: string,
   documentId: string
 ): Promise<T | null> {
+  if (!collectionName || !documentId) {
+    console.warn(`fetchDocument called with invalid collectionName (${collectionName}) or documentId (${documentId})`);
+    return null;
+  }
   try {
     const docRef = doc(db, collectionName, documentId);
     const docSnap = await getDoc(docRef);
@@ -85,6 +89,7 @@ export async function createDocument<T extends DocumentData>(
   collectionName: string,
   data: T
 ): Promise<string | null> {
+  if (!collectionName) return null;
   try {
     const docRef = await addDoc(collection(db, collectionName), data);
     return docRef.id;
@@ -99,6 +104,7 @@ export async function setDocument<T extends DocumentData>(
   documentId: string,
   data: T
 ): Promise<boolean> {
+  if (!collectionName || !documentId) return false;
   try {
     const docRef = doc(db, collectionName, documentId);
     await setDoc(docRef, data);
@@ -114,6 +120,7 @@ export async function updateDocument<T extends DocumentData>(
   documentId: string,
   data: Partial<T>
 ): Promise<boolean> {
+  if (!collectionName || !documentId) return false;
   try {
     const docRef = doc(db, collectionName, documentId);
     await updateDoc(docRef as any, data as any);
@@ -128,6 +135,7 @@ export async function deleteDocument(
   collectionName: string,
   documentId: string
 ): Promise<boolean> {
+  if (!collectionName || !documentId) return false;
   try {
     const docRef = doc(db, collectionName, documentId);
     await deleteDoc(docRef);

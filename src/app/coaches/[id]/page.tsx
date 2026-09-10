@@ -1,8 +1,14 @@
 import { redirect } from 'next/navigation';
 import { fetchPersonById } from "@/lib/firestore";
 
-export default async function CoachProfilePage({ params }: { params: { id: string } }) {
-  const person = await fetchPersonById(params.id);
+export default async function CoachProfilePage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+
+  if (!id) {
+    redirect('/people');
+  }
+
+  const person = await fetchPersonById(id);
   
   if (!person) {
     redirect('/people');
@@ -13,9 +19,9 @@ export default async function CoachProfilePage({ params }: { params: { id: strin
   
   if (!isCoach) {
     // Not a coach, redirect to generic people page
-    redirect(`/people/${params.id}`);
+    redirect(`/people/${id}`);
   }
   
   // Redirect to the person profile page with coach context
-  redirect(`/people/${params.id}`);
+  redirect(`/people/${id}`);
 }
