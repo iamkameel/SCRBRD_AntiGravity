@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { D } from "@/lib/scoring/theme";
+import { fieldService } from "@/services/fieldService";
 import { motion } from "framer-motion";
 import { 
   CloudRain, 
@@ -38,12 +39,34 @@ const MAINTENANCE_LOG = [
 
 export function GroundskeeperDashboard() {
   const [tasks, setTasks] = useState(PREP_TASKS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   
   const completedCount = tasks.filter(t => t.done).length;
   const progressPercent = (completedCount / tasks.length) * 100;
 
   const toggleTask = (id: string) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const handleConfirmReadiness = async () => {
+    setIsSubmitting(true);
+    try {
+      await fieldService.logGroundStatus({
+        fieldId: 'field-a-oval',
+        conditionStatus: progressPercent >= 80 ? 'Optimal' : progressPercent >= 50 ? 'Playable' : 'Inspection Required',
+        pitchReadiness: Math.round(progressPercent),
+        outfieldReadiness: 90,
+        equipmentReadiness: 100,
+        loggedBy: 'Groundskeeper Lead',
+        notes: 'Pre-match prep checklist confirmed.'
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to log ground status:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,8 +154,17 @@ export function GroundskeeperDashboard() {
                 ))}
               </div>
               <div className="pt-4">
-                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl gap-2 shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98]">
-                  <CheckCircle2 className="w-5 h-5" /> Confirm Field Readiness
+                <Button 
+                  onClick={handleConfirmReadiness}
+                  disabled={isSubmitting || submitted}
+                  className={`w-full h-14 font-black uppercase tracking-widest rounded-2xl gap-2 shadow-lg transition-all active:scale-[0.98] ${
+                    submitted 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
+                  }`}
+                >
+                  <CheckCircle2 className="w-5 h-5" /> 
+                  {submitted ? 'Field Readiness Confirmed & Logged' : isSubmitting ? 'Logging Status...' : 'Confirm Field Readiness'}
                 </Button>
               </div>
             </div>
