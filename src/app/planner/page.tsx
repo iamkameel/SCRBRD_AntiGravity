@@ -207,11 +207,11 @@ export default function PlannerPage() {
           )}
         </div>
 
-        {/* Sidebar / Upcoming */}
-        <div>
-          <Card>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users size={20} />
+        {/* Sidebar / Upcoming & AI Recommendations */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <Card className="bg-black/60 border-white/10 backdrop-blur-xl p-5 rounded-2xl">
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+              <Users size={20} className="text-primary" />
               My Teams
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -228,6 +228,40 @@ export default function PlannerPage() {
                   <ChevronRight size={16} color="var(--color-text-muted)" />
                 </div>
               ))}
+            </div>
+          </Card>
+
+          <Card className="bg-black/60 border-primary/20 backdrop-blur-xl p-5 rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-black tracking-wider uppercase text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                AI Recommended Drills
+              </h3>
+              <Badge variant="outline" className="text-[9px] uppercase border-primary/40 text-primary">Rule 21.6 Safe</Badge>
+            </div>
+            <p className="text-xs text-white/50 mb-4">Ranked by Role Need Score & Medically Cleared</p>
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/30 transition-all">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-bold text-white">Drop-and-Run Rotation</span>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px]">High Score: 560</Badge>
+                </div>
+                <p className="text-[10px] text-white/40 mb-2">Targeted to improve strike rotation for Opener role.</p>
+                <div className="flex items-center gap-1 text-[9px] text-emerald-400">
+                  <span>✓ Medically Cleared</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/30 transition-all">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-bold text-white">Spin Standing-Up Gather</span>
+                  <Badge className="bg-blue-500/20 text-blue-400 border-none text-[9px]">Mod Score: 120</Badge>
+                </div>
+                <p className="text-[10px] text-white/40 mb-2">Targeted to improve leg-side collection for Specialist Wicketkeeper.</p>
+                <div className="flex items-center gap-1 text-[9px] text-emerald-400">
+                  <span>✓ Medically Cleared</span>
+                </div>
+              </div>
             </div>
           </Card>
         </div>
