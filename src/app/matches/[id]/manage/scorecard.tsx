@@ -3,6 +3,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Innings, Over, Ball } from "@/types/firestore";
+import { BallEvent } from "@/types/schema_v4";
+import { replayInningsEvents } from "@/services/scoring/replayEngine";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
@@ -11,6 +13,8 @@ interface ScorecardProps {
   teamName: string;
   opponentName: string;
   className?: string;
+  ballEvents?: BallEvent[];
+  playerNamesMap?: Record<string, string>;
 }
 
 interface BattingEntry {
@@ -38,15 +42,60 @@ export function Scorecard({
   innings,
   teamName,
   opponentName,
-  className
+  className,
+  ballEvents,
+  playerNamesMap = {}
 }: ScorecardProps) {
-  // Calculate batting stats from innings
-  const battingStats: BattingEntry[] = calculateBattingStats(innings);
-  const bowlingStats: BowlingEntry[] = calculateBowlingStats(innings);
-  const extras = calculateExtras(innings);
-  const totalRuns = innings.runs || 0;
-  const wickets = innings.wickets || 0;
-  const overs = innings.overs || 0;
+  // Use Replay Engine if ballEvents are provided or present in innings
+  const events = ballEvents || (innings as any).events;
+  const useReplay = events && Array.isArray(events) && events.length > 0;
+
+  let battingStats: BattingEntry[] = [];
+  let bowlingStats: BowlingEntry[] = [];
+  let extras = { byes: 0, legByes: 0, wides: 0, noBalls: 0, total: 0 };
+  let totalRuns = innings.runs || 0;
+  let wickets = innings.wickets || 0;
+  let oversDisplay = `${Math.floor(innings.overs || 0)}.${(((innings.overs || 0) % 1) * 6).toFixed(0)}`;
+
+  if (useReplay) {
+    const replay = replayInningsEvents(events);
+    totalRuns = replay.runs;
+    wickets = replay.wickets;
+    oversDisplay = replay.oversDisplay;
+
+    battingStats = replay.batsmen.map(b => ({
+      playerId: b.playerId,
+      playerName: playerNamesMap[b.playerId] || `Player ${b.playerId.slice(0, 6)}`,
+      runs: b.runs,
+      balls: b.ballsFaced,
+      fours: b.fours,
+      sixes: b.sixes,
+      strikeRate: b.strikeRate,
+      dismissal: b.dismissal ? b.dismissal.description : undefined
+    }));
+
+    bowlingStats = replay.bowlers.map(b => ({
+      bowlerId: b.playerId,
+      bowlerName: playerNamesMap[b.playerId] || `Bowler ${b.playerId.slice(0, 6)}`,
+      overs: b.overs,
+      maidens: b.maidens,
+      runs: b.runsConceded,
+      wickets: b.wickets,
+      economy: b.economy
+    }));
+
+    extras = {
+      byes: replay.extras.byes,
+      legByes: replay.extras.legByes,
+      wides: replay.extras.wides,
+      noBalls: replay.extras.noBalls,
+      total: replay.extras.total
+    };
+  } else {
+    battingStats = calculateBattingStats(innings);
+    bowlingStats = calculateBowlingStats(innings);
+    extras = calculateExtras(innings);
+  }
 
   // Design System (from scoring-dialog.tsx)
   const statColors = {
@@ -69,8 +118,8 @@ export function Scorecard({
             <div className="text-4xl font-bold">
               {totalRuns}/{wickets}
             </div>
-            <div className="text-muted-foreground">
-              {Math.floor(overs)}.{((overs % 1) * 6).toFixed(0)} overs
+            <div className="text-muted-foreground font-mono">
+              {oversDisplay} overs {useReplay && <Badge variant="outline" className="ml-2 text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Replay Verified</Badge>}
             </div>
           </div>
         </div>
@@ -166,7 +215,7 @@ export function Scorecard({
           </div>
           <div className="flex justify-between text-sm mt-2 font-bold">
             <span>Total</span>
-            <span>{totalRuns}/{wickets} ({Math.floor(overs)}.{((overs % 1) * 6).toFixed(0)} overs)</span>
+            <span>{totalRuns}/{wickets} ({oversDisplay} overs)</span>
           </div>
         </div>
       </Card>

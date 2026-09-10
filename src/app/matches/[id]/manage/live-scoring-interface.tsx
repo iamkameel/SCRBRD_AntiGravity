@@ -16,6 +16,8 @@ import { Ball, Innings, Match } from "@/types/firestore";
 import { Play, RotateCcw, TrendingUp, Flag, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { SessionLockBanner } from "@/components/scoring/SessionLockBanner";
 import { MatchAnalyticsDashboard } from "@/components/analytics/MatchAnalyticsDashboard";
 import { 
   getTeamSquadAction, 
@@ -44,6 +46,8 @@ export function LiveScoringInterface({
   homeTeamName,
   awayTeamName
 }: LiveScoringInterfaceProps) {
+  const { user } = useAuth();
+  const [isLockedByOther, setIsLockedByOther] = useState(false);
   const [scoringDialogOpen, setScoringDialogOpen] = useState(false);
   const [currentInnings, setCurrentInnings] = useState<Innings | null>(null);
   const [currentOver, setCurrentOver] = useState<Ball[]>([]);
@@ -272,6 +276,14 @@ export function LiveScoringInterface({
 
   return (
     <div className="space-y-6">
+      {/* Session Lock Banner */}
+      <SessionLockBanner
+        matchId={matchId}
+        currentUserId={user?.uid || 'guest-scorer'}
+        currentUserName={user?.displayName || user?.email || 'Official Scorer'}
+        onLockStateChange={(isLocked) => setIsLockedByOther(isLocked)}
+      />
+
       {/* Match Header */}
       <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10">
         <div className="flex items-center justify-between">
@@ -290,21 +302,35 @@ export function LiveScoringInterface({
           <div className="flex gap-2">
             {/* Retire Batter Button */}
             {!isInningsBreak && (strikerId || nonStrikerId) && (
-              <Button variant="outline" size="sm" onClick={() => setShowRetireBatterDialog(true)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowRetireBatterDialog(true)}
+                disabled={isLockedByOther}
+              >
                 Retire Batter
               </Button>
             )}
             
             {/* Control Buttons */}
             {isFirstInnings && !isInningsBreak && (
-              <Button variant="destructive" onClick={() => setShowEndInningsDialog(true)}>
+              <Button 
+                variant="destructive" 
+                onClick={() => setShowEndInningsDialog(true)}
+                disabled={isLockedByOther}
+              >
                 <Flag className="h-4 w-4 mr-2" />
                 End Innings
               </Button>
             )}
             
             {!isFirstInnings && !isInningsBreak && (
-              <Button variant="default" className="bg-yellow-600 hover:bg-yellow-700" onClick={() => setShowEndMatchDialog(true)}>
+              <Button 
+                variant="default" 
+                className="bg-yellow-600 hover:bg-yellow-700" 
+                onClick={() => setShowEndMatchDialog(true)}
+                disabled={isLockedByOther}
+              >
                 <Trophy className="h-4 w-4 mr-2" />
                 End Match
               </Button>
@@ -378,17 +404,17 @@ export function LiveScoringInterface({
             onClick={() => setScoringDialogOpen(true)}
             size="lg"
             className="col-span-3 h-16 text-lg font-bold"
-            disabled={!strikerId || !bowlerId}
+            disabled={!strikerId || !bowlerId || isLockedByOther}
           >
             <Play className="h-6 w-6 mr-2" />
-            Record Ball
+            {isLockedByOther ? "Scoring Locked (Read-Only)" : "Record Ball"}
           </Button>
           <Button
             onClick={handleUndo}
             size="lg"
             variant="outline"
             className="h-16 flex flex-col items-center justify-center gap-1"
-            disabled={!currentOver || currentOver.length === 0}
+            disabled={!currentOver || currentOver.length === 0 || isLockedByOther}
           >
             <RotateCcw className="h-5 w-5" />
             <span className="text-xs">Undo</span>

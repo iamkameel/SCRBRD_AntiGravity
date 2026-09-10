@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MatchReadinessDossier } from '@/components/admin/MatchReadinessDossier';
+import { medicalReadinessService } from '@/services/medical/medicalReadinessService';
 import { cn } from '@/lib/utils';
 import { Zap, Target, TrendingUp, Award, FileText } from 'lucide-react';
 
@@ -507,7 +508,9 @@ export function MatchManagementClient({
                         {homePlayers.map((player: Person) => {
                           const isSelected = selectedXIIds.includes(player.id) || selectedReservesIds.includes(player.id);
                           const availability = context.availability.find(a => a.personId === player.id);
-                          const isUnavailable = availability?.status === 'unavailable' || player.status === 'injured';
+                          const medicalEval = medicalReadinessService.calculatePlayerReadiness(player.id, (context as any).medicalIncidents || []);
+                          const isMedicalRestricted = medicalEval.clearanceRequired || medicalEval.status === 'Unavailable' || player.status === 'injured';
+                          const isUnavailable = availability?.status === 'unavailable' || isMedicalRestricted;
                           
                           return (
                             <div 
@@ -524,20 +527,36 @@ export function MatchManagementClient({
                                      <h4 className="font-semibold text-[15px]">{player.firstName} {player.lastName}</h4>
                                      {selectedXIIds.includes(player.id) && <Badge className="bg-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-wider h-4 px-1">XI</Badge>}
                                      {selectedReservesIds.includes(player.id) && <Badge className="bg-amber-500/20 text-amber-400 text-[9px] uppercase tracking-wider h-4 px-1">Res</Badge>}
-                                     {isUnavailable && <Badge variant="destructive" className="text-[9px] uppercase tracking-wider h-4 px-1">Unavailable</Badge>}
+                                     {medicalEval.clearanceRequired && (
+                                       <Badge variant="destructive" className="bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] uppercase tracking-wider h-4 px-1">
+                                         Clearance Required
+                                       </Badge>
+                                     )}
+                                     {isUnavailable && !medicalEval.clearanceRequired && (
+                                       <Badge variant="destructive" className="text-[9px] uppercase tracking-wider h-4 px-1">Unavailable</Badge>
+                                     )}
                                    </div>
                                    <div className="flex items-center gap-2 mt-0.5">
                                       <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium font-['DM_Mono',monospace]">
-                                        {player.battingStyle || 'RHB'} • {player.bowlingStyle || 'RFM'}
+                                        {player.battingStyle || 'RHB'} • {player.bowlingStyle || 'RFM'} • Readiness: {medicalEval.score}%
                                       </span>
                                    </div>
                                  </div>
                               </div>
                               <Button 
-                                onClick={() => !isUnavailable && togglePlayerSelection(player)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (medicalEval.clearanceRequired && !isSelected) {
+                                    toast.error(`Medical Clearance Required: ${player.firstName} ${player.lastName} requires medical sign-off before squad selection.`);
+                                    return;
+                                  }
+                                  if (!isUnavailable || isSelected) {
+                                    togglePlayerSelection(player);
+                                  }
+                                }}
                                 variant={isSelected ? "outline" : "ghost"} 
                                 size="sm" 
-                                disabled={isUnavailable && !isSelected}
+                                disabled={isUnavailable && !isSelected && !medicalEval.clearanceRequired}
                                 className={`${isSelected ? 'border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10' : 'opacity-0 group-hover:opacity-100 transition-opacity border border-white/10'}`}
                               >
                                 {isSelected ? 'Remove' : 'Add to Squad'}
