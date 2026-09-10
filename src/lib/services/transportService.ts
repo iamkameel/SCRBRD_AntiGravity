@@ -71,16 +71,27 @@ export const transportService = {
 
     // --- Trip Operations ---
     getUpcomingTrips: async (schoolId?: string): Promise<TransportTrip[]> => {
-        const colRef = collection(db, 'transport_trips');
-        // For now, get all scheduled/ready/transit trips
-        const q = query(
-            colRef,
-            where('status', 'in', ['Scheduled', 'Ready', 'In Transit', 'Delayed']),
-            orderBy('scheduledDeparture', 'asc')
-        );
+        try {
+            const colRef = collection(db, 'transport_trips');
+            const q = query(
+                colRef,
+                where('status', 'in', ['Scheduled', 'Ready', 'In Transit', 'Delayed']),
+                orderBy('scheduledDeparture', 'asc')
+            );
 
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+        } catch (error: any) {
+            console.warn('getUpcomingTrips query failed (using safe fallback):', error?.message || error);
+            try {
+                const colRef = collection(db, 'transport_trips');
+                const snapshot = await getDocs(colRef);
+                const trips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+                return trips.filter(t => ['Scheduled', 'Ready', 'In Transit', 'Delayed'].includes(t.status));
+            } catch (err) {
+                return [];
+            }
+        }
     },
 
     createTrip: async (trip: Omit<TransportTrip, 'id'>) => {
@@ -99,27 +110,45 @@ export const transportService = {
 
     getTripsByFixtures: async (fixtureIds: string[]): Promise<TransportTrip[]> => {
         if (fixtureIds.length === 0) return [];
-        const colRef = collection(db, 'transport_trips');
-        // Firestore 'in' query supports up to 10-30 items depending on version, 
-        // usually 10 for basic queries.
-        const q = query(
-            colRef,
-            where('fixtureId', 'in', fixtureIds.slice(0, 10))
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+        try {
+            const colRef = collection(db, 'transport_trips');
+            const q = query(
+                colRef,
+                where('fixtureId', 'in', fixtureIds.slice(0, 10))
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+        } catch (error: any) {
+            console.warn('getTripsByFixtures query failed:', error?.message || error);
+            return [];
+        }
     },
 
     getDriverTrips: async (driverId: string): Promise<TransportTrip[]> => {
-        const colRef = collection(db, 'transport_trips');
-        const q = query(
-            colRef,
-            where('driverId', '==', driverId),
-            orderBy('scheduledDeparture', 'asc')
-        );
+        try {
+            const colRef = collection(db, 'transport_trips');
+            const q = query(
+                colRef,
+                where('driverId', '==', driverId),
+                orderBy('scheduledDeparture', 'asc')
+            );
 
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+        } catch (error: any) {
+            console.warn('getDriverTrips query failed (using client-side sort fallback):', error?.message || error);
+            try {
+                // Fallback query without orderBy in case composite index is not yet active
+                const colRef = collection(db, 'transport_trips');
+                const q = query(colRef, where('driverId', '==', driverId));
+                const snapshot = await getDocs(q);
+                const trips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TransportTrip));
+                trips.sort((a, b) => new Date(a.scheduledDeparture as string).getTime() - new Date(b.scheduledDeparture as string).getTime());
+                return trips;
+            } catch (fallbackError) {
+                return [];
+            }
+        }
     },
 
     // --- Passenger Manifest Operations ---
