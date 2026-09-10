@@ -1,110 +1,223 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import type { NavGroup } from '@/lib/nav-links';
 import { D } from '@/lib/design-system';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CollapsibleNavGroupProps {
   group: NavGroup;
+  isCollapsed?: boolean;
+  filterQuery?: string;
+  onLinkClick?: () => void;
 }
 
-export default function CollapsibleNavGroup({ group }: CollapsibleNavGroupProps) {
+export default function CollapsibleNavGroup({
+  group,
+  isCollapsed = false,
+  filterQuery = '',
+  onLinkClick,
+}: CollapsibleNavGroupProps) {
   const [isOpen, setIsOpen] = useState(group.defaultOpen ?? false);
   const pathname = usePathname();
   const GroupIcon = group.icon;
 
-  const hasActiveLink = group.links.some(link => pathname === link.href);
+  const accent = group.accentColor || D.indigo;
 
+  // Filter links based on query
+  const filteredLinks = group.links.filter((link) =>
+    filterQuery
+      ? link.label.toLowerCase().includes(filterQuery.toLowerCase()) ||
+        group.label.toLowerCase().includes(filterQuery.toLowerCase())
+      : true
+  );
+
+  const hasActiveLink = group.links.some((link) => pathname === link.href);
+
+  // Auto-expand group if filter matches and query is not empty
+  useEffect(() => {
+    if (filterQuery && filteredLinks.length > 0) {
+      setIsOpen(true);
+    }
+  }, [filterQuery, filteredLinks.length]);
+
+  if (filteredLinks.length === 0) {
+    return null;
+  }
+
+  // --- COLLAPSED MINI-RAIL MODE (80px wide) ---
+  if (isCollapsed) {
+    return (
+      <div className="flex flex-col items-center gap-1.5 py-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={`
+                w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-sm
+                ${hasActiveLink ? 'scale-105 ring-2 ring-offset-1 ring-offset-background' : 'hover:bg-white/5 opacity-70 hover:opacity-100'}
+              `}
+              style={{
+                background: hasActiveLink ? `${accent}20` : 'transparent',
+                borderColor: hasActiveLink ? accent : 'transparent',
+                color: hasActiveLink ? accent : D.textMuted,
+              }}
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {GroupIcon && <GroupIcon size={18} />}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="font-semibold text-xs py-1.5 px-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ background: accent }} />
+              <span>{group.label}</span>
+              <span className="text-[10px] opacity-60">({group.links.length})</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Collapsed Sub-links Icons */}
+        {isOpen && (
+          <div className="flex flex-col items-center gap-1 py-1 w-full border-t border-white/5 my-1">
+            {filteredLinks.map((link) => {
+              const isActive = pathname === link.href;
+              const Icon = link.icon;
+              return (
+                <Tooltip key={link.key}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={link.href}
+                      onClick={onLinkClick}
+                      className={`
+                        w-8 h-8 rounded-lg flex items-center justify-center transition-all
+                        ${isActive ? 'bg-indigo-500/20 text-indigo-400 font-bold shadow-md' : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'}
+                      `}
+                    >
+                      {Icon && <Icon size={15} />}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs font-medium">
+                    {link.label}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // --- EXPANDED MODE (260px wide) ---
   return (
-    <div className="flex flex-col gap-1">
-      {/* Strategic Group Header */}
+    <div className="flex flex-col gap-1 my-0.5">
+      {/* Group Header Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl
-          transition-all duration-300 group/nav
+          w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl
+          transition-all duration-200 group/nav text-left select-none
           ${isOpen ? 'bg-black/5 dark:bg-white/5' : 'hover:bg-black/5 dark:hover:bg-white/5'}
-          ${hasActiveLink ? 'text-indigo-500' : ''}
         `}
-        style={{
-          color: hasActiveLink ? D.indigo : D.textMuted,
-        }}
       >
-        <div className="flex items-center gap-3.5">
-          <div className={`p-1.5 rounded-lg transition-all ${hasActiveLink ? "bg-indigo-500/10 shadow-sm" : "group-hover/nav:bg-black/5 opacity-50"}`}>
-            {GroupIcon && <GroupIcon size={16} style={{ color: hasActiveLink ? D.indigo : 'inherit' }} />}
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`p-1.5 rounded-lg transition-all ${
+              hasActiveLink ? 'shadow-sm' : 'opacity-70 group-hover/nav:opacity-100'
+            }`}
+            style={{
+              background: hasActiveLink ? `${accent}20` : 'transparent',
+              color: hasActiveLink ? accent : D.textMuted,
+            }}
+          >
+            {GroupIcon && <GroupIcon size={16} />}
           </div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ fontFamily: D.head }}>
-             {group.label}
+          <span
+            className="text-[10px] font-bold uppercase tracking-[0.18em] truncate"
+            style={{
+              color: hasActiveLink ? accent : D.textMuted,
+              fontFamily: D.head,
+            }}
+          >
+            {group.label}
           </span>
         </div>
-        <motion.div
-           animate={{ rotate: isOpen ? 180 : 0 }}
-           transition={{ duration: 0.3, ease: "anticipate" }}
-           className="opacity-40"
-        >
-          <ChevronDown size={14} />
-        </motion.div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md text-slate-400 dark:text-slate-500 bg-black/5 dark:bg-white/5"
+          >
+            {filteredLinks.length}
+          </span>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="text-slate-400 group-hover/nav:text-slate-200"
+          >
+            <ChevronDown size={14} />
+          </motion.div>
+        </div>
       </button>
 
-      {/* Group Links Matrix */}
+      {/* Accordion Links */}
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
+            animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "anticipate" }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <ul className="flex flex-col gap-1 py-1 pl-6 pr-2">
-              {group.links.map((link) => {
+            <ul className="flex flex-col gap-0.5 py-1 pl-4 pr-1 border-l-2 ml-4 border-slate-200/40 dark:border-slate-800/60">
+              {filteredLinks.map((link) => {
                 const isActive = pathname === link.href;
                 const Icon = link.icon;
-                
+
                 return (
                   <li key={link.key}>
-                    <Link 
+                    <Link
                       href={link.href}
+                      onClick={onLinkClick}
                       className={`
-                        relative flex items-center gap-3.5 px-4 py-2.5 rounded-xl
-                        transition-all duration-300 group/link
-                        ${isActive 
-                          ? 'shadow-[0_4px_12px_rgba(0,0,0,0.1)]' 
-                          : 'hover:bg-black/5 dark:hover:bg-white/5'}
+                        relative flex items-center gap-3 px-3 py-2 rounded-xl
+                        transition-all duration-200 group/link
+                        ${isActive ? 'shadow-sm font-semibold' : 'hover:bg-black/5 dark:hover:bg-white/5'}
                       `}
                       style={{
-                        background: isActive ? D.surf2 : 'transparent',
-                        color: isActive ? D.indigo : D.textMuted,
-                        border: isActive ? `1px solid ${D.border}` : '1px solid transparent'
+                        background: isActive ? `${accent}15` : 'transparent',
+                        color: isActive ? accent : D.textMuted,
+                        border: isActive ? `1px solid ${accent}30` : '1px solid transparent',
                       }}
                     >
                       {isActive && (
-                         <div 
-                           className="absolute left-1.5 w-1 h-3 rounded-full shadow-sm" 
-                           style={{ background: D.gradMain }}
-                         />
-                      )}
-                      
-                      {Icon && (
-                        <Icon 
-                          size={13} 
-                          className={`transition-all duration-300 ${isActive ? "opacity-100 scale-110" : "opacity-30 group-hover/link:opacity-60"}`}
+                        <div
+                          className="absolute -left-[17px] top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-full shadow-sm"
+                          style={{ background: accent }}
                         />
                       )}
-                      
-                      <span className={`text-[10px] uppercase tracking-widest leading-none ${isActive ? 'font-bold' : 'font-medium opacity-70'}`}>
+
+                      {Icon && (
+                        <Icon
+                          size={14}
+                          className={`transition-all shrink-0 ${
+                            isActive ? 'scale-110 opacity-100' : 'opacity-65 group-hover/link:opacity-100'
+                          }`}
+                          style={{ color: isActive ? accent : 'inherit' }}
+                        />
+                      )}
+
+                      <span className="text-[11px] font-medium tracking-wide truncate">
                         {link.label}
                       </span>
-                      
+
                       {link.badge && (
-                        <span 
-                           className="ml-auto text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tighter shadow-sm animate-pulse"
-                           style={{ background: D.rose, color: 'white' }}
+                        <span
+                          className="ml-auto text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shadow-sm"
+                          style={{ background: D.rose, color: 'white' }}
                         >
                           {link.badge}
                         </span>

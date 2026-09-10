@@ -137,22 +137,22 @@ export default function DashboardView() {
             className="flex items-center justify-between p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 shadow-lg"
           >
             <div className="flex items-center gap-3">
-              <UserCheck className="h-5 w-5 text-indigo-400 shrink-0" />
+              <UserCheck className="h-5 w-5 text-indigo-500 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
+                <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
                   Active Persona Simulation Mode
                 </p>
-                <p className="text-[11px] text-indigo-200 font-medium" style={{ fontFamily: D.sans }}>
-                  Viewing platform layer as: <span className="font-bold text-white uppercase">{activeRole}</span>
+                <p className="text-[11px] text-indigo-950 dark:text-indigo-200 font-medium" style={{ fontFamily: D.sans }}>
+                  Viewing platform layer as: <span className="font-bold text-indigo-600 dark:text-white uppercase">{activeRole}</span>
                 </p>
               </div>
             </div>
 
             <button
               onClick={() => setFilters({ simulatedRole: undefined })}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-xs font-semibold text-indigo-900 dark:text-white transition-all"
             >
-              <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
+              <RefreshCw className="h-3.5 w-3.5 text-indigo-500" />
               Reset Persona
             </button>
           </motion.div>
@@ -180,8 +180,8 @@ export default function DashboardView() {
                 }}
                 className={`relative flex items-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
                   isActive
-                    ? "text-white"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
+                    ? "text-indigo-950 dark:text-white"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.03]"
                 }`}
                 style={{ fontFamily: D.sans }}
               >
@@ -195,7 +195,7 @@ export default function DashboardView() {
                 
                 <div
                   className={`relative z-10 p-1.5 rounded-lg transition-colors duration-300 ${
-                    isActive ? "bg-indigo-500/20 text-indigo-400" : "bg-transparent text-current"
+                    isActive ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : "bg-transparent text-current"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -204,7 +204,7 @@ export default function DashboardView() {
                 <span className="relative z-10">{tab.label}</span>
 
                 {isActive && (
-                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                 )}
               </button>
             );

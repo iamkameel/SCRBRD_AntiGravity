@@ -8,9 +8,35 @@ import { Navbar } from "@/components/layout/Navbar";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Loader2 } from "lucide-react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { useSidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { BackgroundEffects } from "@/components/layout/BackgroundEffects";
 import { CommandMenu } from "@/components/dashboard/CommandMenu";
+import { cn } from "@/lib/utils";
+function AppShellContent({ children }: { children: React.ReactNode }) {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  return (
+    <div className="flex min-h-screen w-full relative bg-background text-foreground font-sans antialiased">
+      <BackgroundEffects />
+      <Sidebar />
+      <main 
+        className={cn(
+          "flex-1 transition-all duration-300 ease-in-out relative z-10 min-h-screen pb-12",
+          isCollapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"
+        )}
+      >
+        <Header />
+        <EmailVerificationBanner />
+        <div className="p-4 sm:p-6 md:p-8 space-y-6">
+          <Breadcrumbs />
+          {children}
+        </div>
+        <CommandMenu />
+      </main>
+    </div>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -42,19 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Authenticated users on app pages - show responsive sidebar
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full relative bg-background text-foreground font-sans antialiased">
-        <BackgroundEffects />
-        <Sidebar />
-        <main className="flex-1 lg:ml-[260px] transition-all duration-300 relative z-10 min-h-screen pb-12">
-          <Header />
-          <EmailVerificationBanner />
-          <div className="p-4 sm:p-6 md:p-8 space-y-6">
-            <Breadcrumbs />
-            {children}
-          </div>
-          <CommandMenu />
-        </main>
-      </div>
+      <AppShellContent>{children}</AppShellContent>
     </SidebarProvider>
   );
 }

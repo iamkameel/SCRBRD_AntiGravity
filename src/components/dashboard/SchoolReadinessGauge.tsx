@@ -64,13 +64,13 @@ export function SchoolReadinessGauge() {
 
           <div className="absolute flex flex-col items-center justify-center text-center">
             <span
-              className="text-2xl font-bold tracking-tight text-white"
+              className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white"
               style={{ fontFamily: D.mono }}
             >
               {overallPercentage}%
             </span>
             <span
-              className="text-[9px] font-semibold uppercase tracking-wider text-emerald-400"
+              className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
               style={{ fontFamily: D.sans }}
             >
               System Ready
@@ -82,10 +82,10 @@ export function SchoolReadinessGauge() {
         <div className="flex-1 space-y-4 w-full">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight" style={{ fontFamily: D.head }}>
                 Match-Day Operations Telemetry
               </h3>
-              <p className="text-xs text-slate-400 font-normal mt-0.5" style={{ fontFamily: D.sans }}>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5" style={{ fontFamily: D.sans }}>
                 Real-time check on squad, pitch, logistics & officiating clearances
               </p>
             </div>
@@ -105,7 +105,7 @@ export function SchoolReadinessGauge() {
               return (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3.5 rounded-xl border transition-all hover:bg-white/[0.02]"
+                  className="flex items-center justify-between p-3.5 rounded-xl border transition-all hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                   style={{ background: D.surf2, borderColor: D.border }}
                 >
                   <div className="flex items-center gap-3">
@@ -116,10 +116,10 @@ export function SchoolReadinessGauge() {
                       <item.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-white" style={{ fontFamily: D.sans }}>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white" style={{ fontFamily: D.sans }}>
                         {item.category}
                       </p>
-                      <p className="text-[11px] text-slate-400 font-medium" style={{ fontFamily: D.mono }}>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold" style={{ fontFamily: D.mono }}>
                         {item.ready} of {item.total} Cleared
                       </p>
                     </div>

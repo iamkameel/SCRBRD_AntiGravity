@@ -160,16 +160,16 @@ export default function FixtureCentreCard({
                   {/* Strategic Scoring Hub */}
                   <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-8 items-center">
                     <div className="text-right">
-                      <span className="text-sm sm:text-base font-semibold text-slate-100 truncate block group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
+                      <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate block group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
                         {match.homeTeamName}
                       </span>
-                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Home</span>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Home</span>
                     </div>
 
                     <div className="flex flex-col items-center min-w-[110px]">
                       {type === 'upcoming' ? (
                         <div 
-                          className="px-4 py-1 rounded-lg text-xs font-semibold text-slate-400 border bg-slate-900/60"
+                          className="px-4 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 border bg-slate-100 dark:bg-slate-900/60"
                           style={{ borderColor: D.border }}
                         >
                           VS
@@ -190,10 +190,10 @@ export default function FixtureCentreCard({
                     </div>
 
                     <div className="text-left">
-                      <span className="text-sm sm:text-base font-semibold text-slate-100 truncate block group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
+                      <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate block group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors" style={{ fontFamily: D.sans }}>
                         {match.awayTeamName}
                       </span>
-                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Away</span>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mt-0.5" style={{ fontFamily: D.sans }}>Away</span>
                     </div>
                   </div>
 
@@ -206,18 +206,18 @@ export default function FixtureCentreCard({
                           <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: D.rose }}></span>
                         </span>
                       )}
-                      <span className="text-xs font-semibold" style={{ color: type === 'live' ? D.rose : D.textPrimary, fontFamily: D.sans }}>
+                      <span className="text-xs font-bold" style={{ color: type === 'live' ? D.rose : D.textPrimary, fontFamily: D.sans }}>
                         {type === 'upcoming' ? formatMatchDateTime(match) : getMatchStatusText(match.status, match.state)}
                       </span>
                     </div>
-                    <div className="text-[11px] font-normal text-slate-400 mt-1 flex items-center gap-1.5" style={{ fontFamily: D.sans }}>
-                      <MapPin className="h-3 w-3 text-slate-400" />
+                    <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1.5" style={{ fontFamily: D.sans }}>
+                      <MapPin className="h-3 w-3 text-slate-500" />
                       {match.venue || 'TBA'}
                     </div>
                   </div>
                   
                   <div className="ml-5 p-2 rounded-lg transition-all group-hover:translate-x-1" style={{ background: D.surf1, color: D.textMuted, border: `1px solid ${D.border}` }}>
-                    <ChevronRight className="h-4 w-4 opacity-50 group-hover:opacity-100 group-hover:text-indigo-400 transition-all" />
+                    <ChevronRight className="h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:text-indigo-500 transition-all" />
                   </div>
                 </div>
               </Link>
@@ -237,7 +237,7 @@ export default function FixtureCentreCard({
       <div className="p-6 md:p-8 pb-5 relative overflow-hidden border-b" style={{ borderColor: D.border, background: D.surf2 }}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-3" style={{ fontFamily: D.head }}>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3" style={{ fontFamily: D.head }}>
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
                 style={{ background: `${D.indigo}15`, border: `1px solid ${D.indigo}30`, color: D.indigo }}
@@ -246,8 +246,8 @@ export default function FixtureCentreCard({
               </div>
               Fixture <span style={{ color: D.indigo }}>Centre</span>
             </h2>
-            <p className="text-xs font-normal text-slate-400 mt-1.5 flex items-center gap-2" style={{ fontFamily: D.sans }}>
-              <Clock className="w-3.5 h-3.5 text-indigo-400" /> Real-time multi-sport operational gateway
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-1.5 flex items-center gap-2" style={{ fontFamily: D.sans }}>
+              <Clock className="w-3.5 h-3.5 text-indigo-500" /> Real-time multi-sport operational gateway
             </p>
           </div>
           <div className="flex gap-3 w-full md:w-auto">

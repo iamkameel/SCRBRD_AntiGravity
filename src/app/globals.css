@@ -48,17 +48,17 @@
   --radius-pill: 999px;
 
   /* --- Light Theme Surfaces --- */
-  --bg-app: #f0f4f8;
+  --bg-app: #f8fafc;
   --surf0: #ffffff;
   --surf1: #ffffff;
-  --surf2: #f5f7fb;
-  --surf3: #eaeff7;
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-med: rgba(0, 0, 0, 0.14);
-  --card-ghost: rgba(0, 0, 0, 0.03);
+  --surf2: #f1f5f9;
+  --surf3: #e2e8f0;
+  --border-subtle: rgba(15, 23, 42, 0.12);
+  --border-med: rgba(15, 23, 42, 0.20);
+  --card-ghost: rgba(15, 23, 42, 0.03);
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-secondary: #1e293b;
+  --text-muted: #475569;
 
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
@@ -76,7 +76,7 @@
   --secondary-foreground: 222 47% 11%;
 
   --muted: 210 20% 96%;
-  --muted-foreground: 215 16% 47%;
+  --muted-foreground: 215 25% 35%; /* Slate-600 */
 
   --accent: 199 89% 48%;            /* Sky #0ea5e9 */
   --accent-foreground: 0 0% 100%;
@@ -84,20 +84,20 @@
   --destructive: 347 77% 60%;       /* Rose #f43f5e */
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
+  --border: 220 13% 85%;
+  --input: 220 13% 85%;
   --ring: 239 84% 67%;
 
   --radius: 0.875rem; /* 14px — D.lg per spec */
 
   /* Sidebar Light */
-  --sidebar-background: 0 0% 98%;
+  --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-primary: 239 84% 67%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 239 84% 95%;
   --sidebar-accent-foreground: 239 84% 30%;
-  --sidebar-border: 220 13% 91%;
+  --sidebar-border: 220 13% 85%;
   --sidebar-ring: 239 84% 67%;
 
   /* Charts */

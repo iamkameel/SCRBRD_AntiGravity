@@ -26,6 +26,7 @@ export interface NavGroup {
   key: string;
   defaultOpen?: boolean;
   highlighted?: boolean; // For special styling (green border)
+  accentColor?: string;
 }
 
 // Dashboard (always visible, not in a group)
@@ -43,6 +44,7 @@ export const navGroups: NavGroup[] = [
     icon: Users2,
     key: 'group-teams-people',
     defaultOpen: true,
+    accentColor: '#6366f1', // Indigo
     links: [
       { href: '/teams', label: 'Team Directory', icon: Shield, key: 'teams' },
       { href: '/players', label: 'People', icon: UsersRound, key: 'people' },
@@ -59,6 +61,7 @@ export const navGroups: NavGroup[] = [
     icon: Waves,
     key: 'group-sports-engines',
     defaultOpen: true,
+    accentColor: '#10b981', // Emerald
     links: [
       { href: '/swimming', label: 'Swimming Gala Engine', icon: Waves, key: 'swimming-gala' },
       { href: '/athletics', label: 'Athletics Track & Field', icon: Flag, key: 'athletics-meet' },
@@ -71,10 +74,11 @@ export const navGroups: NavGroup[] = [
     icon: Crosshair,
     key: 'group-matches',
     defaultOpen: false,
+    accentColor: '#f43f5e', // Rose / Red
     links: [
       { href: '/fixtures', label: 'Match Fixtures', icon: CalendarDays, key: 'matches' },
       { href: '/matches', label: 'Matches Hub', icon: Trophy, key: 'matches-hub' },
-      { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring' },
+      { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring', badge: 'LIVE' },
       { href: '/umpire-review', label: 'Umpire Review', icon: Eye, key: 'umpire-review' },
       { href: '/fixtures/multi-create', label: 'Multi-Fixture Tool', icon: Sparkles, key: 'multi-fixture-tool' },
       { href: '/match-operations', label: 'Match Operations', icon: FilePenLine, key: 'match-operations' },
@@ -87,6 +91,7 @@ export const navGroups: NavGroup[] = [
     icon: BarChart3,
     key: 'group-analytics',
     defaultOpen: false,
+    accentColor: '#f59e0b', // Amber / Gold
     links: [
       { href: '/analytics', label: 'Analysis Dashboard', icon: BarChart3, key: 'analytics-dashboard' },
       { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
@@ -104,6 +109,7 @@ export const navGroups: NavGroup[] = [
     icon: Target,
     key: 'group-coaching',
     defaultOpen: false,
+    accentColor: '#0284c7', // Sky Blue
     links: [
       { href: '/planner', label: 'Session Planner', icon: ClipboardList, key: 'session-planner' },
       { href: '/drills', label: 'Drill Library', icon: Dumbbell, key: 'drill-library' },
@@ -116,6 +122,7 @@ export const navGroups: NavGroup[] = [
     icon: Tractor,
     key: 'group-operations',
     defaultOpen: false,
+    accentColor: '#8b5cf6', // Violet
     links: [
       { href: '/fields', label: 'Fields', icon: MapPin, key: 'fields' },
       { href: '/equipment', label: 'Equipment', icon: Tractor, key: 'equipment' },
@@ -132,6 +139,7 @@ export const navGroups: NavGroup[] = [
     key: 'group-administration',
     defaultOpen: false,
     highlighted: true,
+    accentColor: '#64748b', // Slate
     links: [
       { href: '/user-management', label: 'User Management', icon: UserCog, key: 'user-management' },
       { href: '/data-management', label: 'Data Management', icon: Database, key: 'data-management' },

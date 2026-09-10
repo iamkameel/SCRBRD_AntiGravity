@@ -24,15 +24,17 @@ export const DARK = {
 
 // ── Light Theme Surfaces ─────────────────────────────────────────
 export const LIGHT = {
-    bg: '#f0f4f8',
+    bg: '#f8fafc',
     surf0: '#ffffff',
     surf1: '#ffffff',
-    surf2: '#f5f7fb',
-    surf3: '#eaeff7',
-    border: 'rgba(0,0,0,0.08)',
+    surf2: '#f1f5f9',
+    surf3: '#e2e8f0',
+    border: 'rgba(15, 23, 42, 0.12)',
+    borderMed: 'rgba(15, 23, 42, 0.20)',
+    cardBg: '#ffffff',
     textPrimary: '#0f172a',
-    textSecondary: '#334155',
-    textMuted: '#94a3b8',
+    textSecondary: '#1e293b',
+    textMuted: '#475569',
 } as const;
 
 // ── Accent Colours — Semantic Mapping (§2.4) ─────────────────────
