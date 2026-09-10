@@ -6,7 +6,7 @@ interface DashboardFilters {
   seasonId: string;
   schoolId: string;
   simulatedRole?: string;
-  activeDeckMode?: string;
+  activeDeckMode?: "operations" | "competition" | "squads" | "coaching" | "rankings" | "logistics";
 }
 
 interface DashboardContextType {

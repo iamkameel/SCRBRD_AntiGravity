@@ -11,8 +11,9 @@ import { DashboardFilterBar } from "./DashboardFilterBar";
 import { SmartDailyBriefing } from "./SmartDailyBriefing";
 import { LiveTelemetryTicker } from "./LiveTelemetryTicker";
 import { SchoolReadinessGauge } from "./SchoolReadinessGauge";
+import FixtureCentreCard from "./FixtureCentreCard";
 import { 
-  Loader2, Radio, Layers, Activity, Users, Trophy, Truck, Shield, Sparkles, UserCheck, RefreshCw, ChevronRight, Zap
+  Loader2, Radio, Layers, Activity, Users, Trophy, Truck, Shield, Sparkles, UserCheck, RefreshCw, ChevronRight, Zap, Calendar, HeartPulse, Bus, Award, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { D } from "@/lib/design-system";
@@ -38,7 +39,7 @@ export default function DashboardView() {
   const [person, setPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Active OS Deck Mode tab: "operations" | "coaching" | "rankings" | "logistics"
+  // Active OS Deck Mode tab: "operations" | "competition" | "squads" | "coaching" | "rankings" | "logistics"
   const [activeDeck, setActiveDeck] = useState<string>(filters.activeDeckMode || "operations");
 
   // Effective Role (simulated or authenticated)
@@ -110,10 +111,12 @@ export default function DashboardView() {
   };
 
   const deckTabs = [
-    { id: "operations", label: "Operations & Live Command", icon: Activity, color: D.indigo },
-    { id: "coaching", label: "Coaching & Micro-Plans", icon: Users, color: D.amber },
-    { id: "rankings", label: "Rankings & Milestones", icon: Trophy, color: D.emerald },
-    { id: "logistics", label: "Facilities & Logistics", icon: Truck, color: D.sky },
+    { id: "operations", label: "Match & Live Command", icon: Activity, color: D.indigo },
+    { id: "competition", label: "Competition & Fixtures", icon: Calendar, color: D.rose },
+    { id: "squads", label: "Team Ops & Selection", icon: Shield, color: D.emerald },
+    { id: "coaching", label: "Analytics & Intelligence", icon: Users, color: D.amber },
+    { id: "rankings", label: "Identity, History & Scouting", icon: Trophy, color: D.violet },
+    { id: "logistics", label: "Facilities, Transport & Med", icon: Truck, color: D.sky },
   ];
 
   return (
@@ -162,7 +165,7 @@ export default function DashboardView() {
       {/* 5. Strategic 6-Layer OS Deck Navigation Tabs */}
       <div className="space-y-6">
         <div
-          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl"
+          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl no-scrollbar"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           {deckTabs.map((tab) => {
@@ -172,10 +175,10 @@ export default function DashboardView() {
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveDeck(tab.id);
-                  setFilters({ activeDeckMode: tab.id });
+                  setActiveDeck(tab.id as any);
+                  setFilters({ activeDeckMode: tab.id as any });
                 }}
-                className={`relative flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
+                className={`relative flex items-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
                   isActive
                     ? "text-white"
                     : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
@@ -211,12 +214,13 @@ export default function DashboardView() {
         {/* 6. Dynamic Content Deck Rendering */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeDeck + activeRole}
+            key={activeDeck + (activeRole || "")}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
+            {/* Deck 1: Match & Live Command */}
             {activeDeck === "operations" && (
               <div className="space-y-8">
                 <SmartDailyBriefing
@@ -227,21 +231,42 @@ export default function DashboardView() {
               </div>
             )}
 
+            {/* Deck 2: Competition & Fixtures */}
+            {activeDeck === "competition" && (
+              <div className="space-y-8">
+                <FixtureCentreCard role={activeRole || "schooladmin"} schoolId={person?.schoolId} />
+              </div>
+            )}
+
+            {/* Deck 3: Team Operations & Selection */}
+            {activeDeck === "squads" && (
+              <div className="space-y-8">
+                <CoachDashboard />
+              </div>
+            )}
+
+            {/* Deck 4: Analytics & Intelligence */}
             {activeDeck === "coaching" && (
               <div className="space-y-8">
                 <PlayerMicroPlanGenerator />
               </div>
             )}
 
+            {/* Deck 5: Identity, History & Scouting */}
             {activeDeck === "rankings" && (
               <div className="space-y-8">
                 <GlobalRankingsClient />
               </div>
             )}
 
+            {/* Deck 6: Facilities, Transport & Medical */}
             {activeDeck === "logistics" && (
               <div className="space-y-8">
-                <GroundskeeperDashboard schoolId={person?.schoolId || ""} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <GroundskeeperDashboard schoolId={person?.schoolId || ""} />
+                  <DriverDashboard />
+                </div>
+                <MedicalDashboard />
               </div>
             )}
           </motion.div>

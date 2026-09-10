@@ -78,7 +78,20 @@ export const FONTS = {
 
 // ── Composite D token object (matches cricket_os.jsx API) ────────
 export const D = {
-    ...DARK,
+    // Dynamic theme-aware surface & text tokens
+    bg: 'var(--bg-app)',
+    surf0: 'var(--surf0)',
+    surf1: 'var(--surf1)',
+    surf2: 'var(--surf2)',
+    surf3: 'var(--surf3)',
+    border: 'var(--border-subtle)',
+    borderMed: 'var(--border-med)',
+    cardBg: 'var(--card-ghost)',
+    textPrimary: 'var(--text-primary)',
+    textSecondary: 'var(--text-secondary)',
+    textMuted: 'var(--text-muted)',
+
+    // Constant semantic accents & fonts
     ...ACCENTS,
     ...GRADIENTS,
     gradMain: GRADIENTS.main,

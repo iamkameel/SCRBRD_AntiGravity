@@ -81,7 +81,7 @@ export function GlobalNotificationCenter({ isOpen, onClose }: { isOpen: boolean,
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed top-0 right-0 h-full w-full max-w-sm border-l z-[101] shadow-2xl flex flex-col"
-            style={{ background: `${D.surf1}f5`, borderColor: D.border }}
+            style={{ background: D.surf1, borderColor: D.border }}
           >
             {/* Header Hub */}
             <div className="p-8 border-b flex items-center justify-between" style={{ borderColor: D.border, background: D.surf2 }}>

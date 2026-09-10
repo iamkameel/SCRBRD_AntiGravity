@@ -48,7 +48,7 @@ export function Header() {
       className="sticky top-0 z-40 flex items-center justify-between gap-4 px-6 backdrop-blur-xl border-b transition-all duration-300 shadow-sm"
       style={{
         height: 52,
-        background: `${D.surf1}f0`, // 95% opacity blur
+        background: D.surf1,
         borderColor: D.border,
         fontFamily: D.head,
       }}

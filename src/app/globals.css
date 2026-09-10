@@ -48,6 +48,18 @@
   --radius-pill: 999px;
 
   /* --- Light Theme Surfaces --- */
+  --bg-app: #f0f4f8;
+  --surf0: #ffffff;
+  --surf1: #ffffff;
+  --surf2: #f5f7fb;
+  --surf3: #eaeff7;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-med: rgba(0, 0, 0, 0.14);
+  --card-ghost: rgba(0, 0, 0, 0.03);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
 
@@ -98,6 +110,18 @@
 
 .dark {
   /* --- Dark Theme Surfaces (UIX Spec §2.2) --- */
+  --bg-app: #060910;
+  --surf0: #0a0f1a;
+  --surf1: #0f1621;
+  --surf2: #151d2e;
+  --surf3: #1c2640;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-med: rgba(255, 255, 255, 0.12);
+  --card-ghost: rgba(255, 255, 255, 0.03);
+  --text-primary: #f0f4ff;
+  --text-secondary: #8b9bc4;
+  --text-muted: #4a5570;
+
   --background: 220 30% 4%;     /* #060910 — deepest layer */
   --foreground: 220 40% 94%;    /* #f0f4ff — textPrimary */
 
@@ -201,19 +225,19 @@
   /* Legacy alias */
   .text-gradient-primary { @apply text-gradient-main; }
   .text-gradient-premium {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white/90 to-white/70;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 dark:from-white dark:via-white/90 dark:to-white/70;
   }
 
   /* --- Surface classes (UIX Spec §5.1) --- */
-  .bg-surf0 { background-color: #0a0f1a; }
-  .bg-surf1 { background-color: #0f1621; }
-  .bg-surf2 { background-color: #151d2e; }
-  .bg-surf3 { background-color: #1c2640; }
+  .bg-surf0 { background-color: var(--surf0); }
+  .bg-surf1 { background-color: var(--surf1); }
+  .bg-surf2 { background-color: var(--surf2); }
+  .bg-surf3 { background-color: var(--surf3); }
 
   /* --- Card pattern (UIX Spec §5.2) --- */
   .card-scrbrd {
-    background-color: #0f1621;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background-color: var(--surf1);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
   }
 

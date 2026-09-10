@@ -98,17 +98,17 @@ export function LiveTelemetryTicker() {
 
         {/* Middle: Active Match Banner & Recent Ball Events */}
         <div className="flex-1 max-w-2xl px-2 lg:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-black/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border" style={{ background: D.surf2, borderColor: D.border }}>
             <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-white" style={{ fontFamily: D.head }}>
-                <span className="text-indigo-400">{activeMatch.homeTeam}</span>
-                <span className="text-slate-500 font-mono text-[10px]">VS</span>
-                <span className="text-emerald-400">{activeMatch.awayTeam}</span>
+              <div className="flex items-center gap-2 text-xs font-bold" style={{ fontFamily: D.head, color: D.textPrimary }}>
+                <span className="text-indigo-500 font-extrabold">{activeMatch.homeTeam}</span>
+                <span className="opacity-40 font-mono text-[10px]" style={{ color: D.textMuted }}>VS</span>
+                <span className="text-emerald-500 font-extrabold">{activeMatch.awayTeam}</span>
               </div>
               <div className="flex items-center gap-3 mt-1 text-[11px]" style={{ fontFamily: D.mono }}>
-                <span className="text-slate-200 font-bold">{activeMatch.awayScore}</span>
-                <span className="text-slate-500">|</span>
-                <span className="text-slate-400 font-medium">{activeMatch.venue}</span>
+                <span className="font-bold" style={{ color: D.textPrimary }}>{activeMatch.awayScore}</span>
+                <span style={{ color: D.border }}>|</span>
+                <span className="font-medium opacity-60" style={{ color: D.textMuted }}>{activeMatch.venue}</span>
               </div>
             </div>
 
