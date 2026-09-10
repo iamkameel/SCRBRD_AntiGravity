@@ -54,8 +54,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Landing page or not logged in - show navbar only
-  if (!user || isPublicPage) {
+  // On the root landing page: render without any shell chrome (owns its own nav + bg)
+  if (pathname === '/') {
+    return (
+      <main className="flex-1 relative z-10">{children}</main>
+    );
+  }
+
+  // Auth pages (login/signup) - clean, no sidebar, no nav chrome
+  if (isPublicPage) {
     return (
       <div className="flex min-h-screen flex-col relative bg-background text-foreground font-sans antialiased">
         <BackgroundEffects />
