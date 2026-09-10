@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Match, Person, PreMatchProcedure } from '@/types/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ export function MatchManagementClient({
 
   const seasonId = match.seasonId || 'current-season'; // Fallback
 
-  const fetchInsightData = useMemo(() => async (personId: string) => {
+  const fetchInsightData = useCallback(async (personId: string) => {
     setIsLoadingInsight(true);
     try {
       const [assessmentsRes, readinessRes] = await Promise.all([
@@ -92,7 +92,7 @@ export function MatchManagementClient({
     }
   }, [seasonId]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (selectedPlayerForInsight) {
       fetchInsightData(selectedPlayerForInsight.id);
     }
@@ -227,6 +227,9 @@ export function MatchManagementClient({
     return (
       <Sheet open={!!selectedPlayerForInsight} onOpenChange={(open) => !open && setSelectedPlayerForInsight(null)}>
         <SheetContent className="w-[400px] sm:w-[540px] bg-[#0c1220] border-white/10 text-white p-0 overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>{selectedPlayerForInsight.firstName} {selectedPlayerForInsight.lastName} — Player Insight</SheetTitle>
+          </SheetHeader>
           <div className="h-32 bg-gradient-to-br from-[#4f46e5]/20 to-transparent relative">
             <div className="absolute -bottom-10 left-8">
               <div className="w-20 h-20 rounded-2xl bg-[#101829] border-2 border-white/10 flex items-center justify-center text-xl font-bold shadow-2xl">
