@@ -14,11 +14,32 @@ import { Player as Person } from "@/lib/store";
 import { PlayerCard } from "./PlayerCard";
 import { D } from "@/lib/design-system";
 
+import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchPersonByEmail } from '@/app/actions/personActions';
+import { Sparkles, ArrowRight } from 'lucide-react';
+
 interface PlayersClientProps {
   players: any[];
 }
 
 export function PlayersClient({ players }: PlayersClientProps) {
+  const { user } = useAuth();
+  const [currentUserPerson, setCurrentUserPerson] = useState<any | null>(null);
+
+  useEffect(() => {
+    async function checkCurrentPlayer() {
+      if (!user?.email) return;
+      try {
+        const p = await fetchPersonByEmail(user.email);
+        if (p) setCurrentUserPerson(p);
+      } catch (e) {
+        console.error("Error auto-resolving logged in player", e);
+      }
+    }
+    checkCurrentPlayer();
+  }, [user]);
+
   const { viewMode, setViewMode } = useViewMode({ 
     storageKey: 'players-view-mode',
     defaultMode: 'grid'
@@ -61,6 +82,30 @@ export function PlayersClient({ players }: PlayersClientProps) {
 
   return (
     <div className="space-y-6">
+      {/* Auto-Resolved Player Passport Banner */}
+      {currentUserPerson && (
+        <div className="p-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-indigo-500 text-white shrink-0 shadow-md">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-indigo-300" style={{ fontFamily: D.mono }}>
+                Auto-Resolved Player Passport
+              </div>
+              <div className="text-sm font-bold text-white">
+                Logged in as <strong className="text-indigo-400">{currentUserPerson.firstName} {currentUserPerson.lastName}</strong> ({currentUserPerson.schoolName || 'SCRBRD OS'})
+              </div>
+            </div>
+          </div>
+          <Link href={`/players/${currentUserPerson.id}`}>
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0">
+              View Your Digital Passport <ArrowRight className="h-4 w-4" />
+            </button>
+          </Link>
+        </div>
+      )}
+
       {/* Search and View Mode Toolbar */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         {/* Search Bar */}

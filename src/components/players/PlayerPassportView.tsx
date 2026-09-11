@@ -75,8 +75,11 @@ const StatBlock = ({ label, value, sub, color ="primary" }: { label: string, val
 );
 
 export function PlayerPassportView({ player, profile }: PlayerPassportViewProps) {
-  const avatarUrl = player.profileImageUrl || 
-    `https://ui-avatars.com/api/?name=${player.firstName}+${player.lastName}&background=22c55e&color=fff&size=200`;
+  const firstName = player?.firstName || 'Player';
+  const lastName = player?.lastName || 'Member';
+  const playerId = player?.id || 'SCR-00000';
+  const avatarUrl = player?.profileImageUrl || 
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=22c55e&color=fff&size=200`;
 
   return (
     <div className="space-y-10 sh-fade-in pb-20">
@@ -93,7 +96,7 @@ export function PlayerPassportView({ player, profile }: PlayerPassportViewProps)
               <div className="relative w-56 h-72 rounded-[2rem] overflow-hidden border-4 border-white/10 shadow-3xl bg-white/5">
                 <Image
                   src={avatarUrl}
-                  alt={player.firstName}
+                  alt={firstName}
                   fill
                   className="object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-110"
                 />
@@ -102,7 +105,7 @@ export function PlayerPassportView({ player, profile }: PlayerPassportViewProps)
                 </div>
                 <div className="absolute bottom-6 left-6 right-6 p-4 rounded-xl bg-black/60 backdrop-blur-md border border-white/10">
                   <div className="text-[8px] font-black uppercase tracking-widest text-primary/70 mb-1" style={{ fontFamily: D.mono }}>Unique Player ID</div>
-                  <div className="text-[10px] font-black text-white/90" style={{ fontFamily: D.mono }}>SCR-PID-{player.id?.substring(0, 8).toUpperCase()}</div>
+                  <div className="text-[10px] font-black text-white/90" style={{ fontFamily: D.mono }}>SCR-PID-{playerId.substring(0, 8).toUpperCase()}</div>
                 </div>
               </div>
             </div>
@@ -125,14 +128,14 @@ export function PlayerPassportView({ player, profile }: PlayerPassportViewProps)
                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]" style={{ fontFamily: D.mono }}>Personnel Data Sheet v4.2</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter" style={{ fontFamily: D.head }}>
-                  {player.lastName.toUpperCase()}, <span className="text-primary/70">{player.firstName}</span>
+                  {lastName.toUpperCase()}, <span className="text-primary/70">{firstName}</span>
                 </h1>
                 <div className="flex gap-4">
-                  <span className="text-sm font-bold text-white/60">DOB: {player.dateOfBirth || '14 MAY 2008'}</span>
+                  <span className="text-sm font-bold text-white/60">DOB: {player?.dateOfBirth || '14 MAY 2008'}</span>
                   <span className="text-white/20 px-3 border-x border-white/10">•</span>
-                  <span className="text-sm font-bold text-white/60">{player.physicalAttributes?.battingHand || 'RH'} BAT</span>
+                  <span className="text-sm font-bold text-white/60">{player?.physicalAttributes?.battingHand || 'RH'} BAT</span>
                   <span className="text-white/20 px-3 border-x border-white/10">•</span>
-                  <span className="text-sm font-bold text-white/60">{player.physicalAttributes?.bowlingHand || 'RM'} BOWL</span>
+                  <span className="text-sm font-bold text-white/60">{player?.physicalAttributes?.bowlingHand || 'RM'} BOWL</span>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -141,7 +144,7 @@ export function PlayerPassportView({ player, profile }: PlayerPassportViewProps)
                 </div>
                 <div className="text-right">
                    <div className="text-[8px] font-black uppercase tracking-[0.3em] text-white/40" style={{ fontFamily: D.mono }}>Institutional Affinity</div>
-                   <div className="text-sm font-bold text-white/90">{player.assignedSchools?.[0] || 'Riverside College'}</div>
+                   <div className="text-sm font-bold text-white/90">{player?.schoolName || player?.assignedSchools?.[0] || 'Westville Boys\' High School'}</div>
                 </div>
               </div>
             </div>

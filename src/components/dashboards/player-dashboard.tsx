@@ -17,11 +17,14 @@ import { D } from '@/lib/design-system';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 
+import { PlayerPassportView } from '../players/PlayerPassportView';
+
 export default function PlayerDashboard() {
   const { user } = useAuth();
   const [person, setPerson] = useState<Person | null>(null);
   const [matches, setMatches] = useState<{ upcoming: Match[], past: Match[], total: number }>({ upcoming: [], past: [], total: 0 });
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'dashboard' | 'passport'>('dashboard');
 
   useEffect(() => {
     const loadData = async () => {
@@ -64,6 +67,27 @@ export default function PlayerDashboard() {
     );
   }
 
+  if (viewMode === 'passport') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={() => setViewMode('dashboard')}
+            className="rounded-2xl font-black text-[10px] uppercase tracking-widest px-6 h-10 border transition-all hover:bg-black/5"
+            style={{ background: D.surf2 }}
+          >
+            &larr; Back to Player Dashboard
+          </Button>
+          <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider" style={{ fontFamily: D.mono }}>
+            Biometric Passport Status: Active & Verified
+          </span>
+        </div>
+        <PlayerPassportView player={person || { firstName: user?.displayName?.split(' ')[0] || 'Player', lastName: user?.displayName?.split(' ')[1] || 'Member', id: user?.uid || 'PID-AUTO' }} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12 pb-12">
       {/* Strategic Header */}
@@ -84,7 +108,14 @@ export default function PlayerDashboard() {
             </p>
           </div>
           <div className="md:ml-auto flex gap-4 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5" style={{ background: D.surf2 }}>PASSPORT</Button>
+             <Button
+               variant="outline"
+               onClick={() => setViewMode('passport')}
+               className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5"
+               style={{ background: D.surf2 }}
+             >
+               PASSPORT
+             </Button>
              <Button className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl" style={{ background: D.indigo, color: 'white' }}>MATCH CENTRE</Button>
           </div>
         </div>
