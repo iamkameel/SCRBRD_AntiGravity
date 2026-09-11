@@ -1796,22 +1796,54 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
   const [speechActive, setSpeechActive] = useState(false);
 
   /* ── Keyboard Shortcuts ── */
+  const handleRecordRef = useRef<() => void>();
+  const handleUndoRef = useRef<() => void>();
+  const canRecordRef = useRef(false);
+
+  useEffect(() => {
+    handleRecordRef.current = handleRecord;
+    handleUndoRef.current = handleUndo;
+    canRecordRef.current = canRecord;
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
-      if (e.key >= '0' && e.key <= '6' && e.key !== '5') {
+      const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName);
+      if (isInput) return;
+
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        handleUndoRef.current?.();
+        return;
+      }
+
+      if (e.key >= '0' && e.key <= '6') {
         setRuns(parseInt(e.key, 10));
+        setWicketType(null);
+        setExtraType(null);
         scoringAudio.playKeyClick();
       } else if (e.key === 'w' || e.key === 'W') {
         setShowWicketSheet(true);
         scoringAudio.playKeyClick();
+      } else if (e.key === 'x' || e.key === 'X') {
+        setShowExtrasSheet(true);
+        scoringAudio.playKeyClick();
       } else if (e.key === 'e' || e.key === 'E') {
         setShowEnrichmentDrawer(true);
+        scoringAudio.playKeyClick();
+      } else if (e.key === 'z' || e.key === 'Z') {
+        handleUndoRef.current?.();
         scoringAudio.playKeyClick();
       } else if (e.key === 'b' || e.key === 'B') {
         setShowBroadcast(prev => !prev);
       } else if (e.key === 's' || e.key === 'S') {
         setSoundActive(scoringAudio.toggleSound());
+      } else if (e.key === 'm' || e.key === 'M') {
+        setScorerMode(prev => prev === 'quick' ? 'standard' : prev === 'standard' ? 'full' : 'quick');
+        scoringAudio.playKeyClick();
+      } else if ((e.key === 'Enter' || e.key === ' ') && canRecordRef.current) {
+        e.preventDefault();
+        handleRecordRef.current?.();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -2307,8 +2339,21 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
             {/* Ball Input Panel */}
             {!isInningsBreak && !isComplete && (
               <GlassCard sx={{ padding: '18px 16px' }}>
-                <Lbl>Record Ball</Lbl>
-                <div style={{ height: '12px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
+                  <Lbl>Record Ball</Lbl>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: D.mono, fontSize: '10px', color: D.textMuted, background: D.surf2, padding: '3px 8px', borderRadius: D.pill, border: `1px solid ${D.border}` }}>
+                    <span>⌨️ Hotkeys:</span>
+                    <span style={{ color: D.emerald, fontWeight: 700 }}>0–6</span>
+                    <span>·</span>
+                    <span style={{ color: D.rose, fontWeight: 700 }}>W</span>
+                    <span>Wicket ·</span>
+                    <span style={{ color: D.amber, fontWeight: 700 }}>X</span>
+                    <span>Extra ·</span>
+                    <span style={{ color: D.sky, fontWeight: 700 }}>Z</span>
+                    <span>Undo ·</span>
+                    <span style={{ color: D.violet, fontWeight: 700 }}>Enter</span>
+                  </div>
+                </div>
 
                 {/* Runs */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '7px', marginBottom: '10px' }}>

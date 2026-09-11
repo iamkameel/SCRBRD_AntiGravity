@@ -9,14 +9,21 @@ export type AuditActionType =
     | "MATCH_RESULT_VERIFIED"
     | "SECURITY_ALERT"
     | "LOGISTICS_UPDATE"
-    | "LOGISTICS_CREATE";
+    | "LOGISTICS_CREATE"
+    | "TACTICAL_DIRECTIVE_TRANSMITTED"
+    | "TACTICAL_DIRECTIVE_ACCEPTED"
+    | "TACTICAL_DIRECTIVE_MODIFIED"
+    | "TACTICAL_DIRECTIVE_DISMISSED"
+    | "TACTICAL_DIRECTIVE_SUPERSEDED"
+    | "TACTICAL_DIRECTIVE_CANCELLED"
+    | "TACTICAL_DIRECTIVE_EXPIRED";
 
 export interface AuditLogEntry {
     id?: string;
     actorId: string;
     actorName: string;
     actionType: AuditActionType;
-    entityType: "match" | "player" | "team" | "school" | "system" | "vehicle" | "transport_trip" | "ground_readiness" | "facility_booking" | "medical_incident";
+    entityType: "match" | "player" | "team" | "school" | "system" | "vehicle" | "transport_trip" | "ground_readiness" | "facility_booking" | "medical_incident" | "tactical_directive";
     entityId: string;
     description: string;
     beforeState?: any;

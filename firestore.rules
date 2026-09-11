@@ -38,7 +38,11 @@ service cloud.firestore {
     }
 
     function isCoach() {
-      return hasRole('Assistant Coach') || isHeadCoach();
+      return hasRole('Assistant Coach') || hasRole('Coach') || isHeadCoach();
+    }
+
+    function isCaptain() {
+      return hasRole('Captain') || isCoach();
     }
 
     function isScorer() {
@@ -184,6 +188,54 @@ service cloud.firestore {
       // Session lock for multi-scorer handover
       allow read: if isSignedIn();
       allow create, update, delete: if canScore();
+    }
+
+    // ─── Tactical Directive Bus ───────────────────────────────────────────────
+    // Note: there is no top-level `match /matches/{matchId}` rule block in this
+    // file — live-scoring writes go through the Admin SDK (matchActions.ts),
+    // which bypasses rules entirely, and client reads of `matches` are
+    // apparently ungated today. That's a pre-existing gap, out of scope here.
+    // This block only secures the tacticalDirectives subtree, which IS read
+    // and written directly from the client (Coach/Captain Cockpit listeners),
+    // so it needs its own rules regardless of the parent collection's state.
+
+    match /matches/{matchId}/tacticalDirectives/{directiveId} {
+      allow read: if isSignedIn() && (
+        resource.data.issuedByPersonId == request.auth.uid ||
+        resource.data.issuedToPersonId == request.auth.uid ||
+        isCoach() || isAdmin()
+      );
+      allow create: if isSignedIn() && isCoach()
+        && request.resource.data.issuedByPersonId == request.auth.uid;
+      // Only the issuing coach may mutate the directive itself (supersede/
+      // cancel/expire/denormalized latestResponse). Captain input always goes
+      // through the responses subcollection instead — the directive record
+      // stays an immutable statement of original intent.
+      allow update: if isSignedIn() && (
+        resource.data.issuedByPersonId == request.auth.uid || isCoach()
+      );
+      allow delete: if false;
+
+      match /responses/{responseId} {
+        allow read: if isSignedIn() && (isCoach() || isCaptain());
+        // clientEventId is the doc id, so a retried submit overwrites its own
+        // response rather than creating a duplicate — the captain who typed
+        // it is the only one who can ever write that id.
+        allow create: if isSignedIn() && isCaptain()
+          && request.resource.data.respondedByPersonId == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      match /receipts/{personId} {
+        allow read: if isSignedIn() && (isCoach() || request.auth.uid == personId);
+        allow write: if isSignedIn() && request.auth.uid == personId;
+      }
+
+      match /outcomes/{deliveryId} {
+        allow read: if isSignedIn() && (isCoach() || isCaptain() || isScorer());
+        allow create, update: if isSignedIn() && (isScorer() || isCoach());
+        allow delete: if false;
+      }
     }
 
     // ─── Player Development ───────────────────────────────────────────────────
