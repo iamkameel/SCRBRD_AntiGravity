@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listAgeDivisions,
     createAgeDivision,
@@ -18,6 +18,9 @@ export const ageDivisionService = {
      * Get all age divisions
      */
     async getAll(): Promise<ListAgeDivisionsData['ageDivisions']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_AGE_DIVISIONS;
+        }
         try {
             const response = await listAgeDivisions(dc);
             const divisions = response.data?.ageDivisions;
@@ -26,6 +29,7 @@ export const ageDivisionService = {
             }
             return FALLBACK_AGE_DIVISIONS;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local age division registry.');
             return FALLBACK_AGE_DIVISIONS;
         }

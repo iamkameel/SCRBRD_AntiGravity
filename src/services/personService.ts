@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listPeople,
     createPerson,
@@ -38,6 +38,9 @@ export const personService = {
      * Get all people with relational joins (roles, orgs)
      */
     async getAll(): Promise<ListPeopleData['people']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_PEOPLE;
+        }
         try {
             const response = await listPeople(dc);
             const people = response.data?.people;
@@ -46,6 +49,7 @@ export const personService = {
             }
             return FALLBACK_PEOPLE;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local person registry.');
             return FALLBACK_PEOPLE;
         }

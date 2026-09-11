@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listTeamClasses,
     createTeamClass,
@@ -18,6 +18,9 @@ export const teamClassService = {
      * Get all team classes
      */
     async getAll(): Promise<ListTeamClassesData['teamClasses']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_TEAM_CLASSES;
+        }
         try {
             const response = await listTeamClasses(dc);
             const teamClasses = response.data?.teamClasses;
@@ -26,6 +29,7 @@ export const teamClassService = {
             }
             return FALLBACK_TEAM_CLASSES;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local team class registry.');
             return FALLBACK_TEAM_CLASSES;
         }

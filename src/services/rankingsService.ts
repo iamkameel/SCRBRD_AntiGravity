@@ -76,11 +76,13 @@ export const rankingsService = {
      */
     async calculateTRS(teamId: UUID, context: { seasonId?: UUID }) {
         // 1. Fetch matches for the team in the season
+        const constraints: any[] = [where('state', '==', 'COMPLETED')];
+        if (context.seasonId) {
+            constraints.push(where('seasonId', '==', context.seasonId));
+        }
+
         const matches = await baseService.getAll<Match>('matches', {
-            constraints: [
-                where('seasonId', '==', context.seasonId),
-                where('state', '==', 'COMPLETED')
-            ]
+            constraints
         });
 
         const teamMatches = matches.filter(m => m.homeTeamId === teamId || m.awayTeamId === teamId);
@@ -121,12 +123,18 @@ export const rankingsService = {
      * Logic: Aggregates Match Impact Events over the season.
      */
     async calculatePPR(personId: UUID, context: { seasonId?: UUID }) {
+        if (!personId) {
+            return { score: 40.0, components: [] };
+        }
+
         // 1. Fetch player impact records
+        const constraints: any[] = [where('personId', '==', personId)];
+        if (context.seasonId) {
+            constraints.push(where('seasonId', '==', context.seasonId));
+        }
+
         const impacts = await baseService.getAll<Rankings.PlayerMatchImpact>(this.COLLECTION_IMPACT, {
-            constraints: [
-                where('personId', '==', personId),
-                where('seasonId', '==', context.seasonId)
-            ]
+            constraints
         });
 
         if (impacts.length === 0) {

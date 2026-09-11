@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listFixtures,
     ListFixturesData
@@ -31,6 +31,9 @@ export const fixtureService = {
      * Get all fixtures
      */
     async getAll(): Promise<ListFixturesData['fixtures']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_FIXTURES;
+        }
         try {
             const response = await listFixtures(dc);
             const fixtures = response.data?.fixtures;
@@ -39,6 +42,7 @@ export const fixtureService = {
             }
             return FALLBACK_FIXTURES;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local fixture registry.');
             return FALLBACK_FIXTURES;
         }

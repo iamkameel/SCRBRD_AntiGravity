@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listOrganisations,
     createOrganisation,
@@ -20,6 +20,9 @@ export const organisationService = {
      * Get all organisations
      */
     async getAll(): Promise<ListOrganisationsData['organisations']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_ORGANISATIONS;
+        }
         try {
             const response = await listOrganisations(dc);
             const orgs = response.data?.organisations;
@@ -28,6 +31,7 @@ export const organisationService = {
             }
             return FALLBACK_ORGANISATIONS;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local organisation registry.');
             return FALLBACK_ORGANISATIONS;
         }

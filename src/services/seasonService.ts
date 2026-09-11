@@ -1,4 +1,4 @@
-import { dc } from '@/lib/dataconnect';
+import { dc, isDataConnectEnabled, disableDataConnect } from '@/lib/dataconnect';
 import {
     listSeasons,
     createSeason,
@@ -16,6 +16,9 @@ export const seasonService = {
      * Get all seasons
      */
     async getAll(): Promise<ListSeasonsData['seasons']> {
+        if (!isDataConnectEnabled()) {
+            return FALLBACK_SEASONS;
+        }
         try {
             const response = await listSeasons(dc);
             const seasons = response.data?.seasons;
@@ -24,6 +27,7 @@ export const seasonService = {
             }
             return FALLBACK_SEASONS;
         } catch (error) {
+            disableDataConnect();
             console.warn('DataConnect unavailable, falling back to local season registry.');
             return FALLBACK_SEASONS;
         }
