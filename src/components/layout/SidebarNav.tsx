@@ -50,6 +50,7 @@ const navKeyToModuleMap: Record<string, Module> = {
   'umpire-profiles': 'staff',
   'suggest-role': 'management',
   'schools': 'school',
+  'director-command': 'school',
 
   // League Structure
   'competitions': 'competitions',
