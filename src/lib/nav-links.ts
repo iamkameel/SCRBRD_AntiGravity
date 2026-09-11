@@ -6,7 +6,7 @@ import {
   ClipboardList, Eye, Layers, School as SchoolIcon, MapPin, Shovel,
   Crosshair, GitCompareArrows, GraduationCap, BarChart3, Medal,
   Calendar, Users2, Database, CircleHelp, Target, Terminal, MessageSquare,
-  Waves, Flag, Tv, Calculator
+  Waves, Flag, Tv, Calculator, Newspaper
 } from 'lucide-react';
 
 export interface NavLink {
@@ -98,6 +98,7 @@ export const navGroups: NavGroup[] = [
       { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
       { href: '/scouting', label: 'Scouting Hub', icon: Sparkles, key: 'scouting' },
       { href: '/scouting/dossier', label: 'Tactical Dossier', icon: Shield, key: 'scouting-dossier' },
+      { href: '/recap', label: 'Broadcast Recap', icon: Newspaper, key: 'broadcast-recap' },
       { href: '/results', label: 'Head-to-Head', icon: GitCompareArrows, key: 'head-to-head' },
       { href: '/rankings', label: 'Rankings', icon: BarChart3, key: 'rankings' },
       { href: '/awards', label: 'Awards', icon: Medal, key: 'awards' },
