@@ -1,213 +1,212 @@
-"use client";
+'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Waves, Timer, Trophy, Flame, Play, Pause, RotateCcw, Award, CheckCircle2 } from 'lucide-react';
-import { SwimmingGala, SwimmingEvent, GalaLaneEntry } from '@/types/sports';
-import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Waves, Trophy, Flame, Sparkles, Award, Timer, CheckCircle, AlertCircle, Medal, RefreshCw } from 'lucide-react';
+import { MOCK_SWIMMING_GALA, SwimmingGala, SwimmingEvent } from '@/lib/intelligence/multiSportEngine';
 
-const MOCK_GALA: SwimmingGala = {
-  galaId: 'gala-2026-01',
-  title: 'Inter-Schools Quadrangular Swimming Gala',
-  venue: 'St John\'s Aquatic Centre (50m Olympic Pool)',
-  date: '10 March 2026',
-  hostSchool: 'St John\'s College',
-  status: 'Live',
-  schoolStandings: [
-    { schoolName: 'St John\'s College', totalPoints: 142, gold: 6, silver: 4, bronze: 2 },
-    { schoolName: 'King Edward VII School', totalPoints: 128, gold: 4, silver: 5, bronze: 3 },
-    { schoolName: 'Hilton College', totalPoints: 110, gold: 3, silver: 3, bronze: 4 },
-    { schoolName: 'Michaelhouse', totalPoints: 94, gold: 2, silver: 3, bronze: 4 }
-  ],
-  events: [
-    {
-      id: 'ev-1',
-      eventName: 'U19 Boys 50m Freestyle (Final)',
-      distanceMeters: 50,
-      stroke: 'freestyle',
-      ageGroup: 'U19',
-      gender: 'Boys',
-      isRelay: false,
-      recordTime: '00:23.40',
-      recordHolder: 'C. van Rensburg (SJC, 2024)',
-      status: 'Live',
-      heatNumber: 1,
-      lanes: [
-        { laneNumber: 1, swimmerId: 'sw-1', swimmerName: 'Luke Davies', schoolName: 'Michaelhouse', seedTime: '00:24.90', finalTime: '00:24.65', status: 'Finished', rank: 4, pointsEarned: 5 },
-        { laneNumber: 2, swimmerId: 'sw-2', swimmerName: 'Matthew Miller', schoolName: 'King Edward VII School', seedTime: '00:24.10', finalTime: '00:23.95', status: 'Finished', rank: 2, pointsEarned: 8 },
-        { laneNumber: 3, swimmerId: 'sw-3', swimmerName: 'Aidan Smith', schoolName: 'St John\'s College', seedTime: '00:23.80', finalTime: '00:23.32', status: 'Finished', rank: 1, pointsEarned: 10 },
-        { laneNumber: 4, swimmerId: 'sw-4', swimmerName: 'James Taylor', schoolName: 'Hilton College', seedTime: '00:24.05', finalTime: '00:24.12', status: 'Finished', rank: 3, pointsEarned: 6 },
-        { laneNumber: 5, swimmerId: 'sw-5', swimmerName: 'Ethan Coetzee', schoolName: 'St John\'s College', seedTime: '00:25.10', finalTime: '00:25.02', status: 'Finished', rank: 5, pointsEarned: 4 },
-        { laneNumber: 6, swimmerId: 'sw-6', swimmerName: 'Daniel Botha', schoolName: 'King Edward VII School', seedTime: '00:25.40', finalTime: '00:25.35', status: 'Finished', rank: 6, pointsEarned: 3 },
-      ]
-    },
-    {
-      id: 'ev-2',
-      eventName: 'U17 Boys 100m Breaststroke (Final)',
-      distanceMeters: 100,
-      stroke: 'breaststroke',
-      ageGroup: 'U17',
-      gender: 'Boys',
-      isRelay: false,
-      recordTime: '01:05.12',
-      recordHolder: 'R. Naidoo (KES, 2023)',
-      status: 'Scheduled',
-      heatNumber: 1,
-      lanes: [
-        { laneNumber: 1, swimmerId: 'sw-7', swimmerName: 'Mark Vance', schoolName: 'Hilton College', seedTime: '01:08.20', status: 'Ready' },
-        { laneNumber: 2, swimmerId: 'sw-8', swimmerName: 'Devon Patel', schoolName: 'King Edward VII School', seedTime: '01:06.50', status: 'Ready' },
-        { laneNumber: 3, swimmerId: 'sw-9', swimmerName: 'Oliver Harris', schoolName: 'St John\'s College', seedTime: '01:05.80', status: 'Ready' },
-        { laneNumber: 4, swimmerId: 'sw-10', swimmerName: 'Liam Williams', schoolName: 'Michaelhouse', seedTime: '01:07.10', status: 'Ready' },
-      ]
-    }
-  ]
-};
+export function SwimmingGalaHubView() {
+    const [gala, setGala] = useState<SwimmingGala>(MOCK_SWIMMING_GALA);
+    const [selectedEventId, setSelectedEventId] = useState<string>(gala.events[0]?.eventId || '');
+    const [laneTimes, setLaneTimes] = useState<Record<number, string>>({
+        1: '00:59.80',
+        2: '00:58.20', // Record breaking time!
+        3: '01:00.15',
+        4: '01:01.40',
+    });
 
-export function SwimmingGalaHub() {
-  const [gala, setGala] = useState<SwimmingGala>(MOCK_GALA);
-  const [selectedEventId, setSelectedEventId] = useState<string>(MOCK_GALA.events[0].id);
+    const activeEvent = gala.events.find(e => e.eventId === selectedEventId) || gala.events[0];
 
-  const selectedEvent = gala.events.find(e => e.id === selectedEventId) || gala.events[0];
-  const isRecordBroken = selectedEvent.lanes.some(l => l.rank === 1 && l.finalTime && l.finalTime < selectedEvent.recordTime);
+    const handleTimeChange = (lane: number, val: string) => {
+        setLaneTimes(prev => ({ ...prev, [lane]: val }));
+    };
 
-  return (
-    <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl text-slate-100 space-y-6">
-      {/* Gala Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-            <Waves className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-white font-['Syne',sans-serif] tracking-tight">{gala.title}</h2>
-              <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 font-mono text-[10px]">
-                <Timer className="w-3 h-3 mr-1 animate-spin" />
-                Live Gala Engine
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">{gala.venue} • Host: {gala.hostSchool}</p>
-          </div>
-        </div>
+    const submitEventResults = () => {
+        if (!activeEvent) return;
 
-        <div className="flex items-center gap-2">
-          {gala.events.map(ev => (
-            <Button
-              key={ev.id}
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedEventId(ev.id)}
-              className={cn(
-                "text-xs font-mono transition-all",
-                selectedEventId === ev.id 
-                  ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/40" 
-                  : "bg-slate-950 text-slate-400 border-white/10"
-              )}
-            >
-              {ev.eventName.split(' ')[0]} {ev.eventName.split(' ')[2]}
-            </Button>
-          ))}
-        </div>
-      </div>
+        // Parse and rank times
+        const updatedLanes = activeEvent.lanes.map(l => {
+            const timeStr = laneTimes[l.lane] || l.finalTime || l.seedTime;
+            return {
+                ...l,
+                finalTime: timeStr,
+            };
+        });
 
-      {/* Record Breaker Alert Banner */}
-      {isRecordBroken && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 animate-bounce">
-          <Trophy className="w-6 h-6 text-amber-400 shrink-0" />
-          <div>
-            <div className="text-xs font-mono font-bold uppercase text-amber-400">New Gala Record Established!</div>
-            <div className="text-xs text-slate-200 mt-0.5">
-              <span className="font-bold text-white">{selectedEvent.lanes.find(l => l.rank === 1)?.swimmerName}</span> ({selectedEvent.lanes.find(l => l.rank === 1)?.schoolName}) broke the record with <span className="font-mono text-emerald-400 font-bold">{selectedEvent.lanes.find(l => l.rank === 1)?.finalTime}</span> (Previous: {selectedEvent.recordTime}).
-            </div>
-          </div>
-        </div>
-      )}
+        // Simple sort by time string
+        updatedLanes.sort((a, b) => (a.finalTime || '').localeCompare(b.finalTime || ''));
 
-      {/* Selected Event Details */}
-      <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-mono uppercase text-slate-400">Event</span>
-          <h3 className="text-lg font-bold text-white">{selectedEvent.eventName}</h3>
-        </div>
-        <div className="flex gap-6 text-xs font-mono">
-          <div>
-            <span className="text-slate-400">Gala Record: </span>
-            <span className="text-amber-400 font-bold">{selectedEvent.recordTime}</span> ({selectedEvent.recordHolder})
-          </div>
-          <div>
-            <span className="text-slate-400">Heat: </span>
-            <span className="text-cyan-400 font-bold">#{selectedEvent.heatNumber}</span>
-          </div>
-        </div>
-      </div>
+        // Assign place, points, record status
+        const pointsTable = [10, 8, 6, 4];
+        let recordCountIncrement = 0;
 
-      {/* Lane Telemetry Grid */}
-      <div className="space-y-3">
-        <div className="text-xs font-mono uppercase font-bold text-slate-400">Lane Touchpad Telemetry & Splits</div>
-        <div className="space-y-2">
-          {selectedEvent.lanes.map(lane => (
-            <div 
-              key={lane.laneNumber}
-              className={cn(
-                "p-3 rounded-xl border flex items-center justify-between text-xs transition-all",
-                lane.rank === 1 
-                  ? "bg-amber-500/10 border-amber-500/30 text-slate-100" 
-                  : "bg-white/5 border-white/5 text-slate-300"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "w-7 h-7 rounded-lg font-mono font-bold flex items-center justify-center text-xs",
-                  lane.rank === 1 ? "bg-amber-500 text-slate-950" : "bg-slate-950 text-cyan-400 border border-cyan-500/30"
-                )}>
-                  L{lane.laneNumber}
+        const rankedLanes = updatedLanes.map((l, idx) => {
+            const place = idx + 1;
+            const points = pointsTable[idx] || 2;
+            const isRecordBroken = l.finalTime ? l.finalTime < activeEvent.schoolRecord : false;
+            if (isRecordBroken) recordCountIncrement++;
+
+            return {
+                ...l,
+                place,
+                pointsAwarded: points,
+                isRecordBroken,
+            };
+        });
+
+        // Update Gala state
+        const updatedEvents = gala.events.map(ev => {
+            if (ev.eventId === activeEvent.eventId) {
+                return { ...ev, status: 'COMPLETED' as const, lanes: rankedLanes };
+            }
+            return ev;
+        });
+
+        setGala(prev => ({ ...prev, events: updatedEvents }));
+    };
+
+    return (
+        <div className="space-y-6 font-sans text-[#f0f4ff]">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                        <Waves className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold font-['Syne',sans-serif] tracking-tight">Aquatics & Swimming Gala Engine</h1>
+                        <p className="text-xs text-slate-400 font-mono">{gala.title} • {gala.venueName}</p>
+                    </div>
                 </div>
-                <div>
-                  <div className="font-bold text-white flex items-center gap-1.5">
-                    {lane.swimmerName}
-                    {lane.rank === 1 && <Badge className="bg-amber-500 text-slate-950 font-mono text-[9px] px-1 py-0">GOLD</Badge>}
-                    {lane.rank === 2 && <Badge className="bg-slate-300 text-slate-950 font-mono text-[9px] px-1 py-0">SILVER</Badge>}
-                    {lane.rank === 3 && <Badge className="bg-amber-700 text-white font-mono text-[9px] px-1 py-0">BRONZE</Badge>}
-                  </div>
-                  <div className="text-[11px] text-slate-400">{lane.schoolName} • Seed: {lane.seedTime}</div>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-4 font-mono">
-                <div className="text-right">
-                  <div className="text-emerald-400 font-bold text-sm">{lane.finalTime || '--:--.--'}</div>
-                  <div className="text-[10px] text-slate-400">{lane.pointsEarned ? `+${lane.pointsEarned} pts` : ''}</div>
-                </div>
-              </div>
+                <Badge className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono text-xs px-3 py-1 flex items-center gap-1.5 animate-pulse">
+                    <Timer className="w-3.5 h-3.5" /> LIVE TIMEKEEPING ACTIVE
+                </Badge>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Inter-School Gala Points Table */}
-      <div className="space-y-3 pt-2">
-        <div className="text-xs font-mono uppercase font-bold text-slate-400 flex items-center gap-1.5">
-          <Trophy className="w-4 h-4 text-cyan-400" />
-          Inter-School Gala Standings
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {gala.schoolStandings.map((stand, idx) => (
-            <div key={stand.schoolName} className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-white">{idx + 1}. {stand.schoolName}</span>
-                <span className="font-mono text-cyan-400 font-bold text-sm">{stand.totalPoints} pts</span>
-              </div>
-              <div className="flex gap-2 text-[10px] font-mono text-slate-400 pt-1">
-                <span>🥇 {stand.gold}</span>
-                <span>🥈 {stand.silver}</span>
-                <span>🥉 {stand.bronze}</span>
-              </div>
+            {/* Inter-House Points Standings */}
+            <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-3xl shadow-xl backdrop-blur-2xl text-slate-100 space-y-4">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h2 className="text-sm font-bold font-mono uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                        <Trophy className="w-4 h-4" /> Inter-House Gala Championship Standings
+                    </h2>
+                    <span className="text-xs font-mono text-slate-400">4 Houses Competing</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    {gala.houses.map((house) => (
+                        <div key={house.houseName} className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-2 relative overflow-hidden">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-sm font-['Syne',sans-serif]" style={{ color: house.color }}>{house.houseName} House</span>
+                                <span className="text-xl font-black font-mono text-white">{house.totalPoints} <span className="text-[10px] text-slate-400 font-normal">pts</span></span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                                <span>🥇 {house.goldCount}</span>
+                                <span>🥈 {house.silverCount}</span>
+                                <span>🥉 {house.bronzeCount}</span>
+                                {house.recordsBrokenCount > 0 && (
+                                    <Badge variant="outline" className="border-amber-500/30 text-amber-400 text-[9px] px-1.5 py-0">
+                                        ⚡ {house.recordsBrokenCount} REC
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </Card>
+
+            {/* Event Timekeeper & Live Results Matrix */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                {/* Event Selector List */}
+                <div className="md:col-span-4 space-y-3">
+                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Gala Events ({gala.events.length})</h3>
+                    <div className="space-y-2">
+                        {gala.events.map((ev) => (
+                            <button
+                                key={ev.eventId}
+                                onClick={() => setSelectedEventId(ev.eventId)}
+                                className={`w-full text-left p-4 rounded-2xl border transition-all space-y-1 font-mono text-xs ${
+                                    selectedEventId === ev.eventId
+                                        ? 'bg-cyan-500/20 border-cyan-500/50 text-white shadow-lg'
+                                        : 'bg-slate-900/80 border-white/5 text-slate-300 hover:bg-slate-800'
+                                }`}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold">{ev.eventName}</span>
+                                    <Badge className={`text-[9px] ${
+                                        ev.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                        'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                                    }`}>
+                                        {ev.status}
+                                    </Badge>
+                                </div>
+                                <div className="text-[10px] text-slate-400">Record: {ev.schoolRecord} ({ev.recordHolder})</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Live Timekeeper Console */}
+                <div className="md:col-span-8">
+                    <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-3xl shadow-xl backdrop-blur-2xl text-slate-100 space-y-6">
+                        <div className="flex justify-between items-start border-b border-white/10 pb-4">
+                            <div>
+                                <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider">Active Race Console</div>
+                                <h3 className="text-lg font-bold font-['Syne',sans-serif] text-white">{activeEvent?.eventName}</h3>
+                                <p className="text-xs text-slate-400 font-mono">School Record: <strong className="text-amber-400">{activeEvent?.schoolRecord}</strong> ({activeEvent?.recordHolder})</p>
+                            </div>
+
+                            <Button onClick={submitEventResults} className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold font-mono text-xs">
+                                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Submit & Rank Race
+                            </Button>
+                        </div>
+
+                        {/* Lane Inputs / Results Table */}
+                        <div className="space-y-3 font-mono text-xs">
+                            <div className="grid grid-cols-12 gap-2 text-[10px] text-slate-400 font-bold uppercase pb-1 border-b border-white/5">
+                                <div className="col-span-1">Lane</div>
+                                <div className="col-span-4">Swimmer</div>
+                                <div className="col-span-2">House</div>
+                                <div className="col-span-3">Time Input</div>
+                                <div className="col-span-2 text-right">Place / Pts</div>
+                            </div>
+
+                            {activeEvent?.lanes.map((lane) => (
+                                <div key={lane.lane} className="grid grid-cols-12 gap-2 items-center p-3 bg-white/5 border border-white/5 rounded-xl">
+                                    <div className="col-span-1 font-bold text-cyan-400">L{lane.lane}</div>
+                                    <div className="col-span-4 font-bold text-white flex items-center gap-1.5">
+                                        {lane.swimmerName}
+                                        {lane.isRecordBroken && (
+                                            <Badge className="bg-amber-500 text-slate-950 font-bold text-[9px] px-1 py-0 animate-bounce">
+                                                🚨 NEW REC
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="col-span-2 text-slate-300">{lane.houseOrSchool}</div>
+                                    <div className="col-span-3">
+                                        <Input 
+                                            value={laneTimes[lane.lane] || lane.finalTime || lane.seedTime} 
+                                            onChange={(e) => handleTimeChange(lane.lane, e.target.value)}
+                                            className="h-8 bg-slate-950 border-white/10 text-white font-mono text-xs"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 text-right">
+                                        {lane.place ? (
+                                            <span className="font-bold text-amber-400">#{lane.place} ({lane.pointsAwarded} pts)</span>
+                                        ) : (
+                                            <span className="text-slate-500">Pending</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </Card>
-  );
+    );
 }

@@ -119,6 +119,18 @@ export const navGroups: NavGroup[] = [
     ]
   },
   {
+    id: 'multi-sport',
+    label: 'Multi-Sport OS',
+    icon: Waves,
+    key: 'group-multi-sport',
+    defaultOpen: false,
+    accentColor: '#06b6d4', // Cyan
+    links: [
+      { href: '/swimming', label: 'Swimming Gala Engine', icon: Waves, key: 'swimming-gala' },
+      { href: '/athletics', label: 'Athletics Track & Field', icon: Trophy, key: 'athletics-meet' },
+    ]
+  },
+  {
     id: 'operations',
     label: 'Operations',
     icon: Tractor,
