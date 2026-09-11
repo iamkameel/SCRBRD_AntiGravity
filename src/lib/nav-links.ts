@@ -97,6 +97,7 @@ export const navGroups: NavGroup[] = [
       { href: '/analytics', label: 'Analysis Dashboard', icon: BarChart3, key: 'analytics-dashboard' },
       { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
       { href: '/scouting', label: 'Scouting Hub', icon: Sparkles, key: 'scouting' },
+      { href: '/scouting/dossier', label: 'Tactical Dossier', icon: Shield, key: 'scouting-dossier' },
       { href: '/results', label: 'Head-to-Head', icon: GitCompareArrows, key: 'head-to-head' },
       { href: '/rankings', label: 'Rankings', icon: BarChart3, key: 'rankings' },
       { href: '/awards', label: 'Awards', icon: Medal, key: 'awards' },
