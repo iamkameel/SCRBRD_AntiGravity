@@ -1,6 +1,6 @@
 import type { Innings, Rankings } from "@/types/firestore";
 import { Zap } from "lucide-react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 interface ScorecardTableProps {
   innings: Innings;

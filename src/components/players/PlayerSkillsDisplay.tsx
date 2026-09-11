@@ -1,6 +1,6 @@
 "use client";
 
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { Player as Person } from "@/lib/store";
 import { Activity, Target } from "lucide-react";
 import {

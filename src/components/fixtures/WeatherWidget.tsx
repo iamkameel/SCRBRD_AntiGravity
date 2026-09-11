@@ -1,7 +1,7 @@
 "use client";
 
 import { Cloud, CloudRain, Sun, Wind, Thermometer } from "lucide-react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 interface WeatherWidgetProps {
   date: string;

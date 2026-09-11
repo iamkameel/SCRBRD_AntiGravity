@@ -43,6 +43,7 @@ export const LiveMilestoneAlert: React.FC<LiveMilestoneAlertProps> = ({ trigger,
           {/* Close Button */}
           <button
             onClick={onDismiss}
+            aria-label="Dismiss milestone alert"
             className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />

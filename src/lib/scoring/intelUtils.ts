@@ -1,4 +1,4 @@
-import { D } from './theme';
+import { D } from '@/lib/design-system';
 
 export function getPhase(balls: number, overs: number): string {
     const ov = Math.floor(balls / 6) + 1;

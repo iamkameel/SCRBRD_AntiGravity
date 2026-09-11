@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 import { LiveDot } from './primitives';
 
 export function AppTopBar({ matchId, liveScore }: { matchId: string; liveScore: any }) {

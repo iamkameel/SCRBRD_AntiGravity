@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { BrainCircuit, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { predictPlayerPerformanceAction, PlayerForecast } from "@/app/actions/analyticsActions";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 interface PlayerForecastWidgetProps {
   playerId: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Field, Match, Person } from "@/types/firestore";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { 
   Droplets, 
   Wind, 
@@ -62,7 +62,6 @@ export function GroundsDashboardClient({ fields, upcomingMatches, currentUser }:
 
   return (
     <div style={{ background: D.base, minHeight: '100vh', paddingBottom: '80px', color: D.textPrimary }}>
-      <GlobalStyles />
       
       {/* Top Navigation */}
       <div style={{ 

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 import { Lbl } from './primitives';
 
 export const CX = 150, CY = 150, R_IN = 48, R_MID = 96, R_BND = 126;

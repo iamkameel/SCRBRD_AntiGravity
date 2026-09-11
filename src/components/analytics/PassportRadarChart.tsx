@@ -9,7 +9,7 @@ import {
   PolarRadiusAxis, 
   ResponsiveContainer 
 } from "recharts";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 interface PassportRadarChartProps {
   data?: any[];

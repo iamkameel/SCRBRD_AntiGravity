@@ -1,6 +1,6 @@
 "use client";
 
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { SkillAssessment, SkillDomain, RatingScale1to9 } from "@/types/schema_v4";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

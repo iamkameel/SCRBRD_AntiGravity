@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { Share2, Download, Award, Zap, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

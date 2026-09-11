@@ -324,5 +324,34 @@ export async function fetchInjuredPlayers() {
     }
 }
 
+export async function fetchPlayersAction() {
+    try {
+        const admin = (await import('@/lib/firebase-admin')).default;
+        const snapshot = await admin.firestore().collection('people')
+            .limit(50)
+            .get();
+
+        if (snapshot.empty) {
+            return serializeData([
+                { id: 'player-1', firstName: 'Kameel', lastName: 'Kalyan', playingRole: 'Opener', role: 'Player' },
+                { id: 'player-2', firstName: 'Liam', lastName: 'Botha', playingRole: 'New-ball Seamer', role: 'Player' },
+                { id: 'player-3', firstName: 'Thabo', lastName: 'Mokoena', playingRole: 'Wicketkeeper-Batter', role: 'Player' },
+                { id: 'player-4', firstName: 'Ethan', lastName: 'van Zyl', playingRole: 'Wrist Spinner', role: 'Player' },
+            ]);
+        }
+
+        const players = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return serializeData(players);
+    } catch (error) {
+        console.error('Error fetching players:', error);
+        return serializeData([
+            { id: 'player-1', firstName: 'Kameel', lastName: 'Kalyan', playingRole: 'Opener', role: 'Player' },
+            { id: 'player-2', firstName: 'Liam', lastName: 'Botha', playingRole: 'New-ball Seamer', role: 'Player' },
+            { id: 'player-3', firstName: 'Thabo', lastName: 'Mokoena', playingRole: 'Wicketkeeper-Batter', role: 'Player' },
+            { id: 'player-4', firstName: 'Ethan', lastName: 'van Zyl', playingRole: 'Wrist Spinner', role: 'Player' },
+        ]);
+    }
+}
+
 
 

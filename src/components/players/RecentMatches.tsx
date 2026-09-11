@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Calendar, TrendingUp, TrendingDown, Trophy, MapPin, Activity } from "lucide-react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import Link from "next/link";
 
 interface RecentMatch {

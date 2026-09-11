@@ -1,6 +1,6 @@
 import React from 'react';
 import { Person } from '@/types/firestore';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 import { Lbl, Badge, Sep } from './primitives';
 import { fmtOv, getPlayerName, SR, Econ } from './utils';
 

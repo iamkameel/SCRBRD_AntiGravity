@@ -11,8 +11,10 @@ import {
   endInningsAction,
   startSecondInningsAction,
 } from '@/app/actions/matchActions';
+import { generateCommentary } from '@/lib/utils/commentaryGenerator';
 import Link from 'next/link';
-import { ChevronLeft, RotateCcw, Flag, AlertTriangle, Users, Trophy, Loader2, Wifi, WifiOff, X, Check, Play, Pause, Tv, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
+
+import { ChevronLeft, RotateCcw, Flag, AlertTriangle, Users, Trophy, Loader2, Wifi, WifiOff, X, Check, Play, Pause, Tv, Volume2, VolumeX, Mic, MicOff, Sparkles } from 'lucide-react';
 import { BroadcastOverlay } from '@/components/broadcast/BroadcastOverlay';
 
 /* ═══════════════════════════════════════════════════════
@@ -327,37 +329,6 @@ function PitchMap({ onSelectPitchingPoint, selectedPoint, pitchLog = [] }: Pitch
   );
 }
 
-function GlobalStyles() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-      html{font-size:14px;-webkit-font-smoothing:antialiased}
-      body{background:#05080f;overflow-x:hidden}
-      ::-webkit-scrollbar{width:2px;height:2px}
-      ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
-      @keyframes dotPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.75);opacity:.45}}
-      @keyframes pulseGlow{0%,100%{box-shadow:0 0 6px rgba(52,211,153,.6)}50%{box-shadow:0 0 18px rgba(52,211,153,.3)}}
-      @keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
-      @keyframes scoreReveal{from{transform:translateY(-8px) scale(.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-      @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-      @keyframes wagonDraw{from{stroke-dashoffset:320}to{stroke-dashoffset:0}}
-      @keyframes barSlide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
-      @keyframes chipPop{0%{transform:scale(.85);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
-      @keyframes toastIn{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-      .sh-slide-up{animation:slideUp .32s cubic-bezier(.22,1,.36,1) both}
-      .sh-fade-in{animation:fadeIn .22s ease both}
-      .sh-score-anim{animation:scoreReveal .28s cubic-bezier(.22,1,.36,1) both}
-      .sh-live-dot{animation:dotPulse 1.8s ease-in-out infinite}
-      .sh-live-glow{animation:pulseGlow 2s ease-in-out infinite}
-      .sh-wagon-line{stroke-dasharray:320;animation:wagonDraw .38s ease both}
-      .sh-press{transition:transform .1s ease,opacity .1s ease}
-      .sh-press:active:not(:disabled){transform:scale(.95);opacity:.85}
-      .sh-press:disabled{cursor:not-allowed!important;opacity:.38!important}
-      input,button,textarea,select{font-family:'DM Sans',sans-serif}
-    `}</style>
-  );
-}
 
 /* ═══════════════════════════════════════════════════════
    PRIMITIVES
@@ -1782,6 +1753,7 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
 
   /* ── Scoring state ── */
   const [scorerMode, setScorerMode] = useState<ScorerMode>('standard');
+  const [showQuickMaps, setShowQuickMaps] = useState(false);
   const [contactQuality, setContactQuality] = useState<ContactQuality>(null);
   const [commentary, setCommentary] = useState<string>('');
   const [showEnrichmentDrawer, setShowEnrichmentDrawer] = useState(false);
@@ -1834,7 +1806,7 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
         setShowWicketSheet(true);
         scoringAudio.playKeyClick();
       } else if (e.key === 'e' || e.key === 'E') {
-        setShowEnrichment(true);
+        setShowEnrichmentDrawer(true);
         scoringAudio.playKeyClick();
       } else if (e.key === 'b' || e.key === 'B') {
         setShowBroadcast(prev => !prev);
@@ -1888,6 +1860,40 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
     if (!canRecord || !cp?.strikerId || !cp?.bowlerId) return;
     setSubmitting(true);
     try {
+      const strikerObj = allPlayers.find(p => p.id === cp.strikerId);
+      const bowlerObj = allPlayers.find(p => p.id === cp.bowlerId);
+      const fielderObj = fielderId ? allPlayers.find(p => p.id === fielderId) : null;
+      
+      let zoneName: string | undefined;
+      if (shotCoords && typeof shotCoords.angle === 'number') {
+        const norm = ((shotCoords.angle % 360) + 360) % 360;
+        if (norm >= 337.5 || norm < 22.5) zoneName = 'MID_OFF';
+        else if (norm >= 22.5 && norm < 67.5) zoneName = 'COVER';
+        else if (norm >= 67.5 && norm < 112.5) zoneName = 'POINT';
+        else if (norm >= 112.5 && norm < 157.5) zoneName = 'THIRD_MAN';
+        else if (norm >= 157.5 && norm < 202.5) zoneName = 'FINE_LEG';
+        else if (norm >= 202.5 && norm < 247.5) zoneName = 'SQUARE_LEG';
+        else if (norm >= 247.5 && norm < 292.5) zoneName = 'MID_WICKET';
+        else if (norm >= 292.5 && norm < 337.5) zoneName = 'LONG_ON';
+      }
+
+      const autoCommentary = commentary.trim() || generateCommentary({
+        runs: runs ?? 0,
+        isWide: extraType === 'wide',
+        isNoBall: extraType === 'noball',
+        isDismissal: !!wicketType,
+        dismissalType: wicketType ?? undefined,
+        batsmanName: strikerObj ? `${strikerObj.firstName ? strikerObj.firstName[0] + '. ' : ''}${strikerObj.lastName}` : "Batter",
+        bowlerName: bowlerObj ? `${bowlerObj.firstName ? bowlerObj.firstName[0] + '. ' : ''}${bowlerObj.lastName}` : "Bowler",
+        fielderName: fielderObj ? `${fielderObj.firstName ? fielderObj.firstName[0] + '. ' : ''}${fielderObj.lastName}` : undefined,
+        shotZone: zoneName,
+        shotType: shotType ?? undefined,
+        contactQuality: contactQuality ?? undefined,
+        isPowerplay: (liveScore?.currentInnings?.overs ?? 0) < 6,
+        isDeathOver: (liveScore?.currentInnings?.overs ?? 0) >= 16,
+      });
+
+
       const result = await recordBallAction(match.id!, {
         runs: runs ?? 0,
         isWicket: !!wicketType,
@@ -1902,7 +1908,9 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
         dismissedPlayerId: wicketType ? cp.strikerId : undefined,
         shotCoordinates: shotCoords ?? undefined,
         shotType: shotType ?? undefined,
+        commentary: autoCommentary,
       });
+
       if (result.success) {
         // Determine overlay event & trigger stadium audio/haptics/speech
         if (wicketType) {
@@ -1990,7 +1998,6 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
   if (loading && !liveScore) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: D.base }}>
-        <GlobalStyles />
         <div style={{ textAlign: 'center' }}>
           <Loader2 size={36} color={D.emerald} style={{ animation: 'spin 1s linear infinite', display: 'block', margin: '0 auto 14px' }} />
           <p style={{ color: D.textMuted, fontFamily: D.body, fontSize: '13px' }}>Loading Scoring Hub…</p>
@@ -2004,7 +2011,6 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
   ══════════════════════════════════════════ */
   return (
     <div style={{ background: D.base, minHeight: '100vh', paddingBottom: '80px' }}>
-      <GlobalStyles />
 
       {/* ── STICKY HEADER ── */}
       <div style={{ position: 'sticky', top: 0, zIndex: 100,
@@ -2390,7 +2396,89 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
                   </div>
                 )}
 
-                {/* Record + Undo */}
+                {/* Full OS Inline Telemetry (in Full OS mode) */}
+                {scorerMode === 'full' && (
+                  <div style={{
+                    background: `${D.violet}0A`,
+                    border: `1px solid ${D.violet}30`,
+                    borderRadius: D.md,
+                    padding: '12px',
+                    marginBottom: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: D.head, fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: D.violet }}>
+                        🚀 Full OS Telemetry
+                      </span>
+                      <span style={{ fontFamily: D.body, fontSize: '10px', color: D.textMuted }}>Inline Contact & Commentary</span>
+                    </div>
+
+                    {/* Contact Quality Selector */}
+                    <div>
+                      <div style={{ fontSize: '10px', fontFamily: D.head, fontWeight: 700, color: D.textSecondary, marginBottom: '6px' }}>
+                        Contact Quality
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {[
+                          { id: 'middled', label: 'Middled', icon: '⚡' },
+                          { id: 'edged', label: 'Edged', icon: '💥' },
+                          { id: 'missed', label: 'Beaten', icon: '💨' },
+                          { id: 'lofted', label: 'Lofted', icon: '🚀' },
+                          { id: 'defended', label: 'Defended', icon: '🛡️' },
+                        ].map(q => {
+                          const active = contactQuality === q.id;
+                          return (
+                            <button
+                              key={q.id}
+                              onClick={() => setContactQuality(active ? null : (q.id as ContactQuality))}
+                              className="sh-press"
+                              type="button"
+                              style={{
+                                padding: '4px 10px',
+                                borderRadius: D.pill,
+                                border: active ? `1px solid ${D.violet}` : `1px solid ${D.border}`,
+                                background: active ? D.violet : D.surf2,
+                                color: active ? '#fff' : D.textMuted,
+                                fontSize: '10px',
+                                fontFamily: D.head,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              {q.icon} {q.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Live Commentary Input */}
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Custom commentary / ball note..."
+                        value={commentary}
+                        onChange={e => setCommentary(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: D.md,
+                          background: D.surf2,
+                          border: `1px solid ${D.border}`,
+                          color: D.textPrimary,
+                          fontSize: '11px',
+                          fontFamily: D.body,
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Record + Enrich + Undo */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={handleRecord} disabled={!canRecord} className="sh-press" style={{
                     flex: 1, padding: '15px', borderRadius: D.lg,
@@ -2402,6 +2490,13 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
                   }}>
                     {submitting ? '…' : runs !== null ? `Record Ball · ${runs}r` : 'Record Ball'}
                   </button>
+                  <button onClick={() => setShowEnrichmentDrawer(true)} className="sh-press" title="Phase 2 Enrichment (E)" style={{
+                    padding: '15px 14px', borderRadius: D.lg, background: `${D.sky}15`, border: `1px solid ${D.sky}35`,
+                    color: D.sky, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    fontFamily: D.head, fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap',
+                  }}>
+                    <Sparkles size={15} /> Enrich
+                  </button>
                   <button onClick={handleUndo} disabled={submitting || currentOver.length === 0} className="sh-press" style={{
                     padding: '15px 16px', borderRadius: D.lg, background: D.surf2, border: `1px solid ${D.border}`,
                     color: D.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2412,16 +2507,53 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
               </GlassCard>
             )}
 
-            {/* Pitch Landing Map (22-yard interactive pitch) */}
-            <GlassCard sx={{ padding: '16px' }}>
-              <PitchMap selectedPoint={pitchCoords} onSelectPitchingPoint={setPitchCoords} />
-            </GlassCard>
+            {/* ════════ SIDE-BY-SIDE INTERACTIVE MAPS (Pitch Landing Map & Field Map / Wagon Wheel) ════════ */}
+            {(scorerMode !== 'quick' || showQuickMaps) && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '16px',
+                alignItems: 'stretch',
+              }}>
+                {/* Pitch Landing Map (22-yard interactive pitch) */}
+                <GlassCard sx={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <PitchMap selectedPoint={pitchCoords} onSelectPitchingPoint={setPitchCoords} />
+                </GlassCard>
 
-            {/* Wagon Wheel (in score tab) */}
-            <GlassCard sx={{ padding: '16px 16px 22px' }}>
-              <WagonWheel ballLog={wagonBallLog} shotCoords={shotCoords} onAim={setShotCoords}
-                viewMode={wagonView} onViewMode={setWagonView} hiddenLines={hiddenLines} onToggleLine={handleToggleLine} />
-            </GlassCard>
+                {/* Field Map (Wagon Wheel in score tab) */}
+                <GlassCard sx={{ padding: '16px 16px 22px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <WagonWheel ballLog={wagonBallLog} shotCoords={shotCoords} onAim={setShotCoords}
+                    viewMode={wagonView} onViewMode={setWagonView} hiddenLines={hiddenLines} onToggleLine={handleToggleLine} />
+                </GlassCard>
+              </div>
+            )}
+
+            {scorerMode === 'quick' && !showQuickMaps && (
+              <button 
+                onClick={() => setShowQuickMaps(true)}
+                className="sh-press"
+                type="button"
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  borderRadius: D.lg,
+                  background: D.surf1,
+                  border: `1px dashed ${D.border}`,
+                  color: D.textSecondary,
+                  fontFamily: D.head,
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span>📍</span> Show Pitch Landing & Field Maps (Side-by-Side)
+              </button>
+            )}
 
             {/* End Innings */}
             {!isInningsBreak && !isComplete && liveScore?.status === 'live' && (

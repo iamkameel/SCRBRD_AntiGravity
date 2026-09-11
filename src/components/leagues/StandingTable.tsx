@@ -4,7 +4,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { motion } from "framer-motion";
 
 interface StandingEntry {

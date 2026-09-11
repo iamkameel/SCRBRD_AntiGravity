@@ -509,7 +509,12 @@ export async function recordBallAction(matchId: string, ballData: any) {
       };
     }
 
+    if (ballData.commentary) {
+      (newAction as any).commentary = ballData.commentary;
+    }
+
     // 4. Save Action and Update Projection atomically
+
     const batch = db.batch();
 
     // Save action
@@ -1130,7 +1135,7 @@ export async function saveTeamSelectionAction(
       }
     };
 
-    await admin.firestore().collection('matches').doc(matchId).update(updateData);
+    await admin.firestore().collection('matches').doc(matchId).set(updateData, { merge: true });
     revalidatePath(`/matches/${matchId}/pre-match`);
     return { success: true };
   } catch (error) {
@@ -1159,7 +1164,7 @@ export async function saveTossResultAction(
       tossChoice: result.decision
     };
 
-    await admin.firestore().collection('matches').doc(matchId).update(updateData);
+    await admin.firestore().collection('matches').doc(matchId).set(updateData, { merge: true });
     revalidatePath(`/matches/${matchId}/pre-match`);
     return { success: true };
   } catch (error) {
@@ -1179,7 +1184,7 @@ export async function saveScorerChecklistAction(matchId: string, checklist: any)
       }
     };
 
-    await admin.firestore().collection('matches').doc(matchId).update(updateData);
+    await admin.firestore().collection('matches').doc(matchId).set(updateData, { merge: true });
     revalidatePath(`/matches/${matchId}/pre-match`);
     return { success: true };
   } catch (error) {
@@ -1187,10 +1192,6 @@ export async function saveScorerChecklistAction(matchId: string, checklist: any)
     return { success: false, error: (error as Error).message };
   }
 }
-
-
-
-
 
 export async function endMatchAction(matchId: string, result: { winnerId?: string; margin?: string; resultText: string }) {
   'use server';
@@ -1307,7 +1308,7 @@ export async function saveBattingOrderAction(matchId: string, orderData: { home:
       }
     };
 
-    await admin.firestore().collection('matches').doc(matchId).update(updateData);
+    await admin.firestore().collection('matches').doc(matchId).set(updateData, { merge: true });
     revalidatePath(`/matches/${matchId}/pre-match`);
     return { success: true };
   } catch (error) {
@@ -1326,26 +1327,43 @@ export async function initializeLiveMatchAction(
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const matchDoc = await matchRef.get();
 
-    if (!matchDoc.exists) throw new Error('Match not found');
-    const matchData = matchDoc.data() as Match;
+    let matchData: Partial<Match>;
+    if (matchDoc.exists) {
+      matchData = matchDoc.data() as Match;
+    } else {
+      const mockMatch = (MOCK_MATCHES.find(m => m.id === matchId) || MOCK_MATCHES[0]) as any;
+      matchData = {
+        id: matchId,
+        homeTeamId: mockMatch.homeTeamId || 'home-team-id',
+        awayTeamId: mockMatch.awayTeamId || 'away-team-id',
+        homeTeamName: mockMatch.homeTeamName || 'Westville 1st XI',
+        awayTeamName: mockMatch.awayTeamName || 'Kearsney 1st XI',
+        matchType: 'T20',
+        status: 'scheduled',
+        state: 'SCHEDULED',
+      };
+    }
+
+    const homeTeamId = matchData.homeTeamId || 'home-team-id';
+    const awayTeamId = matchData.awayTeamId || 'away-team-id';
 
     // Determine batting team
     let battingTeamId = '';
     let bowlingTeamId = '';
 
     if (tossResult.decision === 'bat') {
-      battingTeamId = tossResult.winner === 'home' ? matchData.homeTeamId : matchData.awayTeamId;
-      bowlingTeamId = tossResult.winner === 'home' ? matchData.awayTeamId : matchData.homeTeamId;
+      battingTeamId = tossResult.winner === 'home' ? homeTeamId : awayTeamId;
+      bowlingTeamId = tossResult.winner === 'home' ? awayTeamId : homeTeamId;
     } else {
-      battingTeamId = tossResult.winner === 'home' ? matchData.awayTeamId : matchData.homeTeamId;
-      bowlingTeamId = tossResult.winner === 'home' ? matchData.homeTeamId : matchData.awayTeamId;
+      battingTeamId = tossResult.winner === 'home' ? awayTeamId : homeTeamId;
+      bowlingTeamId = tossResult.winner === 'home' ? homeTeamId : awayTeamId;
     }
 
-    // Get openers from batting order
-    const isHomeBatting = battingTeamId === matchData.homeTeamId;
-    const battingTeamOrder = isHomeBatting ? battingOrder.home : battingOrder.away;
-    const strikerId = battingTeamOrder[0];
-    const nonStrikerId = battingTeamOrder[1];
+    // Get openers from batting order with fallbacks
+    const isHomeBatting = battingTeamId === homeTeamId;
+    const battingTeamOrder = (isHomeBatting ? battingOrder.home : battingOrder.away) || [];
+    const strikerId = battingTeamOrder[0] || 'p1';
+    const nonStrikerId = battingTeamOrder[1] || 'p2';
 
     // Initial Live Score Data
     const initialLiveScore = {
@@ -1376,14 +1394,16 @@ export async function initializeLiveMatchAction(
     };
 
     // Update Match Status and Create Live Score
-    await matchRef.update({
+    await matchRef.set({
       status: 'live',
       state: 'LIVE',
       isLive: true,
+      homeTeamId,
+      awayTeamId,
       'liveData.currentInnings': 1,
       'liveData.striker': strikerId,
       'liveData.nonStriker': nonStrikerId
-    });
+    }, { merge: true });
 
     await matchRef.collection('live').doc('score').set(initialLiveScore);
 

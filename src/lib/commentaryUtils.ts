@@ -1,4 +1,5 @@
-import { Ball, Person } from '@/types/firestore';
+import { Person } from '@/types/firestore';
+import { generateCommentary, CommentaryContext } from '@/lib/utils/commentaryGenerator';
 
 export interface CommentaryItem {
     over: number;
@@ -25,7 +26,7 @@ export function generateCommentaryFromHistory(
 
     ballHistory.forEach((ball) => {
         // Determine if legal ball
-        const isExtra = ball.extrasType === 'wide' || ball.extrasType === 'no-ball' || ball.extrasType === 'noball'; // Handle typo in type def
+        const isExtra = ball.extrasType === 'wide' || ball.extrasType === 'no-ball' || ball.extrasType === 'noball' || ball.extraType === 'wide' || ball.extraType === 'no-ball' || ball.extraType === 'noball';
 
         if (!isExtra) {
             ballsInOver++;
@@ -34,35 +35,33 @@ export function generateCommentaryFromHistory(
         // Get names
         const bowler = allPlayers.find(p => p.id === ball.bowlerId);
         const batsman = allPlayers.find(p => p.id === ball.batsmanId);
-        const bowlerName = bowler ? bowler.lastName : "Bowler";
-        const batsmanName = batsman ? batsman.lastName : "Batsman";
+        const fielder = ball.fielderIds && ball.fielderIds.length > 0 ? allPlayers.find(p => p.id === ball.fielderIds[0]) : undefined;
 
-        // Generate description
-        let description = "";
-        const totalRuns = (ball.runs || 0) + (ball.extras || 0);
+        const bowlerName = bowler ? `${bowler.firstName ? bowler.firstName[0] + '. ' : ''}${bowler.lastName}` : (ball.bowlerName || "Bowler");
+        const batsmanName = batsman ? `${batsman.firstName ? batsman.firstName[0] + '. ' : ''}${batsman.lastName}` : (ball.strikerName || ball.batsmanName || "Batsman");
+        const fielderName = fielder ? `${fielder.firstName ? fielder.firstName[0] + '. ' : ''}${fielder.lastName}` : undefined;
 
-        if (ball.isWicket) {
-            const wicketType = ball.wicketType || 'Dismissed';
-            description = `WICKET! ${batsmanName} is out! ${wicketType}.`;
-            if (ball.playerOutId && ball.playerOutId !== ball.batsmanId) {
-                // Could be run out at non-striker end
-                const playerOut = allPlayers.find(p => p.id === ball.playerOutId);
-                description = `WICKET! ${playerOut?.lastName || 'Player'} is Run Out!`;
-            }
-        } else if (totalRuns >= 6) {
-            description = `SIX! ${batsmanName} smashes ${bowlerName} over the rope!`;
-        } else if (totalRuns >= 4) {
-            description = `FOUR! ${batsmanName} finds the boundary off ${bowlerName}.`;
-        } else if (totalRuns === 0) {
-            description = `${bowlerName} to ${batsmanName}, no run.`;
-        } else {
-            description = `${bowlerName} to ${batsmanName}, ${totalRuns} run${totalRuns > 1 ? 's' : ''}.`;
-        }
+        const totalRuns = (ball.runs || 0) + (ball.extras || ball.extraRuns || 0);
 
-        if (ball.extrasType) {
-            const extraName = ball.extrasType === 'noball' ? 'No Ball' :
-                ball.extrasType.charAt(0).toUpperCase() + ball.extrasType.slice(1);
-            description += ` (${extraName})`;
+        let description = ball.commentary;
+
+        if (!description) {
+            const ctx: CommentaryContext = {
+                runs: ball.runs || 0,
+                isWide: ball.extrasType === 'wide' || ball.extraType === 'wide',
+                isNoBall: ball.extrasType === 'noball' || ball.extrasType === 'no-ball' || ball.extraType === 'noball' || ball.extraType === 'no-ball',
+                isDismissal: !!ball.isWicket,
+                dismissalType: ball.wicketType || 'Dismissed',
+                batsmanName,
+                bowlerName,
+                fielderName,
+                shotZone: ball.shotZone,
+                shotType: ball.shotType,
+                contactQuality: ball.contactQuality,
+                isPowerplay: currentOver < 6,
+                isDeathOver: currentOver >= 16,
+            };
+            description = generateCommentary(ctx);
         }
 
         commentary.unshift({ // Add to front for reverse chronological order
@@ -70,7 +69,7 @@ export function generateCommentaryFromHistory(
             ball: ballsInOver,
             description,
             runs: totalRuns,
-            timestamp: ball.timestamp ? new Date(ball.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+            timestamp: ball.timestamp ? (typeof ball.timestamp === 'string' ? ball.timestamp : new Date(ball.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : '',
             bowler: bowlerName,
             batsman: batsmanName
         });
@@ -84,3 +83,4 @@ export function generateCommentaryFromHistory(
 
     return commentary;
 }
+

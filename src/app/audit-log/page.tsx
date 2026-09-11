@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Clock, User, Activity, Globe, Database } from "lucide-react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { getRecentAuditLogsAction } from '@/app/actions/auditActions';
 import { formatDistanceToNow } from 'date-fns';
 import { PageHeader } from '@/components/dashboard/PageHeader';

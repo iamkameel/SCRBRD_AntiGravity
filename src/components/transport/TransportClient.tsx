@@ -19,7 +19,7 @@ import {
   MoreVertical
 } from "lucide-react";
 import { Trip, Vehicle } from "@/types/firestore";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -81,7 +81,6 @@ export function TransportClient({ trips, vehicles }: TransportClientProps) {
 
   return (
     <div style={{ background: D.base, minHeight: '100vh', color: D.textPrimary }}>
-      <GlobalStyles />
       
       {/* Top Header */}
       <div style={{ 

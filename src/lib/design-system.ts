@@ -82,6 +82,7 @@ export const FONTS = {
 export const D = {
     // Dynamic theme-aware surface & text tokens
     bg: 'var(--bg-app)',
+    base: 'var(--bg-app)',
     surf0: 'var(--surf0)',
     surf1: 'var(--surf1)',
     surf2: 'var(--surf2)',
@@ -96,6 +97,7 @@ export const D = {
     // Constant semantic accents & fonts
     ...ACCENTS,
     ...GRADIENTS,
+    grad: GRADIENTS.main,
     gradMain: GRADIENTS.main,
     gradGold: GRADIENTS.gold,
     gradLive: GRADIENTS.live,
@@ -103,9 +105,12 @@ export const D = {
     md: RADIUS.md,
     lg: RADIUS.lg,
     xl: RADIUS.xl,
+    xxl: '24px',
     pill: RADIUS.pill,
+    glass: 'rgba(15, 22, 33, 0.75)',
     mono: FONTS.mono,
     head: FONTS.head,
+    syne: FONTS.head,
     sans: FONTS.sans,
     body: FONTS.body,
 } as const;

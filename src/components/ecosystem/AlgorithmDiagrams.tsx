@@ -15,7 +15,7 @@ import {
   Database
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 const WorkflowStep = ({ icon: Icon, title, description, active = false }: { icon: any, title: string, description: string, active?: boolean }) => (
   <div className={cn(

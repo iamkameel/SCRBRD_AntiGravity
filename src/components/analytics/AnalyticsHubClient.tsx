@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { IntelligenceRadar } from "./IntelligenceRadar";
 import { DevelopmentTimeline } from "./DevelopmentTimeline";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { 
   TrendingUp, 
   Users, 
@@ -95,7 +95,6 @@ export function AnalyticsHubClient() {
 
   return (
     <div style={{ background: D.base, minHeight: '100vh', color: D.textPrimary }}>
-      <GlobalStyles />
       
       {/* Header */}
       <div style={{ 

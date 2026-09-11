@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { TrendingUp, Activity, Target } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 

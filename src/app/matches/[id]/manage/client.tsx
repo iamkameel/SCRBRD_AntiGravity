@@ -779,7 +779,7 @@ export function MatchManagementClient({
                             })}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-center border-b border-white/5 border-dashed m-3 rounded-xl border-white/10">
+                          <div className="flex flex-col items-center justify-center py-12 text-center border-b border-dashed m-3 rounded-xl border-white/10">
                              <Users className="h-8 w-8 text-muted-foreground/30 mb-3" />
                              <h4 className="text-sm font-bold text-muted-foreground mb-1">Starting XI Empty</h4>
                              <p className="text-[10px] text-muted-foreground/70 max-w-[170px]">Drag players here or click &quot;Add to XI&quot; from the squad roster.</p>

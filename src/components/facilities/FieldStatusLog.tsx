@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { History, Thermometer, Droplets, MapPin } from 'lucide-react';
 
 const MOCK_LOGS = [

@@ -25,7 +25,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "strike rotation",
         intensity: "Medium",
         duration: "15 mins",
-        targetAttributes: ["Strike Rotation", "Gap Finding", "Running Between Wickets"],
+        targetAttributes: ["Strike Rotation", "Gap Finding", "Running Between Wickets", "Rotation"],
         description: "Batter drops the ball into a nearby gap and sprints for a single. Focus on soft hands and immediate decision-making.",
         drillLevel: "Intermediate"
     },
@@ -36,7 +36,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "playing spin",
         intensity: "High",
         duration: "20 mins",
-        targetAttributes: ["vs Spin", "Footwork", "Decision Making"],
+        targetAttributes: ["vs Spin", "Playing Spin", "Footwork", "Decision Making"],
         description: "Facing 12 balls from a spinner with specific field settings. Must maintain a target strike rate without losing a wicket.",
         drillLevel: "Advanced"
     },
@@ -47,9 +47,20 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "gap finding",
         intensity: "Medium",
         duration: "20 mins",
-        targetAttributes: ["Gap Finding", "Shot Range", "Control"],
+        targetAttributes: ["Gap Finding", "Shot Range", "Control", "Defensive Technique"],
         description: "Batter must hit specific gaps marked by cones. Focus on head position and balance through the shot.",
         drillLevel: "Foundation"
+    },
+    {
+        id: "bat-004",
+        name: "Power-hitting Range Extension",
+        category: "Batting",
+        subcategory: "power hitting",
+        intensity: "High",
+        duration: "25 mins",
+        targetAttributes: ["Boundary Hitting", "Power", "Intent", "Boundary"],
+        description: "Clear-the-boundary simulation against full length and short balls with extension through swing plane.",
+        drillLevel: "Advanced"
     },
 
     // --- Bowling Drills ---
@@ -60,7 +71,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "death bowling",
         intensity: "High",
         duration: "15 mins",
-        targetAttributes: ["Death", "Control", "Repeatability"],
+        targetAttributes: ["Death", "Death Over Execution", "Control", "Repeatability"],
         description: "Bowling at a specific grid at the base of the stumps. 6 balls, aim for 4/6 successful yorkers.",
         drillLevel: "Advanced"
     },
@@ -71,9 +82,81 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "new ball execution",
         intensity: "Medium",
         duration: "25 mins",
-        targetAttributes: ["New Ball", "Seam/Swing", "Line"],
+        targetAttributes: ["New Ball", "Seam/Swing", "Line", "Line & Length Control"],
         description: "Continuous bowling with a new ball, focusing on wrist position to maintain consistent outswing/inswing.",
         drillLevel: "Intermediate"
+    },
+    {
+        id: "bow-003",
+        name: "Pace Variation Masterclass",
+        category: "Bowling",
+        subcategory: "variation quality",
+        intensity: "Medium",
+        duration: "20 mins",
+        targetAttributes: ["Variation Quality", "Variation", "Control"],
+        description: "Executing off-cutter, knuckle ball, and seam-up back-to-back without arm-speed tell.",
+        drillLevel: "Advanced"
+    },
+
+    // --- Fielding Drills ---
+    {
+        id: "fld-001",
+        name: "Inner-Ring Pressure Throwing",
+        category: "Fielding",
+        subcategory: "ground fielding",
+        intensity: "High",
+        duration: "15 mins",
+        targetAttributes: ["Ground Fielding & Throw", "Ground", "Accuracy", "Reflexes"],
+        description: "Rapid attack on ground ball, single-motion pick-up and direct hit at single stump.",
+        drillLevel: "Intermediate"
+    },
+    {
+        id: "fld-002",
+        name: "Slip Reflex Catching Block",
+        category: "Fielding",
+        subcategory: "slip catching",
+        intensity: "Medium",
+        duration: "15 mins",
+        targetAttributes: ["High & Slip Catching", "Catching", "Reflexes", "Positioning"],
+        description: "Nick-board deflection catching set focusing on soft hands and late tracking.",
+        drillLevel: "Advanced"
+    },
+
+    // --- Wicketkeeping Drills ---
+    {
+        id: "wkp-001",
+        name: "Spin Standing-Up Gather Series",
+        category: "Wicketkeeping",
+        subcategory: "standing up takes",
+        intensity: "High",
+        duration: "20 mins",
+        targetAttributes: ["Glovework & Takes", "Glove Work", "Standing Up", "Collection"],
+        description: "Receiving turning and bouncing deliveries standing up to spinner, retaining soft gloves.",
+        drillLevel: "Advanced"
+    },
+    {
+        id: "wkp-002",
+        name: "Leg-Side Deflection Take Drill",
+        category: "Wicketkeeping",
+        subcategory: "leg-side takes",
+        intensity: "High",
+        duration: "15 mins",
+        targetAttributes: ["Glovework & Takes", "Stumping Speed", "Reaction"],
+        description: "Footwork shift down leg-side with rapid collection and bails removal.",
+        drillLevel: "Intermediate"
+    },
+
+    // --- Physical Drills ---
+    {
+        id: "phy-001",
+        name: "Between-Stumps Sprint Acceleration",
+        category: "Physical",
+        subcategory: "speed",
+        intensity: "High",
+        duration: "15 mins",
+        targetAttributes: ["Speed & Acceleration", "Speed", "Workload Endurance"],
+        description: "Repeat 22-yard shuttle sprints with bat grounding and direction turn technique.",
+        drillLevel: "Foundation"
     },
 
     // --- Mental Drills ---
@@ -84,7 +167,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "reset after error",
         intensity: "Low",
         duration: "10 mins",
-        targetAttributes: ["Reset", "Composure", "Decision Making"],
+        targetAttributes: ["Reset", "Composure", "Composure under Pressure", "Resilience after Error", "Decision Making"],
         description: "Coach introduces a 'bad call' or 'error' scenario. Player must execute a reset routine before the next delivery.",
         drillLevel: "Intermediate"
     },
@@ -95,7 +178,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "concentration",
         intensity: "Medium",
         duration: "45 mins",
-        targetAttributes: ["Concentration", "Patience", "Work Ethic"],
+        targetAttributes: ["Concentration", "Patience", "Work Ethic", "Workload Endurance"],
         description: "Extended session with low frequency of scoring balls. Focus on maintaining intensity between deliveries.",
         drillLevel: "Advanced"
     },
@@ -108,7 +191,7 @@ export const DRILL_LIBRARY: Drill[] = [
         subcategory: "field awareness",
         intensity: "Low",
         duration: "15 mins",
-        targetAttributes: ["Field Awareness", "Game State", "Option Selection"],
+        targetAttributes: ["Field Awareness", "Match Awareness & Options", "Game State", "Option Selection"],
         description: "Interactive session where players are shown field settings and must decide on the optimal bowling/batting plan.",
         drillLevel: "Intermediate"
     }

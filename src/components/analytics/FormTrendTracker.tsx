@@ -12,7 +12,7 @@ import {
   AreaChart,
   Area
 } from "recharts";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 const defaultData = [
   { month: 'Jan', form: 4.2 },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GlobalStyles } from '@/lib/scoring/theme';
+
 import { AppTopBar } from './AppTopBar';
 import { DynamicInsightBar } from './DynamicInsightBar';
 import { BottomDock, ActiveTab } from './BottomDock';
@@ -31,7 +31,6 @@ export function AppShellLive({
   if (loading && !liveScore) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background text-foreground">
-        <GlobalStyles />
         <div className="text-center flex flex-col items-center">
           <Loader2 className="w-9 h-9 text-emerald-500 animate-spin mb-3 block mx-auto" />
           <p className="text-muted-foreground text-sm font-medium">Loading Scoring Hub…</p>
@@ -42,7 +41,6 @@ export function AppShellLive({
 
   return (
     <div className="bg-background min-h-screen pb-20 text-foreground">
-      <GlobalStyles />
       <AppTopBar matchId={matchId} liveScore={liveScore} />
       
       {/* Show Insight Bar globally unless match is complete or loading */}

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { fieldService } from "@/services/fieldService";
 import { motion } from "framer-motion";
 import { 

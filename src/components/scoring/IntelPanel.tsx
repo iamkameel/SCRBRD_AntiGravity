@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 import { Lbl, Badge } from './primitives';
 import { buildSignals, buildNarratives } from '@/lib/scoring/intelUtils';
 

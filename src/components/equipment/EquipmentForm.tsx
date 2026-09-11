@@ -2,7 +2,7 @@
 
 import { useState, useActionState } from "react";
 import { EquipmentActionState } from "@/app/actions/equipmentActions";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { 
   Loader2, 
   Save, 
@@ -138,7 +138,6 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
 
   return (
     <div style={{ color: D.textPrimary }}>
-      <GlobalStyles />
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
         <button 

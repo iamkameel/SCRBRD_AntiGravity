@@ -1,5 +1,5 @@
 import React from 'react';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 import { SHOT_CATEGORIES } from './constants';
 import { X, RotateCcw } from 'lucide-react';
 import { Lbl } from './primitives';

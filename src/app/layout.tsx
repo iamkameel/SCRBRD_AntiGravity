@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Syne, DM_Mono, DM_Sans, Open_Sans } from 'next/font/google';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import Providers from '@/components/layout/Providers';
 import { PermissionViewProvider } from '@/contexts/PermissionViewContext';

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { WagonWheelScorer } from './WagonWheelScorer';
 import { WagonWheelGrid, ShotEventData } from './WagonWheelGrid';
@@ -20,7 +21,7 @@ import { WagonWheelHeatmap } from './WagonWheelHeatmap';
 import { PlayerSelector } from './PlayerSelector';
 import { 
   Undo, Save, Play, Pause, RotateCcw,
-  ChevronRight, AlertCircle, Users, Settings
+  ChevronRight, AlertCircle, Users, Settings, Keyboard, Command
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -188,7 +189,7 @@ export function MatchScoringInterface({
 
   const recordBall = () => {
     if (selectedRuns === null && !currentBall.isWicket && !currentBall.extras) {
-      alert('Please select runs, wicket, or extras');
+      toast.error('Select runs, a wicket, or an extra before recording.');
       return;
     }
 
@@ -369,6 +370,42 @@ export function MatchScoringInterface({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        return;
+      }
+
+      if (e.key >= '0' && e.key <= '6') {
+        e.preventDefault();
+        const runs = parseInt(e.key, 10);
+        handleRunsSelect(runs);
+        toast.info(`Runs: ${runs}`);
+      } else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleWicket();
+        toast.info('Wicket selected');
+      } else if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        handleExtras('wide', 1);
+        toast.info('Wide extra selected');
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        recordBall();
+      } else if ((e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) || (e.key.toLowerCase() === 'u' && !e.ctrlKey && !e.metaKey)) {
+        e.preventDefault();
+        if (currentOver.length > 0) {
+          undoLastBall();
+          toast.info('Undid last ball');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedRuns, currentBall, currentOver, innings, recordBall, undoLastBall]);
+
   const getBallSymbol = (ball: Ball) => {
     if (ball.isWicket) return 'W';
     if (ball.extrasType === 'wide') return `${ball.runs}wd`;
@@ -383,19 +420,65 @@ export function MatchScoringInterface({
     <div className="space-y-6">
       {/* Score Display */}
       <Card className="p-8 border-primary/20 bg-gradient-to-br from-card to-secondary/10 shadow-xl backdrop-blur-md">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 drop-shadow-sm">
+            <h2 className="text-5xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 drop-shadow-sm">
               {innings.totalRuns}/{innings.wickets}
             </h2>
-            <p className="text-lg font-medium text-muted-foreground mt-2 uppercase tracking-widest">
+            <p className="text-base md:text-lg font-medium text-muted-foreground mt-2 uppercase tracking-widest">
               Overs: {innings.overs.length}.{ballsInOver}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts">
+                  <Keyboard className="h-4 w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline text-xs font-semibold">Shortcuts</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Command className="h-5 w-5 text-primary" />
+                    Scorer Keyboard Shortcuts
+                  </DialogTitle>
+                  <DialogDescription>
+                    Use key bindings for high-speed scoring on the boundary line.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 py-2 text-sm">
+                  <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Select Runs (0-6)</span>
+                    <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">0 - 6</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Toggle Wicket</span>
+                    <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">W</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Toggle Wide Extra</span>
+                    <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">E</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Record Ball</span>
+                    <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">Enter</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5">
+                    <span className="text-muted-foreground">Undo Last Ball</span>
+                    <div className="flex gap-1">
+                      <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">U</kbd>
+                      <span className="text-xs text-muted-foreground">or</span>
+                      <kbd className="px-2 py-1 bg-muted rounded font-mono text-xs font-bold">Ctrl+Z</kbd>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" aria-label="Match Settings" title="Match Settings">
                   <Settings className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
@@ -676,7 +759,8 @@ export function MatchScoringInterface({
               onClick={undoLastBall}
               disabled={currentOver.length === 0}
               className="h-16 w-16"
-              title="Undo Last Ball"
+              aria-label="Undo last ball"
+              title="Undo last ball"
             >
               <Undo className="h-5 w-5" />
             </Button>

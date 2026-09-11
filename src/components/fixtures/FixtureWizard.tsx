@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Team, Field, Person } from "@/types/firestore";
 
 import { MatchupInsights } from "@/lib/matchupIntelligence";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -284,7 +284,6 @@ export function FixtureWizard({ teams, fields }: FixtureWizardProps) {
   if (state.success) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center sh-fade-in">
-        <GlobalStyles />
         <div className="mb-8 flex justify-center">
             <div className="h-24 w-24 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center animate-bounce-subtle">
                 <CheckCircle2 className="h-12 w-12 text-green-500" />
@@ -349,7 +348,6 @@ export function FixtureWizard({ teams, fields }: FixtureWizardProps) {
   return (
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sh-fade-in">
-      <GlobalStyles />
       {/* LEFT: Form */}
       <div className="lg:col-span-2 space-y-8">
         <form action={action} className="space-y-8">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 
 export function Lbl({ children, color }: { children: React.ReactNode; color?: string }) {
   return (

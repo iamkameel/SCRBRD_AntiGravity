@@ -1,4 +1,4 @@
-import { D } from '@/lib/scoring/theme';
+import { D } from '@/lib/design-system';
 
 export const SHOT_CATEGORIES = [
     {

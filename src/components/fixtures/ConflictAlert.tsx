@@ -2,7 +2,7 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Calendar, MapPin, Users } from "lucide-react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 
 interface ConflictAlertProps {
   conflicts: string[];

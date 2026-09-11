@@ -8,7 +8,7 @@ import {
   MessageSquare, DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { intelService } from "@/services/intelService";
 
 const EcosystemNode = ({ 

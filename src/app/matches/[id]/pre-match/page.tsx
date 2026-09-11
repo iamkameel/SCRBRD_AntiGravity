@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, CheckCircle2, Lock, AlertTriangle, Shield, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { 
   getMatchDetailsAction, 
@@ -34,8 +34,10 @@ import { getTeamAction } from "@/app/actions/teamActions";
 import { BattingOrderEditor } from "@/components/matches/BattingOrderEditor";
 import { getMockSquad } from "@/lib/mockMatchData";
 
-export default function PreMatchPage({ params }: { params: { id: string } }) {
+export default function PreMatchPage() {
   const router = useRouter();
+  const routeParams = useParams();
+  const matchId = (routeParams?.id as string) || '';
   const [activeTab, setActiveTab] = useState("teams");
   const [loading, setLoading] = useState(true);
   
@@ -58,7 +60,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
       setLoading(true);
       try {
         // 1. Fetch Match Details
-        const matchData = await getMatchDetailsAction(params.id);
+        const matchData = await getMatchDetailsAction(matchId);
         if (!matchData) {
           toast.error("Match not found");
           return;
@@ -103,7 +105,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
     };
 
     fetchData();
-  }, [params.id]);
+  }, [matchId]);
 
   if (loading || !match) {
     return (
@@ -201,8 +203,20 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
       await saveScorerChecklistAction(match.id, checklistData);
       
       // Initialize Live Match
-      const homeOrder = match.teamSelection?.home?.playingXI || [];
-      const awayOrder = match.teamSelection?.away?.playingXI || [];
+      const homeXI = match.teamSelection?.home?.playingXI && match.teamSelection.home.playingXI.length > 0
+        ? match.teamSelection.home.playingXI
+        : homeSquad.slice(0, 11).map(p => p.id);
+      const awayXI = match.teamSelection?.away?.playingXI && match.teamSelection.away.playingXI.length > 0
+        ? match.teamSelection.away.playingXI
+        : awaySquad.slice(0, 11).map(p => p.id);
+
+      const battingOrderAny = match.preMatch?.battingOrder as any;
+      const homeOrder = (battingOrderAny?.home && battingOrderAny.home.length > 0)
+        ? battingOrderAny.home 
+        : homeXI;
+      const awayOrder = (battingOrderAny?.away && battingOrderAny.away.length > 0)
+        ? battingOrderAny.away 
+        : awayXI;
       
       if (!tossResult) {
         toast.error("Toss result missing");
@@ -218,10 +232,10 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
       if (initResult.success) {
         toast.success("Match Started! Redirecting to live scoring...");
         setTimeout(() => {
-          router.push(`/matches/${params.id}/score`);
+          router.push(`/matches/${matchId}/score`);
         }, 1500);
       } else {
-        toast.error("Failed to initialize live match");
+        toast.error(initResult.error || "Failed to initialize live match");
       }
     } catch (error) {
       console.error(error);
@@ -265,7 +279,7 @@ export default function PreMatchPage({ params }: { params: { id: string } }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href={`/matches/${params.id}`}>
+          <Link href={`/matches/${matchId}`}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>

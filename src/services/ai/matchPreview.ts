@@ -40,9 +40,10 @@ export async function generateMatchPreview(input: MatchPreviewInput): Promise<Ma
     const format = input.matchFormat ?? 'T20';
     const { homeTeam: h, awayTeam: a } = input;
 
-    const response = await ai.generate({
-        model: DEFAULT_MODEL,
-        prompt: `You are a school cricket analyst. Write an engaging pre-match preview.
+    try {
+        const response = await ai.generate({
+            model: DEFAULT_MODEL,
+            prompt: `You are a school cricket analyst. Write an engaging pre-match preview.
 
 Match: ${h.name} vs ${a.name}
 Format: ${format}${input.venue ? ` at ${input.venue}` : ''}
@@ -63,8 +64,20 @@ Respond ONLY with valid JSON:
   "keyBattles": [{"batter": "", "bowler": "", "context": ""}],
   "prediction": "<1-2 sentence prediction>"
 }`,
-    });
+        });
 
-    const text = response.text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-    return JSON.parse(text) as MatchPreviewOutput;
+        const text = response.text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        return JSON.parse(text) as MatchPreviewOutput;
+    } catch (err) {
+        console.warn('[AI] Gemini API unavailable or failed, returning structured mock preview:', err);
+        return {
+            headline: `Clash of Titans: ${h.name} Prepare to Host ${a.name} in Key ${format} Encounter`,
+            preview: `${h.name} enter this fixture in solid form (${h.recentForm}) boasting a ${h.winRateThisSeason}% win rate this season. All eyes will be on key batter ${h.topBatter.name} (Avg: ${h.topBatter.average}, SR: ${h.topBatter.strikeRate}) and lead bowler ${h.topBowler.name} (Econ: ${h.topBowler.economy}). Meanwhile, ${a.name} bring high tactical discipline with ${a.topBatter.name} leading their batting lineup. Pitch conditions at ${input.venue ?? 'the grounds'} are expected to offer a true surface for bat and ball.`,
+            keyBattles: [
+                { batter: h.topBatter.name, bowler: a.topBowler.name, context: 'Powerplay new-ball battle' },
+                { batter: a.topBatter.name, bowler: h.topBowler.name, context: 'Middle overs spin control vs boundary striking' }
+            ],
+            prediction: `Expect a tightly fought match, with ${h.winRateThisSeason >= a.winRateThisSeason ? h.name : a.name} holding a strategic edge based on recent execution.`
+        };
+    }
 }

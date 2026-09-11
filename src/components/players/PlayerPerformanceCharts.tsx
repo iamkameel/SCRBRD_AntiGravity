@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { Activity, Target } from "lucide-react";
 import { Player as Person } from "@/lib/store";
 import {

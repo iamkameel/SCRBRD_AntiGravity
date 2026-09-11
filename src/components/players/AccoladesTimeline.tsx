@@ -1,6 +1,6 @@
 "use client";
 
-import { D } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { Award, Star, Milestone, ShieldPlus, ChevronDown } from "lucide-react";
 
 interface Accolade {

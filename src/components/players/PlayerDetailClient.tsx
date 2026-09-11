@@ -30,7 +30,7 @@ import {
 import { BattingStatsCard, BowlingStatsCard, FieldingStatsCard } from "./PlayerStatsCards";
 import { PlayerPerformanceCharts } from "./PlayerPerformanceCharts";
 import { PlayerSkillsDisplay } from "./PlayerSkillsDisplay";
-import { D, GlobalStyles } from "@/lib/scoring/theme";
+import { D } from '@/lib/design-system';
 import { RecentMatches } from "./RecentMatches";
 import PlayerImpactCard from "@/components/rankings/PlayerImpactCard";
 import { FormAnalysisCard } from "@/components/profiles/FormAnalysisCard";
@@ -158,7 +158,6 @@ export function PlayerDetailClient({
 
   return (
     <div className="pb-24 space-y-8">
-      <GlobalStyles />
 
       {/* ─── Back + Edit Row ─── */}
       <div className="flex items-center justify-between">
