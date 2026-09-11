@@ -6,7 +6,8 @@ import ScoutingDashboard from '@/components/scouting/ScoutingDashboard';
 import AIScoutingView from '@/components/scouting/AIScoutingView';
 import { OppositionScoutingCockpit } from '@/components/scouting/OppositionScoutingCockpit';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Sparkles, Users, ShieldAlert } from "lucide-react";
+import { Sparkles, Users, ShieldAlert, GraduationCap } from "lucide-react";
+import { TalentPathwayEngine } from "@/components/scouting/TalentPathwayEngine";
 import { D } from "@/lib/design-system";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -40,6 +41,12 @@ function ScoutingContent() {
             <Users className="h-4 w-4" /> Prospects & Evaluations
           </TabsTrigger>
           <TabsTrigger 
+            value="pathway" 
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold uppercase tracking-wider text-xs data-[state=active]:bg-indigo-500 data-[state=active]:text-white transition-all"
+          >
+            <GraduationCap className="h-4 w-4" /> Selection Pathway & Elite Camps
+          </TabsTrigger>
+          <TabsTrigger 
             value="ai" 
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold uppercase tracking-wider text-xs data-[state=active]:bg-sky-500 data-[state=active]:text-black transition-all"
           >
@@ -55,6 +62,10 @@ function ScoutingContent() {
 
         <TabsContent value="overview" className="focus-visible:outline-none">
           <ScoutingDashboard />
+        </TabsContent>
+
+        <TabsContent value="pathway" className="focus-visible:outline-none">
+          <TalentPathwayEngine />
         </TabsContent>
 
         <TabsContent value="ai" className="focus-visible:outline-none">

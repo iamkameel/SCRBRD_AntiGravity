@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { MetricCard } from "../dashboard/MetricCard";
 import { SectionHeader } from "../ui/SectionHeader";
 
+import ScoutReportForm from './ScoutReportForm';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 // Mock data for initial UI rendering
 const MOCK_PROSPECTS = [
     { 
@@ -149,6 +152,9 @@ const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
 );
 
 export default function ScoutingDashboard() {
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedPlayerId, setSelectedPlayerId] = useState<string>('1');
+
     return (
         <div className="space-y-12 pb-24">
             {/* Standardized Header */}
@@ -166,14 +172,28 @@ export default function ScoutingDashboard() {
                       className="h-11 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/5 focus:border-indigo-500/30 focus:bg-white/5 outline-none transition-all text-[10px] font-black tracking-widest uppercase w-48 lg:w-64"
                     />
                   </div>
-                  <Button className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
-                          style={{ background: D.indigo, color: 'white' }}>
+                  <Button 
+                    onClick={() => setIsFormOpen(true)}
+                    className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20" 
+                    style={{ background: D.indigo, color: 'white' }}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     CREATE REPORT
                   </Button>
                 </div>
               }
             />
+
+            {/* Scout Evaluation Modal */}
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+              <DialogContent className="max-w-4xl bg-transparent border-0 p-0 overflow-hidden shadow-2xl">
+                <ScoutReportForm 
+                  playerId={selectedPlayerId} 
+                  onSave={() => setIsFormOpen(false)}
+                  onCancel={() => setIsFormOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
 
             {/* Strategic Intel HUD */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

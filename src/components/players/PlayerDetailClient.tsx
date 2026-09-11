@@ -50,6 +50,7 @@ import { PlayerPassportView } from "./PlayerPassportView";
 import { PlayerHonoursCabinet } from "@/components/player/PlayerHonoursCabinet";
 import { WagonWheelHeatmap } from "@/components/analytics/WagonWheelHeatmap";
 import { PlayerComparisonTool } from "./PlayerComparisonTool";
+import { PlayerCareerHistoryTab } from "./PlayerCareerHistoryTab";
 import { SkillAssessment, ReadinessScore } from "@/types/schema_v4";
 
 interface PlayerDetailClientProps {
@@ -62,11 +63,13 @@ interface PlayerDetailClientProps {
 const tabs = [
   { id: "overview", label: "Overview", icon: BarChart2 },
   { id: "stats", label: "Stats", icon: Activity },
+  { id: "history", label: "Career History", icon: Clock },
   { id: "performance", label: "Impact", icon: TrendingUp },
   { id: "passport", label: "Passport", icon: BookOpen },
   { id: "rewards", label: "Rewards", icon: Star },
   { id: "intelligence", label: "Intelligence", icon: Map },
 ];
+
 
 function HeroStatPill({ label, value, accent = false }: { label: string; value: string | number; accent?: boolean }) {
   return (
@@ -479,6 +482,14 @@ export function PlayerDetailClient({
               <p className="text-[10px] text-white/20 mt-1">Links to longitudinal match data once match engine is active</p>
             </div>
           </TabsContent>
+
+          {/* ═══════════════════════════════════════════════
+              TAB: CAREER HISTORY & TIMELINE
+          ══════════════════════════════════════════════════ */}
+          <TabsContent value="history" className="space-y-6">
+            <PlayerCareerHistoryTab playerId={player.id} />
+          </TabsContent>
+
 
           {/* ═══════════════════════════════════════════════
               TAB: IMPACT ANALYSIS
