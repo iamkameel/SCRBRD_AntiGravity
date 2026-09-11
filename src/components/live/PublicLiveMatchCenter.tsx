@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Radio, Activity, Target, Flame, ChevronRight, Share2, Award, Clock } from 'lucide-react';
-import { liveMatchSync, LiveMatchState } from '@/services/liveMatchSync';
+import { Radio, Activity, Target, Flame, Share2, Wifi, Zap, Plus, AlertCircle, ShieldAlert } from 'lucide-react';
+import { liveMatchSync, LiveMatchState, MilestoneAlert } from '@/services/liveMatchSync';
 import { WagonWheelGrid, ShotEventData } from '@/components/scoring/WagonWheelGrid';
 
 const MOCK_WAGON_SHOTS: ShotEventData[] = [
@@ -19,20 +19,109 @@ const MOCK_WAGON_SHOTS: ShotEventData[] = [
   { x: 150, y: 160, angle: 350, distance: 30, zoneInfo: { zoneName: 'Mid-Off', zoneCode: 'MO', ringName: 'Inner Ring', isBoundary: false }, runs: 0, isWicket: true },
 ];
 
-export function PublicLiveMatchCenter({ fixtureId }: { fixtureId?: string }) {
+export function PublicLiveMatchCenter({ fixtureId = 'fix-1st-xi-kes' }: { fixtureId?: string }) {
   const [matchState, setMatchState] = useState<LiveMatchState>(liveMatchSync.getLiveState());
   const [activeTab, setActiveTab] = useState('commentary');
+  const [activeAlert, setActiveAlert] = useState<MilestoneAlert | null>(null);
 
   useEffect(() => {
+    // Connect to Firestore real-time snapshot
+    liveMatchSync.connectFirestore(fixtureId);
+
     const unsubscribe = liveMatchSync.subscribe(newState => {
       setMatchState(newState);
+      if (newState.activeMilestoneAlert) {
+        setActiveAlert(newState.activeMilestoneAlert);
+        // Auto-dismiss alert after 4 seconds
+        const timer = setTimeout(() => setActiveAlert(null), 4000);
+        return () => clearTimeout(timer);
+      }
     });
+
     return () => unsubscribe();
   }, [fixtureId]);
 
+  const simulateScorerBall = (runs: number, isWicket: boolean = false) => {
+    const ballNumber = matchState.ballsInOver + 1 > 6 ? 1 : matchState.ballsInOver + 1;
+    const overNumber = matchState.ballsInOver + 1 > 6 ? matchState.oversCompleted + 1 : matchState.oversCompleted;
+    
+    let commentary = `Ball ${overNumber}.${ballNumber}: ${matchState.striker.name} scores ${runs} run(s) off ${matchState.currentBowler.name}.`;
+    if (runs === 4) commentary = `CRUNCHED! ${matchState.striker.name} leans into a brilliant drive to the cover fence for FOUR!`;
+    if (runs === 6) commentary = `MONSTROUS! ${matchState.striker.name} lofts it high and deep into the crowd for SIX!`;
+    if (isWicket) commentary = `OUT! Wicket falls! ${matchState.striker.name} caught by fielder off ${matchState.currentBowler.name}!`;
+
+    liveMatchSync.addBallEvent({
+      id: `sim-${Date.now()}`,
+      overNumber,
+      ballNumber,
+      strikerName: matchState.striker.name,
+      bowlerName: matchState.currentBowler.name,
+      runsOffBat: isWicket ? 0 : runs,
+      extraRuns: 0,
+      totalRuns: isWicket ? 0 : runs,
+      isWicket,
+      dismissedPlayerName: isWicket ? matchState.striker.name : undefined,
+      commentary,
+      timestamp: new Date().toLocaleTimeString()
+    }, fixtureId);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Broadcast Match Header */}
+    <div className="space-y-6 font-sans">
+      {/* Milestone Flash Alert Popup */}
+      {activeAlert && (
+        <div className="fixed top-6 right-6 z-50 animate-bounce transition-all duration-300">
+          <div className={`p-4 rounded-2xl border shadow-2xl flex items-center gap-4 backdrop-blur-2xl ${
+            activeAlert.type === 'WICKET' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' :
+            activeAlert.type === 'SIX' ? 'bg-amber-950/90 border-amber-500/50 text-amber-200' :
+            activeAlert.type === 'FOUR' ? 'bg-cyan-950/90 border-cyan-500/50 text-cyan-200' :
+            'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+          }`}>
+            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center font-black text-xl shrink-0">
+              {activeAlert.type === 'WICKET' ? '☝️' : activeAlert.type === 'SIX' ? '6️⃣' : activeAlert.type === 'FOUR' ? '4️⃣' : '🎖️'}
+            </div>
+            <div>
+              <div className="text-xs font-mono tracking-widest font-black uppercase">{activeAlert.title}</div>
+              <div className="text-sm font-bold text-white">{activeAlert.description}</div>
+              <div className="text-[10px] font-mono text-white/60 mt-0.5">Live Spectator Push • {activeAlert.timestamp}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Realtime Stream Telemetry Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/90 border border-white/10 rounded-2xl text-xs font-mono">
+        <div className="flex items-center gap-3">
+          <Badge className={`font-mono text-[11px] px-2.5 py-0.5 flex items-center gap-1.5 ${
+            matchState.connectionStatus === 'CONNECTED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+            matchState.connectionStatus === 'SYNCING' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' :
+            'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+          }`}>
+            <Wifi className="w-3.5 h-3.5" />
+            {matchState.connectionStatus === 'CONNECTED' ? `FIREBASE SYNCED (${matchState.latencyMs ?? 30}ms)` : matchState.connectionStatus}
+          </Badge>
+          <span className="text-slate-400 hidden sm:inline">Last Packet: <strong className="text-slate-200">{matchState.lastSyncTimestamp}</strong></span>
+        </div>
+
+        {/* Live Scorer Simulation Bar */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-400 font-bold uppercase hidden md:inline">Test Scorer Push:</span>
+          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(1)} className="h-7 text-[11px] font-mono border-white/10 bg-white/5 hover:bg-white/10 text-slate-200">
+            +1 Single
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(4)} className="h-7 text-[11px] font-mono border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold">
+            +4 Boundary
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(6)} className="h-7 text-[11px] font-mono border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold">
+            +6 Maximum
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(0, true)} className="h-7 text-[11px] font-mono border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold">
+            Wicket!
+          </Button>
+        </div>
+      </div>
+
+      {/* Broadcast Match Header Card */}
       <Card className="p-6 bg-slate-900/95 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-2xl text-slate-100 relative overflow-hidden">
         {/* Background Ambient Glow */}
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -43,14 +132,14 @@ export function PublicLiveMatchCenter({ fixtureId }: { fixtureId?: string }) {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
               <Badge className="bg-rose-500 text-white font-mono text-xs px-3 py-1 animate-pulse flex items-center gap-1.5 shadow-lg shadow-rose-500/20">
-                <Radio className="w-3.5 h-3.5" /> LIVE SCORING
+                <Radio className="w-3.5 h-3.5" /> LIVE SPECTATOR STREAM
               </Badge>
               <span className="text-xs text-slate-400 font-mono">1st XI Annual Derby • Mitchell Field</span>
             </div>
 
             <div className="flex items-center gap-3">
-              <Button size="sm" variant="outline" className="border-white/10 hover:bg-white/10 text-xs font-mono">
-                <Share2 className="w-3.5 h-3.5 mr-1.5 text-cyan-400" /> Share Match
+              <Button size="sm" variant="outline" className="border-white/10 hover:bg-white/10 text-xs font-mono text-slate-300">
+                <Share2 className="w-3.5 h-3.5 mr-1.5 text-cyan-400" /> Share Stream
               </Button>
             </div>
           </div>
@@ -149,7 +238,7 @@ export function PublicLiveMatchCenter({ fixtureId }: { fixtureId?: string }) {
         <TabsContent value="commentary" className="space-y-4">
           <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-xl backdrop-blur-xl text-slate-100 space-y-4">
             <h3 className="text-sm font-bold font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              <Activity className="w-4 h-4" /> Live Ball-by-Ball Feed
+              <Activity className="w-4 h-4" /> Live Ball-by-Ball Stream
             </h3>
             <div className="space-y-3">
               {matchState.recentBalls.map((ball) => (
@@ -191,16 +280,20 @@ export function PublicLiveMatchCenter({ fixtureId }: { fixtureId?: string }) {
               </div>
 
               <div className="grid grid-cols-12 text-white items-center py-2 border-b border-white/5">
-                <span className="col-span-6 font-bold text-cyan-300">Aidan Smith *</span>
-                <span className="col-span-2 text-right font-black text-amber-400">78</span>
-                <span className="col-span-2 text-right text-slate-400">64</span>
-                <span className="col-span-2 text-right text-cyan-400">121.8</span>
+                <span className="col-span-6 font-bold text-cyan-300">{matchState.striker.name} *</span>
+                <span className="col-span-2 text-right font-black text-amber-400">{matchState.striker.runs}</span>
+                <span className="col-span-2 text-right text-slate-400">{matchState.striker.ballsFacing}</span>
+                <span className="col-span-2 text-right text-cyan-400">
+                  {matchState.striker.ballsFacing > 0 ? ((matchState.striker.runs / matchState.striker.ballsFacing) * 100).toFixed(1) : '0.0'}
+                </span>
               </div>
               <div className="grid grid-cols-12 text-white items-center py-2 border-b border-white/5">
-                <span className="col-span-6 font-bold">Luke Davies</span>
-                <span className="col-span-2 text-right font-black text-amber-400">34</span>
-                <span className="col-span-2 text-right text-slate-400">42</span>
-                <span className="col-span-2 text-right text-cyan-400">80.9</span>
+                <span className="col-span-6 font-bold">{matchState.nonStriker.name}</span>
+                <span className="col-span-2 text-right font-black text-amber-400">{matchState.nonStriker.runs}</span>
+                <span className="col-span-2 text-right text-slate-400">{matchState.nonStriker.ballsFacing}</span>
+                <span className="col-span-2 text-right text-cyan-400">
+                  {matchState.nonStriker.ballsFacing > 0 ? ((matchState.nonStriker.runs / matchState.nonStriker.ballsFacing) * 100).toFixed(1) : '0.0'}
+                </span>
               </div>
               <div className="grid grid-cols-12 text-slate-400 items-center py-2 border-b border-white/5">
                 <span className="col-span-6">Michael Ross (c b Hendricks)</span>
