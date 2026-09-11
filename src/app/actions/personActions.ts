@@ -156,15 +156,157 @@ export async function bulkDeletePeopleAction(personIds: string[]) {
 export async function fetchPersonByEmail(email: string) {
     try {
         const admin = (await import('@/lib/firebase-admin')).default;
-        const snapshot = await admin.firestore().collection('people').where('email', '==', email).limit(1).get();
+        const db = admin.firestore();
+        const snapshot = await db.collection('people').where('email', '==', email).limit(1).get();
 
-        if (snapshot.empty) return null;
+        const { resolveSchoolByEmail } = await import('@/lib/services/schoolDomainService');
+        const resolvedDomainSchool = await resolveSchoolByEmail(email);
 
-        const doc = snapshot.docs[0];
-        return serializeData({ id: doc.id, ...doc.data() }) as Person;
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            const data = doc.data() as Person;
+
+            // If person lacks schoolId but domain mapping found a match, auto-assign
+            if (!data.schoolId && resolvedDomainSchool) {
+                await db.collection('people').doc(doc.id).update({
+                    schoolId: resolvedDomainSchool.schoolId,
+                    updatedAt: new Date().toISOString(),
+                });
+                data.schoolId = resolvedDomainSchool.schoolId;
+            }
+
+            return serializeData({ ...data, id: doc.id }) as Person;
+        }
+
+        // If no person document exists yet but domain auto-mapping matched a school,
+        // provision an initial Person record for this email automatically.
+        if (resolvedDomainSchool) {
+            const personId = `person_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            const nameParts = email.split('@')[0].split('.');
+            const firstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : 'Staff';
+            const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Member';
+
+            const newPerson: Partial<Person> = {
+                id: personId,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                role: 'Sportsmaster',
+                schoolId: resolvedDomainSchool.schoolId,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            await db.collection('people').doc(personId).set(newPerson);
+            revalidatePath('/people');
+            return serializeData(newPerson) as Person;
+        }
+
+        return null;
     } catch (error) {
         console.error('Error fetching person by email:', error);
         return null;
+    }
+}
+
+export async function resolveSchoolByEmailAction(email: string) {
+    try {
+        const { resolveSchoolByEmail } = await import('@/lib/services/schoolDomainService');
+        const result = await resolveSchoolByEmail(email);
+        return serializeData({ success: true, school: result });
+    } catch (error) {
+        console.error('Error resolving school by email:', error);
+        return { success: false, school: null };
+    }
+}
+
+export async function completeOnboardingAction(data: {
+    email: string;
+    schoolName: string;
+    schoolRegion?: string;
+    role: string;
+    teamName: string;
+    ageGroup: string;
+}) {
+    try {
+        const admin = (await import('@/lib/firebase-admin')).default;
+        const db = admin.firestore();
+
+        // 1. Ensure or create School
+        let schoolId = `school_${data.schoolName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+        const schoolDoc = await db.collection('schools').doc(schoolId).get();
+
+        if (!schoolDoc.exists) {
+            await db.collection('schools').doc(schoolId).set({
+                id: schoolId,
+                name: data.schoolName,
+                location: data.schoolRegion || 'South Africa',
+                contactEmail: data.email,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
+        }
+
+        // 2. Ensure or create Team
+        const teamId = `team_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        await db.collection('teams').doc(teamId).set({
+            id: teamId,
+            name: data.teamName,
+            schoolId: schoolId,
+            suffix: data.ageGroup,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        });
+
+        // 3. Upsert Person with role and schoolId
+        const snapshot = await db.collection('people').where('email', '==', data.email).limit(1).get();
+        let personId = `person_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+        if (!snapshot.empty) {
+            personId = snapshot.docs[0].id;
+            await db.collection('people').doc(personId).update({
+                schoolId: schoolId,
+                role: data.role,
+                teamIds: admin.firestore.FieldValue.arrayUnion(teamId),
+                updatedAt: new Date().toISOString(),
+            });
+        } else {
+            const nameParts = data.email.split('@')[0].split('.');
+            const firstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : 'Staff';
+            const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Member';
+
+            await db.collection('people').doc(personId).set({
+                id: personId,
+                email: data.email,
+                firstName,
+                lastName,
+                role: data.role,
+                schoolId: schoolId,
+                teamIds: [teamId],
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
+        }
+
+        revalidatePath('/people');
+        revalidatePath('/schools');
+        revalidatePath('/dashboard');
+        revalidatePath('/onboarding');
+
+        return serializeData({
+            success: true,
+            schoolId,
+            personId,
+            teamId,
+        });
+    } catch (error) {
+        console.error('Error completing onboarding:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to complete onboarding',
+        };
     }
 }
 
@@ -181,5 +323,6 @@ export async function fetchInjuredPlayers() {
         return [];
     }
 }
+
 
 
