@@ -27,6 +27,8 @@ import { toast } from 'sonner';
 import { MatchTransitionDialog, TransitionType } from '@/components/matches/MatchTransitionDialog';
 import { MATCH_STATES } from '@/lib/matchStates';
 import { useRouter } from 'next/navigation';
+import { RecognitionService, LiveMilestoneTrigger } from '@/services/recognition/RecognitionService';
+import { LiveMilestoneAlert } from './LiveMilestoneAlert';
 
 interface Ball {
   runs: number;
@@ -117,6 +119,7 @@ export function MatchScoringInterface({
   // Transition State
   const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
   const [transitionType, setTransitionType] = useState<TransitionType>('innings_break');
+  const [activeMilestoneTrigger, setActiveMilestoneTrigger] = useState<LiveMilestoneTrigger | null>(null);
   const router = useRouter();
 
   const ballsInOver = currentOver.filter(b => 
@@ -241,6 +244,44 @@ export function MatchScoringInterface({
         setPartnershipBalls(prev => prev + 1);
       }
     }
+
+    // LIVE MILESTONE TELEMETRY EVALUATION
+    const allPriorBalls = [...innings.overs.flatMap(o => o.balls), ...currentOver];
+    const strikerId = innings.currentBatsmen[0];
+    const strikerRunsBefore = allPriorBalls
+      .filter(b => b.batsmanId === strikerId && (!b.extrasType || b.extrasType === 'noball'))
+      .reduce((sum, b) => sum + b.runs, 0);
+    const strikerRunsAfter = strikerRunsBefore + (ball.extrasType && ball.extrasType !== 'noball' ? 0 : ball.runs);
+
+    const bowlerId = innings.currentBowler;
+    const bowlerWicketsBefore = allPriorBalls
+      .filter(b => b.bowlerId === bowlerId && b.isWicket && b.wicketType !== 'Run Out')
+      .length;
+    const bowlerWicketsAfter = bowlerWicketsBefore + (ball.isWicket && ball.wicketType !== 'Run Out' ? 1 : 0);
+
+    RecognitionService.evaluateLiveBallEvent({
+      matchId,
+      inningsNumber: currentInnings,
+      strikerId,
+      strikerName: strikerId || 'Striker',
+      bowlerId,
+      bowlerName: bowlerId || 'Bowler',
+      runs: ball.runs,
+      isWicket: ball.isWicket,
+      wicketType: ball.wicketType,
+      strikerRunsBefore,
+      strikerRunsAfter,
+      bowlerWicketsBefore,
+      bowlerWicketsAfter,
+      recentOverBalls: newOver
+    }).then(triggers => {
+      if (triggers.length > 0) {
+        setActiveMilestoneTrigger(triggers[0]);
+        toast.success(triggers[0].toastTitle, { description: triggers[0].toastDescription });
+      }
+    }).catch(err => {
+      console.error('Error evaluating live milestones:', err);
+    });
 
     // Reset for next ball
     setCurrentBall({});
@@ -706,6 +747,12 @@ export function MatchScoringInterface({
           ))}
         </div>
       </Card>
+
+      {/* Real-time Milestone Celebration Overlay */}
+      <LiveMilestoneAlert
+        trigger={activeMilestoneTrigger}
+        onDismiss={() => setActiveMilestoneTrigger(null)}
+      />
     </div>
   );
 }

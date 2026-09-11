@@ -43,6 +43,9 @@ import { RewardsLeaderboard } from "@/components/rewards/RewardsLeaderboard";
 import { RewardsStore } from "@/components/rewards/RewardsStore";
 import { RewardsWallet } from "@/types/rewards";
 import { PlayerAttributeMatrix } from "./PlayerAttributeMatrix";
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Milestone } from '@/types/schema_v4';
 import { PlayerPassportView } from "./PlayerPassportView";
 import { PlayerHonoursCabinet } from "@/components/player/PlayerHonoursCabinet";
 import { WagonWheelHeatmap } from "@/components/analytics/WagonWheelHeatmap";
@@ -109,6 +112,22 @@ export function PlayerDetailClient({
   const [activeTab, setActiveTab] = useState("overview");
   const tabsRef = useRef<HTMLDivElement>(null);
   const [stickyTabs, setStickyTabs] = useState(false);
+  const [firestoreMilestones, setFirestoreMilestones] = useState<Milestone[]>([]);
+
+  useEffect(() => {
+    async function loadMilestones() {
+      if (!player?.id) return;
+      try {
+        const q = query(collection(db, 'milestones'), where('personId', '==', player.id));
+        const snap = await getDocs(q);
+        const fetched = snap.docs.map(doc => doc.data() as Milestone);
+        setFirestoreMilestones(fetched);
+      } catch (e) {
+        console.error('Error fetching milestones from Firestore:', e);
+      }
+    }
+    loadMilestones();
+  }, [player?.id]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -539,6 +558,7 @@ export function PlayerDetailClient({
                 }
               ]}
               milestones={[
+                ...firestoreMilestones,
                 {
                   id: "m1",
                   personId: player.id,
