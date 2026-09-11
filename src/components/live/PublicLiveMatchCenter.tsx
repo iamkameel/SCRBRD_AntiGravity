@@ -1,39 +1,47 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Radio, Activity, Target, Flame, Share2, Wifi, Zap, Plus, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Radio, Share2, Wifi } from 'lucide-react';
 import { liveMatchSync, LiveMatchState, MilestoneAlert } from '@/services/liveMatchSync';
-import { WagonWheelGrid, ShotEventData } from '@/components/scoring/WagonWheelGrid';
 
-const MOCK_WAGON_SHOTS: ShotEventData[] = [
-  { x: 220, y: 120, angle: 45, distance: 75, zoneInfo: { zoneName: 'Cover', zoneCode: 'CO', ringName: 'Outfield', isBoundary: false }, runs: 4, isWicket: false },
-  { x: 190, y: 80, angle: 10, distance: 95, zoneInfo: { zoneName: 'Long-Off', zoneCode: 'LO', ringName: 'Boundary 6', isBoundary: true }, runs: 6, isWicket: false },
-  { x: 120, y: 100, angle: 330, distance: 80, zoneInfo: { zoneName: 'Long-On', zoneCode: 'LO', ringName: 'Outfield', isBoundary: false }, runs: 1, isWicket: false },
-  { x: 80, y: 160, angle: 280, distance: 70, zoneInfo: { zoneName: 'Mid-Wicket', zoneCode: 'MW', ringName: 'Outfield', isBoundary: false }, runs: 4, isWicket: false },
-  { x: 60, y: 220, angle: 240, distance: 60, zoneInfo: { zoneName: 'Square Leg', zoneCode: 'SL', ringName: 'Outfield', isBoundary: false }, runs: 2, isWicket: false },
-  { x: 250, y: 170, angle: 80, distance: 85, zoneInfo: { zoneName: 'Point', zoneCode: 'PT', ringName: 'Boundary 4', isBoundary: true }, runs: 4, isWicket: false },
-  { x: 150, y: 160, angle: 350, distance: 30, zoneInfo: { zoneName: 'Mid-Off', zoneCode: 'MO', ringName: 'Inner Ring', isBoundary: false }, runs: 0, isWicket: true },
-];
+// Broadcast HUD System Components
+import { MatchHUD, BallCircleItem } from '@/components/scoring/MatchHUD';
+import { IntelligenceRibbon, InsightCard } from '@/components/scoring/IntelligenceRibbon';
+import { EventInterruptOverlay, EventInterrupt } from '@/components/scoring/EventInterruptOverlay';
+import { SpectatorScorecard, InningsScorecardData } from '@/components/scoring/SpectatorScorecard';
 
 export function PublicLiveMatchCenter({ fixtureId = 'fix-1st-xi-kes' }: { fixtureId?: string }) {
   const [matchState, setMatchState] = useState<LiveMatchState>(liveMatchSync.getLiveState());
-  const [activeTab, setActiveTab] = useState('commentary');
   const [activeAlert, setActiveAlert] = useState<MilestoneAlert | null>(null);
+  const [activeInterrupt, setActiveInterrupt] = useState<EventInterrupt | null>(null);
 
   useEffect(() => {
     // Connect to Firestore real-time snapshot
     liveMatchSync.connectFirestore(fixtureId);
 
-    const unsubscribe = liveMatchSync.subscribe(newState => {
+    const unsubscribe = liveMatchSync.subscribe((newState) => {
       setMatchState(newState);
       if (newState.activeMilestoneAlert) {
         setActiveAlert(newState.activeMilestoneAlert);
-        // Auto-dismiss alert after 4 seconds
-        const timer = setTimeout(() => setActiveAlert(null), 4000);
+        
+        // Convert milestone alert to Tier 3 Event Interrupt
+        const alertType = newState.activeMilestoneAlert.type;
+        const interruptType = alertType === 'WICKET' ? 'WICKET' : alertType === 'SIX' || alertType === 'FOUR' ? 'MILESTONE_50' : 'MILESTONE_50';
+        
+        setActiveInterrupt({
+          type: interruptType,
+          title: newState.activeMilestoneAlert.title,
+          subtitle: newState.activeMilestoneAlert.description,
+          statsText: newState.activeMilestoneAlert.timestamp,
+        });
+
+        // Auto-dismiss after 5 seconds
+        const timer = setTimeout(() => {
+          setActiveAlert(null);
+          setActiveInterrupt(null);
+        }, 5000);
         return () => clearTimeout(timer);
       }
     });
@@ -44,306 +52,335 @@ export function PublicLiveMatchCenter({ fixtureId = 'fix-1st-xi-kes' }: { fixtur
   const simulateScorerBall = (runs: number, isWicket: boolean = false) => {
     const ballNumber = matchState.ballsInOver + 1 > 6 ? 1 : matchState.ballsInOver + 1;
     const overNumber = matchState.ballsInOver + 1 > 6 ? matchState.oversCompleted + 1 : matchState.oversCompleted;
-    
+
     let commentary = `Ball ${overNumber}.${ballNumber}: ${matchState.striker.name} scores ${runs} run(s) off ${matchState.currentBowler.name}.`;
     if (runs === 4) commentary = `CRUNCHED! ${matchState.striker.name} leans into a brilliant drive to the cover fence for FOUR!`;
     if (runs === 6) commentary = `MONSTROUS! ${matchState.striker.name} lofts it high and deep into the crowd for SIX!`;
     if (isWicket) commentary = `OUT! Wicket falls! ${matchState.striker.name} caught by fielder off ${matchState.currentBowler.name}!`;
 
-    liveMatchSync.addBallEvent({
-      id: `sim-${Date.now()}`,
-      overNumber,
-      ballNumber,
-      strikerName: matchState.striker.name,
-      bowlerName: matchState.currentBowler.name,
-      runsOffBat: isWicket ? 0 : runs,
-      extraRuns: 0,
-      totalRuns: isWicket ? 0 : runs,
-      isWicket,
-      dismissedPlayerName: isWicket ? matchState.striker.name : undefined,
-      commentary,
-      timestamp: new Date().toLocaleTimeString()
-    }, fixtureId);
+    if (isWicket) {
+      setActiveInterrupt({
+        type: 'WICKET',
+        title: `WICKET! ${matchState.striker.name.toUpperCase()} OUT!`,
+        subtitle: commentary,
+        statsText: `${matchState.striker.runs} runs (${matchState.striker.ballsFacing}b)`,
+      });
+    } else if (runs === 6) {
+      setActiveInterrupt({
+        type: 'MILESTONE_50',
+        title: `MAXIMUM! 6 RUNS!`,
+        subtitle: `${matchState.striker.name} hits a colossal 65m boundary!`,
+        statsText: `6 RUNS`,
+      });
+    }
+
+    liveMatchSync.addBallEvent(
+      {
+        id: `sim-${Date.now()}`,
+        overNumber,
+        ballNumber,
+        strikerName: matchState.striker.name,
+        bowlerName: matchState.currentBowler.name,
+        runsOffBat: isWicket ? 0 : runs,
+        extraRuns: 0,
+        totalRuns: isWicket ? 0 : runs,
+        isWicket,
+        dismissedPlayerName: isWicket ? matchState.striker.name : undefined,
+        commentary,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+      fixtureId
+    );
+  };
+
+  // Convert match state recent balls into BallCircleItems for HUD
+  const currentOverBallCircles: BallCircleItem[] = matchState.recentBalls.slice(0, 6).map((b) => ({
+    id: b.id,
+    label: b.isWicket ? 'W' : b.runsOffBat.toString(),
+    type: b.isWicket
+      ? 'wicket'
+      : b.runsOffBat === 6
+      ? 'six'
+      : b.runsOffBat === 4
+      ? 'four'
+      : b.runsOffBat === 3
+      ? 'three'
+      : b.runsOffBat === 2
+      ? 'two'
+      : b.runsOffBat === 1
+      ? 'single'
+      : 'dot',
+  }));
+
+  // Build Spectator Scorecard Innings Data
+  const inn1Scorecard: InningsScorecardData = {
+    teamName: matchState.battingTeamName,
+    totalRuns: matchState.totalRuns,
+    totalWickets: matchState.wickets,
+    totalOvers: `${matchState.oversCompleted}.${matchState.ballsInOver}`,
+    extrasText: '12 (b 2, lb 4, wd 5, nb 1)',
+    batting: [
+      {
+        id: 'bat-1',
+        name: matchState.striker.name,
+        isCaptain: true,
+        dismissalText: 'not out',
+        runs: matchState.striker.runs,
+        balls: matchState.striker.ballsFacing,
+        fours: 4,
+        sixes: 2,
+        strikeRate: matchState.striker.ballsFacing > 0 ? (matchState.striker.runs / matchState.striker.ballsFacing) * 100 : 0,
+        wagonWheelData: {
+          fineLeg: 15,
+          squareLeg: 20,
+          midWicket: 35,
+          longOn: 12,
+          longOff: 8,
+          cover: 6,
+          point: 2,
+          thirdMan: 2,
+        },
+      },
+      {
+        id: 'bat-2',
+        name: matchState.nonStriker.name,
+        dismissalText: 'not out',
+        runs: matchState.nonStriker.runs,
+        balls: matchState.nonStriker.ballsFacing,
+        fours: 2,
+        sixes: 0,
+        strikeRate: matchState.nonStriker.ballsFacing > 0 ? (matchState.nonStriker.runs / matchState.nonStriker.ballsFacing) * 100 : 0,
+        wagonWheelData: {
+          fineLeg: 10,
+          squareLeg: 15,
+          midWicket: 25,
+          longOn: 20,
+          longOff: 15,
+          cover: 10,
+          point: 3,
+          thirdMan: 2,
+        },
+      },
+      {
+        id: 'bat-3',
+        name: 'Aiden Markram',
+        isKeeper: true,
+        dismissalText: 'c Mkhize b Pillay',
+        runs: 48,
+        balls: 32,
+        fours: 6,
+        sixes: 1,
+        strikeRate: 150.0,
+        wagonWheelData: {
+          fineLeg: 8,
+          squareLeg: 12,
+          midWicket: 28,
+          longOn: 18,
+          longOff: 14,
+          cover: 12,
+          point: 5,
+          thirdMan: 3,
+        },
+      },
+      {
+        id: 'bat-4',
+        name: 'Tristan Stubbs',
+        dismissalText: 'b Mkhize',
+        runs: 22,
+        balls: 15,
+        fours: 3,
+        sixes: 0,
+        strikeRate: 146.6,
+      },
+    ],
+    bowling: [
+      {
+        id: 'bowl-1',
+        name: matchState.currentBowler.name,
+        overs: matchState.currentBowler.overs,
+        maidens: 0,
+        runsConceded: matchState.currentBowler.runsConceded,
+        wickets: matchState.currentBowler.wicketsTaken,
+        economy: matchState.currentBowler.overs > 0 ? matchState.currentBowler.runsConceded / matchState.currentBowler.overs : 0,
+        dots: 14,
+      },
+      {
+        id: 'bowl-2',
+        name: 'Kagiso Rabada',
+        overs: 4.0,
+        maidens: 1,
+        runsConceded: 24,
+        wickets: 2,
+        economy: 6.0,
+        dots: 16,
+      },
+    ],
+  };
+
+  const inn2Scorecard: InningsScorecardData = {
+    teamName: matchState.bowlingTeamName,
+    totalRuns: 142,
+    totalWickets: 6,
+    totalOvers: '20.0',
+    extrasText: '8 (b 1, lb 2, wd 4, nb 1)',
+    batting: [
+      {
+        id: 'bat-201',
+        name: 'Heinrich Klaasen',
+        dismissalText: 'c Markram b Rabada',
+        runs: 54,
+        balls: 30,
+        fours: 5,
+        sixes: 3,
+        strikeRate: 180.0,
+      },
+    ],
+    bowling: [
+      {
+        id: 'bowl-201',
+        name: 'Marco Jansen',
+        overs: 4.0,
+        maidens: 0,
+        runsConceded: 32,
+        wickets: 3,
+        economy: 8.0,
+        dots: 11,
+      },
+    ],
   };
 
   return (
     <div className="space-y-6 font-sans">
-      {/* Milestone Flash Alert Popup */}
-      {activeAlert && (
-        <div className="fixed top-6 right-6 z-50 animate-bounce transition-all duration-300">
-          <div className={`p-4 rounded-2xl border shadow-2xl flex items-center gap-4 backdrop-blur-2xl ${
-            activeAlert.type === 'WICKET' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' :
-            activeAlert.type === 'SIX' ? 'bg-amber-950/90 border-amber-500/50 text-amber-200' :
-            activeAlert.type === 'FOUR' ? 'bg-cyan-950/90 border-cyan-500/50 text-cyan-200' :
-            'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
-          }`}>
-            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center font-black text-xl shrink-0">
-              {activeAlert.type === 'WICKET' ? '☝️' : activeAlert.type === 'SIX' ? '6️⃣' : activeAlert.type === 'FOUR' ? '4️⃣' : '🎖️'}
-            </div>
-            <div>
-              <div className="text-xs font-mono tracking-widest font-black uppercase">{activeAlert.title}</div>
-              <div className="text-sm font-bold text-white">{activeAlert.description}</div>
-              <div className="text-[10px] font-mono text-white/60 mt-0.5">Live Spectator Push • {activeAlert.timestamp}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Realtime Stream Telemetry Banner */}
+      {/* Realtime Stream Sync Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/90 border border-white/10 rounded-2xl text-xs font-mono">
         <div className="flex items-center gap-3">
-          <Badge className={`font-mono text-[11px] px-2.5 py-0.5 flex items-center gap-1.5 ${
-            matchState.connectionStatus === 'CONNECTED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-            matchState.connectionStatus === 'SYNCING' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' :
-            'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-          }`}>
-            <Wifi className="w-3.5 h-3.5" />
-            {matchState.connectionStatus === 'CONNECTED' ? `FIREBASE SYNCED (${matchState.latencyMs ?? 30}ms)` : matchState.connectionStatus}
+          <Badge className="bg-rose-500 text-white font-mono text-xs px-3 py-1 animate-pulse flex items-center gap-1.5 shadow-lg shadow-rose-500/20">
+            <Radio className="w-3.5 h-3.5" /> LIVE BROADCAST
           </Badge>
-          <span className="text-slate-400 hidden sm:inline">Last Packet: <strong className="text-slate-200">{matchState.lastSyncTimestamp}</strong></span>
+          <Badge
+            className={`font-mono text-[11px] px-2.5 py-0.5 flex items-center gap-1.5 ${
+              matchState.connectionStatus === 'CONNECTED'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : matchState.connectionStatus === 'SYNCING'
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse'
+                : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+            }`}
+          >
+            <Wifi className="w-3.5 h-3.5" />
+            {matchState.connectionStatus === 'CONNECTED'
+              ? `SYNCED (${matchState.latencyMs ?? 28}ms)`
+              : matchState.connectionStatus}
+          </Badge>
         </div>
 
-        {/* Live Scorer Simulation Bar */}
+        {/* Live Scorer Test Simulator */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-slate-400 font-bold uppercase hidden md:inline">Test Scorer Push:</span>
-          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(1)} className="h-7 text-[11px] font-mono border-white/10 bg-white/5 hover:bg-white/10 text-slate-200">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => simulateScorerBall(1)}
+            className="h-7 text-[11px] font-mono border-white/10 bg-white/5 hover:bg-white/10 text-slate-200"
+          >
             +1 Single
           </Button>
-          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(4)} className="h-7 text-[11px] font-mono border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => simulateScorerBall(4)}
+            className="h-7 text-[11px] font-mono border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 font-bold"
+          >
             +4 Boundary
           </Button>
-          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(6)} className="h-7 text-[11px] font-mono border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => simulateScorerBall(6)}
+            className="h-7 text-[11px] font-mono border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold"
+          >
             +6 Maximum
           </Button>
-          <Button size="sm" variant="outline" onClick={() => simulateScorerBall(0, true)} className="h-7 text-[11px] font-mono border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => simulateScorerBall(0, true)}
+            className="h-7 text-[11px] font-mono border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold"
+          >
             Wicket!
           </Button>
         </div>
       </div>
 
-      {/* Broadcast Match Header Card */}
-      <Card className="p-6 bg-slate-900/95 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-2xl text-slate-100 relative overflow-hidden">
-        {/* Background Ambient Glow */}
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Tier 3 Event Interrupt Overlay */}
+      <EventInterruptOverlay
+        interrupt={activeInterrupt}
+        onDismiss={() => setActiveInterrupt(null)}
+      />
 
-        <div className="relative z-10 space-y-6">
-          {/* Header Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
-            <div className="flex items-center gap-3">
-              <Badge className="bg-rose-500 text-white font-mono text-xs px-3 py-1 animate-pulse flex items-center gap-1.5 shadow-lg shadow-rose-500/20">
-                <Radio className="w-3.5 h-3.5" /> LIVE SPECTATOR STREAM
-              </Badge>
-              <span className="text-xs text-slate-400 font-mono">1st XI Annual Derby • Mitchell Field</span>
-            </div>
+      {/* Broadcast-Inspired Match HUD Architecture (Tier 1) */}
+      <MatchHUD
+        homeTeamName="Durban High School"
+        homeTeamCode="DHS"
+        awayTeamName="Westville Boys' High"
+        awayTeamCode="WBHS"
+        homeColor="#3b82f6"
+        awayColor="#10b981"
+        battingTeamName={matchState.battingTeamName}
+        bowlingTeamName={matchState.bowlingTeamName}
+        currentInningsNumber={1}
+        runs={matchState.totalRuns}
+        wickets={matchState.wickets}
+        overs={matchState.oversCompleted}
+        balls={matchState.oversCompleted * 6 + matchState.ballsInOver}
+        maxOvers={20}
+        target={matchState.targetRuns ?? undefined}
+        crr={matchState.currentRunRate.toFixed(2)}
+        rrr={matchState.requiredRunRate ? matchState.requiredRunRate.toFixed(2) : undefined}
+        striker={{
+          name: matchState.striker.name,
+          runs: matchState.striker.runs,
+          balls: matchState.striker.ballsFacing,
+          fours: 4,
+          sixes: 2,
+        }}
+        nonStriker={{
+          name: matchState.nonStriker.name,
+          runs: matchState.nonStriker.runs,
+          balls: matchState.nonStriker.ballsFacing,
+          fours: 2,
+          sixes: 0,
+        }}
+        bowler={{
+          name: matchState.currentBowler.name,
+          overs: matchState.currentBowler.overs,
+          runsConceded: matchState.currentBowler.runsConceded,
+          wickets: matchState.currentBowler.wicketsTaken,
+          econ: matchState.currentBowler.overs > 0 ? (matchState.currentBowler.runsConceded / matchState.currentBowler.overs).toFixed(2) : '0.0',
+        }}
+        currentOverBalls={currentOverBallCircles}
+        phase="POWERPLAY"
+        matchMetadata={{
+          competition: 'KZN Super League 1st XI',
+          venue: "Bowden's Field",
+          weather: 'Sunny, 24°C',
+          date: new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }),
+        }}
+      />
 
-            <div className="flex items-center gap-3">
-              <Button size="sm" variant="outline" className="border-white/10 hover:bg-white/10 text-xs font-mono text-slate-300">
-                <Share2 className="w-3.5 h-3.5 mr-1.5 text-cyan-400" /> Share Stream
-              </Button>
-            </div>
-          </div>
+      {/* Tier 2 Rotating Intelligence Ribbon */}
+      <IntelligenceRibbon />
 
-          {/* Main Scoreboard Display */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Batting Team Info */}
-            <div className="lg:col-span-5 space-y-2">
-              <div className="text-xs font-mono uppercase tracking-widest text-slate-400">Batting Innings</div>
-              <h1 className="text-2xl md:text-3xl font-black text-white font-['Syne',sans-serif] tracking-tight">
-                {matchState.battingTeamName}
-              </h1>
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl md:text-4xl font-black text-amber-400 font-mono tracking-tight">
-                  {matchState.totalRuns}/{matchState.wickets}
-                </span>
-                <span className="text-xl font-bold text-slate-300 font-mono">
-                  ({matchState.oversCompleted}.{matchState.ballsInOver} Overs)
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-mono text-slate-400">
-                <span>CRR: <strong className="text-white">{matchState.currentRunRate.toFixed(2)}</strong></span>
-                {matchState.requiredRunRate && (
-                  <span>RRR: <strong className="text-cyan-400">{matchState.requiredRunRate.toFixed(2)}</strong></span>
-                )}
-              </div>
-            </div>
-
-            {/* Current Batsmen & Bowler Widget */}
-            <div className="lg:col-span-7 bg-white/5 border border-white/10 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
-              {/* Striker & Non-Striker */}
-              <div className="space-y-2 border-b sm:border-b-0 sm:border-r border-white/10 pr-0 sm:pr-4 pb-3 sm:pb-0">
-                <div className="text-slate-400 font-bold uppercase text-[10px]">At The Crease</div>
-                <div className="flex justify-between items-center bg-cyan-500/10 p-2 rounded-lg border border-cyan-500/20 text-white font-bold">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                    {matchState.striker.name} *
-                  </span>
-                  <span className="text-amber-400 font-black text-sm">{matchState.striker.runs} ({matchState.striker.ballsFacing})</span>
-                </div>
-                <div className="flex justify-between items-center p-2 text-slate-300">
-                  <span>{matchState.nonStriker.name}</span>
-                  <span className="font-bold">{matchState.nonStriker.runs} ({matchState.nonStriker.ballsFacing})</span>
-                </div>
-              </div>
-
-              {/* Bowler */}
-              <div className="space-y-2">
-                <div className="text-slate-400 font-bold uppercase text-[10px]">Current Bowler</div>
-                <div className="p-2 rounded-lg bg-white/5 border border-white/5 text-white">
-                  <div className="font-bold text-sm text-cyan-300">{matchState.currentBowler.name}</div>
-                  <div className="text-slate-400 text-[11px] mt-1">
-                    {matchState.currentBowler.overs} overs • {matchState.currentBowler.runsConceded} runs • <strong className="text-amber-400">{matchState.currentBowler.wicketsTaken} wickets</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Target Chase Progress Bar */}
-          {matchState.targetRuns && (
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-xs font-mono text-slate-300">
-                <span className="text-cyan-400 font-bold">{matchState.statusMessage}</span>
-                <span>Target: {matchState.targetRuns}</span>
-              </div>
-              <div className="w-full bg-slate-950 rounded-full h-3 p-0.5 border border-white/10 overflow-hidden">
-                <div 
-                  className="bg-gradient-to-r from-amber-500 to-cyan-400 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (matchState.totalRuns / matchState.targetRuns) * 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Tabs Navigation for Match Analytics & Commentary */}
-      <Tabs defaultValue="commentary" onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-900 border border-white/10 p-1 rounded-xl font-mono text-xs text-slate-400">
-          <TabsTrigger value="commentary" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-bold">
-            Live Commentary
-          </TabsTrigger>
-          <TabsTrigger value="scorecard" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-bold">
-            Full Scorecard
-          </TabsTrigger>
-          <TabsTrigger value="worm" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-bold">
-            Run Rate Worm Chart
-          </TabsTrigger>
-          <TabsTrigger value="wagon" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-bold">
-            Wagon Wheel Heatmap
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab 1: Live Commentary */}
-        <TabsContent value="commentary" className="space-y-4">
-          <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-xl backdrop-blur-xl text-slate-100 space-y-4">
-            <h3 className="text-sm font-bold font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              <Activity className="w-4 h-4" /> Live Ball-by-Ball Stream
-            </h3>
-            <div className="space-y-3">
-              {matchState.recentBalls.map((ball) => (
-                <div key={ball.id} className="p-4 rounded-xl bg-white/5 border border-white/5 flex gap-4 items-start font-mono text-xs">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col items-center justify-center font-bold text-amber-400 shrink-0">
-                    <span className="text-[10px] text-slate-400">Over</span>
-                    <span>{ball.overNumber}.{ball.ballNumber}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white text-sm">{ball.strikerName}</span>
-                      <span className="text-slate-400">vs {ball.bowlerName}</span>
-                      {ball.runsOffBat === 4 && <Badge className="bg-cyan-500 text-slate-950 font-bold text-[10px]">4 RUNS</Badge>}
-                      {ball.runsOffBat === 6 && <Badge className="bg-amber-400 text-slate-950 font-bold text-[10px]">6 RUNS</Badge>}
-                      {ball.isWicket && <Badge className="bg-rose-500 text-white font-bold text-[10px]">WICKET</Badge>}
-                    </div>
-                    <p className="text-slate-300 leading-relaxed font-sans text-xs">{ball.commentary}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Tab 2: Full Scorecard */}
-        <TabsContent value="scorecard">
-          <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-xl backdrop-blur-xl text-slate-100 space-y-4 font-mono text-xs">
-            <div className="flex justify-between items-center border-b border-white/10 pb-4">
-              <h3 className="text-sm font-bold uppercase text-white font-['Syne',sans-serif]">St John&apos;s College 1st XI — Innings Scorecard</h3>
-              <Badge variant="outline" className="border-cyan-500/30 text-cyan-400">{matchState.totalRuns}/{matchState.wickets} ({matchState.oversCompleted} Overs)</Badge>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="grid grid-cols-12 text-slate-400 font-bold uppercase text-[10px] pb-2 border-b border-white/5">
-                <span className="col-span-6">Batter</span>
-                <span className="col-span-2 text-right">Runs</span>
-                <span className="col-span-2 text-right">Balls</span>
-                <span className="col-span-2 text-right">SR</span>
-              </div>
-
-              <div className="grid grid-cols-12 text-white items-center py-2 border-b border-white/5">
-                <span className="col-span-6 font-bold text-cyan-300">{matchState.striker.name} *</span>
-                <span className="col-span-2 text-right font-black text-amber-400">{matchState.striker.runs}</span>
-                <span className="col-span-2 text-right text-slate-400">{matchState.striker.ballsFacing}</span>
-                <span className="col-span-2 text-right text-cyan-400">
-                  {matchState.striker.ballsFacing > 0 ? ((matchState.striker.runs / matchState.striker.ballsFacing) * 100).toFixed(1) : '0.0'}
-                </span>
-              </div>
-              <div className="grid grid-cols-12 text-white items-center py-2 border-b border-white/5">
-                <span className="col-span-6 font-bold">{matchState.nonStriker.name}</span>
-                <span className="col-span-2 text-right font-black text-amber-400">{matchState.nonStriker.runs}</span>
-                <span className="col-span-2 text-right text-slate-400">{matchState.nonStriker.ballsFacing}</span>
-                <span className="col-span-2 text-right text-cyan-400">
-                  {matchState.nonStriker.ballsFacing > 0 ? ((matchState.nonStriker.runs / matchState.nonStriker.ballsFacing) * 100).toFixed(1) : '0.0'}
-                </span>
-              </div>
-              <div className="grid grid-cols-12 text-slate-400 items-center py-2 border-b border-white/5">
-                <span className="col-span-6">Michael Ross (c b Hendricks)</span>
-                <span className="col-span-2 text-right font-bold text-white">42</span>
-                <span className="col-span-2 text-right">38</span>
-                <span className="col-span-2 text-right">110.5</span>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Tab 3: Run Rate Worm Chart */}
-        <TabsContent value="worm">
-          <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-xl backdrop-blur-xl text-slate-100 space-y-4">
-            <h3 className="text-sm font-bold font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              <Flame className="w-4 h-4" /> Match Run Rate & Progression Worm
-            </h3>
-            <div className="p-4 bg-slate-950 rounded-xl border border-white/5 space-y-3 font-mono text-xs">
-              <div className="text-slate-400 text-[11px]">Cumulative Innings Run Comparison</div>
-              <div className="flex items-end gap-3 h-40 pt-4 px-2 border-b border-white/10">
-                {matchState.wormData.map((d) => (
-                  <div key={d.over} className="flex-1 flex flex-col items-center gap-1 group">
-                    <div 
-                      className="w-full bg-gradient-to-t from-cyan-500 to-amber-400 rounded-t-sm transition-all group-hover:brightness-125"
-                      style={{ height: `${(d.runs / 200) * 100}%` }}
-                    />
-                    <span className="text-[10px] text-slate-400">O{d.over}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-400">
-                <span>Start: Over 1</span>
-                <span>Current: Over {matchState.oversCompleted}</span>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Tab 4: Wagon Wheel Heatmap */}
-        <TabsContent value="wagon">
-          <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-xl backdrop-blur-xl text-slate-100 space-y-4">
-            <h3 className="text-sm font-bold font-mono uppercase tracking-wider text-amber-400 flex items-center gap-2">
-              <Target className="w-4 h-4" /> Live Wagon Wheel Sector Analysis
-            </h3>
-            <div className="flex justify-center py-4">
-              <WagonWheelGrid shotsHistory={MOCK_WAGON_SHOTS} onShotRecorded={() => {}} />
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Spectator Scorecard & Interactive Batter Wagon Wheel */}
+      <SpectatorScorecard
+        firstInnings={inn1Scorecard}
+        secondInnings={inn2Scorecard}
+        playerOfTheMatch={{
+          name: 'Aiden Markram',
+          team: matchState.battingTeamName,
+          headline: 'Dynamic 48 runs (32b) & 2 crucial catches',
+          statsText: 'POTM 🏅',
+        }}
+      />
     </div>
   );
 }
