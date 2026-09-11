@@ -1921,6 +1921,8 @@ export function ScoringHubClient({ match, homePlayers, awayPlayers }: ScoringHub
         shotZone: zoneName,
         shotType: shotType ?? undefined,
         contactQuality: contactQuality ?? undefined,
+        pitchLength: pitchCoords?.length,
+        pitchLine: pitchCoords?.line ? `${pitchCoords.line} stump` : undefined,
         isPowerplay: (liveScore?.currentInnings?.overs ?? 0) < 6,
         isDeathOver: (liveScore?.currentInnings?.overs ?? 0) >= 16,
       });
