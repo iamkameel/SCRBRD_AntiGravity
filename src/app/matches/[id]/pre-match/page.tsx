@@ -33,6 +33,7 @@ import { getTeamAction } from "@/app/actions/teamActions";
 
 import { BattingOrderEditor } from "@/components/matches/BattingOrderEditor";
 import { getMockSquad } from "@/lib/mockMatchData";
+import { PreMatchReadinessBoard } from "@/components/prematch/PreMatchReadinessBoard";
 
 export default function PreMatchPage() {
   const router = useRouter();
