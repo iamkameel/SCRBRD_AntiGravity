@@ -6,7 +6,7 @@ import {
   ClipboardList, Eye, Layers, School as SchoolIcon, MapPin, Shovel,
   Crosshair, GitCompareArrows, GraduationCap, BarChart3, Medal,
   Calendar, Users2, Database, CircleHelp, Target, Terminal, MessageSquare,
-  Waves, Flag, Tv
+  Waves, Flag, Tv, Calculator
 } from 'lucide-react';
 
 export interface NavLink {
@@ -79,6 +79,7 @@ export const navGroups: NavGroup[] = [
       { href: '/fixtures', label: 'Match Fixtures', icon: CalendarDays, key: 'matches' },
       { href: '/matches', label: 'Matches Hub', icon: Trophy, key: 'matches-hub' },
       { href: '/matches/add', label: 'Live Scoring', icon: Activity, key: 'live-scoring', badge: 'LIVE' },
+      { href: '/match-calculators', label: 'Match Calculators & DLS', icon: Calculator, key: 'match-calculators' },
       { href: '/umpire-review', label: 'Umpire Review', icon: Eye, key: 'umpire-review' },
       { href: '/fixtures/multi-create', label: 'Multi-Fixture Tool', icon: Sparkles, key: 'multi-fixture-tool' },
       { href: '/match-operations', label: 'Match Operations', icon: FilePenLine, key: 'match-operations' },
