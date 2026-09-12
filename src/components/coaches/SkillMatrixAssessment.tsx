@@ -31,10 +31,10 @@ const ATTRIBUTES: Record<string, string[]> = {
 
 const RATING_SCALE = [
   { value: 1, label: "Severely Underdeveloped" },
-  { value: 3, label: "Below Standard" },
-  { value: 5, label: "Competent Standard" },
-  { value: 7, label: "Strong Performer" },
-  { value: 9, label: "Elite Trait" },
+  { value: 5, label: "Below Standard" },
+  { value: 10, label: "Competent Standard" },
+  { value: 15, label: "Strong Performer" },
+  { value: 20, label: "Elite Trait" },
 ];
 
 export function SkillMatrixAssessment({ playerId, playerName, role }: SkillMatrixProps) {
@@ -147,7 +147,7 @@ export function SkillMatrixAssessment({ playerId, playerName, role }: SkillMatri
               <div className="mt-2 h-1 w-24 bg-white/5 mx-auto rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: `${(Number(overallScore) / 9) * 100}%` }}
+                  animate={{ width: `${(Number(overallScore) / 20) * 100}%` }}
                   className="h-full" 
                   style={{ background: D.indigo }}
                 />
@@ -207,7 +207,7 @@ export function SkillMatrixAssessment({ playerId, playerName, role }: SkillMatri
                       className="text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-lg border-0"
                       style={{ background: D.surf3, color: ratings[activeCategory]?.[attr] ? D.indigo : D.textMuted }}
                     >
-                      {ratings[activeCategory]?.[attr] ? `RATING: ${ratings[activeCategory][attr]} / 9` : "PENDING EVALUATION"}
+                      {ratings[activeCategory]?.[attr] ? `RATING: ${ratings[activeCategory][attr]} / 20` : "PENDING EVALUATION"}
                     </Badge>
                   </div>
                   

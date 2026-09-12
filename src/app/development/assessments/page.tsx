@@ -12,7 +12,7 @@ interface AttributeEvaluation {
   domain: SkillDomain;
   name: string;
   description: string;
-  score: number; // 1-9 scale
+  score: number; // 1-20 scale (10 = average)
   notes: string;
   anchors?: { score: number; text: string }[];
 }
@@ -24,12 +24,12 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Batting',
     name: 'Defensive Technique',
     description: 'Solid stance, head over ball, soft hands under pressure',
-    score: 5,
+    score: 10,
     notes: '',
     anchors: [
       { score: 1, text: 'Unstable stance, leaves gaps between bat and pad' },
-      { score: 5, text: 'Competent forward/backward defence at school level' },
-      { score: 9, text: 'Impenetrable defence under high pace and drift' }
+      { score: 10, text: 'Competent forward/backward defence at school level' },
+      { score: 20, text: 'Impenetrable defence under high pace and drift' }
     ]
   },
   {
@@ -37,14 +37,14 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Batting',
     name: 'Strike Rotation',
     description: 'Gap awareness, turning dots into singles',
-    score: 5,
+    score: 10,
     notes: '',
     anchors: [
       { score: 1, text: 'Rarely turns dots into singles, poor gap awareness' },
-      { score: 3, text: 'Rotates only against poor bowling / loose fields' },
-      { score: 5, text: 'Rotates consistently at school standard' },
-      { score: 7, text: 'Manipulates fields well under pressure' },
-      { score: 9, text: 'Elite school-level strike rotator and tempo controller' }
+      { score: 5, text: 'Rotates only against poor bowling / loose fields' },
+      { score: 10, text: 'Rotates consistently at school standard' },
+      { score: 15, text: 'Manipulates fields well under pressure' },
+      { score: 20, text: 'Elite school-level strike rotator and tempo controller' }
     ]
   },
   {
@@ -52,7 +52,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Batting',
     name: 'Boundary Hitting',
     description: 'Power execution, clear intent against length',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -60,7 +60,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Batting',
     name: 'Playing Spin',
     description: 'Footwork forward/back, reading drift and spin',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -68,7 +68,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Batting',
     name: 'Tempo Control & Innings Construction',
     description: 'Adapting run-rate demand to match phase and scenario',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -78,14 +78,14 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Bowling',
     name: 'Line & Length Control',
     description: 'Repeatability of seam placement under pressure',
-    score: 5,
+    score: 10,
     notes: '',
     anchors: [
       { score: 1, text: 'Frequent misses in line and length' },
-      { score: 3, text: 'Inconsistent with short pressure bursts only' },
-      { score: 5, text: 'Reasonable school-level control' },
-      { score: 7, text: 'Disciplined pressure bowler with repeatability' },
-      { score: 9, text: 'Exceptional control and sustained pressure' }
+      { score: 5, text: 'Inconsistent with short pressure bursts only' },
+      { score: 10, text: 'Reasonable school-level control' },
+      { score: 15, text: 'Disciplined pressure bowler with repeatability' },
+      { score: 20, text: 'Exceptional control and sustained pressure' }
     ]
   },
   {
@@ -93,7 +93,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Bowling',
     name: 'Variation Quality',
     description: 'Execution of slower balls, yorkers, or arm balls',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -101,7 +101,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Bowling',
     name: 'Death Over Execution',
     description: 'Composure and plan execution in overs 16-20',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -109,7 +109,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Bowling',
     name: 'Spin Drift & Revolutions',
     description: 'Revolutions on seam, dip, and flight deception',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -119,7 +119,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Fielding',
     name: 'High & Slip Catching',
     description: 'Clean collection, hand position, boundary tracking',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -127,7 +127,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Fielding',
     name: 'Ground Fielding & Throw',
     description: 'Pick up & release speed, throw accuracy to keeper',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -135,7 +135,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Fielding',
     name: 'Reflexes & Inner-Ring Pressure',
     description: 'Anticipation and stopping quick singles',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -145,7 +145,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Wicketkeeping',
     name: 'Glovework & Takes',
     description: 'Clean gathers standing up to spin and seam',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -153,7 +153,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Wicketkeeping',
     name: 'Stumping Speed & Release',
     description: 'Reaction time and gather-to-bails execution',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -163,7 +163,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Physical',
     name: 'Speed & Acceleration',
     description: 'Between-the-wickets acceleration and boundary pursuit',
-    score: 5,
+    score: 10,
     notes: ''
   },
   {
@@ -171,7 +171,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Physical',
     name: 'Workload Endurance',
     description: 'Performance maintenance during long spells / innings',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -181,14 +181,14 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Mental',
     name: 'Composure under Pressure',
     description: 'Settles others and maintains execution when behind',
-    score: 5,
+    score: 10,
     notes: '',
     anchors: [
       { score: 1, text: 'Performance drops sharply after pressure events' },
-      { score: 3, text: 'Becomes rushed in tight moments' },
-      { score: 5, text: 'Generally stable under normal pressure' },
-      { score: 7, text: 'Strong control in difficult situations' },
-      { score: 9, text: 'Elite pressure performer who settles others' }
+      { score: 5, text: 'Becomes rushed in tight moments' },
+      { score: 10, text: 'Generally stable under normal pressure' },
+      { score: 15, text: 'Strong control in difficult situations' },
+      { score: 20, text: 'Elite pressure performer who settles others' }
     ]
   },
   {
@@ -196,7 +196,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Mental',
     name: 'Resilience after Error',
     description: 'Pre-ball reset routine after dropping catch or dot ball',
-    score: 5,
+    score: 10,
     notes: ''
   },
 
@@ -206,7 +206,7 @@ const INITIAL_ATTRIBUTES: AttributeEvaluation[] = [
     domain: 'Tactical',
     name: 'Match Awareness & Options',
     description: 'Reading field placements, phase-specific risk choices',
-    score: 5,
+    score: 10,
     notes: ''
   },
 ];
@@ -483,7 +483,7 @@ export default function SkillAssessmentPage() {
                         Rating:
                       </span>
                       <span className="text-xl font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 font-['Syne',sans-serif]">
-                        {attr.score} / 9
+                        {attr.score} / 20
                       </span>
                     </div>
                   </div>
@@ -508,7 +508,7 @@ export default function SkillAssessmentPage() {
                     </div>
                   )}
 
-                  {/* 1-9 Rubric Buttons */}
+                  {/* 1-20 Rubric Buttons */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase font-semibold font-['Syne',sans-serif]">
                       <span>1 — Severely underdeveloped</span>

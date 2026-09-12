@@ -127,10 +127,10 @@ const ATTRIBUTES_BY_DOMAIN: Record<SkillDomain, string[]> = {
 
 const RATING_SCALE = [
     { value: 1, label: "1: Severely Underdeveloped" },
-    { value: 3, label: "3: Below Expected Standard" },
-    { value: 5, label: "5: Competent School Standard" },
-    { value: 7, label: "7: Strong Performer" },
-    { value: 9, label: "9: Elite School-Level Trait" },
+    { value: 5, label: "5: Below Expected Standard" },
+    { value: 10, label: "10: Competent School Standard" },
+    { value: 15, label: "15: Strong Performer" },
+    { value: 20, label: "20: Elite School-Level Trait" },
 ];
 
 export function CoachDevelopmentHub() {
@@ -140,11 +140,11 @@ export function CoachDevelopmentHub() {
     
     // Ratings state
     const [ratings, setRatings] = useState<Record<string, number>>({
-        "Defensive Technique": 7,
-        "Strike Rotation": 3,
-        "Playing Spin": 5,
-        "Tempo Control": 6,
-        "Composure Under Pressure": 5,
+        "Defensive Technique": 15,
+        "Strike Rotation": 6,
+        "Playing Spin": 10,
+        "Tempo Control": 13,
+        "Composure Under Pressure": 10,
     });
     
     const [saving, setSaving] = useState(false);
@@ -252,7 +252,7 @@ export function CoachDevelopmentHub() {
 
     // Strength Sharpening Drills (High Ratings 7+)
     const strengthDrills = useMemo(() => {
-        const topAttrs = Object.entries(ratings).filter(([_, val]) => val >= 7);
+        const topAttrs = Object.entries(ratings).filter(([_, val]) => val >= 15);
         if (topAttrs.length === 0) return [];
 
         return MASTER_DRILL_LIBRARY.filter(d => 
@@ -566,11 +566,11 @@ export function CoachDevelopmentHub() {
                                                     color: ratings[attr] !== undefined ? D.sky : D.textMuted
                                                 }}
                                             >
-                                                {ratings[attr] !== undefined ? `RATING: ${ratings[attr]} / 9 (${normalizeSkillScore(ratings[attr])}%)` : "NOT EVALUATED"}
+                                                {ratings[attr] !== undefined ? `RATING: ${ratings[attr]} / 20 (${normalizeSkillScore(ratings[attr])}%)` : "NOT EVALUATED"}
                                             </Badge>
                                         </div>
 
-                                        {/* 1-9 Scale Buttons */}
+                                        {/* 1-20 Scale Buttons */}
                                         <div className="grid grid-cols-5 gap-2">
                                             {RATING_SCALE.map((scale) => {
                                                 const isSelected = ratings[attr] === scale.value;

@@ -737,7 +737,19 @@ export type SkillDomain =
     | 'Fielding'
     | 'Wicketkeeping';
 
-export type RatingScale1to9 = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+/**
+ * Coach/analyst rating scale: 1–20, where 10 is the midpoint (average for the
+ * level). Unassessed attributes display at the 10 baseline until a coach or
+ * analyst submits a rating.
+ */
+export type RatingScale1to20 =
+    | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+    | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+
+export const RATING_MIN = 1;
+export const RATING_MAX = 20;
+/** Neutral baseline shown when nothing has been assessed. */
+export const RATING_BASELINE = 10;
 
 export interface SkillAttribute {
     domain: SkillDomain;
@@ -751,7 +763,7 @@ export interface SkillAssessment {
     assessorId: UUID; // PersonId of the coach/scout
     domain: SkillDomain;
     attributeName: string;
-    rating: RatingScale1to9;
+    rating: RatingScale1to20;
     confidence: 'Low' | 'Moderate' | 'High';
     note?: string;
     assessedAt: ISO8601Timestamp;

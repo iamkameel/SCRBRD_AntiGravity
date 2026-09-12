@@ -14,7 +14,7 @@ import {
     doc,
     updateDoc
 } from "firebase/firestore";
-import { SkillAssessment, PerformanceIndex, DevelopmentTrend, RoleArchetype, SkillDomain, RatingScale1to9, ReadinessScore } from "@/types/schema_v4";
+import { SkillAssessment, PerformanceIndex, DevelopmentTrend, RoleArchetype, SkillDomain, RatingScale1to20, ReadinessScore } from "@/types/schema_v4";
 import { requireUser } from "@/lib/auth/session";
 
 /**

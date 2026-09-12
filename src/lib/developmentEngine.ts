@@ -1,22 +1,22 @@
 /**
  * SCRBRD Player Development Intelligence Engine
- * Implements role-weighted domain calculations, skill normalisation (1-9 to 0-100),
+ * Implements role-weighted domain calculations, skill normalisation (1-20 to 0-100),
  * development need scoring, and rules-based drill recommendations.
  * 
  * Reference: SCRBRD Cricket OS Specification Sections 11, 12, 13, 16, 17
  */
 
-import { RoleArchetype, SkillDomain } from "@/types/schema_v4";
+import { RoleArchetype, SkillDomain, RATING_MIN, RATING_MAX } from "@/types/schema_v4";
 import { Drill, DevelopmentNeed, DrillRecommendation } from "@/types/drills";
 import { MASTER_DRILL_LIBRARY } from "./drillLibrary";
 
 /**
- * Normalise a 1-9 coach rating to a 0-100 percentage score.
- * Formula: ((raw_score - 1) / 8) * 100
+ * Normalise a 1-20 coach rating to a 0-100 percentage score.
+ * Formula: ((raw_score - 1) / 19) * 100
  */
-export function normalizeSkillScore(rawScore1to9: number): number {
-    const clamped = Math.max(1, Math.min(9, rawScore1to9));
-    return Math.round(((clamped - 1) / 8) * 100);
+export function normalizeSkillScore(rawScore1to20: number): number {
+    const clamped = Math.max(RATING_MIN, Math.min(RATING_MAX, rawScore1to20));
+    return Math.round(((clamped - RATING_MIN) / (RATING_MAX - RATING_MIN)) * 100);
 }
 
 /**

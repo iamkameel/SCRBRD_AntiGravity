@@ -473,8 +473,8 @@ export function PlayerDetailClient({
                       subtitle: `${domain} domain`,
                       category: 'Skill Assessment',
                       metrics: [
-                        { label: 'Coach Rating', value: `${rating} / 9`, accent: true },
-                        { label: 'Normalised Index', value: `${Math.round(((rating - 1) / 8) * 100)}%` },
+                        { label: 'Coach Rating', value: `${rating} / 20`, accent: true },
+                        { label: 'Normalised Index', value: `${Math.round(((rating - 1) / 19) * 100)}%` },
                       ],
                     });
                   }}

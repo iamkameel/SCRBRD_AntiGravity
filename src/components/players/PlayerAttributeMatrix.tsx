@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { D } from "@/lib/design-system";
-import { SkillAssessment, SkillDomain } from "@/types/schema_v4";
+import { SkillAssessment, SkillDomain, RATING_MAX, RATING_BASELINE } from "@/types/schema_v4";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronDown, ChevronUp, Lock, ShieldCheck } from "lucide-react";
@@ -30,20 +30,23 @@ const ATTRIBUTE_MAP: Record<SkillDomain, string[]> = {
   Wicketkeeping: ["Setup", "Glove Work", "Collection", "Hands", "Standing Back", "Standing Up", "Leg Side", "Footwork", "Stumping", "Gather/Release", "Reaction", "Comms"],
 };
 
-const MAX_RATING = 9;
+const MAX_RATING = RATING_MAX;
 
-/** Rating bands on the 1–9 assessment scale. */
+/** Rating bands on the 1–20 assessment scale (10 = average for the level). */
 function band(rating: number) {
-  if (rating >= 8) return { label: "Elite", color: "#22c55e" };
-  if (rating >= 7) return { label: "Very Good", color: "#10b981" };
-  if (rating >= 5) return { label: "Good", color: "#0ea5e9" };
-  if (rating >= 3) return { label: "Average", color: "#f59e0b" };
+  if (rating >= 18) return { label: "Elite", color: "#22c55e" };
+  if (rating >= 15) return { label: "Very Good", color: "#10b981" };
+  if (rating >= 11) return { label: "Good", color: "#0ea5e9" };
+  if (rating >= 6) return { label: "Average", color: "#f59e0b" };
   return { label: "Developing", color: "#f43f5e" };
 }
 
+/** Muted treatment for the baseline, so it never reads as a coach's verdict. */
+const BASELINE_COLOR = "#64748b";
+
 interface DomainSummary {
   domain: SkillDomain;
-  average: number | null;
+  average: number;
   assessed: number;
   total: number;
 }
@@ -62,10 +65,11 @@ function ProfileHexagon({ summaries }: { summaries: DomainSummary[] }) {
   const gridPath = (scale: number) =>
     summaries.map((_, i) => pointAt(i, r * scale).join(",")).join(" ");
 
-  const anyAssessed = summaries.some(s => s.average !== null);
+  const anyAssessed = summaries.some(s => s.assessed > 0);
   const shape = summaries
-    .map((s, i) => pointAt(i, r * ((s.average ?? 0) / MAX_RATING)).join(","))
+    .map((s, i) => pointAt(i, r * (s.average / MAX_RATING)).join(","))
     .join(" ");
+  const stroke = anyAssessed ? "#22c55e" : BASELINE_COLOR;
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto max-w-[210px]" role="img" aria-label="Profile shape across core skill domains">
@@ -77,16 +81,20 @@ function ProfileHexagon({ summaries }: { summaries: DomainSummary[] }) {
         return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke="currentColor" strokeWidth="0.5" className="text-zinc-300 dark:text-white/10" />;
       })}
 
-      {anyAssessed && (
-        <>
-          <polygon points={shape} fill="#22c55e" fillOpacity="0.22" stroke="#22c55e" strokeWidth="1.6" strokeLinejoin="round" />
-          {summaries.map((s, i) => {
-            if (s.average === null) return null;
-            const [x, y] = pointAt(i, r * (s.average / MAX_RATING));
-            return <circle key={s.domain} cx={x} cy={y} r="2.6" fill="#22c55e" />;
-          })}
-        </>
-      )}
+      <polygon
+        points={shape}
+        fill={stroke}
+        fillOpacity={anyAssessed ? 0.22 : 0.1}
+        stroke={stroke}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        strokeDasharray={anyAssessed ? undefined : "3 3"}
+      />
+      {summaries.map((s, i) => {
+        if (s.assessed === 0) return null;
+        const [x, y] = pointAt(i, r * (s.average / MAX_RATING));
+        return <circle key={s.domain} cx={x} cy={y} r="2.6" fill="#22c55e" />;
+      })}
 
       {summaries.map((s, i) => {
         const [x, y] = pointAt(i, r + 17);
@@ -108,16 +116,17 @@ function ProfileHexagon({ summaries }: { summaries: DomainSummary[] }) {
   );
 }
 
-function AttributeBar({ rating }: { rating: number | null }) {
-  if (rating === null) {
-    return <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-white/[0.06]" />;
-  }
-  const { color } = band(rating);
+function AttributeBar({ rating, assessed }: { rating: number; assessed: boolean }) {
+  const color = assessed ? band(rating).color : BASELINE_COLOR;
   return (
     <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-white/[0.06] overflow-hidden">
       <div
         className="h-full rounded-full transition-[width] duration-500"
-        style={{ width: `${(rating / MAX_RATING) * 100}%`, background: color }}
+        style={{
+          width: `${(rating / MAX_RATING) * 100}%`,
+          background: color,
+          opacity: assessed ? 1 : 0.45,
+        }}
       />
     </div>
   );
@@ -134,29 +143,32 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
     setCollapsedDomains(prev => ({ ...prev, [domain]: !prev[domain] }));
 
   /**
-   * Ratings come only from recorded assessments. An attribute that has never
-   * been assessed is null and renders as "—": a missing rating must never be
-   * shown as a number, because selection and development decisions are made
-   * from this matrix.
+   * An attribute a coach or analyst has not assessed sits at the neutral
+   * baseline (10 of 20 — average for the level), and is rendered muted so a
+   * baseline is never mistaken for a coach's verdict.
    */
   const ratingFor = useMemo(() => {
     const byKey = new Map<string, number>();
     for (const a of assessments) {
       byKey.set(`${a.domain}::${a.attributeName.toLowerCase()}`, a.rating as number);
     }
-    return (domain: SkillDomain, attr: string): number | null =>
-      byKey.get(`${domain}::${attr.toLowerCase()}`) ?? null;
+    return (domain: SkillDomain, attr: string): { rating: number; assessed: boolean } => {
+      const found = byKey.get(`${domain}::${attr.toLowerCase()}`);
+      return found === undefined
+        ? { rating: RATING_BASELINE, assessed: false }
+        : { rating: found, assessed: true };
+    };
   }, [assessments]);
 
   const summaries: DomainSummary[] = useMemo(
     () =>
       DOMAINS.map(domain => {
         const attrs = ATTRIBUTE_MAP[domain];
-        const rated = attrs.map(a => ratingFor(domain, a)).filter((r): r is number => r !== null);
+        const values = attrs.map(a => ratingFor(domain, a));
         return {
           domain,
-          average: rated.length ? rated.reduce((s, r) => s + r, 0) / rated.length : null,
-          assessed: rated.length,
+          average: values.reduce((s, v) => s + v.rating, 0) / values.length,
+          assessed: values.filter(v => v.assessed).length,
           total: attrs.length,
         };
       }),
@@ -168,14 +180,14 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
     [summaries]
   );
 
-  const overall = useMemo(() => {
-    const rated = summaries.filter(s => s.average !== null);
-    if (!rated.length) return null;
-    return rated.reduce((sum, s) => sum + (s.average as number), 0) / rated.length;
-  }, [summaries]);
+  const overall = useMemo(
+    () => summaries.reduce((sum, s) => sum + s.average, 0) / summaries.length,
+    [summaries]
+  );
 
   const totalAssessed = summaries.reduce((s, d) => s + d.assessed, 0);
   const totalAttributes = summaries.reduce((s, d) => s + d.total, 0);
+  const hasAnyAssessment = totalAssessed > 0;
 
   return (
     <TooltipProvider>
@@ -190,7 +202,7 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                   className="text-5xl md:text-6xl font-black leading-none tabular-nums tracking-tighter text-zinc-900 dark:text-white"
                   style={{ fontFamily: D.head }}
                 >
-                  {overall === null ? "—" : overall.toFixed(1)}
+                  {overall.toFixed(1)}
                 </div>
                 <div
                   className="mt-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 dark:text-white/35"
@@ -207,19 +219,17 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                 >
                   {playingRole || "Player"}
                 </div>
-                {overall !== null && (
-                  <div
-                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider"
-                    style={{
-                      color: band(overall).color,
-                      borderColor: `${band(overall).color}55`,
-                      background: `${band(overall).color}14`,
-                      fontFamily: D.mono,
-                    }}
-                  >
-                    {band(overall).label}
-                  </div>
-                )}
+                <div
+                  className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                  style={{
+                    color: hasAnyAssessment ? band(overall).color : BASELINE_COLOR,
+                    borderColor: `${hasAnyAssessment ? band(overall).color : BASELINE_COLOR}55`,
+                    background: `${hasAnyAssessment ? band(overall).color : BASELINE_COLOR}14`,
+                    fontFamily: D.mono,
+                  }}
+                >
+                  {hasAnyAssessment ? band(overall).label : "Baseline"}
+                </div>
                 <div className="text-[10px] font-semibold text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>
                   {totalAssessed} of {totalAttributes} attributes assessed
                 </div>
@@ -250,29 +260,26 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                       <span
                         className="text-lg font-black tabular-nums leading-none"
                         style={{
-                          color: s.average === null ? undefined : band(s.average).color,
+                          color: s.assessed > 0 ? band(s.average).color : BASELINE_COLOR,
                           fontFamily: D.head,
                         }}
                       >
-                        {s.average === null ? (
-                          <span className="text-zinc-300 dark:text-white/20">—</span>
-                        ) : (
-                          s.average.toFixed(1)
-                        )}
+                        {s.average.toFixed(1)}
                       </span>
                     </div>
                     <div className="mt-2">
-                      <AttributeBar rating={s.average} />
+                      <AttributeBar rating={s.average} assessed={s.assessed > 0} />
                     </div>
                   </div>
                 ))}
             </div>
           </div>
 
-          {overall === null && (
+          {!hasAnyAssessment && (
             <p className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-4 py-3 text-xs font-medium text-amber-700 dark:text-amber-300">
-              No skill assessments recorded for this player yet. Ratings appear here once a coach or
-              analyst submits an assessment — nothing is estimated or inferred.
+              No assessments recorded yet — every attribute is showing the neutral baseline of{" "}
+              {RATING_BASELINE}/{RATING_MAX}. Baseline values are muted and update as soon as a coach
+              or analyst submits a rating.
             </p>
           )}
 
@@ -304,15 +311,11 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                     <span
                       className="text-base font-black tabular-nums leading-none w-8"
                       style={{
-                        color: summary.average === null ? undefined : band(summary.average).color,
+                        color: summary.assessed > 0 ? band(summary.average).color : BASELINE_COLOR,
                         fontFamily: D.head,
                       }}
                     >
-                      {summary.average === null ? (
-                        <span className="text-zinc-300 dark:text-white/20">—</span>
-                      ) : (
-                        summary.average.toFixed(1)
-                      )}
+                      {summary.average.toFixed(1)}
                     </span>
                     <h3
                       className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900 dark:text-white truncate"
@@ -336,8 +339,7 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                 {!isCollapsed && (
                   <div className="p-4 space-y-2.5">
                     {attributes.map(attr => {
-                      const rating = ratingFor(domain, attr);
-                      const assessed = rating !== null;
+                      const { rating, assessed } = ratingFor(domain, attr);
 
                       return (
                         <Tooltip key={attr}>
@@ -358,15 +360,15 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                                 <span
                                   className="text-xs font-black tabular-nums shrink-0"
                                   style={{
-                                    color: assessed ? band(rating).color : undefined,
+                                    color: assessed ? band(rating).color : BASELINE_COLOR,
                                     fontFamily: D.mono,
                                   }}
                                 >
-                                  {assessed ? rating : <span className="text-zinc-300 dark:text-white/25">—</span>}
+                                  {rating}
                                 </span>
                               </div>
                               <div className="mt-1.5">
-                                <AttributeBar rating={rating} />
+                                <AttributeBar rating={rating} assessed={assessed} />
                               </div>
                             </div>
                           </TooltipTrigger>
@@ -378,7 +380,8 @@ export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttri
                               </>
                             ) : (
                               <span className="flex items-center gap-1.5">
-                                <Lock className="h-3 w-3" /> Not yet assessed
+                                <Lock className="h-3 w-3" /> Not yet assessed — showing the{" "}
+                                {RATING_BASELINE}/{MAX_RATING} baseline
                               </span>
                             )}
                           </TooltipContent>
