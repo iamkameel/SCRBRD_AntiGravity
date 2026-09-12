@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Match, Team, Innings, Person, Rankings, LiveScoreProjection } from "@/types/firestore";
 import { useLiveScore } from "@/hooks/useLiveScore";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,9 +25,12 @@ import { toast } from "sonner";
 import {
   ChevronLeft, Share2, RefreshCw, Play, Moon, Zap, Users,
   Activity, MapPin, Calendar, Clock, Trophy, Radio, Tv2,
-  BarChart3, MessageSquare, Shield, Star, Search, Filter, Check
+  BarChart3, MessageSquare, Shield, Star, Search, Filter, Check,
+  Bus, Bell, Smartphone, Send, ShieldCheck, CheckCircle2, Navigation, AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/lib/auth/usePermissions";
+import { parentNotificationService, ParentNotification, INITIAL_PARENT_NOTIFICATIONS } from "@/lib/services/parentNotificationService";
 
 interface MatchDetailClientProps {
   match: Match;
@@ -37,13 +41,14 @@ interface MatchDetailClientProps {
   matchImpactEvents?: Rankings.MatchImpactEvent[];
 }
 
-type TabId = 'overview' | 'scorecard' | 'analytics' | 'impact' | 'broadcast' | 'squads' | 'commentary';
+type TabId = 'overview' | 'scorecard' | 'analytics' | 'impact' | 'parent_hub' | 'broadcast' | 'squads' | 'commentary';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview',   label: 'Overview',   icon: Activity },
   { id: 'scorecard',  label: 'Scorecard',  icon: BarChart3 },
   { id: 'analytics',  label: 'Analytics',  icon: Zap },
   { id: 'impact',     label: 'Impact',     icon: Star },
+  { id: 'parent_hub', label: 'Parent & Bus Hub', icon: Bus },
   { id: 'broadcast',  label: 'Broadcast',  icon: Tv2 },
   { id: 'squads',     label: 'Squads',     icon: Users },
   { id: 'commentary', label: 'Commentary', icon: MessageSquare },
@@ -83,9 +88,36 @@ function StatPill({ label, value, color = D.textSecondary }: { label: string; va
 export function MatchDetailClient({
   match, homeTeam, awayTeam, players = [], playerImpact = [], matchImpactEvents = []
 }: MatchDetailClientProps) {
+  const { canAccess } = usePermissions();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [commentaryFilter, setCommentaryFilter] = useState<'all' | 'wicket' | 'four' | 'six'>('all');
   const [commentaryQuery, setCommentaryQuery] = useState('');
+
+  // Parent Hub & SMS Alerts State
+  const [parentNotifications, setParentNotifications] = useState<ParentNotification[]>(INITIAL_PARENT_NOTIFICATIONS);
+  const [parentPhone, setParentPhone] = useState('');
+  const [smsPreferences, setSmsPreferences] = useState({
+    milestones: true,
+    wickets: false,
+    busDeparture: true,
+    matchResult: true,
+  });
+
+  useEffect(() => {
+    const unsub = parentNotificationService.subscribeNotifications('TRIP-101', (notifs) => {
+      if (notifs?.length) setParentNotifications(notifs);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSaveSmsPreferences = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!parentPhone || parentPhone.length < 8) {
+      toast.error("Please enter a valid mobile phone number for SMS alerts");
+      return;
+    }
+    toast.success(`Subscribed ${parentPhone} to instant match & bus SMS alerts!`);
+  };
 
   const { liveScore, loading: liveLoading } = useLiveScore(match.id);
 
@@ -203,7 +235,7 @@ export function MatchDetailClient({
             <Share2 className="h-3.5 w-3.5 text-emerald-400" />
             Share
           </Button>
-          {isLive && (
+          {isLive && canAccess('scoring') && (
             <Link href={`/matches/${match.id}/score`}>
               <Button size="sm" className="gap-2 text-xs font-black uppercase tracking-widest bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/20">
                 <Radio className="h-3.5 w-3.5 animate-pulse" />
@@ -335,19 +367,28 @@ export function MatchDetailClient({
             const Icon = tab.icon;
             const active = activeTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  "relative flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors",
                   active
-                    ? "bg-white/10 text-white border border-white/15 shadow-lg shadow-black/20"
+                    ? "text-white"
                     : "text-white/40 hover:text-white/70 hover:bg-white/[0.03]"
                 )}
               >
-                <Icon className={cn("h-3.5 w-3.5", active ? "text-emerald-400" : "text-white/30")} />
-                <span>{tab.label}</span>
-              </button>
+                {active && (
+                  <motion.div
+                    layoutId="matchDetailTabPill"
+                    className="absolute inset-0 bg-white/10 rounded-2xl border border-white/15 shadow-lg shadow-black/20"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Icon className={cn("h-3.5 w-3.5", active ? "text-emerald-400" : "text-white/30")} />
+                  <span>{tab.label}</span>
+                </span>
+              </motion.button>
             );
           })}
         </div>
@@ -439,6 +480,165 @@ export function MatchDetailClient({
         {activeTab === 'impact' && (
           <div className="animate-in fade-in duration-300">
             <ImpactTab playerImpact={playerImpact} players={players} />
+          </div>
+        )}
+
+        {/* PARENT & BUS HUB TAB */}
+        {activeTab === 'parent_hub' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* Top Transport & Safety Header */}
+            <div className="rounded-3xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-black/60 to-slate-950/80 p-6 md:p-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase tracking-widest">
+                    <Bus className="h-4 w-4" />
+                    <span>Parent & Fleet Logistics Telemetry</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight" style={{ fontFamily: D.head }}>
+                    1st XI Squad Bus & Parent Notification Hub
+                  </h3>
+                  <p className="text-xs text-white/50 max-w-xl">
+                    Real-time transport tracking, student boarding verifications, and instant SMS alerts for parents and guardians.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span className="text-xs font-black uppercase tracking-wider">11/11 Players Boarded & Safe</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Bus Status & Manifest */}
+              <div className="lg:col-span-2 space-y-6">
+                <Section label="Live Bus Manifest & Travel Status" accent="#6366f1">
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <StatPill label="Vehicle" value="Bus V02" color="#818cf8" />
+                      <StatPill label="Route Status" value="EN ROUTE" color="#34d399" />
+                      <StatPill label="Est. Arrival" value="08:35 AM" color="#fbbf24" />
+                      <StatPill label="Driver" value="D. Roberts" color="#f472b6" />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Navigation className="h-5 w-5 text-indigo-400 animate-pulse" />
+                        <div>
+                          <div className="text-xs font-bold text-white">Current Route Location</div>
+                          <div className="text-[10px] text-white/40 font-mono">N3 Highway Southbound (Km 42) · 12 mins to venue</div>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest text-indigo-300">
+                        GPS Active
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Verified Passenger Boarding Manifest</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {players.slice(0, 11).map((p, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                              <span className="text-xs font-bold text-white">{p.firstName} {p.lastName}</span>
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                              BOARDED
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Section>
+
+                {/* Live Dispatch History */}
+                <Section label="Parent Notification Activity Stream" accent="#10b981">
+                  <div className="p-6 space-y-4">
+                    {parentNotifications.length > 0 ? (
+                      parentNotifications.map((notif, idx) => (
+                        <div key={idx} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-start gap-4">
+                          <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Smartphone className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-white uppercase tracking-wider">{notif.title}</span>
+                              <span className="text-[9px] font-mono text-white/30">{typeof notif.sentAt === 'string' ? notif.sentAt : 'Just now'}</span>
+                            </div>
+                            <p className="text-xs text-white/70">{notif.message}</p>
+                            <div className="flex items-center gap-2 pt-1">
+                              <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {notif.channel} {notif.status}
+                              </span>
+                              <span className="text-[9px] text-white/30 font-medium">To: {notif.guardianName} ({notif.guardianPhone})</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-8 text-center text-white/30 text-xs font-bold uppercase tracking-widest">
+                        No notifications sent yet
+                      </div>
+                    )}
+                  </div>
+                </Section>
+              </div>
+
+              {/* SMS Subscription Form */}
+              <div className="space-y-6">
+                <Section label="Subscribe to Parent SMS Alerts" accent="#f59e0b">
+                  <form onSubmit={handleSaveSmsPreferences} className="p-6 space-y-5">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-white/50">Guardian Mobile Phone</label>
+                      <div className="relative">
+                        <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                        <Input
+                          type="tel"
+                          placeholder="+27 82 123 4567"
+                          value={parentPhone}
+                          onChange={(e) => setParentPhone(e.target.value)}
+                          className="pl-10 h-11 rounded-xl bg-white/[0.04] border-white/10 text-xs font-mono text-white placeholder:text-white/20 focus-visible:ring-emerald-500"
+                        />
+                      </div>
+                      <p className="text-[9px] text-white/30">Direct SMS updates will be delivered to this mobile number during the match.</p>
+                    </div>
+
+                    <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Select Alert Triggers</div>
+
+                      {[
+                        { key: 'milestones', label: 'Milestones (50s, 100s, 5-Wkts)', desc: 'Instant SMS when a player reaches a milestone' },
+                        { key: 'wickets', label: 'Wicket Alerts', desc: 'SMS on every wicket fall in the match' },
+                        { key: 'busDeparture', label: 'Bus Departure & ETA Updates', desc: 'Alerts when squad bus departs or arrives' },
+                        { key: 'matchResult', label: 'Match Result Summary', desc: 'Final scorecard summary SMS' },
+                      ].map((item) => (
+                        <div key={item.key} className="flex items-start justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-white">{item.label}</div>
+                            <div className="text-[9px] text-white/30">{item.desc}</div>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={(smsPreferences as any)[item.key]}
+                            onChange={(e) => setSmsPreferences({ ...smsPreferences, [item.key]: e.target.checked })}
+                            className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-0"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button type="submit" className="w-full h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase tracking-widest text-xs gap-2 shadow-lg shadow-emerald-500/20">
+                      <Bell className="h-4 w-4" />
+                      Save SMS Preferences
+                    </Button>
+                  </form>
+                </Section>
+              </div>
+            </div>
           </div>
         )}
 

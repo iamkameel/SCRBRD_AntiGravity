@@ -18,11 +18,18 @@ import {
   CheckCircle2,
   AlertTriangle,
   ChevronRight,
-  Flame
+  Flame,
+  UserCheck,
+  Target,
+  BarChart3
 } from 'lucide-react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlayerCareerProfile, MOCK_CAREER_PROFILES } from '@/lib/intelligence/playerHistoryEngine';
+import { 
+  PlayerCareerProfile, 
+  MOCK_CAREER_PROFILES, 
+  calculateRoleSuitability 
+} from '@/lib/intelligence/playerHistoryEngine';
 
 interface PlayerCareerHistoryTabProps {
   profile?: PlayerCareerProfile;
@@ -32,7 +39,6 @@ interface PlayerCareerHistoryTabProps {
 export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: PlayerCareerHistoryTabProps) {
   const profile = profileProp || (playerId && MOCK_CAREER_PROFILES[playerId]) || MOCK_CAREER_PROFILES['player-1'];
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'MILESTONES' | 'AWARDS' | 'ACCOLADES' | 'MEDICAL'>('ALL');
-
 
   // Build unified chronological timeline stream
   const timelineEvents = [
@@ -94,6 +100,14 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
   });
 
   const latestStats = profile.seasonStats[profile.seasonStats.length - 1];
+  const latestSkill = profile.skillProgression[profile.skillProgression.length - 1];
+
+  // Calculate role suitability options
+  const roleOptions = ['Opener', 'Top-order Anchor', 'Death Bowler', 'Bowling All-Rounder', 'Wicketkeeper-Batter'];
+  const roleFitScores = roleOptions.map(r => ({
+    role: r,
+    fit: calculateRoleSuitability(r, latestSkill.domains)
+  })).sort((a, b) => b.fit - a.fit);
 
   return (
     <div className="space-y-8">
@@ -104,7 +118,7 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
             <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Career Runs</span>
             <Trophy className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.syne }}>
+          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.head }}>
             {profile.seasonStats.reduce((sum, s) => sum + s.batting.runs, 0)}
           </p>
           <p className="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
@@ -117,7 +131,7 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
             <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Career Wickets</span>
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.syne }}>
+          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.head }}>
             {profile.seasonStats.reduce((sum, s) => sum + s.bowling.wickets, 0)}
           </p>
           <p className="text-[11px] text-white/50 font-medium mt-1">
@@ -130,7 +144,7 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
             <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Honours & Awards</span>
             <Medal className="w-4 h-4 text-purple-400" />
           </div>
-          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.syne }}>
+          <p className="text-3xl font-black text-white mt-2" style={{ fontFamily: D.head }}>
             {profile.awards.length + profile.milestones.length}
           </p>
           <p className="text-[11px] text-purple-300 font-medium mt-1">
@@ -140,11 +154,11 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
 
         <Card className="bg-black/40 border-white/10 backdrop-blur-xl rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Readiness State</span>
+            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Composite Index</span>
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-3xl font-black text-emerald-400 mt-2" style={{ fontFamily: D.syne }}>
-            {profile.readinessScore}%
+          <p className="text-3xl font-black text-emerald-400 mt-2" style={{ fontFamily: D.head }}>
+            {latestSkill.compositeIndex} <span className="text-xs font-normal text-slate-400">/ 100</span>
           </p>
           <p className="text-[11px] text-white/50 font-medium mt-1">
             Status: <span className="text-emerald-400 font-bold">{profile.readinessStatus}</span>
@@ -152,11 +166,109 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
         </Card>
       </div>
 
+      {/* Role Evolution & Skill Domain Progression Runway */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Longitudinal Skill Matrix Progression */}
+        <div className="lg:col-span-2 rounded-3xl border border-white/10 p-6 space-y-4" style={{ background: D.surf2 }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-white uppercase italic tracking-tight" style={{ fontFamily: D.head }}>
+                Multi-Season Skill Progression (7 Domains)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Normalized 0–100 development trajectory across Physical, Mental, Tactical, and Skill attributes.
+              </p>
+            </div>
+            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs font-bold font-mono">
+              +16 Index Growth
+            </Badge>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {profile.skillProgression.map((prog) => (
+              <div key={prog.season} className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-sky-400 font-mono">{prog.season} Season</span>
+                  <span className="text-emerald-400 font-mono">Composite Index: {prog.compositeIndex}</span>
+                </div>
+
+                <div className="grid grid-cols-7 gap-2 text-center text-[10px]">
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Batting</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.batting}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Bowling</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.bowling}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Fielding</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.fielding}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Keeper</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.wicketkeeping}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Physical</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.physical}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Mental</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.mental}</span>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-xl">
+                    <span className="text-slate-400 uppercase text-[8px] font-bold block">Tactical</span>
+                    <span className="font-mono font-bold text-white text-xs">{prog.domains.tactical}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Role Archetype Suitability Engine */}
+        <div className="rounded-3xl border border-white/10 p-6 space-y-4" style={{ background: D.surf2 }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-white uppercase italic tracking-tight" style={{ fontFamily: D.head }}>
+                Role Archetype Fit
+              </h3>
+              <p className="text-xs text-muted-foreground">Weighted domain suitability calculation.</p>
+            </div>
+            <UserCheck className="w-5 h-5 text-indigo-400" />
+          </div>
+
+          <div className="space-y-2.5 pt-2">
+            {roleFitScores.map((rf, idx) => (
+              <div key={rf.role} className="p-3 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white block">{rf.role}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {idx === 0 ? 'Primary Preferred Archetype' : 'Alternative Tactical Role'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${rf.fit >= 80 ? 'bg-emerald-400' : rf.fit >= 60 ? 'bg-sky-400' : 'bg-amber-400'}`}
+                      style={{ width: `${rf.fit}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-black text-white">{rf.fit}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Season-by-Season Performance Runway */}
       <Card className="bg-black/40 border-white/10 backdrop-blur-2xl rounded-3xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-black text-white uppercase tracking-tight" style={{ fontFamily: D.syne }}>
+            <h3 className="text-lg font-black text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
               LONGITUDINAL SEASON <span className="text-primary italic">RUNWAY</span>
             </h3>
             <p className="text-xs text-white/40">Multi-year statistical progression across competitive seasons</p>
@@ -201,7 +313,7 @@ export function PlayerCareerHistoryTab({ profile: profileProp, playerId }: Playe
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-black/40 border border-white/10 p-4 rounded-2xl">
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-black text-white uppercase tracking-tight" style={{ fontFamily: D.syne }}>
+            <h3 className="text-base font-black text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
               CAREER <span className="text-primary italic">TIMELINE LOG</span>
             </h3>
           </div>

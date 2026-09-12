@@ -35,7 +35,7 @@ const navKeyToModuleMap: Record<string, Module> = {
   'dashboard': 'dashboard',
   'matches': 'matches', 
   'matches-hub': 'matches',
-  'live-scoring': 'matches',
+  'live-scoring': 'scoring',
   'analytics-dashboard': 'analytics',
   'strategic-calendar': 'calendar',
   'scouting': 'talent',
@@ -85,6 +85,7 @@ const navKeyToModuleMap: Record<string, Module> = {
   'financials': 'management',
 
   // System Administration
+  'system-architect-hub': 'settings',
   'user-management': 'settings',
   'data-management': 'management',
   'testing-arena': 'settings',

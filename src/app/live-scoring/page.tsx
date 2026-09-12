@@ -7,6 +7,8 @@ import {
   Play, Users, MapPin, Trophy, Flame, Search
 } from "lucide-react";
 import { MOCK_MATCHES, MockMatchData } from "@/lib/mockMatchData";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { usePermissions } from "@/lib/auth/usePermissions";
 
 export default function LiveScoringPage() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'LIVE' | 'SCHEDULED' | 'COMPLETED'>('ALL');
@@ -26,7 +28,8 @@ export default function LiveScoringPage() {
   const completedCount = MOCK_MATCHES.filter(m => m.state === 'COMPLETED').length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <RouteGuard module="scoring" label="Live Scoring Command Centre" fallbackRoute="/matches">
+      <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* Hero Header */}
       <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/20 p-8 shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
@@ -141,10 +144,12 @@ export default function LiveScoringPage() {
         </div>
       )}
     </div>
+    </RouteGuard>
   );
 }
 
 function MatchCard({ match }: { match: MockMatchData }) {
+  const { canAccess } = usePermissions();
   const isLive = match.state === 'LIVE';
   const isScheduled = match.state === 'SCHEDULED';
   const isCompleted = match.state === 'COMPLETED';
@@ -302,17 +307,27 @@ function MatchCard({ match }: { match: MockMatchData }) {
           Squad & Pre-Match
         </Link>
 
-        <Link
-          href={`/matches/${match.id}/scoring-hub`}
-          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            isLive 
-              ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20' 
-              : 'bg-slate-800 hover:bg-slate-700 text-white'
-          }`}
-        >
-          {isLive ? 'Launch Scorer Console' : 'View Scoring Hub'}
-          <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
+        {canAccess('scoring') ? (
+          <Link
+            href={`/matches/${match.id}/scoring-hub`}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              isLive 
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20' 
+                : 'bg-slate-800 hover:bg-slate-700 text-white'
+            }`}
+          >
+            {isLive ? 'Launch Scorer Console' : 'View Scoring Hub'}
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        ) : (
+          <Link
+            href={`/matches/${match.id}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition-all"
+          >
+            View Match Centre
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
       </div>
     </div>
   );

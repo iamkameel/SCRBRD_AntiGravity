@@ -131,26 +131,57 @@ export function AnalyticsDashboardClient() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList style={{ background: D.surf1, border: `1px solid ${D.border}`, padding: 4, borderRadius: 14, height: 'auto' }}>
-          <TabsTrigger value="overview" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-400 gap-2">
-            <BarChart3 className="h-3.5 w-3.5" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-sky-500/20 data-[state=active]:text-sky-400 gap-2">
-            <TrendingUp className="h-3.5 w-3.5" />
-            Performance
-          </TabsTrigger>
-          {!isPlayer && (
-            <TabsTrigger value="predictions" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 gap-2">
-              <Brain className="h-3.5 w-3.5" />
-              AI Predictions
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="insights" className="rounded-md text-xs font-bold uppercase tracking-wider px-5 py-2.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 gap-2">
-            <Zap className="h-3.5 w-3.5" />
-            Insights
-          </TabsTrigger>
-        </TabsList>
+        <div 
+          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl no-scrollbar"
+          style={{ background: D.surf1, borderColor: D.border }}
+        >
+          {[
+            { id: "overview", label: "Overview", icon: BarChart3, color: D.indigo },
+            { id: "performance", label: "Performance", icon: TrendingUp, color: D.sky },
+            ...(!isPlayer ? [{ id: "predictions", label: "AI Predictions", icon: Brain, color: D.violet }] : []),
+            { id: "insights", label: "Insights", icon: Zap, color: D.amber },
+          ].map((tabItem) => {
+            const isActive = activeTab === tabItem.id;
+            const Icon = tabItem.icon;
+            return (
+              <button
+                key={tabItem.id}
+                onClick={() => setActiveTab(tabItem.id)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
+                  isActive
+                    ? "text-slate-900 dark:text-white"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+                }`}
+                style={{ fontFamily: D.sans }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="analyticsTabPill"
+                    className="absolute inset-0 rounded-xl border border-indigo-500/30 bg-indigo-500/15 shadow-lg shadow-indigo-500/10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+
+                <div
+                  className={`relative z-10 p-1 rounded-lg transition-colors duration-300 ${
+                    isActive ? "bg-indigo-500/20 text-indigo-400" : "bg-transparent text-current"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+
+                <span className="relative z-10 uppercase tracking-wider text-[11px]" style={{ fontFamily: D.head }}>
+                  {tabItem.label}
+                </span>
+
+                {isActive && (
+                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

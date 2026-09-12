@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { facilityEngineService, buildFallbackSnapshot, type FacilitySnapshot } from '@/lib/services/facilityEngineService';
 import { createBookingAction } from '@/app/actions/fieldBookingActions';
-import { upsertMaintenanceTaskAction } from '@/app/actions/fieldActions';
+import { upsertMaintenanceTaskAction, logGroundStatusAction } from '@/app/actions/fieldActions';
 import {
   computeTurfHealth, detectBookingConflicts, findUnbookedFixtures, buildPrepSchedule, recommendPitchAllocation,
   bookingsLast7Days, weekOf, weekLoad, toDateKey, addDays, bookingForFixture,
@@ -60,7 +60,9 @@ export function FacilityCommandCenter() {
   const [todayKey] = useState(() => toDateKey(new Date()));
   const [weekAnchor, setWeekAnchor] = useState(() => toDateKey(new Date()));
   const [quick, setQuick] = useState<QuickBook | null>(null);
+  const [logModal, setLogModal] = useState<{ fieldId: string; conditionStatus: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unplayable'; pitchReadiness: number; outfieldReadiness: number; equipmentReadiness: number; cleggValue: number; moistureLevel: number; grassLength: number; notes: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+
 
   // ── School resolution (dashboard filter → email domain → first → demo) ──
   useEffect(() => {
@@ -299,7 +301,17 @@ export function FacilityCommandCenter() {
                   {next ? <span className="text-white/60">Next: {dayLabel(next.date).dow} {dayLabel(next.date).dom}</span> : <span>No fixture</span>}
                 </div>
                 <div className="flex gap-2">
-                  <Link href={`/fields/${f.id}`} className="flex-1 h-8 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><ExternalLink className="h-3 w-3" /> Field</Link>
+                  <button onClick={() => setLogModal({
+                    fieldId: f.id,
+                    conditionStatus: 'Excellent',
+                    pitchReadiness: h.factors.find(x => x.key === 'pitch')?.score ?? 85,
+                    outfieldReadiness: h.factors.find(x => x.key === 'outfield')?.score ?? 90,
+                    equipmentReadiness: 95,
+                    cleggValue: 88,
+                    moistureLevel: 18,
+                    grassLength: 6,
+                    notes: ''
+                  })} className="flex-1 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><FlaskConical className="h-3 w-3" /> Log Pitch</button>
                   <button onClick={() => setQuick({ fieldId: f.id, date: todayKey, startTime: '15:00', endTime: '17:00', title: '', type: 'Practice', organizer: '' })} className="flex-1 h-8 rounded-lg bg-[#22c55e]/10 border border-[#22c55e]/30 text-[#22c55e] text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><Plus className="h-3 w-3" /> Book</button>
                 </div>
               </div>
@@ -533,6 +545,97 @@ export function FacilityCommandCenter() {
                   <Button disabled={!quick.title || !quick.fieldId || quick.startTime >= quick.endTime || busy === 'book'} onClick={() => submitBooking(quick)}
                     className={cn('font-black uppercase text-[10px] tracking-wider', clash.length ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-[#22c55e] hover:bg-[#16a34a] text-black')}>
                     {busy === 'book' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : clash.length ? 'Book anyway' : 'Confirm booking'}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Groundskeeper Telemetry Modal */}
+      <Dialog open={!!logModal} onOpenChange={o => !o && setLogModal(null)}>
+        <DialogContent className="bg-[#0b0b0b] border-white/10 text-white sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: D.head }}>Log Groundskeeper Telemetry</DialogTitle>
+            <DialogDescription className="text-white/50 text-xs">
+              Record Clegg Impact Value, moisture level, grass height, and readiness to update field health and match readiness protocols.
+            </DialogDescription>
+          </DialogHeader>
+          {logModal && (() => {
+            const inputCls = 'h-9 w-full rounded-lg bg-white/5 border border-white/10 px-3 text-xs text-white focus:outline-none focus:border-amber-500/50';
+            const fName = snap.fields.find(f => f.id === logModal.fieldId)?.name ?? 'Field';
+            return (
+              <div className="space-y-4">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold block">{fName}</span>
+                    <span className="text-[10px] text-amber-300/70 font-mono">Current Status: {logModal.conditionStatus}</span>
+                  </div>
+                  <FlaskConical className="h-5 w-5 text-amber-400" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="space-y-1 col-span-2">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Condition Status</span>
+                    <select value={logModal.conditionStatus} onChange={e => setLogModal({ ...logModal, conditionStatus: e.target.value as any })} className={inputCls}>
+                      <option value="Excellent" className="bg-[#0b0b0b]">Excellent (Match-Ready)</option>
+                      <option value="Good" className="bg-[#0b0b0b]">Good (Playable)</option>
+                      <option value="Fair" className="bg-[#0b0b0b]">Fair (Inspection Required)</option>
+                      <option value="Poor" className="bg-[#0b0b0b]">Poor (Heavy Wear)</option>
+                      <option value="Unplayable" className="bg-[#0b0b0b]">Unplayable (Waterlogged / Damaged)</option>
+                    </select>
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Clegg Impact Value (CIV)</span>
+                    <input type="number" value={logModal.cleggValue} onChange={e => setLogModal({ ...logModal, cleggValue: Number(e.target.value) })} className={inputCls} placeholder="85-95" />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Moisture Content (%)</span>
+                    <input type="number" value={logModal.moistureLevel} onChange={e => setLogModal({ ...logModal, moistureLevel: Number(e.target.value) })} className={inputCls} placeholder="12-22%" />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Grass Cut Height (mm)</span>
+                    <input type="number" value={logModal.grassLength} onChange={e => setLogModal({ ...logModal, grassLength: Number(e.target.value) })} className={inputCls} placeholder="6mm" />
+                  </label>
+                  <label className="space-y-1">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Pitch Readiness Score (0-100)</span>
+                    <input type="number" value={logModal.pitchReadiness} onChange={e => setLogModal({ ...logModal, pitchReadiness: Number(e.target.value) })} className={inputCls} />
+                  </label>
+                  <label className="space-y-1 col-span-2">
+                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Groundskeeper & Agronomy Notes</span>
+                    <input value={logModal.notes} onChange={e => setLogModal({ ...logModal, notes: e.target.value })} placeholder="e.g., Heavy roller applied; pitch mown to 6mm for weekend 1st XI derby." className={inputCls} />
+                  </label>
+                </div>
+                <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                  <Button variant="ghost" onClick={() => setLogModal(null)} className="text-white/60">Cancel</Button>
+                  <Button disabled={busy === 'log'} onClick={async () => {
+                    setBusy('log');
+                    try {
+                      const res = await logGroundStatusAction({
+                        fieldId: logModal.fieldId,
+                        conditionStatus: logModal.conditionStatus,
+                        pitchReadiness: logModal.pitchReadiness,
+                        outfieldReadiness: logModal.outfieldReadiness,
+                        equipmentReadiness: logModal.equipmentReadiness,
+                        loggedByPersonId: user?.uid || 'head-groundskeeper-id',
+                        moistureLevel: logModal.moistureLevel,
+                        grassCover: 90,
+                        notes: `[CIV: ${logModal.cleggValue} | Cut: ${logModal.grassLength}mm] ${logModal.notes}`
+                      });
+                      if (res.success) {
+                        toast.success(`Ground status recorded for ${fName}`);
+                        setLogModal(null);
+                        load();
+                      } else {
+                        toast.error(res.error || 'Failed to log ground status');
+                      }
+                    } catch (e: any) {
+                      toast.error(e.message || 'Error logging status');
+                    } finally {
+                      setBusy(null);
+                    }
+                  }} className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[10px] tracking-wider">
+                    {busy === 'log' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Telemetry Entry'}
                   </Button>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { MatchScoringInterface } from '@/components/scoring/MatchScoringInterface';
 import { notFound } from 'next/navigation';
+import { RouteGuard } from '@/components/auth/RouteGuard';
 
 export default async function MatchScoringPage(props: {
   params: Promise<{ id: string }>;
@@ -23,14 +24,16 @@ export default async function MatchScoringPage(props: {
   const data = matchSnap.data();
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <MatchScoringInterface
-        matchId={matchId}
-        initialData={data}
-        homeTeamName={data?.homeTeamName ?? data?.homeTeam ?? 'Home Team'}
-        awayTeamName={data?.awayTeamName ?? data?.awayTeam ?? 'Away Team'}
-        currentInnings={(data?.liveScore?.innings?.currentInnings ?? 1) as 1 | 2}
-      />
-    </div>
+    <RouteGuard module="scoring" label="Live Scorer Console" fallbackRoute={`/matches/${matchId}`}>
+      <div className="min-h-screen bg-background p-4 md:p-6">
+        <MatchScoringInterface
+          matchId={matchId}
+          initialData={data}
+          homeTeamName={data?.homeTeamName ?? data?.homeTeam ?? 'Home Team'}
+          awayTeamName={data?.awayTeamName ?? data?.awayTeam ?? 'Away Team'}
+          currentInnings={(data?.liveScore?.innings?.currentInnings ?? 1) as 1 | 2}
+        />
+      </div>
+    </RouteGuard>
   );
 }

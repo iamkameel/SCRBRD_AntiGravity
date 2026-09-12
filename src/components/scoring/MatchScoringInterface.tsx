@@ -19,9 +19,13 @@ import { WagonWheelScorer } from './WagonWheelScorer';
 import { WagonWheelGrid, ShotEventData } from './WagonWheelGrid';
 import { WagonWheelHeatmap } from './WagonWheelHeatmap';
 import { PlayerSelector } from './PlayerSelector';
+import { placementFromTap, CAPTURE_PROFILE } from '@/lib/scoring/placementEngine';
+import { AutomatedMatchBulletin } from '@/components/media/AutomatedMatchBulletin';
+import { OfflineSyncBanner } from './OfflineSyncBanner';
+import { PolarSpatialHeatmap } from './PolarSpatialHeatmap';
 import { 
   Undo, Save, Play, Pause, RotateCcw,
-  ChevronRight, AlertCircle, Users, Settings, Keyboard, Command
+  ChevronRight, AlertCircle, Users, Settings, Keyboard, Command, Newspaper
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -102,6 +106,7 @@ export function MatchScoringInterface({
   );
   
   const [showWagonWheel, setShowWagonWheel] = useState(false);
+  const [showBulletin, setShowBulletin] = useState(false);
   const [selectedRuns, setSelectedRuns] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   
@@ -149,10 +154,19 @@ export function MatchScoringInterface({
     const angle = 'angle' in shot ? shot.angle : 0;
     const distance = 'distance' in shot ? shot.distance : 0;
     
+    // Derive batter-relative polar placement math
+    const placement = placementFromTap({
+      angle,
+      radius: distance / 100, // normalize 0-100% distance to 0.0-1.0
+      batHand: 'R',
+      profile: CAPTURE_PROFILE.FULL,
+    });
+
     setCurrentBall(prev => ({
       ...prev,
-      shotAngle: angle,
-      shotDistance: distance
+      shotAngle: placement.theta,
+      shotDistance: Math.round(placement.radius * 100),
+      shotZone: placement.closePosition ?? placement.zone ?? 'infield'
     }));
 
     if ('zoneInfo' in shot) {
@@ -418,6 +432,9 @@ export function MatchScoringInterface({
 
   return (
     <div className="space-y-6">
+      {/* Offline Sync & Network Resilience Banner */}
+      <OfflineSyncBanner className="rounded-xl overflow-hidden shadow-lg border border-white/10" />
+
       {/* Score Display */}
       <Card className="p-8 border-primary/20 bg-gradient-to-br from-card to-secondary/10 shadow-xl backdrop-blur-md">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
@@ -766,18 +783,33 @@ export function MatchScoringInterface({
             </Button>
           </div>
 
-          {/* Wagon Wheel Toggle */}
-          <Button
-            variant="secondary"
-            onClick={() => setShowWagonWheel(!showWagonWheel)}
-            className="w-full"
-          >
-            {showWagonWheel ? 'Hide' : 'Show'} Wagon Wheel
-          </Button>
+          {/* Wagon Wheel & AI Press Bulletin Toggles */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowWagonWheel(!showWagonWheel)}
+              className="w-full font-mono text-xs font-bold"
+            >
+              {showWagonWheel ? 'Hide' : 'Show'} Wagon Wheel
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowBulletin(!showBulletin)}
+              className="w-full font-mono text-xs font-bold border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+            >
+              <Newspaper className="w-3.5 h-3.5 mr-1.5" />
+              {showBulletin ? 'Hide' : 'AI Press'} Bulletin
+            </Button>
+          </div>
         </div>
 
         {/* Wagon Wheel Scorer & Telemetry */}
         <div className="space-y-6">
+          {showBulletin && (
+            <AutomatedMatchBulletin />
+          )}
+
           {showWagonWheel ? (
             <div className="space-y-6">
               <Card className="p-6 bg-slate-900/90 border border-white/10 shadow-2xl backdrop-blur-xl">
@@ -788,6 +820,10 @@ export function MatchScoringInterface({
                   disabled={isPaused}
                 />
               </Card>
+
+              {/* Polar Spatial Heatmap with Slips & Catching Ring */}
+              <PolarSpatialHeatmap shots={shotsHistory} batHand="R" />
+
               <WagonWheelHeatmap shots={shotsHistory} />
             </div>
           ) : (

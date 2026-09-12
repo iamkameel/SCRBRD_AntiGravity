@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Radio, ArrowRight, Zap, Trophy, ShieldAlert, ChevronRight } from "lucide-react";
+import { Radio, ArrowRight, Zap, Eye } from "lucide-react";
 import { D } from "@/lib/design-system";
+import { usePermissions } from "@/lib/auth/usePermissions";
 
 export interface LiveMatchTickerData {
   id: string;
@@ -57,7 +58,13 @@ const MOCK_TICKER_MATCHES: LiveMatchTickerData[] = [
 
 export function LiveTelemetryTicker() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { canAccess } = usePermissions();
   const activeMatch = MOCK_TICKER_MATCHES[activeIndex];
+  const canScore = canAccess("scoring");
+
+  const targetHref = canScore 
+    ? `/matches/${activeMatch.id}/scoring-hub` 
+    : `/matches/${activeMatch.id}`;
 
   return (
     <div
@@ -161,13 +168,18 @@ export function LiveTelemetryTicker() {
             ))}
           </div>
 
-          <Link href={`/matches/${activeMatch.id}/scoring-hub`}>
+          <Link href={targetHref}>
             <button
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all hover:scale-105 active:scale-95 text-white"
-              style={{ background: D.indigo, fontFamily: D.sans }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all hover:scale-105 active:scale-95 text-white border"
+              style={{
+                background: canScore ? D.indigo : D.surf3,
+                borderColor: canScore ? "transparent" : D.border,
+                fontFamily: D.sans
+              }}
+              title={canScore ? "Launch Scorer Console" : "Open Live Match Spectator Hub"}
             >
-              <Zap className="h-3.5 w-3.5" />
-              Live Hub
+              {canScore ? <Zap className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5 text-indigo-400" />}
+              {canScore ? "Live Hub" : "Match Spectator Hub"}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </Link>
@@ -176,3 +188,4 @@ export function LiveTelemetryTicker() {
     </div>
   );
 }
+

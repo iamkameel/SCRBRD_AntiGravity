@@ -1,7 +1,7 @@
 /**
  * Role-Based Access Control (RBAC) System
  * Based on the SCRBRD CricketOS Platform Dossier
- * 17 Roles | 6 Tiers | 30 Modules
+ * 17 Roles | 6 Tiers | 31 Modules
  */
 
 // 1. All 17 User Roles
@@ -59,10 +59,11 @@ export const ROLE_TIERS: Record<Role, number> = {
     [ROLES.EXTERNAL]: 6,
 };
 
-// 3. The 30 Navigation Modules & Base Access Rules (Max Tier Allowed)
+// 3. The 31 Navigation Modules & Base Access Rules (Max Tier Allowed)
 export const MODULES = {
     dashboard: 6,
     matches: 5,
+    scoring: 4,        // Live Scorer Console — Scorer, Coach, Admin, Match Official
     competitions: 4,
     leagues: 4,
     squad: 4,
@@ -72,6 +73,7 @@ export const MODULES = {
     training: 4,
     fitness: 4,
     injuries: 4,
+    medical: 3,        // confidential medical & concussion RTP hub
     logistics: 4,
     calendar: 5,
     fields: 4,
@@ -107,13 +109,75 @@ export function resolveRoleTier(role: Role): number {
 export function hasModuleAccess(role: Role, module: Module): boolean {
     const userTier = resolveRoleTier(role);
 
-    // Specific Module Exceptions (Parent Hub exclusively for parents)
+    // 1. Scoring Console exclusively for operational scoring roles
+    if (module === 'scoring') {
+        const allowedScoringRoles: Role[] = [
+            ROLES.SUPERADMIN,
+            ROLES.PLATFORMOPS,
+            ROLES.LEAGUEADMIN,
+            ROLES.TOURNAMENTDIRECTOR,
+            ROLES.SPORTSMASTER,
+            ROLES.SCHOOLADMIN,
+            ROLES.COACH,
+            ROLES.COACHSUPPORT,
+            ROLES.MATCHOFFICIAL,
+            ROLES.SELECTOR
+        ];
+        return allowedScoringRoles.includes(role);
+    }
+
+    // 2. Groundskeeper & Facilities Hub
+    if (module === 'fields') {
+        const allowedFieldRoles: Role[] = [
+            ROLES.SUPERADMIN,
+            ROLES.PLATFORMOPS,
+            ROLES.LEAGUEADMIN,
+            ROLES.TOURNAMENTDIRECTOR,
+            ROLES.SPORTSMASTER,
+            ROLES.SCHOOLADMIN,
+            ROLES.SCHOOLSTAFF,
+            ROLES.COACH,
+            ROLES.COACHSUPPORT,
+            ROLES.GROUNDSKEEPER
+        ];
+        return allowedFieldRoles.includes(role);
+    }
+
+    // 3. Logistics & Fleet Operations Hub
+    if (module === 'logistics') {
+        const allowedLogisticsRoles: Role[] = [
+            ROLES.SUPERADMIN,
+            ROLES.PLATFORMOPS,
+            ROLES.LEAGUEADMIN,
+            ROLES.TOURNAMENTDIRECTOR,
+            ROLES.SPORTSMASTER,
+            ROLES.SCHOOLADMIN,
+            ROLES.SCHOOLSTAFF,
+            ROLES.COACH,
+            ROLES.COACHSUPPORT,
+            ROLES.DRIVER
+        ];
+        return allowedLogisticsRoles.includes(role);
+    }
+
+    // 4. Medical Hub
+    if (module === 'medical') {
+        const allowedMedicalRoles: Role[] = [
+            ROLES.SUPERADMIN,
+            ROLES.PLATFORMOPS,
+            ROLES.SPORTSMASTER,
+            ROLES.SCHOOLADMIN,
+            ROLES.MEDICALOFFICER
+        ];
+        return allowedMedicalRoles.includes(role);
+    }
+
+    // 5. Parent Hub exclusively for parents & platform ops
     if (module === 'parenthub') {
-        return role === ROLES.PARENT || userTier <= 2; // Parents + Core platform ops
+        return role === ROLES.PARENT || userTier <= 2;
     }
 
     // Default RBAC check: lower tier number implies higher access scope
-    // If the user's tier is less than or equal to the maximum allowed tier for the module, grant access.
     const maxAllowedTier = MODULES[module];
     return userTier <= maxAllowedTier;
 }
@@ -124,3 +188,4 @@ export function hasModuleAccess(role: Role, module: Module): boolean {
 export function getPermittedModules(role: Role): Module[] {
     return (Object.keys(MODULES) as Module[]).filter(mod => hasModuleAccess(role, mod));
 }
+

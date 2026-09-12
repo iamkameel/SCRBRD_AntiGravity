@@ -36,6 +36,21 @@ export function DriverMobileInterface({ tripId = 'TRIP-101' }: DriverMobileInter
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [loading, setLoading] = useState(true);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [safetyChecklist, setSafetyChecklist] = useState([
+    { id: 'brakes', label: 'Brakes & Air/Hydraulic Pressure', checked: true },
+    { id: 'tires', label: 'Tire Pressure & Tread Depth (>3mm)', checked: true },
+    { id: 'fuel', label: 'Fuel Level (>50% Capacity)', checked: true },
+    { id: 'lights', label: 'Headlights, Indicators & Brake Lights', checked: true },
+    { id: 'firstaid', label: 'First Aid Kit & Fire Extinguisher', checked: true },
+    { id: 'doors', label: 'Emergency Exits & Door Seals', checked: true },
+  ]);
+
+  const toggleSafetyItem = (id: string) => {
+    setSafetyChecklist(prev => prev.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
+  };
+
+  const allSafetyPassed = safetyChecklist.every(item => item.checked);
 
   useEffect(() => {
     setLoading(true);
@@ -162,6 +177,25 @@ export function DriverMobileInterface({ tripId = 'TRIP-101' }: DriverMobileInter
 
       {/* Main Body */}
       <div className="p-5 flex-1 space-y-5">
+        {/* Pre-Trip Vehicle Safety Inspection Button */}
+        <button
+          onClick={() => setSafetyModalOpen(true)}
+          className={`w-full p-3 rounded-2xl border flex items-center justify-between transition-all active:scale-[0.98] ${
+            allSafetyPassed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <ShieldAlert className={`w-4 h-4 ${allSafetyPassed ? 'text-emerald-400' : 'text-rose-400'}`} />
+            <div className="text-left">
+              <span className="text-[9px] font-black uppercase tracking-widest block opacity-70">PRE-TRIP VEHICLE INSPECTION</span>
+              <span className="text-xs font-bold block">{allSafetyPassed ? '6/6 SAFETY CHECKS PASSED' : 'INSPECTION REQUIRED'}</span>
+            </div>
+          </div>
+          <Badge variant="outline" className={`text-[8px] font-black uppercase ${allSafetyPassed ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'}`}>
+            {allSafetyPassed ? 'VERIFIED' : 'REVIEW'}
+          </Badge>
+        </button>
+
         {/* Boarding Progress Telemetry */}
         <div className="p-4 rounded-2xl border space-y-3" style={{ background: D.surf2, borderColor: D.border }}>
           <div className="flex items-center justify-between">
@@ -213,6 +247,56 @@ export function DriverMobileInterface({ tripId = 'TRIP-101' }: DriverMobileInter
             </Button>
           )}
         </div>
+
+        {/* Pre-Trip Vehicle Safety Modal */}
+        <AnimatePresence>
+          {safetyModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-sm p-5 rounded-3xl border space-y-4 shadow-2xl"
+                style={{ background: D.surf2, borderColor: D.border }}
+              >
+                <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: D.border }}>
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-indigo-400" />
+                    <h2 className="text-sm font-black uppercase" style={{ fontFamily: D.head }}>PRE-TRIP SAFETY CHECK</h2>
+                  </div>
+                  <button onClick={() => setSafetyModalOpen(false)} className="text-xs font-black uppercase opacity-60">CLOSE</button>
+                </div>
+
+                <div className="space-y-2">
+                  {safetyChecklist.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => toggleSafetyItem(item.id)}
+                      className={`w-full p-3 rounded-xl border text-left flex items-center justify-between text-xs font-bold transition-all ${
+                        item.checked ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' : 'bg-black/30 border-white/10 text-white/50'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <Badge variant="outline" className={`text-[8px] font-black uppercase ${item.checked ? 'bg-emerald-500 text-black font-black' : 'bg-black/40 text-white/40'}`}>
+                        {item.checked ? 'PASSED' : 'TAP TO PASS'}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => {
+                    toast.success("Vehicle Pre-Trip Inspection Verified!");
+                    setSafetyModalOpen(false);
+                  }}
+                  className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-xs rounded-xl shadow-lg"
+                >
+                  SAVE INSPECTION VERIFICATION
+                </Button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Passenger Checklist Cards */}
         <div className="space-y-2.5">

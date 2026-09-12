@@ -1,4 +1,10 @@
-"use client";
+/**
+ * SCRBRD — AI Coach Assistant & Automated Athlete Diagnosis.
+ * Ported & enhanced from scrbrd-beta-2/src/services/aiCoachAssistant.ts
+ */
+
+import { MASTER_DRILL_LIBRARY } from "@/lib/drillLibrary";
+import { Drill } from "@/types/drills";
 
 export interface PlayerDiagnosis {
     playerId: string;
@@ -8,21 +14,21 @@ export interface PlayerDiagnosis {
     primaryWeakness: string;
     primaryStrength: string;
     medicalRestrictions: string[];
-    recommendedDrills: {
+    recommendedDrills: Array<{
         id: string;
         name: string;
-        category: 'Batting' | 'Bowling' | 'Fielding' | 'Wicketkeeping' | 'Mental' | 'Tactical';
+        category: string;
         objective: string;
         durationMinutes: number;
         equipment: string[];
         safetyCleared: boolean;
         confidence: 'HIGH' | 'MODERATE' | 'LOW';
-    }[];
+    }>;
 }
 
 export class AICoachAssistantService {
     /**
-     * Evaluates player assessment matrices and medical restrictions to generate AI training plans.
+     * Diagnoses athlete performance metrics and matches them against master drill library + medical safety filters.
      */
     public diagnosePlayer(
         playerId: string,
@@ -34,63 +40,94 @@ export class AICoachAssistantService {
     ): PlayerDiagnosis {
         const isOpener = roleArchetype.toLowerCase().includes('opener');
         const isDeathBowler = roleArchetype.toLowerCase().includes('death');
+        const isKeeper = roleArchetype.toLowerCase().includes('keeper');
         const hasShoulderRestriction = medicalRestrictions.some(m => m.toLowerCase().includes('shoulder'));
+        const hasBackRestriction = medicalRestrictions.some(m => m.toLowerCase().includes('back'));
 
         const recommendedDrills = [];
 
-        // Drill 1: Strike Rotation (Rule-based condition: high dot ball %)
+        // Rule 1: High Dot-Ball Percentage (>45%) -> Strike Rotation Drill
         if (dotBallPercentage > 45) {
-            recommendedDrills.push({
-                id: 'drill-rot-1',
-                name: 'Drop-and-Run Single Rotation Drill',
-                category: 'Batting' as const,
-                objective: 'Improve gap awareness and quick first-step acceleration to rotate strike against spin/pace.',
-                durationMinutes: 20,
-                equipment: ['Cones', 'Tennis Balls', 'Batten Grid'],
-                safetyCleared: true,
-                confidence: 'HIGH' as const,
-            });
+            const drill = MASTER_DRILL_LIBRARY.find((d: Drill) => d.id === 'bat_01');
+            if (drill) {
+                recommendedDrills.push({
+                    id: drill.id,
+                    name: drill.name,
+                    category: drill.category,
+                    objective: drill.coachingObjective,
+                    durationMinutes: drill.durationMinutes,
+                    equipment: drill.equipment,
+                    safetyCleared: true,
+                    confidence: 'HIGH' as const,
+                });
+            }
         }
 
-        // Drill 2: Power Hitting / Boundary Expansion
+        // Rule 2: Low Strike Rate (<110) for Openers -> Power Hitting Drill
         if (strikeRate < 110 && isOpener) {
-            recommendedDrills.push({
-                id: 'drill-pow-2',
-                name: 'Powerplay Lofted Off-Drive Block',
-                category: 'Batting' as const,
-                objective: 'Develop clean extension through the line for over-the-infield boundary options.',
-                durationMinutes: 25,
-                equipment: ['Sidearm Feeder', 'Heavy Bat'],
-                safetyCleared: !hasShoulderRestriction,
-                confidence: 'HIGH' as const,
-            });
+            const drill = MASTER_DRILL_LIBRARY.find((d: Drill) => d.id === 'bat_03');
+            if (drill) {
+                recommendedDrills.push({
+                    id: drill.id,
+                    name: drill.name,
+                    category: drill.category,
+                    objective: drill.coachingObjective,
+                    durationMinutes: drill.durationMinutes,
+                    equipment: drill.equipment,
+                    safetyCleared: !hasShoulderRestriction,
+                    confidence: 'HIGH' as const,
+                });
+            }
         }
 
-        // Drill 3: Death Over Target Bowling
+        // Rule 3: Death Bowler -> Yorker Target Grid
         if (isDeathBowler) {
-            recommendedDrills.push({
-                id: 'drill-bow-3',
-                name: 'Yorker & Slower-Ball Target Grid',
-                category: 'Bowling' as const,
-                objective: 'Execute high-pressure wide yorkers and back-of-the-hand slower balls in 6-ball sets.',
-                durationMinutes: 30,
-                equipment: ['Target Cones', 'New Leather Balls'],
-                safetyCleared: true,
-                confidence: 'HIGH' as const,
-            });
+            const drill = MASTER_DRILL_LIBRARY.find((d: Drill) => d.id === 'bowl_02');
+            if (drill) {
+                recommendedDrills.push({
+                    id: drill.id,
+                    name: drill.name,
+                    category: drill.category,
+                    objective: drill.coachingObjective,
+                    durationMinutes: drill.durationMinutes,
+                    equipment: drill.equipment,
+                    safetyCleared: !hasBackRestriction,
+                    confidence: 'HIGH' as const,
+                });
+            }
         }
 
-        // Drill 4: Mental Resiliency / Reset Routine
-        recommendedDrills.push({
-            id: 'drill-men-4',
-            name: 'Pre-Ball Focus Reset Routine',
-            category: 'Mental' as const,
-            objective: 'Establish a consistent 5-second breath reset routine between balls under match scenario pressure.',
-            durationMinutes: 15,
-            equipment: ['Match Scenario Scoreboard'],
-            safetyCleared: true,
-            confidence: 'MODERATE' as const,
-        });
+        // Rule 4: Wicketkeeper -> Leg-Side Deflection Take
+        if (isKeeper) {
+            const drill = MASTER_DRILL_LIBRARY.find((d: Drill) => d.id === 'keep_01');
+            if (drill) {
+                recommendedDrills.push({
+                    id: drill.id,
+                    name: drill.name,
+                    category: drill.category,
+                    objective: drill.coachingObjective,
+                    durationMinutes: drill.durationMinutes,
+                    equipment: drill.equipment,
+                    safetyCleared: true,
+                    confidence: 'HIGH' as const,
+                });
+            }
+        }
+
+        // Always include a fielding drill if available
+        const fieldDrill = MASTER_DRILL_LIBRARY.find((d: Drill) => d.id === 'field_01');
+        if (fieldDrill && !recommendedDrills.some(d => d.id === fieldDrill.id)) {
+            recommendedDrills.push({
+                id: fieldDrill.id,
+                name: fieldDrill.name,
+                category: fieldDrill.category,
+                objective: fieldDrill.coachingObjective,
+                durationMinutes: fieldDrill.durationMinutes,
+                equipment: fieldDrill.equipment,
+                safetyCleared: !hasShoulderRestriction,
+                confidence: 'MODERATE' as const,
+            });
+        }
 
         return {
             playerId,
@@ -98,7 +135,7 @@ export class AICoachAssistantService {
             roleArchetype,
             weaknessSeverity: dotBallPercentage > 50 ? 'HIGH' : 'MODERATE',
             primaryWeakness: dotBallPercentage > 45 ? 'High Dot-Ball Percentage in Middle Overs' : 'Boundary Execution Rate',
-            primaryStrength: 'Defensive Alignment & Front Foot Solidness',
+            primaryStrength: 'Defensive Alignment & Front Foot Balance',
             medicalRestrictions,
             recommendedDrills,
         };

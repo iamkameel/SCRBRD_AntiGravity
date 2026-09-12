@@ -6,15 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
-  Trophy, Dumbbell, Truck, Wallet, Filter, Clock, MapPin, Plus, ArrowUpRight
+  Trophy, Dumbbell, Truck, Wallet, Filter, Clock, MapPin, Plus, ArrowUpRight,
+  GraduationCap, AlertTriangle, Download, RefreshCw, CheckCircle2, Link as LinkIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { D } from "@/lib/design-system";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-type EventType = 'match' | 'training' | 'transport' | 'finance';
+type EventType = 'match' | 'training' | 'transport' | 'finance' | 'academic' | 'exam';
 
 interface CalendarEvent {
   id: string;
@@ -23,20 +24,36 @@ interface CalendarEvent {
   date: Date;
   time?: string;
   description?: string;
+  conflictWarning?: string;
   meta?: any;
 }
 
+const ACADEMIC_TERMS = [
+  { id: 'term-1', name: 'Term 1: Summer Sport Focus', start: '2026-01-14', end: '2026-03-28', activeSport: 'Cricket & Swimming' },
+  { id: 'term-2', name: 'Term 2: Mid-Year Exams & Winter Sport', start: '2026-04-15', end: '2026-06-26', activeSport: 'Rugby & Hockey' },
+  { id: 'term-3', name: 'Term 3: Athletics & Pre-Season', start: '2026-07-22', end: '2026-09-25', activeSport: 'Athletics & Pre-Season Cricket' },
+  { id: 'term-4', name: 'Term 4: Final Exams & Summer Sport', start: '2026-10-06', end: '2026-12-04', activeSport: 'Cricket & Aquatics' },
+];
+
+const EXAM_WINDOWS = [
+  { title: 'Grade 11 & 12 Prelim Exams', start: '2026-09-01', end: '2026-09-18' },
+  { title: 'Final NSC Examinations', start: '2026-10-20', end: '2026-11-28' }
+];
+
 export default function StrategicCalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1)); // Default to Sept 2026
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 8, 1));
   const [filters, setFilters] = useState<Record<EventType, boolean>>({
     match: true,
     training: true,
     transport: true,
-    finance: false,
+    finance: true,
+    academic: true,
+    exam: true,
   });
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedIcs, setCopiedIcs] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,22 +67,52 @@ export default function StrategicCalendarPage() {
 
         const allEvents: CalendarEvent[] = [];
 
-        // 1. Matches
+        // 1. Academic Terms
+        ACADEMIC_TERMS.forEach(term => {
+          allEvents.push({
+            id: term.id,
+            type: 'academic',
+            title: term.name,
+            date: new Date(term.start),
+            description: `Active Sport Focus: ${term.activeSport}`
+          });
+        });
+
+        // 2. Exam Windows
+        EXAM_WINDOWS.forEach((exam, idx) => {
+          allEvents.push({
+            id: `exam-${idx}`,
+            type: 'exam',
+            title: `EXAM BLOCK: ${exam.title}`,
+            date: new Date(exam.start),
+            description: 'Strict sports workload reduction & quiet study windows enforced.'
+          });
+        });
+
+        // 3. Matches (with exam conflict detection)
         matches.forEach((m: any) => {
           if (m.dateTime) {
+            const mDate = new Date(m.dateTime);
+            const inExamWindow = EXAM_WINDOWS.some(e => {
+              const start = new Date(e.start);
+              const end = new Date(e.end);
+              return mDate >= start && mDate <= end;
+            });
+
             allEvents.push({
               id: m.id,
               type: 'match',
               title: `${m.homeTeamName || 'Home'} vs ${m.awayTeamName || 'Away'}`,
-              date: new Date(m.dateTime),
-              time: new Date(m.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              date: mDate,
+              time: mDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               description: `Venue: ${m.venue || 'TBD'}`,
+              conflictWarning: inExamWindow ? 'CRITICAL: Fixture falls inside Academic Prelim Exam Block!' : undefined,
               meta: m
             });
           }
         });
 
-        // 2. Transport (Trips)
+        // 4. Transport (Trips)
         trips.forEach((t: any) => {
           if (t.date) {
             allEvents.push({
@@ -79,7 +126,7 @@ export default function StrategicCalendarPage() {
           }
         });
 
-        // 3. Training Logs
+        // 5. Training Logs
         players.forEach((p: any) => {
           if (p.trainingLogs) {
             p.trainingLogs.forEach((log: any) => {
@@ -97,7 +144,7 @@ export default function StrategicCalendarPage() {
           }
         });
 
-        // 4. Financials
+        // 6. Financials
         transactions.forEach((t: any) => {
           if (t.date) {
             allEvents.push({
@@ -136,7 +183,7 @@ export default function StrategicCalendarPage() {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const goToToday = () => {
-    const now = new Date();
+    const now = new Date(2026, 8, 1);
     setCurrentDate(now);
     setSelectedDate(now);
   };
@@ -157,6 +204,12 @@ export default function StrategicCalendarPage() {
     filters[e.type]
   );
 
+  const handleCopyIcs = () => {
+    navigator.clipboard.writeText("https://scrbrd.io/api/v1/calendar/ical-sync?key=live-school-2026");
+    setCopiedIcs(true);
+    setTimeout(() => setCopiedIcs(false), 2500);
+  };
+
   const getEventBadge = (type: EventType) => {
     switch (type) {
       case 'match':
@@ -167,6 +220,10 @@ export default function StrategicCalendarPage() {
         return { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/20', icon: Truck, color: D.amber };
       case 'finance':
         return { bg: 'bg-purple-500/10', text: 'text-purple-300', border: 'border-purple-500/20', icon: Wallet, color: D.violet };
+      case 'academic':
+        return { bg: 'bg-sky-500/10', text: 'text-sky-300', border: 'border-sky-500/20', icon: GraduationCap, color: D.sky };
+      case 'exam':
+        return { bg: 'bg-rose-500/10', text: 'text-rose-300', border: 'border-rose-500/20', icon: AlertTriangle, color: D.rose };
     }
   };
 
@@ -174,11 +231,20 @@ export default function StrategicCalendarPage() {
     <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Standardized Section Header */}
       <SectionHeader
-        title="Strategic Operations Calendar"
-        sub="Master schedule for matches, logistics, training, and institutional events."
+        title="Strategic Academic & School Operations Calendar"
+        sub="Unified master calendar connecting academic term structures, exams, fixtures, and logistics."
         icon={<CalendarIcon className="w-5 h-5 text-indigo-400" />}
         actions={
           <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleCopyIcs}
+              variant="outline" 
+              className="h-10 px-4 rounded-xl font-bold text-xs border border-white/10 hover:bg-white/5 text-white gap-2"
+              style={{ background: D.surf2 }}
+            >
+              {copiedIcs ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <LinkIcon className="w-4 h-4 text-indigo-400" />}
+              {copiedIcs ? 'iCal URL Copied!' : 'Export iCal (.ics) Feed'}
+            </Button>
             <Button 
               onClick={goToToday} 
               variant="outline" 
@@ -190,6 +256,31 @@ export default function StrategicCalendarPage() {
           </div>
         }
       />
+
+      {/* Academic Term Banner */}
+      <div className="p-6 rounded-3xl border bg-black/40 space-y-4" style={{ borderColor: D.border }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-sky-400" />
+            <h3 className="text-sm font-black uppercase text-white tracking-wider" style={{ fontFamily: D.head }}>
+              2026 ACADEMIC TERM STRUCTURE & SPORTING CALENDAR
+            </h3>
+          </div>
+          <Badge className="bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[9px] font-mono">
+            4 TERMS ACTIVE
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {ACADEMIC_TERMS.map(t => (
+            <div key={t.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+              <h4 className="text-xs font-bold text-white">{t.name}</h4>
+              <p className="text-[10px] font-mono text-zinc-400">{t.start} → {t.end}</p>
+              <span className="text-[9px] font-mono text-sky-400 font-bold block mt-1">SPORT: {t.activeSport}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Control Strip & Month Selector */}
       <div 
@@ -223,6 +314,8 @@ export default function StrategicCalendarPage() {
             { key: 'training', label: 'Training', icon: Dumbbell, color: 'indigo' },
             { key: 'transport', label: 'Logistics', icon: Truck, color: 'amber' },
             { key: 'finance', label: 'Finance', icon: Wallet, color: 'purple' },
+            { key: 'academic', label: 'Academic', icon: GraduationCap, color: 'sky' },
+            { key: 'exam', label: 'Exams', icon: AlertTriangle, color: 'rose' },
           ].map((item) => {
             const isActive = filters[item.key as EventType];
             const Icon = item.icon;
@@ -312,7 +405,8 @@ export default function StrategicCalendarPage() {
                             key={idx} 
                             className={cn(
                               "flex items-center gap-1 text-[10px] truncate px-1.5 py-0.5 rounded-md border font-medium",
-                              badge.bg, badge.text, badge.border
+                              badge.bg, badge.text, badge.border,
+                              event.conflictWarning ? "border-rose-500/60 bg-rose-500/20 animate-pulse" : ""
                             )}
                           >
                             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: badge.color }} />
@@ -385,6 +479,13 @@ export default function StrategicCalendarPage() {
                         <h4 className="font-bold text-sm text-white mb-0.5">{event.title}</h4>
                         <p className="text-xs text-slate-400 line-clamp-2">{event.description}</p>
                       </div>
+
+                      {event.conflictWarning && (
+                        <div className="p-2 rounded-lg bg-rose-500/20 border border-rose-500/30 text-[10px] font-mono text-rose-300 flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                          <span>{event.conflictWarning}</span>
+                        </div>
+                      )}
 
                       {event.type === 'match' && (
                         <Link href={`/matches/${event.id}`} className="block pt-1">

@@ -11,7 +11,7 @@ import { MetricCard } from "../dashboard/MetricCard";
 import { SectionHeader } from "../ui/SectionHeader";
 
 import ScoutReportForm from './ScoutReportForm';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 // Mock data for initial UI rendering
 const MOCK_PROSPECTS = [
@@ -187,6 +187,7 @@ export default function ScoutingDashboard() {
             {/* Scout Evaluation Modal */}
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
               <DialogContent className="max-w-4xl bg-transparent border-0 p-0 overflow-hidden shadow-2xl">
+                <DialogTitle className="sr-only">Scout Report Evaluation Form</DialogTitle>
                 <ScoutReportForm 
                   playerId={selectedPlayerId} 
                   onSave={() => setIsFormOpen(false)}

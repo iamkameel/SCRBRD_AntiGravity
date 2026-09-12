@@ -72,12 +72,34 @@ export async function getRecentAuditLogs(schoolId?: string, limitCount = 10) {
         }
 
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as AuditLogEntry[];
+        const logs = snapshot.docs.map(doc => {
+            const data = doc.data();
+            let timestamp = data.timestamp;
+
+            if (timestamp && typeof timestamp.toDate === 'function') {
+                const date = timestamp.toDate();
+                timestamp = {
+                    seconds: Math.floor(date.getTime() / 1000),
+                    nanoseconds: (date.getTime() % 1000) * 1000000,
+                };
+            } else if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
+                timestamp = {
+                    seconds: timestamp.seconds,
+                    nanoseconds: timestamp.nanoseconds || 0,
+                };
+            }
+
+            return {
+                id: doc.id,
+                ...data,
+                timestamp,
+            };
+        });
+
+        return JSON.parse(JSON.stringify(logs)) as AuditLogEntry[];
     } catch (error) {
         console.error("Error fetching audit logs:", error);
         return [];
     }
 }
+

@@ -36,6 +36,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { D } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { transportService } from "@/lib/services/transportService";
+import { transportEngine } from "@/lib/intelligence/transportEngine";
+import Link from "next/link";
+
 
 export interface FleetVehicle {
   id: string;
@@ -396,23 +399,33 @@ export function TransportHub() {
           </div>
 
           <div className="lg:ml-auto flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-             <div className="flex items-center gap-2 p-1.5 rounded-2xl border" style={{ background: D.surf2, borderColor: D.border }}>
-                <button 
-                  onClick={() => setActiveTab('trips')}
-                  className={cn(
-                    "h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all",
-                    activeTab === 'trips' ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20" : "text-white/40 hover:text-white"
-                  )}>
-                  TRIP MANIFESTS ({trips.length})
-                </button>
-                <button 
-                  onClick={() => setActiveTab('fleet')}
-                  className={cn(
-                    "h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all",
-                    activeTab === 'fleet' ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20" : "text-white/40 hover:text-white"
-                  )}>
-                  FLEET ASSETS ({fleet.length})
-                </button>
+             <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border backdrop-blur-xl" style={{ background: D.surf2, borderColor: D.border }}>
+                {[
+                  { id: 'trips', label: `TRIP MANIFESTS (${trips.length})` },
+                  { id: 'fleet', label: `FLEET ASSETS (${fleet.length})` },
+                ].map((t) => {
+                  const isActive = activeTab === t.id;
+                  return (
+                    <button 
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id as any)}
+                      className={cn(
+                        "relative h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors duration-300 select-none",
+                        isActive ? "text-slate-900 font-bold" : "text-white/40 hover:text-white"
+                      )}
+                      style={{ fontFamily: D.head }}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="transportTabPill"
+                          className="absolute inset-0 rounded-xl border border-amber-500/50 bg-amber-500 shadow-lg shadow-amber-500/20"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">{t.label}</span>
+                    </button>
+                  );
+                })}
              </div>
 
              <Button 
@@ -466,6 +479,19 @@ export function TransportHub() {
                   const tripTotal = trip.passengers.length;
                   const tripBoardingPct = Math.round((tripBoarded / tripTotal) * 100);
 
+                  // Transport Intelligence Audit
+                  const auditReport = transportEngine.auditManifest({
+                    id: trip.id,
+                    fixtureTitle: trip.fixture,
+                    destinationVenue: trip.destination,
+                    scheduledDeparture: trip.time,
+                    vehicleId: trip.vehicleId,
+                    driverName: trip.driver,
+                    status: trip.status,
+                    passengers: trip.passengers,
+                    routeStops: trip.routeStops
+                  });
+
                   return (
                     <div 
                       key={trip.id} 
@@ -486,20 +512,43 @@ export function TransportHub() {
                           )}>
                             {trip.status}
                           </Badge>
+                          <Badge className={cn(
+                            "text-[9px] font-black uppercase tracking-widest h-6 px-3 border",
+                            auditReport.readinessGrade === 'READY' ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" :
+                            auditReport.readinessGrade === 'WARNING' ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                          )}>
+                            AUDIT: {auditReport.readinessGrade}
+                          </Badge>
                         </div>
-                        <span className="text-[11px] font-mono font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
-                          DEPARTURE: {trip.time}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
+                            DEPARTURE: {trip.time}
+                          </span>
+                          <Link 
+                            href={`/transport/driver/${trip.id}`} 
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-7 px-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600 hover:text-white flex items-center gap-1 transition-colors"
+                          >
+                            <Navigation size={11} /> PWA
+                          </Link>
+                        </div>
                       </div>
 
                       <h3 className="text-xl font-black italic uppercase tracking-tight mb-2" style={{ fontFamily: D.head }}>
                         {trip.fixture}
                       </h3>
 
-                      <div className="flex items-center gap-2 text-xs font-semibold text-white/60 mb-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-white/60 mb-3">
                         <MapPin className="h-4 w-4 text-amber-500 shrink-0" />
                         <span>{trip.destination}</span>
                       </div>
+
+                      {auditReport.missingEssentialRoles.length > 0 && (
+                        <div className="mb-3 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2 text-[10px] font-mono text-rose-300">
+                          <AlertCircle size={12} className="shrink-0 text-rose-400" />
+                          <span>MISSING ESSENTIALS: {auditReport.missingEssentialRoles.join(', ')}</span>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-black/30 border border-white/5 mb-4 text-center">
                         <div>

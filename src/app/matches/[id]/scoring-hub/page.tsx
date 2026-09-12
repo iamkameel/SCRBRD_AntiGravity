@@ -2,6 +2,7 @@ import { getMatchDetailsAction, getTeamSquadAction } from '@/app/actions/matchAc
 import { ScoringHubClient } from './client';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { RouteGuard } from '@/components/auth/RouteGuard';
 
 interface ScoringHubPageProps {
   params: Promise<{ id: string }>;
@@ -25,10 +26,12 @@ export default async function ScoringHubPage({ params }: ScoringHubPageProps) {
   ]);
 
   return (
-    <ScoringHubClient
-      match={match}
-      homePlayers={homePlayers}
-      awayPlayers={awayPlayers}
-    />
+    <RouteGuard module="scoring" label="Live Scoring Hub" fallbackRoute={`/matches/${id}`}>
+      <ScoringHubClient
+        match={match}
+        homePlayers={homePlayers}
+        awayPlayers={awayPlayers}
+      />
+    </RouteGuard>
   );
 }

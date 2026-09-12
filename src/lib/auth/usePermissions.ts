@@ -18,7 +18,7 @@ const mapSimulatedToRole = (simulated: string): Role => {
     if (normalized === 'coach') return ROLES.COACH;
     if (normalized === 'assistant_coach') return ROLES.COACHSUPPORT;
     if (normalized === 'team_manager') return ROLES.SCHOOLSTAFF;
-    if (normalized === 'captain') return ROLES.PLAYER;
+    if (normalized === 'captain') return ROLES.SELECTOR;
 
     // Players & Spectators
     if (normalized === 'player') return ROLES.PLAYER;
@@ -34,10 +34,10 @@ const mapSimulatedToRole = (simulated: string): Role => {
     // Officials & Ground Staff
     if (normalized === 'umpire') return ROLES.MATCHOFFICIAL;
     if (normalized === 'scorer') return ROLES.MATCHOFFICIAL;
-    if (normalized === 'grounds_keeper') return ROLES.SCHOOLSTAFF;
-    if (normalized === 'driver') return ROLES.EXTERNAL;
+    if (normalized === 'grounds_keeper') return ROLES.GROUNDSKEEPER;
+    if (normalized === 'driver') return ROLES.DRIVER;
 
-    return ROLES.EXTERNAL; // Default fallback
+    return ROLES.EXTERNAL; // Default fallback (Spectator)
 }
 
 /**

@@ -96,6 +96,7 @@ export const navGroups: NavGroup[] = [
     defaultOpen: false,
     accentColor: '#f59e0b', // Amber / Gold
     links: [
+      { href: '/reports', label: 'School Reports', icon: Newspaper, key: 'sports-reports' },
       { href: '/analytics', label: 'Analysis Dashboard', icon: BarChart3, key: 'analytics-dashboard' },
       { href: '/analysis', label: 'Analysis Hub', icon: BarChart3, key: 'analysis-hub' },
       { href: '/scouting', label: 'Scouting Hub', icon: Sparkles, key: 'scouting' },
@@ -146,6 +147,7 @@ export const navGroups: NavGroup[] = [
     highlighted: true,
     accentColor: '#64748b', // Slate
     links: [
+      { href: '/admin/system', label: 'System Architect Hub', icon: Shield, key: 'system-architect-hub' },
       { href: '/user-management', label: 'User Management', icon: UserCog, key: 'user-management' },
       { href: '/data-management', label: 'Data Management', icon: Database, key: 'data-management' },
       { href: '/audit-log', label: 'Audit Log', icon: FilePenLine, key: 'audit-log' },

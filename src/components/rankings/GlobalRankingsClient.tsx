@@ -93,7 +93,7 @@ export function GlobalRankingsClient() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white selection:bg-sky-500/30 pb-16">
+    <div className="min-h-screen text-white selection:bg-sky-500/30 pb-16" style={{ background: D.bg }}>
       {/* Dynamic Header */}
       <SectionHeader 
         title="Rankings & Milestones Hub"
@@ -104,8 +104,8 @@ export function GlobalRankingsClient() {
             <Badge variant="outline" className="bg-sky-500/10 border-sky-500/20 text-sky-400 font-black">
               INTELLIGENCE LAYER V2
             </Badge>
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest ml-4">
-              <Clock className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest ml-4 font-mono">
+              <Clock className="w-3 h-3 text-sky-400" />
               UPDATED 2H AGO
             </div>
           </div>
@@ -118,27 +118,34 @@ export function GlobalRankingsClient() {
           {/* Main List Area */}
           <div className="space-y-8">
             {/* Main Tabs */}
-            <div className="flex items-center gap-8 border-b border-white/5">
+            <div 
+              className="flex items-center gap-1.5 p-1.5 rounded-2xl border shadow-xl backdrop-blur-xl overflow-x-auto no-scrollbar"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
               {(['players', 'teams', 'scouting', 'milestones'] as const).map(t => (
                 <button 
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`
-                    pb-4 text-xs font-black uppercase tracking-[0.2em] transition-all relative
-                    ${tab === t ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}
-                  `}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap select-none ${
+                    tab === t ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
                   style={{ fontFamily: D.head }}
                 >
-                  {t}
                   {tab === t && (
                     <motion.div 
-                      layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]"
+                      layoutId="rankingsTabPill"
+                      className="absolute inset-0 rounded-xl border border-sky-500/30 bg-sky-500/15 shadow-lg shadow-sky-500/10"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
+                  )}
+                  <span className="relative z-10 uppercase tracking-wider text-[11px]">{t}</span>
+                  {tab === t && (
+                    <span className="relative z-10 w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
                   )}
                 </button>
               ))}
             </div>
+
 
             {/* Sub-Filters & Threshold Controls for Players Tab */}
             {tab === 'players' && (
