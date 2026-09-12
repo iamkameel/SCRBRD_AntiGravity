@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   Award,
   Bookmark,
+  CheckCircle2,
   ChevronRight,
   GraduationCap,
   MapPin,
@@ -29,10 +30,11 @@ import {
 import {
   createProvincialInvitationalAction,
   getRegionalTalentBoardAction,
+  nominateProvincialCampAction,
   toggleWatchlistAction,
   updateProvincialInvitationalStatusAction,
 } from "@/app/actions/scoutingActions";
-import { PotentialAbilityRadar } from "./PotentialAbilityRadar";
+import { PotentialVsAbilityRadar } from "./PotentialVsAbilityRadar";
 
 const PATHWAY_STAGES: PathwayStage[] = ["School Squad", "Zonal Select", "Provincial Invitational", "National Camp"];
 const INVITATIONAL_STATUSES: InvitationalStatus[] = ["Identified", "Invited", "Confirmed", "Attended", "Selected", "Declined"];
@@ -73,6 +75,7 @@ export function TalentPathwayEngine() {
   const [searchQuery, setSearchQuery] = useState("");
   const [watchlistOnly, setWatchlistOnly] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState("");
+  const [nominatedProspectIds, setNominatedProspectIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [invitee, setInvitee] = useState<RegionalProspect | null>(null);
   const [isCreatingInvitation, setIsCreatingInvitation] = useState(false);
@@ -93,7 +96,7 @@ export function TalentPathwayEngine() {
           setSelectedId(result.prospects[0].id);
         }
       } catch (error) {
-        console.error("Unable to load regional talent board:", error);
+        if (process.env.NODE_ENV !== "test") console.error("Unable to load regional talent board:", error);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -110,9 +113,17 @@ export function TalentPathwayEngine() {
       && (!watchlistOnly || prospect.inWatchlist);
   }), [prospects, searchQuery, selectedStage, watchlistOnly]);
 
-  const selectedProspect = prospects.find((prospect) => prospect.id === selectedId) || filteredProspects[0] || prospects[0];
+  const selectedProspect = filteredProspects.find((prospect) => prospect.id === selectedId) || filteredProspects[0];
   const selectedSnapshot = selectedProspect?.abilityHistory.find((snapshot) => snapshot.season === selectedSeason)
     || selectedProspect?.abilityHistory[selectedProspect.abilityHistory.length - 1];
+  const radarDimensions = selectedSnapshot ? [
+    { key: "technical", label: "Technical Mechanics", current: selectedSnapshot.abilities.Technical, potential: selectedSnapshot.projectedAbilities.Technical },
+    { key: "tactical", label: "Tactical Reading", current: selectedSnapshot.abilities.Tactical, potential: selectedSnapshot.projectedAbilities.Tactical },
+    { key: "physical", label: "Physical Engine", current: selectedSnapshot.abilities.Physical, potential: selectedSnapshot.projectedAbilities.Physical },
+    { key: "mental", label: "Mental Composure", current: selectedSnapshot.abilities.Mental, potential: selectedSnapshot.projectedAbilities.Mental },
+    { key: "competitive", label: "Competitive Will", current: selectedSnapshot.abilities.Competitive, potential: selectedSnapshot.projectedAbilities.Competitive },
+    { key: "evidence", label: "Match Evidence", current: selectedSnapshot.abilities.Evidence, potential: selectedSnapshot.projectedAbilities.Evidence },
+  ] : [];
 
   useEffect(() => {
     if (selectedProspect && !selectedProspect.abilityHistory.some((snapshot) => snapshot.season === selectedSeason)) {
@@ -187,6 +198,23 @@ export function TalentPathwayEngine() {
     }
   };
 
+  const nominateForCamp = async (prospect: RegionalProspect) => {
+    const wasNominated = nominatedProspectIds.has(prospect.id);
+    setNominatedProspectIds((current) => new Set(current).add(prospect.id));
+    try {
+      const result = await nominateProvincialCampAction(prospect.id, "National Elite Camp", "Provincial Invitational");
+      if (result.success) return;
+    } catch (error) {
+      console.error("Unable to nominate athlete for camp:", error);
+    }
+    if (wasNominated) return;
+    setNominatedProspectIds((current) => {
+      const next = new Set(current);
+      next.delete(prospect.id);
+      return next;
+    });
+  };
+
   const invitationCount = prospects.filter((prospect) => prospect.invitational && prospect.invitational.status !== "Declined").length;
   const selectedCount = prospects.filter((prospect) => prospect.invitational?.status === "Selected").length;
 
@@ -202,7 +230,7 @@ export function TalentPathwayEngine() {
                 <span className="text-[10px] font-black uppercase tracking-[0.28em]" style={{ fontFamily: D.mono }}>Module 14 · Regional talent identification</span>
               </div>
               <h2 className="mt-2 text-3xl md:text-4xl font-black tracking-tighter" style={{ color: D.textPrimary, fontFamily: D.head }}>
-                SCOUT. <span className="italic text-indigo-400">PROJECT.</span> SELECT.
+                SELECTION PATHWAY & <span className="italic text-indigo-400">TALENT ENGINE</span>
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: D.textSecondary }}>
                 Convert field reports into a multi-season talent profile, maintain a focused watchlist, and track provincial invitations from identification through selection.
@@ -257,6 +285,7 @@ export function TalentPathwayEngine() {
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3"><AbilityMetric label="Current ability" value={prospect.currentAbility} colour={D.sky} /><AbilityMetric label="Projected ceiling" value={prospect.projectedPotential} colour={D.indigo} /></div>
                 <div className="mt-4 flex items-center justify-between gap-3"><span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}><MapPin className="h-3 w-3" />{prospect.region}</span>{prospect.invitational ? <Badge className={`border text-[9px] ${statusStyles[prospect.invitational.status]}`}>{prospect.invitational.status}</Badge> : <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted }}>No invite</span>}</div>
+                <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); nominateForCamp(prospect); }} className="mt-4 w-full rounded-xl text-[10px] font-black uppercase tracking-wider" style={{ borderColor: nominatedProspectIds.has(prospect.id) ? `${D.emerald}88` : D.border, color: nominatedProspectIds.has(prospect.id) ? D.emerald : D.textSecondary }}>{nominatedProspectIds.has(prospect.id) ? <><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />Nominated</> : <><Award className="mr-1.5 h-3.5 w-3.5" />Nominate Camp</>}</Button>
               </motion.article>
             ))}
           </div>
@@ -266,9 +295,9 @@ export function TalentPathwayEngine() {
         {selectedProspect && selectedSnapshot && (
           <aside className="space-y-5">
             <div className="rounded-3xl border p-5" style={{ background: D.surf1, borderColor: D.border }}>
-              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400" style={{ fontFamily: D.mono }}>Multi-season projection</p><h3 className="mt-1 text-2xl font-black" style={{ color: D.textPrimary, fontFamily: D.head }}>{selectedProspect.name}</h3><p className="mt-1 text-xs" style={{ color: D.textSecondary }}>{selectedProspect.roleArchetype} · {selectedProspect.reportCount} reports</p></div><Radar className="h-5 w-5 text-indigo-400" /></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400" style={{ fontFamily: D.mono }}>Multi-season projection</p><h3 className="mt-1 text-2xl font-black" style={{ color: D.textPrimary, fontFamily: D.head }}>{selectedProspect.name} · trajectory</h3><p className="mt-1 text-xs" style={{ color: D.textSecondary }}>{selectedProspect.roleArchetype} · {selectedProspect.reportCount} reports</p></div><Radar className="h-5 w-5 text-indigo-400" /></div>
               <div className="mt-5 flex flex-wrap gap-2" aria-label="Season selector">{selectedProspect.abilityHistory.map((snapshot) => <button key={snapshot.season} onClick={() => setSelectedSeason(snapshot.season)} className="rounded-lg border px-3 py-1.5 text-[10px] font-black" style={{ background: selectedSnapshot.season === snapshot.season ? `${D.indigo}22` : D.surf2, borderColor: selectedSnapshot.season === snapshot.season ? `${D.indigo}88` : D.border, color: selectedSnapshot.season === snapshot.season ? D.indigo : D.textSecondary }}>{snapshot.season}</button>)}</div>
-              <div className="mt-5"><PotentialAbilityRadar snapshot={selectedSnapshot} athleteName={selectedProspect.name} /></div>
+              <div className="mt-5"><PotentialVsAbilityRadar dimensions={radarDimensions} athleteName={selectedProspect.name} /></div>
               <p className="mt-4 rounded-xl border p-3 text-xs leading-relaxed italic" style={{ background: D.surf2, borderColor: D.border, color: D.textSecondary }}>&ldquo;{selectedProspect.notes}&rdquo;</p>
             </div>
 
