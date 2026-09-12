@@ -1,439 +1,220 @@
 rules_version = '2';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SCRBRD Firestore Security Rules
+//
+// Two things to understand before editing:
+//
+// 1. EVERY WRITE IS SERVER-SIDE. All mutations go through Next.js server
+//    actions that call requireUser() (src/lib/auth/session.ts) and then write
+//    with the Firebase Admin SDK, which bypasses these rules entirely.
+//    So the client write rule is `false` everywhere — if a feature needs to
+//    write, it gets a guarded server action, not a rule exception.
+//
+// 2. ROLES COME FROM A CUSTOM CLAIM, not a document read. The claim is set at
+//    sign-in (api/auth/session) from users/{uid}.role. Reading a document to
+//    resolve a role costs a read on every rule evaluation and can be
+//    circumvented if that document is client-writable; the claim is neither.
+//
+// Tiers mirror src/lib/auth/rbac.ts:
+//   1 platform · 2 competition · 3 school · 4 coaching/ops · 5 participant · 6 external
+// ═══════════════════════════════════════════════════════════════════════════
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Helper Functions ───────────────────────────────────────────────────
+    // ─── Identity ──────────────────────────────────────────────────────────
 
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(uid) {
-      return request.auth.uid == uid;
+    function role() {
+      return isSignedIn() ? request.auth.token.get('role', 'external') : 'external';
     }
 
-    function userData() {
-      return get(/databases/$(database)/documents/people/$(request.auth.uid)).data;
+    function tier() {
+      return role() in ['superadmin', 'platformops'] ? 1
+           : role() in ['leagueadmin', 'tournamentdirector'] ? 2
+           : role() in ['sportsmaster', 'schooladmin', 'medicalofficer', 'schoolstaff'] ? 3
+           : role() in ['coach', 'coachsupport', 'matchofficial', 'groundskeeper', 'driver', 'selector'] ? 4
+           : role() in ['player', 'adultplayer', 'parent'] ? 5
+           : 6;
     }
 
-    function hasRole(role) {
-      return isSignedIn() && role in userData().roles;
+    /** Signed in and at or above the given tier (lower number = more access). */
+    function atLeast(t) {
+      return isSignedIn() && tier() <= t;
     }
 
-    function isSystemArchitect() {
-      return hasRole('System Architect');
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
     }
 
-    function isAdmin() {
-      return hasRole('Admin') || isSystemArchitect();
+    // ─── Accounts ──────────────────────────────────────────────────────────
+    // A user may read their own record. Nobody writes from the client: the
+    // role field lives here and is the source of the custom claim, so a
+    // client write would be privilege escalation.
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) || atLeast(2);
+      allow write: if false;
     }
 
-    function isSportsmaster() {
-      return hasRole('Sportsmaster') || isAdmin();
-    }
-
-    function isHeadCoach() {
-      return hasRole('Head Coach') || isSportsmaster();
-    }
-
-    function isCoach() {
-      return hasRole('Assistant Coach') || hasRole('Coach') || isHeadCoach();
-    }
-
-    function isCaptain() {
-      return hasRole('Captain') || isCoach();
-    }
-
-    function isScorer() {
-      return hasRole('Scorer') || isAdmin();
-    }
-
-    function isUmpire() {
-      return hasRole('Umpire') || isAdmin();
-    }
-
-    function isMedical() {
-      return hasRole('Medical Staff') || isAdmin();
-    }
-
-    function isGroundskeeper() {
-      return hasRole('Groundskeeper') || isSportsmaster();
-    }
-
-    function isTransport() {
-      return hasRole('Transport Coordinator') || isSportsmaster();
-    }
-
-    function canScore() {
-      return isScorer() || isUmpire();
-    }
-
-    function canManageData() {
-      return isSportsmaster();
-    }
-
-    // ─── People ─────────────────────────────────────────────────────────────
+    // ─── People and squads ─────────────────────────────────────────────────
 
     match /people/{personId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isOwner(personId) || canManageData() || isCoach();
-      allow delete: if isAdmin();
+      allow write: if false;
     }
-
-    // ─── Core Entities ───────────────────────────────────────────────────────
-
-    match /schools/{schoolId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /seasons/{seasonId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /divisions/{divisionId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /venues/{venueId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /leagues/{leagueId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    // ─── Teams & Rosters ─────────────────────────────────────────────────────
 
     match /teams/{teamId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-
-      match /roster/{rosterId} {
+      allow write: if false;
+      match /{sub=**} {
         allow read: if isSignedIn();
-        allow create, update, delete: if isCoach();
+        allow write: if false;
       }
+    }
 
-      match /squads/{squadId} {
+    match /rosters/{rosterId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ─── Competition structure (reference data) ────────────────────────────
+
+    match /schools/{schoolId}      { allow read: if isSignedIn(); allow write: if false; }
+    match /seasons/{seasonId}      { allow read: if isSignedIn(); allow write: if false; }
+    match /divisions/{divisionId}  { allow read: if isSignedIn(); allow write: if false; }
+    match /leagues/{leagueId}      { allow read: if isSignedIn(); allow write: if false; }
+    match /invitations/{inviteId}  { allow read: if atLeast(3);   allow write: if false; }
+
+    // ─── Matches ───────────────────────────────────────────────────────────
+    // Live score and ball log are readable by any signed-in user (spectators
+    // follow along); team selections are embargoed until released.
+
+    match /matches/{matchId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+
+      match /live/{docId} {
         allow read: if isSignedIn();
-        allow create, update, delete: if isCoach();
+        allow write: if false;
       }
-    }
 
-    // ─── Competitions & Fixtures ──────────────────────────────────────────────
-
-    match /competitions/{competitionId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /fixtures/{fixtureId} {
-      allow read: if isSignedIn();
-      allow create, delete: if canManageData();
-      // Updates are broad — specific sub-collections restrict further.
-      allow update: if isSignedIn();
-
-      match /officials/{officialId} {
+      match /scoring_actions/{actionId} {
         allow read: if isSignedIn();
-        allow create, delete: if canManageData();
-        allow update: if canManageData()
-          || isOwner(get(/databases/$(database)/documents/fixtures/$(fixtureId)/officials/$(officialId)).data.personId);
+        allow write: if false;
       }
 
-      match /lineups/{teamId} {
-        allow read: if isSignedIn();
-        allow create, update: if isCoach() || canManageData();
+      // Tactical directives are captain/coach comms, not spectator content.
+      match /tacticalDirectives/{directiveId} {
+        allow read: if atLeast(4);
+        allow write: if false;
+        match /{sub=**} {
+          allow read: if atLeast(4);
+          allow write: if false;
+        }
       }
 
-      match /scorecards/{inningsId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if canScore();
+      match /impact_events/{eventId} {
+        allow read: if atLeast(4);
+        allow write: if false;
+        match /{sub=**} {
+          allow read: if atLeast(4);
+          allow write: if false;
+        }
       }
 
-      match /transportAssignments/{assignmentId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isTransport() || canManageData();
-      }
-
-      match /readinessChecks/{checkId} {
-        allow read: if isSignedIn();
-        allow create, update: if canManageData() || isCoach();
-      }
-
-      match /availabilityResponses/{responseId} {
-        allow read: if isCoach() || canManageData();
-        allow create, update: if isSignedIn();
+      match /player_impact/{personId} {
+        allow read: if atLeast(4);
+        allow write: if false;
       }
     }
 
-    // ─── Scoring (Ball Events) ────────────────────────────────────────────────
+    match /match_scoring_locks/{matchId} { allow read: if atLeast(4); allow write: if false; }
+    match /match_highlights/{highlightId} { allow read: if isSignedIn(); allow write: if false; }
+    match /field_sport_matches/{matchId} { allow read: if isSignedIn(); allow write: if false; }
+    match /fixture_readiness_checks/{checkId} { allow read: if atLeast(4); allow write: if false; }
 
-    match /ballEvents/{eventId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canScore();
+    // ─── Development and assessment ────────────────────────────────────────
+    // Coaching data. A player's own view of their ratings is served by a
+    // server action, not a client read: personId is a person-record id and
+    // does not equal the Firebase uid, so there is no self-read rule here.
+    match /skill_assessments/{assessmentId} {
+      allow read: if atLeast(4);
+      allow write: if false;
     }
 
-    match /innings/{inningsId} {
-      allow read: if isSignedIn();
-      allow create, update: if canScore();
-    }
+    match /performance_indices/{indexId}  { allow read: if atLeast(4); allow write: if false; }
+    match /development_trends/{trendId}   { allow read: if atLeast(4); allow write: if false; }
+    match /readiness_scores/{scoreId}     { allow read: if atLeast(4); allow write: if false; }
+    match /coach_interventions/{id}       { allow read: if atLeast(4); allow write: if false; }
 
-    match /scoringLocks/{fixtureId} {
-      // Session lock for multi-scorer handover
-      allow read: if isSignedIn();
-      allow create, update, delete: if canScore();
-    }
+    // ─── Medical — confidential ────────────────────────────────────────────
 
-    // ─── Tactical Directive Bus ───────────────────────────────────────────────
-    // Note: there is no top-level `match /matches/{matchId}` rule block in this
-    // file — live-scoring writes go through the Admin SDK (matchActions.ts),
-    // which bypasses rules entirely, and client reads of `matches` are
-    // apparently ungated today. That's a pre-existing gap, out of scope here.
-    // This block only secures the tacticalDirectives subtree, which IS read
-    // and written directly from the client (Coach/Captain Cockpit listeners),
-    // so it needs its own rules regardless of the parent collection's state.
+    match /medical_incidents/{incidentId}      { allow read: if atLeast(3); allow write: if false; }
+    match /concussion_rtp_records/{recordId}   { allow read: if atLeast(3); allow write: if false; }
 
-    match /matches/{matchId}/tacticalDirectives/{directiveId} {
-      allow read: if isSignedIn() && (
-        resource.data.issuedByPersonId == request.auth.uid ||
-        resource.data.issuedToPersonId == request.auth.uid ||
-        isCoach() || isAdmin()
-      );
-      allow create: if isSignedIn() && isCoach()
-        && request.resource.data.issuedByPersonId == request.auth.uid;
-      // Only the issuing coach may mutate the directive itself (supersede/
-      // cancel/expire/denormalized latestResponse). Captain input always goes
-      // through the responses subcollection instead — the directive record
-      // stays an immutable statement of original intent.
-      allow update: if isSignedIn() && (
-        resource.data.issuedByPersonId == request.auth.uid || isCoach()
-      );
-      allow delete: if false;
+    // ─── Scouting — restricted, and never visible to the subject ───────────
 
-      match /responses/{responseId} {
-        allow read: if isSignedIn() && (isCoach() || isCaptain());
-        // clientEventId is the doc id, so a retried submit overwrites its own
-        // response rather than creating a duplicate — the captain who typed
-        // it is the only one who can ever write that id.
-        allow create: if isSignedIn() && isCaptain()
-          && request.resource.data.respondedByPersonId == request.auth.uid;
-        allow update, delete: if false;
-      }
+    match /scouting_reports/{reportId}    { allow read: if atLeast(3); allow write: if false; }
+    match /scouting_watchlists/{listId}   { allow read: if atLeast(3); allow write: if false; }
+    match /provincial_invitationals/{id}  { allow read: if atLeast(3); allow write: if false; }
 
-      match /receipts/{personId} {
-        allow read: if isSignedIn() && (isCoach() || request.auth.uid == personId);
-        allow write: if isSignedIn() && request.auth.uid == personId;
-      }
+    // ─── Recognition ───────────────────────────────────────────────────────
 
-      match /outcomes/{deliveryId} {
-        allow read: if isSignedIn() && (isCoach() || isCaptain() || isScorer());
-        allow create, update: if isSignedIn() && (isScorer() || isCoach());
-        allow delete: if false;
-      }
-    }
+    match /awards/{awardId}         { allow read: if isSignedIn(); allow write: if false; }
+    match /accolades/{accoladeId}   { allow read: if isSignedIn(); allow write: if false; }
+    match /honours/{honourId}       { allow read: if isSignedIn(); allow write: if false; }
+    match /milestones/{milestoneId} { allow read: if isSignedIn(); allow write: if false; }
 
-    // ─── Player Development ───────────────────────────────────────────────────
+    // Wallets and ledger are written by the rewards engine and read through
+    // server actions only — no client access at all.
+    match /rewards_wallets/{playerId}     { allow read, write: if false; }
+    match /reward_transactions/{txId}     { allow read, write: if false; }
 
-    match /skillMatrices/{matrixId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-
-      match /assessments/{assessmentId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isCoach();
-      }
-    }
-
-    match /performanceIndices/{indexId} {
-      allow read: if isSignedIn();
-      allow create, update: if isCoach();
-    }
-
-    match /developmentTrends/{trendId} {
-      allow read: if isSignedIn();
-      allow create, update: if isCoach();
-    }
-
-    match /developmentNeeds/{needId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-    }
-
-    match /drillRecommendations/{recommendationId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-    }
-
-    // ─── Drills & Training ────────────────────────────────────────────────────
-
-    match /drills/{drillId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-    }
-
-    match /trainingSessions/{sessionId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-
-      match /assignments/{assignmentId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isCoach();
-      }
-
-      match /logs/{logId} {
-        allow read: if isSignedIn();
-        allow create, update: if isCoach();
-      }
-    }
-
-    match /trainingPlans/{planId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-    }
-
-    // ─── Medical ──────────────────────────────────────────────────────────────
-
-    match /injuryRecords/{recordId} {
-      allow read: if isMedical() || isCoach();
-      allow create, update, delete: if isMedical();
-    }
-
-    match /medicalNotes/{noteId} {
-      // Medical notes are sensitive — restricted to medical staff and admins
-      allow read, create, update, delete: if isMedical();
-    }
-
-    match /readinessScores/{scoreId} {
-      allow read: if isCoach() || isMedical() || canManageData();
-      allow create, update: if isCoach() || isMedical();
-    }
-
-    // ─── Facilities & Grounds ─────────────────────────────────────────────────
+    // ─── Facilities and logistics ──────────────────────────────────────────
 
     match /fields/{fieldId} {
       allow read: if isSignedIn();
-      allow create, update: if isGroundskeeper();
-      allow delete: if canManageData();
-
-      match /bookings/{bookingId} {
+      allow write: if false;
+      match /{sub=**} {
         allow read: if isSignedIn();
-        allow create, update, delete: if isGroundskeeper() || canManageData();
-      }
-
-      match /statusLogs/{logId} {
-        allow read: if isSignedIn();
-        allow create, update: if isGroundskeeper();
-      }
-
-      match /maintenanceTasks/{taskId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isGroundskeeper();
+        allow write: if false;
       }
     }
 
-    // ─── Transport ────────────────────────────────────────────────────────────
+    match /facility_bookings/{bookingId}  { allow read: if atLeast(4); allow write: if false; }
+    match /ground_status_logs/{logId}     { allow read: if isSignedIn(); allow write: if false; }
+    match /maintenance_tasks/{taskId}     { allow read: if atLeast(4); allow write: if false; }
+    match /equipment/{itemId}             { allow read: if atLeast(4); allow write: if false; }
 
-    match /vehicles/{vehicleId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isTransport();
-    }
+    match /vehicles/{vehicleId}           { allow read: if atLeast(4); allow write: if false; }
+    match /transport_trips/{tripId}       { allow read: if atLeast(4); allow write: if false; }
+    match /trip_passengers/{passengerId}  { allow read: if atLeast(4); allow write: if false; }
 
-    match /transportTrips/{tripId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isTransport();
+    // ─── Community and communications ──────────────────────────────────────
 
-      match /passengers/{passengerId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isTransport();
-      }
-    }
+    match /community_rsvps/{rsvpId}            { allow read: if isSignedIn(); allow write: if false; }
+    match /community_notif_prefs/{studentId}   { allow read: if atLeast(5); allow write: if false; }
+    match /parent_notifications/{notifId}      { allow read: if isSignedIn(); allow write: if false; }
+    match /staff_broadcasts/{broadcastId}      { allow read: if atLeast(4); allow write: if false; }
+    match /child_profiles/{profileId}          { allow read: if atLeast(3); allow write: if false; }
 
-    // ─── Awards, Accolades, Milestones ────────────────────────────────────────
+    // ─── Finance and audit — administrative only ───────────────────────────
 
-    match /awards/{awardId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach() || canManageData();
-    }
+    match /transactions/{transactionId} { allow read: if atLeast(3); allow write: if false; }
+    match /receipts/{receiptId}         { allow read: if atLeast(3); allow write: if false; }
+    match /audit_logs/{logId}           { allow read: if atLeast(2); allow write: if false; }
 
-    match /accolades/{accoladeId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isCoach();
-    }
+    // ─── Default deny ──────────────────────────────────────────────────────
+    // Anything not named above is unreachable from the client. Adding a
+    // collection means adding a rule here deliberately, not inheriting access.
 
-    match /milestones/{milestoneId} {
-      allow read: if isSignedIn();
-      allow create, update: if isCoach() || canManageData();
-    }
-
-    // ─── Scouting ─────────────────────────────────────────────────────────────
-
-    match /scoutingReports/{reportId} {
-      allow read: if isCoach() || canManageData();
-      allow create, update: if isCoach();
-      allow delete: if isAdmin();
-    }
-
-    match /scoutingWatchlists/{watchlistId} {
-      allow read: if isCoach() || canManageData();
-      allow create, update, delete: if isCoach();
-    }
-
-    // ─── Rankings ─────────────────────────────────────────────────────────────
-
-    match /playerRankings/{rankingId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /teamRankings/{rankingId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-    }
-
-    // ─── Notifications ────────────────────────────────────────────────────────
-
-    match /notifications/{notificationId} {
-      allow read: if isOwner(resource.data.recipientId) || isAdmin();
-      allow create: if isSignedIn();
-      allow update: if isOwner(resource.data.recipientId);
-      allow delete: if isOwner(resource.data.recipientId) || isAdmin();
-    }
-
-    // ─── Financials (Restricted) ──────────────────────────────────────────────
-
-    match /financials/{transactionId} {
-      allow read, create, update, delete: if isAdmin();
-    }
-
-    match /equipment/{itemId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    match /sponsors/{sponsorId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if canManageData();
-    }
-
-    // ─── Audit Log (Append-only) ──────────────────────────────────────────────
-
-    match /auditLogs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn(); // Any signed-in action may create a log
-      allow update, delete: if false; // Immutable
-    }
-
-    // ─── Family Links ─────────────────────────────────────────────────────────
-
-    match /familyLinks/{linkId} {
-      allow read: if isSignedIn();
-      allow create, delete: if isOwner(resource.data.guardianId) || isAdmin();
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
