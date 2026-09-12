@@ -2,10 +2,10 @@
 
 import { D } from "@/lib/design-system";
 
-// Static, single-layer background. The previous version stacked three
-// viewport-sized discs with 120–160px blur filters and animated drop-shadow on
-// them, which forced a full repaint every frame on every page. Radial gradients
-// give the same soft glow with no filter and no animation.
+// Design 2.0 §7.1 — the signature gradient behaves like light falling on a
+// dark surface, not wallpaper. Static radial fields, no filters, no animation:
+// the previous blurred-disc version repainted every frame on every page.
+// Opacities stay low so content, not the canvas, carries the colour.
 export function BackgroundEffects() {
   return (
     <div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
@@ -13,15 +13,15 @@ export function BackgroundEffects() {
         className="absolute inset-0"
         style={{
           background: [
-            `radial-gradient(ellipse 50% 50% at 90% 5%, ${D.indigo}18, transparent 70%)`,
-            `radial-gradient(ellipse 45% 45% at 5% 95%, ${D.rose}0a, transparent 70%)`,
-            `radial-gradient(ellipse 30% 30% at 25% 35%, ${D.emerald}06, transparent 70%)`,
+            `radial-gradient(ellipse 55% 45% at 12% 8%, ${D.lime}14, transparent 70%)`,
+            `radial-gradient(ellipse 50% 50% at 88% 30%, ${D.green}10, transparent 70%)`,
+            `radial-gradient(ellipse 40% 40% at 70% 92%, ${D.cyan}0c, transparent 70%)`,
             D.bg,
           ].join(', '),
         }}
       />
 
-      {/* OS Grain Unit — Strategic Texture */}
+      {/* Grain — keeps large flat surfaces from reading as vector-flat */}
       <div
         className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04] mix-blend-overlay pointer-events-none"
         style={{
@@ -29,7 +29,7 @@ export function BackgroundEffects() {
         }}
       />
 
-      {/* Tactical Grid — UIX Spec §1.4 Background Detail */}
+      {/* Tactical grid — structure hint, barely there */}
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(${D.border} 1px, transparent 1px), linear-gradient(90deg, ${D.border} 1px, transparent 1px)`,

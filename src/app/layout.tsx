@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Syne, DM_Mono, DM_Sans, Open_Sans } from 'next/font/google';
+import { Inter, Inter_Tight, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
@@ -9,35 +9,28 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { DashboardProvider } from '@/contexts/DashboardContext';
 import { AppShell } from "@/components/layout/AppShell";
 
-// UIX Spec §3.1: Syne — main high-impact headers
-const syne = Syne({
-  variable: '--font-syne',
+// Design 2.0 §11 — three faces, three jobs. No other typefaces load.
+// Display: Inter Tight — headings, scores, KPIs. Tight tracking at size.
+const display = Inter_Tight({
+  variable: '--font-display',
   subsets: ['latin'],
-  weight: ['600', '700', '800'],
+  weight: ['500', '600', '700'],
   display: 'swap',
 });
 
-// Open Sans — clean UI, subheadings, interface controls
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
+// Body and UI: Inter — copy, controls, labels.
+const body = Inter({
+  variable: '--font-body-face',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   display: 'swap',
 });
 
-// UIX Spec §3.1: DM Mono — all numeric/data values
-const dmMono = DM_Mono({
-  variable: '--font-dm-mono',
+// Data: Geist Mono — numerics, tables, live feeds. Tabular by default.
+const data = Geist_Mono({
+  variable: '--font-data',
   subsets: ['latin'],
   weight: ['400', '500'],
-  display: 'swap',
-});
-
-// UIX Spec §3.1: DM Sans — body copy
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
   display: 'swap',
 });
 
@@ -52,8 +45,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${syne.variable} ${openSans.variable} ${dmMono.variable} ${dmSans.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
+    // Font variables go on <html>, not <body>: globals.css derives --font-head
+    // and friends on :root, and a custom property resolves var() on the element
+    // that declares it. On <body> the next/font faces were never reached and
+    // every heading fell back to the system font.
+    <html lang="en" className={`${display.variable} ${body.variable} ${data.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-background text-foreground" suppressHydrationWarning>
         <Providers>
           <AuthProvider>
             <PermissionViewProvider>

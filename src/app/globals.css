@@ -11,158 +11,194 @@
    CSS Custom Properties — SCRBRD Design Tokens
    ========================================================= */
 
+/* Design 2.0 §6–§10, §44 — neutral-first surfaces, selective spectral accents.
+   Every colour a component uses comes from here; components never carry hex.
+   Legacy names (--scrbrd-indigo, --surf0…) are kept as aliases so the 4,500+
+   existing token references keep resolving while consumers migrate. */
+
 :root {
-  /* --- Font families — reference Next.js injected vars so we get the
-       optimised subset + correct variable font axes loaded by layout.tsx --- */
-  --font-mono: var(--font-dm-mono, 'DM Mono', monospace);
-  --font-head: var(--font-dm-sans, 'DM Sans', sans-serif);
-  --font-sans: var(--font-dm-sans, 'DM Sans', sans-serif);
-  --font-body: var(--font-dm-sans, 'DM Sans', sans-serif);
+  /* --- Typefaces (loaded by layout.tsx via next/font) --- */
+  --font-head: var(--font-display, 'Inter Tight', system-ui, sans-serif);
+  --font-sans: var(--font-body-face, 'Inter', system-ui, sans-serif);
+  --font-body: var(--font-body-face, 'Inter', system-ui, sans-serif);
+  --font-mono: var(--font-data, 'Geist Mono', ui-monospace, monospace);
 
-  /* --- SCRBRD Accent Colours (semantic, consistent across themes) --- */
-  --scrbrd-indigo:  #b5f542;  /* Brand primary — nav active, primary buttons */
-  --scrbrd-sky:     #0ea5e9;  /* Match / live data — scores, match cards */
-  --scrbrd-emerald: #10b981;  /* Positive / live — wins, live status, fitness */
-  --scrbrd-amber:   #f59e0b;  /* Warning / traction — notifications, upcoming */
-  --scrbrd-rose:    #f43f5e;  /* Danger / medical — injuries, errors, wickets */
-  --scrbrd-violet:  #8b5cf6;  /* Restricted / advanced — passport, talent */
-  --scrbrd-teal:    #14b8a6;  /* Infrastructure — grounds, school admin */
-  --scrbrd-orange:  #f97316;  /* Scheduling / officials */
-  --scrbrd-cyan:    #06b6d4;  /* Support roles */
-  --scrbrd-lime:    #84cc16;  /* Transport — driver, vehicle/logistics */
-  --scrbrd-pink:    #ec4899;  /* Secondary accent — decorative only */
+  /* --- §6.1 Core neutrals --- */
+  --scrbrd-black:     #080A0B;
+  --scrbrd-ink:       #0D1012;
+  --scrbrd-graphite:  #14181B;
+  --scrbrd-surface:   #1A2024;
+  --scrbrd-surface-2: #22292E;
+  --scrbrd-white:     #F7F8F3;
+  --scrbrd-paper:     #F2F3ED;
+  --scrbrd-mist:      #E3E7E2;
+  --scrbrd-muted:     #A8B0AC;
 
-  /* --- Gradients --- */
-  --grad-main: linear-gradient(135deg, #b5f542, #0ea5e9);
-  --grad-gold: linear-gradient(135deg, #f59e0b, #f97316);
-  --grad-live: linear-gradient(135deg, #10b981, #06b6d4);
+  /* --- §6.2 Signature spectral palette (design-system colours, not team colours) --- */
+  --scrbrd-lime:      #D7F900;   /* signature accent — strong primary and live-performance moments only */
+  --scrbrd-acid:      #B8F20A;
+  --scrbrd-green:     #31C884;
+  --scrbrd-emerald:   #0D985D;
+  --scrbrd-cyan:      #28C9E8;
+  --scrbrd-sky:       #188EF5;
+  --scrbrd-cobalt:    #315BA8;
+  --scrbrd-midnight:  #001F3F;
+  --scrbrd-yellow:    #FFD817;   /* attention and sport-energy moments, never a permanent dominant */
 
-  /* --- Border Radius Scale --- */
-  --radius-sm:   6px;
-  --radius-md:  10px;
-  --radius-lg:  20px;
-  --radius-xl:  24px;
-  --radius-pill: 999px;
+  /* --- §6.3 Semantic states — never the only carrier of meaning --- */
+  --state-positive:   #38D684;
+  --state-warning:    #FFC84A;
+  --state-critical:   #FF5F63;   /* wickets, errors, critical alerts — spend sparingly */
+  --state-info:       #4DA7FF;
+  --state-neutral:    #8F9A96;
 
-  /* --- Light Theme Surfaces --- */
-  --bg-app: #f8fafc;
-  --surf0: #ffffff;
-  --surf1: #ffffff;
-  --surf2: #f1f5f9;
-  --surf3: #e2e8f0;
-  --border-subtle: rgba(15, 23, 42, 0.12);
-  --border-med: rgba(15, 23, 42, 0.20);
-  --card-ghost: rgba(15, 23, 42, 0.03);
-  --text-primary: #0f172a;
-  --text-secondary: #1e293b;
-  --text-muted: #475569;
+  /* Legacy accent aliases — same values as above, old names */
+  --scrbrd-indigo:    var(--scrbrd-lime);
+  --scrbrd-amber:     var(--state-warning);
+  --scrbrd-rose:      var(--state-critical);
+  --scrbrd-violet:    var(--scrbrd-cobalt);
+  --scrbrd-teal:      var(--scrbrd-emerald);
+  --scrbrd-orange:    var(--scrbrd-yellow);
+  --scrbrd-pink:      var(--scrbrd-cyan);
 
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
+  /* --- §7 Gradients — behave like light, not wallpaper --- */
+  --grad-signature:
+    radial-gradient(circle at 20% 20%, rgba(215,249,0,.35), transparent 32%),
+    radial-gradient(circle at 70% 45%, rgba(49,200,132,.30), transparent 38%),
+    radial-gradient(circle at 95% 15%, rgba(40,201,232,.26), transparent 34%),
+    linear-gradient(135deg, #07110A 0%, #08283A 100%);
+  --grad-energy:      linear-gradient(135deg, #D7F900 0%, #31C884 55%, #28C9E8 100%);
+  --grad-performance: linear-gradient(135deg, #28C9E8 0%, #188EF5 55%, #001F3F 100%);
+  --grad-alert:       linear-gradient(135deg, #FFC84A 0%, #FF8A3D 55%, #14181B 100%);
+  --grad-achievement: linear-gradient(135deg, #D7F900 0%, #FFD817 60%, rgba(255,255,255,.85) 100%);
+  --grad-main: var(--grad-energy);
+  --grad-gold: var(--grad-achievement);
+  --grad-live: var(--grad-performance);
 
+  /* --- §10 Shape --- */
+  --radius-sm:   10px;   /* chips, inputs */
+  --radius-md:   16px;   /* cards */
+  --radius-lg:   22px;   /* large cards, panels */
+  --radius-xl:   30px;   /* hero containers */
+  --radius-pill: 999px;  /* state, filters, compact selectors only */
+
+  /* --- §44 Motion — cause and effect, not decoration --- */
+  --motion-control: 180ms;
+  --motion-panel:   260ms;
+  --motion-major:   420ms;
+  --motion-event:   1000ms;
+  --ease-standard:  cubic-bezier(.2, 0, 0, 1);
+  --ease-spring:    cubic-bezier(.34, 1.4, .64, 1);
+
+  /* --- §8 Surface levels — light (§48: warm off-white, never pure white everywhere) --- */
+  --surface-0: var(--scrbrd-paper);    /* canvas */
+  --surface-1: var(--scrbrd-white);    /* structural: nav, main containers */
+  --surface-2: #FFFFFF;                /* bento cards, visualisations */
+  --surface-3: #FFFFFF;                /* floating: menus, drawers */
+  --surface-4: var(--scrbrd-mist);     /* live/event */
+  --bg-app: var(--surface-0);
+  --surf0: var(--surface-0);
+  --surf1: var(--surface-1);
+  --surf2: var(--surface-2);
+  --surf3: var(--surface-4);
+  --border-subtle: rgba(13, 16, 18, 0.10);
+  --border-med:    rgba(13, 16, 18, 0.18);
+  --card-ghost:    rgba(13, 16, 18, 0.03);
+  --text-primary:   var(--scrbrd-ink);
+  --text-secondary: #3A4340;
+  --text-muted:     #6B756F;
+
+  /* --- shadcn/Tailwind HSL contract — derived from the above --- */
+  --background: 70 20% 94%;
+  --foreground: 204 16% 6%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-
+  --card-foreground: 204 16% 6%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 204 16% 6%;
+  --primary: 68 100% 49%;            /* lime — one dominant action per section */
+  --primary-foreground: 204 16% 6%;  /* ink on lime, not white on lime */
+  --secondary: 108 9% 90%;
+  --secondary-foreground: 204 16% 6%;
+  --muted: 108 9% 90%;
+  --muted-foreground: 150 5% 40%;
+  --accent: 190 81% 53%;             /* cyan */
+  --accent-foreground: 204 16% 6%;
+  --destructive: 358 100% 69%;
+  --destructive-foreground: 204 16% 6%;
+  --border: 150 5% 84%;
+  --input: 150 5% 84%;
+  --ring: 68 100% 49%;
+  --radius: 1rem;                    /* 16px — --radius-md */
 
-  --primary: 85 90% 38%;           /* Indigo #b5f542 */
-  --primary-foreground: 0 0% 100%;
+  --sidebar-background: 72 26% 96%;
+  --sidebar-foreground: 204 16% 6%;
+  --sidebar-primary: 68 100% 49%;
+  --sidebar-primary-foreground: 204 16% 6%;
+  --sidebar-accent: 108 9% 90%;
+  --sidebar-accent-foreground: 204 16% 6%;
+  --sidebar-border: 150 5% 84%;
+  --sidebar-ring: 68 100% 49%;
 
-  --secondary: 210 20% 96%;
-  --secondary-foreground: 222 47% 11%;
-
-  --muted: 210 20% 96%;
-  --muted-foreground: 215 25% 35%; /* Slate-600 */
-
-  --accent: 199 89% 48%;            /* Sky #0ea5e9 */
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 347 77% 60%;       /* Rose #f43f5e */
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 220 13% 85%;
-  --input: 220 13% 85%;
-  --ring: 85 90% 38%;
-
-  --radius: 1.25rem; /* 14px — D.lg per spec */
-
-  /* Sidebar Light */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 85 90% 38%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 239 84% 95%;
-  --sidebar-accent-foreground: 239 84% 30%;
-  --sidebar-border: 220 13% 85%;
-  --sidebar-ring: 85 90% 38%;
-
-  /* Charts */
-  --chart-1: 85 90% 38%;
-  --chart-2: 199 89% 48%;
-  --chart-3: 158 64% 52%;
-  --chart-4: 38 92% 50%;
-  --chart-5: 347 77% 60%;
+  --chart-1: 68 100% 49%;   /* lime */
+  --chart-2: 190 81% 53%;   /* cyan */
+  --chart-3: 153 61% 49%;   /* green */
+  --chart-4: 50 100% 55%;   /* yellow */
+  --chart-5: 358 100% 69%;  /* critical — wickets */
 }
 
 .dark {
-  /* --- Dark Theme Surfaces (UIX Spec §2.2) --- */
-  --bg-app: #0b0d0b;
-  --surf0: #101310;
-  --surf1: #171a17;
-  --surf2: #202520;
-  --surf3: #2b312b;
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-med: rgba(255, 255, 255, 0.12);
-  --card-ghost: rgba(255, 255, 255, 0.03);
-  --text-primary: #f3f5ef;
-  --text-secondary: #b0b8ac;
-  --text-muted: #929c8d;
+  /* --- §8 Surface levels — dark is the flagship expression (§49) --- */
+  --surface-0: var(--scrbrd-black);
+  --surface-1: var(--scrbrd-ink);
+  --surface-2: var(--scrbrd-graphite);
+  --surface-3: var(--scrbrd-surface);
+  --surface-4: var(--scrbrd-surface-2);
+  --bg-app: var(--surface-0);
+  --surf0: var(--surface-0);
+  --surf1: var(--surface-1);
+  --surf2: var(--surface-2);
+  --surf3: var(--surface-3);
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-med:    rgba(255, 255, 255, 0.16);
+  --card-ghost:    rgba(255, 255, 255, 0.03);
+  --text-primary:   var(--scrbrd-white);
+  --text-secondary: #C3CAC6;
+  --text-muted:     var(--scrbrd-muted);
 
-  --background: 120 8% 4%;     /* #0b0d0b — deepest layer */
-  --foreground: 80 23% 95%;    /* #f3f5ef — textPrimary */
+  --background: 200 16% 4%;
+  --foreground: 72 26% 96%;
+  --card: 204 16% 6%;
+  --card-foreground: 72 26% 96%;
+  --popover: 206 15% 9%;
+  --popover-foreground: 72 26% 96%;
+  --primary: 68 100% 49%;
+  --primary-foreground: 204 16% 6%;
+  --secondary: 206 15% 9%;
+  --secondary-foreground: 72 26% 96%;
+  --muted: 204 16% 12%;
+  --muted-foreground: 150 5% 67%;
+  --accent: 190 81% 53%;
+  --accent-foreground: 204 16% 6%;
+  --destructive: 358 100% 69%;
+  --destructive-foreground: 204 16% 6%;
+  --border: 204 16% 12%;
+  --input: 206 15% 9%;
+  --ring: 68 100% 49%;
 
-  --card: 120 6% 10%;           /* #171a17 — surf1 */
-  --card-foreground: 80 23% 95%;
+  --sidebar-background: 204 16% 6%;
+  --sidebar-foreground: 72 26% 96%;
+  --sidebar-primary: 68 100% 49%;
+  --sidebar-primary-foreground: 204 16% 6%;
+  --sidebar-accent: 206 15% 9%;
+  --sidebar-accent-foreground: 72 26% 96%;
+  --sidebar-border: 206 15% 9%;
+  --sidebar-ring: 68 100% 49%;
 
-  --popover: 120 6% 10%;
-  --popover-foreground: 80 23% 95%;
-
-  --primary: 82 90% 61%;       /* Indigo #b5f542 — brand primary */
-  --primary-foreground: 120 15% 6%;
-
-  --secondary: 120 7% 14%;     /* #202520 — surf2 */
-  --secondary-foreground: 80 23% 95%;
-
-  --muted: 120 7% 18%;         /* #2b312b — surf3 */
-  --muted-foreground: 100 8% 67%; /* #b0b8ac — textSecondary */
-
-  --accent: 199 89% 48%;        /* Sky #0ea5e9 */
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 347 77% 60%;   /* Rose #f43f5e */
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 120 6% 19%;        /* rgba(255,255,255,0.07) equivalent */
-  --input: 120 7% 14%;
-  --ring: 82 90% 61%;
-
-  /* Sidebar Dark */
-  --sidebar-background: 120 8% 4%;
-  --sidebar-foreground: 80 23% 95%;
-  --sidebar-primary: 82 90% 61%;
-  --sidebar-primary-foreground: 120 15% 6%;
-  --sidebar-accent: 120 7% 14%;
-  --sidebar-accent-foreground: 80 23% 95%;
-  --sidebar-border: 120 6% 15%;
-  --sidebar-ring: 82 90% 61%;
-
-  /* Charts — vibrant on dark */
-  --chart-1: 199 89% 48%;   /* Sky — boundary */
-  --chart-2: 38 92% 50%;    /* Amber — big over */
-  --chart-3: 347 77% 60%;   /* Rose — wicket */
-  --chart-4: 215 16% 47%;   /* Muted — dots */
-  --chart-5: 271 81% 56%;   /* Violet — stat bar */
+  --chart-1: 68 100% 49%;
+  --chart-2: 190 81% 53%;
+  --chart-3: 153 61% 49%;
+  --chart-4: 50 100% 55%;
+  --chart-5: 358 100% 69%;
 }
 
 /* =========================================================
@@ -177,19 +213,23 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-family: var(--font-body);
+    /* §13 — numbers are central; they align in columns by default. */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "cv11" 1;
   }
 
-  /* Headings always use Syne per spec §3.1 */
+  /* §12 — page headings stay 28–36px; large type is reserved for scores and KPIs. */
   h1, h2, h3 {
     font-family: var(--font-head);
-    @apply tracking-tight font-bold;
+    @apply tracking-tight font-semibold;
+    text-wrap: balance;
   }
   h4, h5, h6 {
     font-family: var(--font-head);
-    @apply tracking-tight font-semibold;
+    @apply tracking-tight font-medium;
   }
 
-  /* All code / pre elements use DM Mono */
+  /* Code, data and numerics use Geist Mono */
   code, pre, kbd, samp {
     font-family: var(--font-mono);
   }
@@ -238,35 +278,76 @@
     border-radius: var(--radius-lg);
   }
 
-  /* --- Glass morphism --- */
+  /* --- §8 Surface levels --- */
+  .surface-0 { background-color: var(--surface-0); }
+  .surface-1 { background-color: var(--surface-1); }
+  .surface-2 { background-color: var(--surface-2); }
+  .surface-3 { background-color: var(--surface-3); }
+  .surface-4 { background-color: var(--surface-4); }
+
+  /* --- §9 Glass — overlays, rails, floating controls; never tables or forms --- */
+  .glass {
+    background: rgba(20, 24, 27, .72);
+    backdrop-filter: blur(18px) saturate(115%);
+    -webkit-backdrop-filter: blur(18px) saturate(115%);
+    border: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+  }
   .glass-card {
-    @apply bg-white/60 dark:bg-[#171a17]/80 backdrop-blur-xl border border-white/40 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.4)];
+    @apply backdrop-blur-xl border;
+    background: color-mix(in srgb, var(--surface-1) 78%, transparent);
+    border-color: var(--border-subtle);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, .12);
   }
   .glass-morphism-premium {
-    @apply bg-white/30 dark:bg-[#0b0d0b]/70 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)];
+    @apply backdrop-blur-2xl border;
+    background: color-mix(in srgb, var(--surface-0) 72%, transparent);
+    border-color: var(--border-subtle);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
   }
 
-  /* --- Mesh backgrounds --- */
+  /* --- §7 Gradient fields — light, not wallpaper --- */
+  .bg-signature { background: var(--grad-signature); }
   .bg-mesh-light {
-    background-color: #ffffff;
+    background-color: var(--scrbrd-paper);
     background-image:
-      radial-gradient(at 0% 0%, hsla(239, 84%, 95%, 1) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(199, 89%, 95%, 1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(239, 84%, 90%, 1) 0, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(215, 249, 0, .14) 0, transparent 50%),
+      radial-gradient(at 50% 0%, rgba(40, 201, 232, .10) 0, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(49, 200, 132, .10) 0, transparent 50%);
   }
   .bg-mesh-dark {
-    background-color: #0b0d0b;
+    background-color: var(--scrbrd-black);
     background-image:
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0, transparent 40%),
-      radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0, transparent 40%),
-      radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.05) 0, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(215, 249, 0, .10) 0, transparent 40%),
+      radial-gradient(at 100% 0%, rgba(40, 201, 232, .08) 0, transparent 40%),
+      radial-gradient(at 100% 100%, rgba(49, 200, 132, .05) 0, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(24, 142, 245, .05) 0, transparent 50%);
   }
 
-  /* --- Glow / shadow utilities --- */
-  .premium-shadow { @apply shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]; }
-  .glow-accent    { @apply shadow-[0_0_15px_rgba(99,102,241,0.3)] dark:shadow-[0_0_20px_rgba(99,102,241,0.2)]; }
-  .hover-glow     { @apply transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] dark:hover:shadow-[0_0_30px_rgba(99,102,241,0.25)]; }
+  /* --- §12 Type scale --- */
+  .text-display-xl { font-size: clamp(3.5rem, 6vw, 4.5rem); line-height: .95; letter-spacing: -.025em; font-family: var(--font-head); }
+  .text-display-l  { font-size: clamp(2.75rem, 4.5vw, 3.5rem); line-height: 1; letter-spacing: -.02em; font-family: var(--font-head); }
+  .text-heading-xl { font-size: 2.25rem; line-height: 1.1; letter-spacing: -.015em; font-family: var(--font-head); }
+  .text-heading-l  { font-size: 1.875rem; line-height: 1.15; letter-spacing: -.01em; font-family: var(--font-head); }
+  .text-heading-m  { font-size: 1.5rem; line-height: 1.2; font-family: var(--font-head); }
+  .text-heading-s  { font-size: 1.125rem; line-height: 1.3; font-family: var(--font-head); }
+  .text-body-l { font-size: 1.0625rem; line-height: 1.55; }
+  .text-body-m { font-size: .9375rem; line-height: 1.55; }
+  .text-body-s { font-size: .8125rem; line-height: 1.5; }
+  .text-label  { font-size: .75rem; line-height: 1.3; letter-spacing: .04em; font-weight: 500; }
+  .text-micro  { font-size: .6875rem; line-height: 1.3; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; }
+
+  /* --- §13 Numerals --- */
+  .tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+  /* --- Glow / shadow utilities — accent glow is lime, spent sparingly --- */
+  .premium-shadow { box-shadow: 0 20px 50px rgba(0, 0, 0, .10); }
+  .dark .premium-shadow { box-shadow: 0 20px 50px rgba(0, 0, 0, .30); }
+  .glow-accent    { box-shadow: 0 0 15px rgba(215, 249, 0, .22); }
+  .dark .glow-accent { box-shadow: 0 0 20px rgba(215, 249, 0, .16); }
+  .hover-glow     { transition: box-shadow var(--motion-panel) var(--ease-standard); }
+  .hover-glow:hover { box-shadow: 0 0 30px rgba(215, 249, 0, .28); }
 }
 
 /* =========================================================

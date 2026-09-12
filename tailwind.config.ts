@@ -10,17 +10,40 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: "2rem",
+			padding: { DEFAULT: "1rem", md: "2rem", xl: "3rem" },
 			screens: {
-				"2xl": "1400px",
+				"2xl": "1600px",
 			},
 		},
 		extend: {
 			fontFamily: {
-				sans: ["var(--font-dm-sans)", "sans-serif"],
-				open: ["var(--font-open-sans)", "sans-serif"],
-				mono: ["var(--font-dm-mono)", "monospace"],
-				head: ["var(--font-dm-sans)", "sans-serif"],
+				sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+				open: ["var(--font-sans)", "system-ui", "sans-serif"],
+				mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+				head: ["var(--font-head)", "system-ui", "sans-serif"],
+			},
+			fontSize: {
+				"display-xl": ["4.5rem", { lineHeight: "0.95", letterSpacing: "-0.025em" }],
+				"display-l": ["3.5rem", { lineHeight: "1", letterSpacing: "-0.02em" }],
+				"heading-xl": ["2.25rem", { lineHeight: "1.1", letterSpacing: "-0.015em" }],
+				"heading-l": ["1.875rem", { lineHeight: "1.15", letterSpacing: "-0.01em" }],
+				"heading-m": ["1.5rem", { lineHeight: "1.2" }],
+				"heading-s": ["1.125rem", { lineHeight: "1.3" }],
+				"body-l": ["1.0625rem", { lineHeight: "1.55" }],
+				"body-m": ["0.9375rem", { lineHeight: "1.55" }],
+				"body-s": ["0.8125rem", { lineHeight: "1.5" }],
+				label: ["0.75rem", { lineHeight: "1.3", letterSpacing: "0.04em" }],
+				micro: ["0.6875rem", { lineHeight: "1.3", letterSpacing: "0.06em" }],
+			},
+			transitionDuration: {
+				control: "180ms",
+				panel: "260ms",
+				major: "420ms",
+				event: "1000ms",
+			},
+			transitionTimingFunction: {
+				standard: "cubic-bezier(.2, 0, 0, 1)",
+				spring: "cubic-bezier(.34, 1.4, .64, 1)",
 			},
 			colors: {
 				background: 'hsl(var(--background))',
@@ -56,6 +79,27 @@ export default {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
+				// Design 2.0 — spectral accents and semantic states
+				brand: 'var(--scrbrd-lime)',
+				lime: 'var(--scrbrd-lime)',
+				acid: 'var(--scrbrd-acid)',
+				green: 'var(--scrbrd-green)',
+				cyan: 'var(--scrbrd-cyan)',
+				cobalt: 'var(--scrbrd-cobalt)',
+				midnight: 'var(--scrbrd-midnight)',
+				yellow: 'var(--scrbrd-yellow)',
+				positive: 'var(--state-positive)',
+				warning: 'var(--state-warning)',
+				critical: 'var(--state-critical)',
+				info: 'var(--state-info)',
+				neutral: 'var(--state-neutral)',
+				surface: {
+					0: 'var(--surface-0)',
+					1: 'var(--surface-1)',
+					2: 'var(--surface-2)',
+					3: 'var(--surface-3)',
+					4: 'var(--surface-4)',
+				},
 				chart: {
 					'1': 'hsl(var(--chart-1))',
 					'2': 'hsl(var(--chart-2))',
@@ -94,10 +138,17 @@ export default {
 					900: '#14532d'
 				},
 			},
+			// §10 shape scale. Existing classes keep their relative intent:
+			// md/xl were the control and card radii before, so they land on
+			// the spec's control (10) and card (16) steps; 2xl/3xl on panel (22)
+			// and hero (30). rounded-full stays the pill.
 			borderRadius: {
-				lg: '0.75rem',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'var(--radius-sm)',
+				md: 'var(--radius-sm)',
+				lg: 'var(--radius-md)',
+				xl: 'var(--radius-md)',
+				'2xl': 'var(--radius-lg)',
+				'3xl': 'var(--radius-xl)',
 			},
 			keyframes: {
 				'accordion-down': {

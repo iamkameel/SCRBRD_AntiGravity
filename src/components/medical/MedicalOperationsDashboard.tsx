@@ -102,7 +102,7 @@ export function MedicalOperationsDashboard() {
           </div>
           <h1 
             className="text-3xl md:text-4xl font-black text-white tracking-tight mt-1"
-            style={{ fontFamily: "var(--font-syne, 'Syne', sans-serif)" }}
+            style={{ fontFamily: 'var(--font-head)' }}
           >
             CLINICAL TRIAGE <span className="text-rose-400 font-normal">& RTP ENGINE</span>
           </h1>

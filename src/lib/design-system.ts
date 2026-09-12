@@ -1,88 +1,120 @@
 /**
- * SCRBRD CricketOS — Design System Tokens
- * UIX Guidelines 2026 · §2 Colour System
+ * SCRBRD — Design System Tokens (Design 2.0)
+ *
+ * Neutral-first surfaces with selective spectral accents. Surfaces and text
+ * are CSS variables so they follow the theme; accents are hex constants so
+ * the `${D.lime}18` alpha-suffix idiom used across the codebase keeps working.
  *
  * Usage:
- *   import { D, ROLE_COLOURS } from '@/lib/design-system';
- *   style={{ color: D.indigo, background: D.indigo + '18' }}
+ *   import { D } from '@/lib/design-system';
+ *   style={{ color: D.positive, background: D.brand + '18' }}
+ *
+ * Legacy keys (indigo, amber, rose, violet, teal, orange, pink, syne) remain
+ * as aliases so existing references resolve; new code should use the
+ * semantic and spectral names.
  */
 
-// ── Dark Theme Surfaces ──────────────────────────────────────────
-export const DARK = {
-    bg: '#0b0d0b',   // App background — deepest layer
-    surf0: '#101310',   // Page canvas
-    surf1: '#171a17',   // Card base layer, modals
-    surf2: '#202520',   // Input fields, secondary cards
-    surf3: '#2b312b',   // Hover states, chip backgrounds
-    border: 'rgba(255,255,255,0.07)',  // Hairline borders
-    borderMed: 'rgba(255,255,255,0.12)', // Visible separators
-    cardBg: 'rgba(255,255,255,0.03)', // Ghost card background
-    textPrimary: '#f3f5ef',   // Primary text
-    textSecondary: '#b0b8ac',   // Secondary text, labels
-    textMuted: '#929c8d',   // Muted text, placeholders
+// ── §6.1 Core neutrals ───────────────────────────────────────────
+export const NEUTRALS = {
+    black: '#080A0B',
+    ink: '#0D1012',
+    graphite: '#14181B',
+    surface: '#1A2024',
+    surface2: '#22292E',
+    white: '#F7F8F3',
+    paper: '#F2F3ED',
+    mist: '#E3E7E2',
+    muted: '#A8B0AC',
 } as const;
 
-// ── Light Theme Surfaces ─────────────────────────────────────────
-export const LIGHT = {
-    bg: '#f8fafc',
-    surf0: '#ffffff',
-    surf1: '#ffffff',
-    surf2: '#f1f5f9',
-    surf3: '#e2e8f0',
-    border: 'rgba(15, 23, 42, 0.12)',
-    borderMed: 'rgba(15, 23, 42, 0.20)',
-    cardBg: '#ffffff',
-    textPrimary: '#0f172a',
-    textSecondary: '#1e293b',
-    textMuted: '#475569',
+// ── §6.2 Signature spectral palette ──────────────────────────────
+export const SPECTRAL = {
+    lime: '#D7F900',      // signature — strong primary and live-performance moments only
+    acid: '#B8F20A',
+    green: '#31C884',
+    emerald: '#0D985D',
+    cyan: '#28C9E8',
+    sky: '#188EF5',
+    cobalt: '#315BA8',
+    midnight: '#001F3F',
+    yellow: '#FFD817',    // attention and sport-energy, never a permanent dominant
 } as const;
 
-// ── Accent Colours — Semantic Mapping (§2.4) ─────────────────────
+// ── §6.3 Semantic states — never the only carrier of meaning ─────
+export const STATES = {
+    positive: '#38D684',
+    warning: '#FFC84A',
+    critical: '#FF5F63',  // wickets, errors, critical alerts — spend sparingly
+    info: '#4DA7FF',
+    neutral: '#8F9A96',
+} as const;
+
+/** Combined accent map. Legacy names map onto the new palette. */
 export const ACCENTS = {
-    indigo: '#b5f542',  // Brand primary — nav active, primary buttons
-    sky: '#0ea5e9',  // Match / live data — scores, match cards
-    emerald: '#10b981',  // Positive / live — wins, live status, fitness
-    amber: '#f59e0b',  // Warning / traction — notifications, upcoming
-    rose: '#f43f5e',  // Danger / medical — injuries, errors, wickets
-    violet: '#8b5cf6',  // Restricted / advanced — passport, talent
-    teal: '#14b8a6',  // Infrastructure — grounds, school admin
-    orange: '#f97316',  // Scheduling / officials
-    cyan: '#06b6d4',  // Support roles
-    lime: '#84cc16',  // Transport — driver, vehicle/logistics
-    pink: '#ec4899',  // Secondary accent — decorative only
+    brand: SPECTRAL.lime,
+    ...SPECTRAL,
+    ...STATES,
+    // legacy aliases
+    indigo: SPECTRAL.lime,
+    amber: STATES.warning,
+    rose: STATES.critical,
+    violet: SPECTRAL.cobalt,
+    teal: SPECTRAL.emerald,
+    orange: SPECTRAL.yellow,
+    pink: SPECTRAL.cyan,
 } as const;
 
-// ── Gradients (§2.5) ─────────────────────────────────────────────
+// ── §7 Gradients — behave like light, not wallpaper ──────────────
 export const GRADIENTS = {
-    main: 'linear-gradient(135deg, #b5f542, #4bd887)',
-    gold: 'linear-gradient(135deg, #f59e0b, #f97316)',
-    live: 'linear-gradient(135deg, #10b981, #06b6d4)',
+    signature: 'var(--grad-signature)',
+    energy: 'var(--grad-energy)',
+    performance: 'var(--grad-performance)',
+    alert: 'var(--grad-alert)',
+    achievement: 'var(--grad-achievement)',
+    // legacy aliases
+    main: 'var(--grad-energy)',
+    gold: 'var(--grad-achievement)',
+    live: 'var(--grad-performance)',
 } as const;
 
-// ── Border Radius (§4.1) ─────────────────────────────────────────
+// ── §10 Shape ────────────────────────────────────────────────────
 export const RADIUS = {
-    sm: '6px',
-    md: '10px',
-    lg: '20px',
-    xl: '24px',
+    sm: '10px',
+    md: '16px',
+    lg: '22px',
+    xl: '30px',
     pill: '999px',
 } as const;
 
-// ── Font Families (§3.1) ─────────────────────────────────────────
+// ── §11 Typefaces (vars set by layout.tsx via next/font) ─────────
 export const FONTS = {
-    // Reference CSS vars so inline style={{ fontFamily: D.head }} also gets the
-    // Next.js-loaded optimised subset (same vars injected by layout.tsx)
-    mono: "var(--font-dm-mono, 'DM Mono', monospace)",     // All numeric/data values
-    head: "var(--font-dm-sans, 'DM Sans', sans-serif)",          // Main high-impact page titles
-    sans: "var(--font-dm-sans, 'DM Sans', sans-serif)",// Clean subheadings & UI controls
-    body: "var(--font-dm-sans, 'DM Sans', sans-serif)",    // Body copy & descriptions
+    head: 'var(--font-head)',   // Inter Tight — display, headings, scores
+    sans: 'var(--font-sans)',   // Inter — UI controls
+    body: 'var(--font-body)',   // Inter — body copy
+    mono: 'var(--font-mono)',   // Geist Mono — data, numerics
 } as const;
 
-// ── Composite D token object (matches cricket_os.jsx API) ────────
+// ── §44 Motion ───────────────────────────────────────────────────
+export const MOTION = {
+    control: 'var(--motion-control)',
+    panel: 'var(--motion-panel)',
+    major: 'var(--motion-major)',
+    event: 'var(--motion-event)',
+    ease: 'var(--ease-standard)',
+    spring: 'var(--ease-spring)',
+} as const;
+
+// ── Composite D token object ─────────────────────────────────────
 export const D = {
-    // Dynamic theme-aware surface & text tokens
+    // Theme-aware surfaces and text (CSS variables)
     bg: 'var(--bg-app)',
     base: 'var(--bg-app)',
+    surface0: 'var(--surface-0)',
+    surface1: 'var(--surface-1)',
+    surface2: 'var(--surface-2)',
+    surface3: 'var(--surface-3)',
+    surface4: 'var(--surface-4)',
+    // legacy surface names
     surf0: 'var(--surf0)',
     surf1: 'var(--surf1)',
     surf2: 'var(--surf2)',
@@ -94,77 +126,108 @@ export const D = {
     textSecondary: 'var(--text-secondary)',
     textMuted: 'var(--text-muted)',
 
-    // Constant semantic accents & fonts
+    // Accents (hex, alpha-suffixable)
     ...ACCENTS,
+
+    // Gradients
     ...GRADIENTS,
-    grad: GRADIENTS.main,
-    gradMain: GRADIENTS.main,
-    gradGold: GRADIENTS.gold,
-    gradLive: GRADIENTS.live,
+    grad: GRADIENTS.energy,
+    gradMain: GRADIENTS.energy,
+    gradGold: GRADIENTS.achievement,
+    gradLive: GRADIENTS.performance,
+
+    // Shape
     sm: RADIUS.sm,
     md: RADIUS.md,
     lg: RADIUS.lg,
     xl: RADIUS.xl,
-    xxl: '24px',
+    xxl: '36px',
     pill: RADIUS.pill,
-    glass: 'rgba(15, 22, 33, 0.75)',
+
+    // §9 Glass — selective use only
+    glass: 'rgba(20, 24, 27, 0.72)',
+
+    // Type
     mono: FONTS.mono,
     head: FONTS.head,
-    syne: FONTS.head,
+    syne: FONTS.head,   // legacy alias
     sans: FONTS.sans,
     body: FONTS.body,
+
+    // Motion
+    ...MOTION,
 } as const;
 
-// ── Role Colour Map (§2.7) ───────────────────────────────────────
+// ── Role colours — a few hues, reused; not one per role ──────────
+// §6 rule: fewer simultaneous accents. Roles group by tier.
+const PLATFORM = SPECTRAL.lime;
+const COMPETITION = SPECTRAL.cyan;
+const SCHOOL = SPECTRAL.sky;
+const COACHING = SPECTRAL.green;
+const OPERATIONS = SPECTRAL.yellow;
+const MEDICAL = STATES.critical;
+const PARTICIPANT = SPECTRAL.acid;
+const EXTERNAL = STATES.neutral;
+
 export const ROLE_COLOURS: Record<string, string> = {
-    superadmin: ACCENTS.violet,
-    platformops: '#7c3aed',
-    leagueadmin: ACCENTS.indigo,
-    tournamentdirector: '#4f46e5',
-    sportsmaster: ACCENTS.amber,
-    schooladmin: ACCENTS.teal,
-    medicalofficer: ACCENTS.rose,
-    schoolstaff: ACCENTS.sky,
-    coach: ACCENTS.emerald,
-    coachsupport: ACCENTS.cyan,
-    matchofficial: ACCENTS.orange,
-    selector: ACCENTS.amber,
-    player: ACCENTS.emerald,
-    adultplayer: ACCENTS.emerald,
-    parent: ACCENTS.sky,
-    scout: ACCENTS.violet,
-    external: '#64748b',
-    // Aliases (from ROLES enum)
-    'System Architect': ACCENTS.violet,
-    'Platform Ops': '#7c3aed',
-    'School Admin': ACCENTS.teal,
-    'Sports Master': ACCENTS.amber,
-    'Coach': ACCENTS.emerald,
-    'Coach Support': ACCENTS.cyan,
-    'Player': ACCENTS.emerald,
-    'Adult Player': ACCENTS.emerald,
-    'Match Official': ACCENTS.orange,
-    'Medical Officer': ACCENTS.rose,
-    'Groundskeeper': ACCENTS.teal,
-    'Driver': ACCENTS.lime,
-    'Parent': ACCENTS.sky,
-    'Scout': ACCENTS.violet,
-    'External': '#64748b',
-    'Spectator': '#64748b',
+    superadmin: PLATFORM,
+    platformops: PLATFORM,
+    leagueadmin: COMPETITION,
+    tournamentdirector: COMPETITION,
+    sportsmaster: SCHOOL,
+    schooladmin: SCHOOL,
+    schoolstaff: SCHOOL,
+    medicalofficer: MEDICAL,
+    coach: COACHING,
+    coachsupport: COACHING,
+    selector: COACHING,
+    matchofficial: OPERATIONS,
+    groundskeeper: OPERATIONS,
+    driver: OPERATIONS,
+    player: PARTICIPANT,
+    adultplayer: PARTICIPANT,
+    parent: PARTICIPANT,
+    scout: EXTERNAL,
+    external: EXTERNAL,
+    // Display-name aliases
+    'System Architect': PLATFORM,
+    'Platform Ops': PLATFORM,
+    'Admin': COMPETITION,
+    'Sportsmaster': SCHOOL,
+    'Sports Master': SCHOOL,
+    'School Admin': SCHOOL,
+    'Team Manager': SCHOOL,
+    'Coach': COACHING,
+    'Assistant Coach': COACHING,
+    'Coach Support': COACHING,
+    'Captain': COACHING,
+    'Umpire': OPERATIONS,
+    'Scorer': OPERATIONS,
+    'Match Official': OPERATIONS,
+    'Groundskeeper': OPERATIONS,
+    'Grounds-Keeper': OPERATIONS,
+    'Driver': OPERATIONS,
+    'Trainer': MEDICAL,
+    'Physiotherapist': MEDICAL,
+    'Doctor': MEDICAL,
+    'First Aid': MEDICAL,
+    'Medical Officer': MEDICAL,
+    'Player': PARTICIPANT,
+    'Adult Player': PARTICIPANT,
+    'Guardian': PARTICIPANT,
+    'Parent': PARTICIPANT,
+    'Scout': EXTERNAL,
+    'External': EXTERNAL,
+    'Spectator': EXTERNAL,
 };
 
-/**
- * Get role accent colour — safe with fallback
- */
+/** Role accent colour with a safe fallback. */
 export function getRoleColour(role?: string): string {
-    if (!role) return ACCENTS.indigo;
-    return ROLE_COLOURS[role] ?? ROLE_COLOURS[role.toLowerCase()] ?? ACCENTS.indigo;
+    if (!role) return ACCENTS.brand;
+    return ROLE_COLOURS[role] ?? ROLE_COLOURS[role.toLowerCase()] ?? ACCENTS.brand;
 }
 
-/**
- * Alpha-tint a hex colour per UIX spec §2.6
- * bg → +18, border → +30, hover → +22
- */
+/** Alpha-tint a hex colour: bg → 18, border → 30, hover → 22. */
 export function alpha(hex: string, suffix: '18' | '22' | '30' | '33' | '44' | '55' | '66' | '08' | '12'): string {
     return `${hex}${suffix}`;
 }

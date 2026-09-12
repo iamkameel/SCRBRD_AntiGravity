@@ -147,7 +147,7 @@ export function MatchCard({ match, homeTeam, awayTeam, showActions = true, varia
               )}
             </div>
             {(isLive || isCompleted) && row.score ? (
-              <span className="text-xl font-black text-white tracking-tighter" style={{ fontFamily: 'var(--font-dm-mono)' }}>{row.score}</span>
+              <span className="text-xl font-black text-white tracking-tighter" style={{ fontFamily: 'var(--font-mono)' }}>{row.score}</span>
             ) : (
               <span className="text-[9px] font-black uppercase tracking-widest text-white/15">TBD</span>
             )}
