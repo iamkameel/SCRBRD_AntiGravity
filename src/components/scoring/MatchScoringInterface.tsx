@@ -23,6 +23,7 @@ import { placementFromTap, CAPTURE_PROFILE } from '@/lib/scoring/placementEngine
 import { AutomatedMatchBulletin } from '@/components/media/AutomatedMatchBulletin';
 import { OfflineSyncBanner } from './OfflineSyncBanner';
 import { PolarSpatialHeatmap } from './PolarSpatialHeatmap';
+import { VoiceScoringConsole } from './VoiceScoringConsole';
 import { 
   Undo, Save, Play, Pause, RotateCcw,
   ChevronRight, AlertCircle, Users, Settings, Keyboard, Command, Newspaper
@@ -641,6 +642,24 @@ export function MatchScoringInterface({
           />
         </div>
       </Card>
+
+      {/* Hands-Free Voice Assisted Live Scoring Console */}
+      <VoiceScoringConsole 
+        onRecordBall={(voiceBall) => {
+          if (voiceBall.isWicket) {
+            handleWicket();
+          } else if (voiceBall.extrasType) {
+            handleExtras(voiceBall.extrasType, voiceBall.runs);
+          } else {
+            handleRunsSelect(voiceBall.runs);
+          }
+          if (voiceBall.shotType) {
+            setCurrentBall(prev => ({ ...prev, shotType: voiceBall.shotType }));
+          }
+        }}
+        onUndo={undoLastBall}
+        disabled={isPaused}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Scoring Controls */}
