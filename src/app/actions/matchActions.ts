@@ -24,7 +24,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { serializeData } from '@/lib/serialize';
-import { requireUser } from '@/lib/auth/session';
+import { requireUser, requireTeamAccess } from '@/lib/auth/session';
 import { MOCK_MATCHES } from '@/lib/mockMatchData';
 
 export type MatchActionState = {
@@ -1080,7 +1080,14 @@ export async function saveTeamSelectionAction(
 ) {
   'use server';
   try {
-    const actor = await requireUser('squad');
+    // Which side of this fixture is being confirmed decides who may confirm it.
+    const matchSnap = await admin.firestore().collection('matches').doc(matchId).get();
+    if (!matchSnap.exists) return { success: false, error: 'Match not found' };
+    const subjectTeamId = teamType === 'home'
+      ? (matchSnap.data()?.homeTeamId as string)
+      : (matchSnap.data()?.awayTeamId as string);
+
+    const actor = await requireTeamAccess('squad', subjectTeamId);
     const updateData = {
       [`teamSelection.${teamType}`]: {
         ...selection,
@@ -1258,12 +1265,12 @@ export async function retireBatterAction(matchId: string, playerId: string, reti
 export async function saveBattingOrderAction(matchId: string, orderData: { home: string[], away: string[] }) {
   'use server';
   try {
-    await requireUser('squad');
+    const actor = await requireUser('squad');
     const updateData = {
       'preMatch.battingOrder': {
         ...orderData,
         arrangedAt: new Date().toISOString(),
-        arrangedBy: 'user'
+        arrangedBy: actor.uid
       }
     };
 

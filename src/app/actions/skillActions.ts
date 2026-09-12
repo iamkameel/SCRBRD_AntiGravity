@@ -15,7 +15,7 @@ import {
     updateDoc
 } from "firebase/firestore";
 import { SkillAssessment, PerformanceIndex, DevelopmentTrend, RoleArchetype, SkillDomain, RatingScale1to20, ReadinessScore } from "@/types/schema_v4";
-import { requireUser } from "@/lib/auth/session";
+import { requireUser, resolveActorPerson } from "@/lib/auth/session";
 
 /**
  * Log a new skill assessment for a player.
@@ -26,7 +26,7 @@ export async function logSkillAssessmentAction(assessment: Omit<SkillAssessment,
         // assessment must be attributable and may never be self-awarded.
         // The `skills` module is tier 4, which already excludes players.
         const actor = await requireUser("skills");
-        const actorPersonId = await resolveActorPersonId(actor.uid, actor.email);
+        const { personId: actorPersonId } = await resolveActorPerson(actor);
 
         if (actorPersonId && actorPersonId === assessment.personId) {
             return { success: false, error: "You cannot assess your own attributes." };
@@ -50,26 +50,6 @@ export async function logSkillAssessmentAction(assessment: Omit<SkillAssessment,
         console.error("Error logging skill assessment:", error);
         return { success: false, error: (error as Error).message || "Failed to log assessment" };
     }
-}
-
-/** Maps a signed-in account to its person record, for self-assessment checks. */
-async function resolveActorPersonId(uid: string, email: string | null): Promise<string | null> {
-    try {
-        const adminSdk = (await import('@/lib/firebase-admin')).default;
-        const adminDb = adminSdk.firestore();
-
-        const userDoc = await adminDb.collection('users').doc(uid).get();
-        const linked = userDoc.exists ? (userDoc.data()?.personId as string | undefined) : undefined;
-        if (linked) return linked;
-
-        if (email) {
-            const byEmail = await adminDb.collection('people').where('email', '==', email).limit(1).get();
-            if (!byEmail.empty) return byEmail.docs[0].id;
-        }
-    } catch {
-        // Fall through: the tier check above is still enforced.
-    }
-    return null;
 }
 
 /**

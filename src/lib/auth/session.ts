@@ -99,6 +99,63 @@ export async function requireUser(module?: Module): Promise<SessionUser> {
     return user;
 }
 
+export interface ActorPerson {
+    /** The caller's person record, when their account is linked to one. */
+    personId: string | null;
+    /** Teams that person belongs to — the squads a coach or selector owns. */
+    teamIds: string[];
+}
+
+/**
+ * Maps a signed-in account to its person record. Used for team scoping and to
+ * stop anyone assessing themselves. Falls back to an email match when the
+ * users document carries no explicit link.
+ */
+export async function resolveActorPerson(user: SessionUser): Promise<ActorPerson> {
+    const empty: ActorPerson = { personId: null, teamIds: [] };
+    try {
+        const userDoc = await adminDb.collection('users').doc(user.uid).get();
+        const linked = userDoc.exists ? (userDoc.data()?.personId as string | undefined) : undefined;
+
+        if (linked) {
+            const person = await adminDb.collection('people').doc(linked).get();
+            return { personId: linked, teamIds: (person.data()?.teamIds as string[]) ?? [] };
+        }
+
+        if (user.email) {
+            const byEmail = await adminDb.collection('people').where('email', '==', user.email).limit(1).get();
+            if (!byEmail.empty) {
+                const doc = byEmail.docs[0];
+                return { personId: doc.id, teamIds: (doc.data()?.teamIds as string[]) ?? [] };
+            }
+        }
+    } catch {
+        // Fall through: the caller's module/tier check still applies.
+    }
+    return empty;
+}
+
+/** School administration and above act across every team in their remit. */
+const TEAM_SCOPE_EXEMPT_TIER = 3;
+
+/**
+ * Require that the caller may act on a specific team's data.
+ *
+ * Tier <= 3 (school admin, sportsmaster, platform) is exempt. Coaching and
+ * selection roles must belong to the team, so a home coach cannot confirm the
+ * away side's XI.
+ */
+export async function requireTeamAccess(module: Module, teamId: string): Promise<SessionUser> {
+    const user = await requireUser(module);
+    if (user.tier <= TEAM_SCOPE_EXEMPT_TIER) return user;
+
+    const { teamIds } = await resolveActorPerson(user);
+    if (!teamIds.includes(teamId)) {
+        throw new AuthorizationError('You can only manage your own team.', 403);
+    }
+    return user;
+}
+
 /** Mints a session cookie from a freshly issued Firebase ID token. */
 export async function createSessionCookie(idToken: string): Promise<string> {
     return adminAuth.createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
