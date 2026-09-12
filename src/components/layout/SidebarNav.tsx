@@ -62,6 +62,8 @@ const navKeyToModuleMap: Record<string, Module> = {
 
   // Communications
   'inbox-newsfeed': 'dashboard',
+  'broadcast-media': 'media',
+  'broadcast-recap': 'media',
 
   // Coaching & Training
   'session-planner': 'training',

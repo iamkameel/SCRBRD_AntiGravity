@@ -24,23 +24,25 @@
 import {
     collection,
     doc,
-    documentId,
+    getDoc,
     getDocs,
     query,
     where,
     updateDoc,
     addDoc,
     serverTimestamp,
-    Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { fetchCollection } from '@/lib/firestore';
+import { queryDocs, queryDocsLenient, fetchByIds, fetchWhereIn, chunk, toDate, describeFirestoreError } from '@/lib/services/firestoreQuery';
 import type { Team, Match, Person, School, Field, Division } from '@/types/firestore';
 import type { FixtureReadinessCheck, PlayerAvailability } from '@/types/schema_v4';
 import { transportService, TransportTrip } from '@/lib/services/transportService';
-import { facilityService, GroundReadinessLog } from '@/lib/services/facilityService';
 import { medicalService, MedicalIncident } from '@/lib/services/medicalService';
 import { recordAuditLog } from '@/lib/services/auditService';
+import { assessBowlingWorkload, extractBowlerEntries, formatOvers } from '@/lib/intelligence/workloadEngine';
+
+/** Minimal view of a ground_status_logs doc (both historical shapes). */
+interface GroundLogLite { conditionStatus: string; pitchReadiness: number; at: number }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -115,7 +117,9 @@ export interface DirectorSnapshot {
     readinessGrid: TeamReadinessTelemetry[];
     staffRoster: StaffDutyAssignment[];
     workloadAlerts: WorkloadRiskAlert[];
-    source: 'live' | 'fallback';
+    /** live = read from Firestore; fallback = school has no records; error = a read was refused (see `error`). */
+    source: 'live' | 'fallback' | 'error';
+    error?: string;
     generatedAt: string;
 }
 
@@ -217,14 +221,15 @@ export const MOCK_WORKLOAD_ALERTS: WorkloadRiskAlert[] = [
     },
 ];
 
-export function buildFallbackSnapshot(schoolId: string, schoolName?: string): DirectorSnapshot {
+export function buildFallbackSnapshot(schoolId: string, schoolName?: string, error?: string): DirectorSnapshot {
     return {
         schoolId,
         metrics: { ...MOCK_EXECUTIVE_METRICS, schoolName: schoolName || MOCK_EXECUTIVE_METRICS.schoolName },
         readinessGrid: MOCK_TEAM_READINESS_GRID,
         staffRoster: MOCK_STAFF_ASSIGNMENTS,
         workloadAlerts: MOCK_WORKLOAD_ALERTS,
-        source: 'fallback',
+        source: error ? 'error' : 'fallback',
+        error,
         generatedAt: new Date().toISOString(),
     };
 }
@@ -232,48 +237,6 @@ export function buildFallbackSnapshot(schoolId: string, schoolName?: string): Di
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-const IN_LIMIT = 30; // Firestore `in` operator cap
-
-function chunk<T>(arr: T[], size = IN_LIMIT): T[][] {
-    const out: T[][] = [];
-    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-    return out;
-}
-
-/** Fetch docs by id across the `in` cap. Missing collections resolve to []. */
-async function fetchByIds<T>(collectionName: string, ids: string[]): Promise<T[]> {
-    const unique = Array.from(new Set(ids.filter(Boolean)));
-    if (unique.length === 0) return [];
-    const results = await Promise.all(
-        chunk(unique).map(c => fetchCollection<T>(collectionName, [where(documentId(), 'in', c)]))
-    );
-    return results.flat();
-}
-
-/** Fetch docs where `field` is in ids, across the `in` cap. */
-async function fetchWhereIn<T>(collectionName: string, field: string, ids: string[]): Promise<T[]> {
-    const unique = Array.from(new Set(ids.filter(Boolean)));
-    if (unique.length === 0) return [];
-    const results = await Promise.all(
-        chunk(unique).map(c => fetchCollection<T>(collectionName, [where(field, 'in', c)]))
-    );
-    return results.flat();
-}
-
-function toDate(value: unknown): Date | null {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (value instanceof Timestamp) return value.toDate();
-    if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as any).toDate === 'function') {
-        return (value as any).toDate();
-    }
-    if (typeof value === 'string' || typeof value === 'number') {
-        const d = new Date(value);
-        return isNaN(d.getTime()) ? null : d;
-    }
-    return null;
-}
 
 function formatFixtureDate(value: unknown): string {
     const d = toDate(value);
@@ -312,7 +275,8 @@ function currentSeasonLabel(now = new Date()): string {
 }
 
 function isJuniorLabel(label: string): boolean {
-    return /\bU-?1[0-6]\b/i.test(label);
+    // (?!\d) not \b: "U15A" has no word boundary between 5 and A.
+    return /\bU-?1[0-6](?!\d)/i.test(label);
 }
 
 /**
@@ -374,7 +338,7 @@ function scoreRow(row: Omit<TeamReadinessTelemetry, 'overallReadinessScore'>): n
 export const sportsDirectorService = {
     /** Schools available for the header selector. */
     async listSchools(): Promise<Pick<School, 'id' | 'name' | 'abbreviation' | 'contactEmail'>[]> {
-        const schools = await fetchCollection<School>('schools');
+        const schools = await queryDocsLenient<School>('schools');
         return schools
             .map(s => ({ id: s.id, name: s.name, abbreviation: s.abbreviation, contactEmail: s.contactEmail }))
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -386,7 +350,8 @@ export const sportsDirectorService = {
      */
     async getExecutiveSnapshot(schoolId: string, schoolName?: string): Promise<DirectorSnapshot> {
         try {
-            const teams = await fetchCollection<Team>('teams', [where('schoolId', '==', schoolId)]);
+            // Strict: a rules denial here must surface as an error, not as "no data".
+            const teams = await queryDocs<Team>('teams', [where('schoolId', '==', schoolId)]);
             if (teams.length === 0) return buildFallbackSnapshot(schoolId, schoolName);
 
             const teamIds = teams.map(t => t.id);
@@ -436,11 +401,10 @@ export const sportsDirectorService = {
                 fetchByIds<Field>('fields', fieldIds),
                 fetchByIds<Division>('divisions', divisionIds),
                 medicalService.getIncidents().catch(() => [] as MedicalIncident[]),
-                fetchCollection<Person>('people', [where('schoolId', '==', schoolId)]),
-                Promise.all(fieldIds.map(async fid => {
-                    try { return [fid, await facilityService.getLatestReadinessLog(fid)] as const; }
-                    catch { return [fid, null] as const; }
-                })),
+                queryDocsLenient<Person>('people', [where('schoolId', '==', schoolId)]),
+                // All logs for the board's fields in one `in` query; latest-per-field is picked
+                // client-side so no (fieldId, loggedAt) composite index is required.
+                fetchWhereIn<any>('ground_status_logs', 'fieldId', fieldIds),
             ]);
 
             const readinessByFixture = new Map(readinessChecks.map(r => [r.fixtureId, r]));
@@ -460,7 +424,14 @@ export const sportsDirectorService = {
             const opponentById = new Map(opponents.map(t => [t.id, t]));
             const fieldById = new Map(fields.map(f => [f.id, f]));
             const divisionById = new Map(divisions.map(d => [d.id, d]));
-            const groundLogByField = new Map<string, GroundReadinessLog | null>(groundLogs);
+            const groundLogByField = new Map<string, GroundLogLite | null>();
+            for (const raw of groundLogs as any[]) {
+                const at = toDate(raw.loggedAt)?.getTime() ?? 0;
+                const prev = groundLogByField.get(raw.fieldId);
+                if (!prev || at > prev.at) {
+                    groundLogByField.set(raw.fieldId, { conditionStatus: String(raw.conditionStatus ?? 'Fair'), pitchReadiness: Number(raw.pitchReadiness ?? 0), at });
+                }
+            }
 
             // ── People resolution (officials, coaches, selected XIs, incident subjects) ──
             const personIds = new Set<string>();
@@ -620,8 +591,44 @@ export const sportsDirectorService = {
                 });
             }
 
-            // Consecutive matches: same player in ≥3 XIs over the trailing 7 days (cross-age-group doubling up)
+            // Bowling overload: overs per bowler from completed matches' live projections, trailing 7 days,
+            // against age-banded weekly caps (workloadEngine).
             const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+            const recentCompleted = completed
+                .filter(m => { const d = toDate(m.matchDate); return !!d && d.getTime() >= weekAgo; })
+                .slice(0, 40);
+            const projections = await Promise.all(recentCompleted.map(async m => {
+                try {
+                    const s = await getDoc(doc(db, 'matches', m.id, 'live', 'score'));
+                    return s.exists() ? (s.data() as any) : null;
+                } catch { return null; }
+            }));
+            const ownTeamIds = new Set(teamIds);
+            const bowlerEntries = recentCompleted.flatMap((m, i) =>
+                extractBowlerEntries(m.id, toDate(m.matchDate)!.toISOString(), projections[i], ownTeamIds, id => teamById.get(id)?.name ?? 'Squad')
+            );
+            const bowlingRisks = assessBowlingWorkload(bowlerEntries, new Date(now).toISOString()).filter(w => w.level !== 'OK');
+            if (bowlingRisks.length) {
+                const extra = await resolvePeople(bowlingRisks.map(w => w.playerId).filter(id => !peopleById.has(id)));
+                extra.forEach((v, k) => peopleById.set(k, v));
+                for (const w of bowlingRisks) {
+                    const p = peopleById.get(w.playerId);
+                    workloadAlerts.push({
+                        id: `bowl-${w.playerId}`,
+                        playerId: w.playerId,
+                        playerName: personName(p) ?? w.playerName ?? 'Unknown bowler',
+                        teamName: squadMembership.get(w.playerId) ?? w.teamName,
+                        role: p?.bowlingStyle ?? p?.playingRole ?? 'Bowler',
+                        riskType: 'BOWLING_OVERLOAD',
+                        details: `Bowled ${formatOvers(w.oversLast7)} overs across ${w.matches} match${w.matches > 1 ? 'es' : ''} in the last 7 days — ${Math.round(w.utilisation * 100)}% of the ${w.ageBand} weekly cap (${w.cap}).`,
+                        currentWorkload: `${formatOvers(w.oversLast7)} overs / week`,
+                        recommendedLimit: w.remainingOvers > 0 ? `Max ${formatOvers(w.remainingOvers)} more overs this week` : 'Cap reached — rest from bowling',
+                        severity: w.level === 'HIGH' ? 'HIGH' : 'MODERATE',
+                    });
+                }
+            }
+
+            // Consecutive matches: same player in ≥3 XIs over the trailing 7 days (cross-age-group doubling up)
             const recentXiCounts = new Map<string, number>();
             for (const m of completed) {
                 const d = toDate(m.matchDate);
@@ -701,8 +708,9 @@ export const sportsDirectorService = {
                 generatedAt: new Date().toISOString(),
             };
         } catch (error) {
-            console.warn('[sportsDirectorService] snapshot failed, using fallback dataset:', error);
-            return buildFallbackSnapshot(schoolId, schoolName);
+            const reason = describeFirestoreError(error);
+            console.warn('[sportsDirectorService] snapshot failed, using fallback dataset:', reason);
+            return buildFallbackSnapshot(schoolId, schoolName, reason);
         }
     },
 

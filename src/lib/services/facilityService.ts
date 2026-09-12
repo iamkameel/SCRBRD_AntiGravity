@@ -1,7 +1,6 @@
 import {
     collection,
     doc,
-    getDoc,
     getDocs,
     query,
     where,
@@ -12,7 +11,6 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Field } from '@/types/firestore';
 
 export interface GroundReadinessLog {
     id?: string;
@@ -38,18 +36,54 @@ export interface FacilityBooking {
     status: 'Confirmed' | 'Pending' | 'Cancelled';
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Booking store
+//
+// The canonical booking store is `fields/{fieldId}/bookings` — the same
+// subcollection the Field Booking Calendar (fieldBookingActions) and the
+// Turf & Facility Engine read and write. Earlier versions of this service
+// wrote to a separate top-level `facility_bookings` collection, which meant
+// the two views never saw each other's bookings. Writes now go to the
+// subcollection; the legacy collection is still read so old records surface.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function asDate(v: Timestamp | string | Date): Date {
+    if (v instanceof Date) return v;
+    if (v instanceof Timestamp) return v.toDate();
+    return new Date(v);
+}
+const pad = (n: number) => String(n).padStart(2, '0');
+const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+/** Map a fields/{id}/bookings doc to the FacilityBooking shape. */
+function fromFieldBooking(fieldId: string, id: string, raw: Record<string, unknown>): FacilityBooking {
+    const day = raw.date ? asDate(raw.date as Timestamp | string) : new Date();
+    const [sh, sm] = String(raw.startTime ?? '08:00').split(':').map(Number);
+    const [eh, em] = String(raw.endTime ?? '12:00').split(':').map(Number);
+    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), sh || 0, sm || 0);
+    const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), eh || 0, em || 0);
+    const type = raw.type as string | undefined;
+    return {
+        id,
+        fieldId,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        purpose: String(raw.title ?? 'Booking'),
+        relatedEntityType: (raw.relatedEntityType as FacilityBooking['relatedEntityType']) ?? (raw.fixtureId ? 'fixture' : type === 'Practice' ? 'training' : undefined),
+        relatedEntityId: (raw.relatedEntityId as string | undefined) ?? (raw.fixtureId as string | undefined),
+        status: (raw.status as FacilityBooking['status']) ?? 'Confirmed',
+    };
+}
+
 export const facilityService = {
     // --- Readiness Logs ---
     getLatestReadinessLog: async (fieldId: string): Promise<GroundReadinessLog | null> => {
-        const colRef = collection(db, 'ground_status_logs');
-        const q = query(
-            colRef,
-            where('fieldId', '==', fieldId),
-            orderBy('loggedAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
+        // Single `where` + client-side sort: no (fieldId, loggedAt) composite index required.
+        const snapshot = await getDocs(query(collection(db, 'ground_status_logs'), where('fieldId', '==', fieldId)));
         if (snapshot.empty) return null;
-        return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as GroundReadinessLog;
+        const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GroundReadinessLog));
+        logs.sort((a, b) => asDate(b.loggedAt).getTime() - asDate(a.loggedAt).getTime());
+        return logs[0];
     },
 
     logReadiness: async (log: Omit<GroundReadinessLog, 'id'>) => {
@@ -71,21 +105,37 @@ export const facilityService = {
 
     // --- Bookings ---
     getBookings: async (fieldId: string): Promise<FacilityBooking[]> => {
-        const colRef = collection(db, 'facility_bookings');
-        const q = query(
-            colRef,
-            where('fieldId', '==', fieldId),
-            orderBy('startTime', 'asc')
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FacilityBooking));
+        const sub = await getDocs(query(collection(db, 'fields', fieldId, 'bookings'), orderBy('date', 'asc')));
+        const canonical = sub.docs.map(d => fromFieldBooking(fieldId, d.id, d.data()));
+
+        let legacy: FacilityBooking[] = [];
+        try {
+            const snap = await getDocs(query(collection(db, 'facility_bookings'), where('fieldId', '==', fieldId)));
+            legacy = snap.docs.map(d => ({ id: d.id, ...d.data() } as FacilityBooking));
+        } catch {
+            // legacy collection may not exist / be readable — fine
+        }
+
+        return [...canonical, ...legacy].sort((a, b) => asDate(a.startTime).getTime() - asDate(b.startTime).getTime());
     },
 
     createBooking: async (booking: Omit<FacilityBooking, 'id'>) => {
-        const colRef = collection(db, 'facility_bookings');
-        const docRef = await addDoc(colRef, {
-            ...booking,
-            createdAt: serverTimestamp()
+        const start = asDate(booking.startTime);
+        const end = asDate(booking.endTime);
+        const type = booking.relatedEntityType === 'fixture' ? 'Match' : booking.relatedEntityType === 'training' ? 'Practice' : 'Event';
+        const docRef = await addDoc(collection(db, 'fields', booking.fieldId, 'bookings'), {
+            date: Timestamp.fromDate(new Date(start.getFullYear(), start.getMonth(), start.getDate())),
+            startTime: hhmm(start),
+            endTime: hhmm(end),
+            title: booking.purpose,
+            organizer: 'Facilities',
+            type,
+            status: booking.status,
+            relatedEntityType: booking.relatedEntityType ?? null,
+            relatedEntityId: booking.relatedEntityId ?? null,
+            fixtureId: booking.relatedEntityType === 'fixture' ? booking.relatedEntityId ?? null : null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         });
         return docRef.id;
     }

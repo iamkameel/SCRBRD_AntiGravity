@@ -1,4 +1,5 @@
 import { FacilityCommandCenter } from '@/components/facilities/FacilityCommandCenter';
+import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -8,8 +9,10 @@ export const metadata: Metadata = {
 
 export default function FacilitiesPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <FacilityCommandCenter />
-    </div>
+    <RouteGuard module="fields" label="Turf & Facility Engine">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <FacilityCommandCenter />
+      </div>
+    </RouteGuard>
   );
 }

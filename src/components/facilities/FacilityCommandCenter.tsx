@@ -125,18 +125,19 @@ export function FacilityCommandCenter() {
   }, [health, conflicts, unbooked, snap, openTasks, todayKey]);
 
   // ── Actions ──
-  const isDemo = snap?.source === 'fallback';
+  const isDemo = snap?.source !== 'live'; // fallback or error → demo dataset, nothing persists
+  const isError = snap?.source === 'error';
 
   const addLocalBooking = (b: Omit<UnifiedBooking, 'id'>) =>
     setSnap(prev => prev && { ...prev, bookings: [...prev.bookings, { ...b, id: `local-${Date.now()}` }] });
 
   const submitBooking = async (q: QuickBook) => {
     if (!snap) return;
-    const payload: Omit<UnifiedBooking, 'id'> = { ...q, status: 'Confirmed', source: 'field' };
+    const payload: Omit<UnifiedBooking, 'id'> = { ...q, status: 'Confirmed', source: q.fixtureId ? 'fixture' : 'field' };
     if (isDemo) { addLocalBooking(payload); toast.info('Demo dataset — booking kept locally.'); setQuick(null); return; }
     setBusy('book');
     try {
-      const res = await createBookingAction(q.fieldId, { date: q.date, startTime: q.startTime, endTime: q.endTime, title: q.title, organizer: q.organizer, type: q.type, status: 'Confirmed' });
+      const res = await createBookingAction(q.fieldId, { date: q.date, startTime: q.startTime, endTime: q.endTime, title: q.title, organizer: q.organizer, type: q.type, status: 'Confirmed', fixtureId: q.fixtureId });
       if (!res.success) throw new Error(res.error);
       toast.success(`Booked ${fieldName(q.fieldId)} · ${q.date} ${q.startTime}–${q.endTime}`);
       setQuick(null);
@@ -168,7 +169,7 @@ export function FacilityCommandCenter() {
     try {
       await facilityEngineService.assignFixtureToField(f.matchId, fieldId);
       const b = bookingForFixture(f, fieldId)!;
-      const res = await createBookingAction(fieldId, { date: b.date, startTime: b.startTime, endTime: b.endTime, title: b.title, organizer: 'Fixtures', type: 'Match', status: 'Confirmed' });
+      const res = await createBookingAction(fieldId, { date: b.date, startTime: b.startTime, endTime: b.endTime, title: b.title, organizer: 'Fixtures', type: 'Match', status: 'Confirmed', fixtureId: f.matchId });
       if (!res.success) throw new Error(res.error);
       toast.success(`${f.title} → ${fieldName(fieldId)} (booked)`);
       load();
@@ -223,14 +224,15 @@ export function FacilityCommandCenter() {
                 {schools.map(s => <option key={s.id} value={s.id} className="bg-[#0b0b0b]">{s.name}</option>)}
                 <option value={DEMO_SCHOOL_ID} className="bg-[#0b0b0b]">Demo dataset</option>
               </select>
-              <Badge className={cn('text-[9px] uppercase font-mono gap-1.5', isDemo ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30')}>
-                {isDemo ? <FlaskConical className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
-                {isDemo ? 'Demo data — no fields for this school' : 'Live'}
+              <Badge title={snap.error} className={cn('text-[9px] uppercase font-mono gap-1.5', isError ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : isDemo ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30')}>
+                {isError ? <AlertTriangle className="h-3 w-3" /> : isDemo ? <FlaskConical className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
+                {isError ? 'Firestore error — showing demo data' : isDemo ? 'Demo data — no fields for this school' : 'Live'}
               </Badge>
               <button onClick={load} disabled={loading} className="h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50" style={{ fontFamily: D.mono }}>
                 <RefreshCw className={cn('h-3 w-3', loading && 'animate-spin')} /> Refresh
               </button>
             </div>
+            {isError && <p role="alert" className="text-[10px] font-mono text-rose-300/90 pt-1">{snap.error}</p>}
           </div>
           <Button onClick={() => setQuick({ fieldId: snap.fields[0]?.id ?? '', date: todayKey, startTime: '15:00', endTime: '17:00', title: '', type: 'Practice', organizer: '' })}
             className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-black uppercase tracking-widest text-[10px] rounded-full px-6 h-10 shadow-[0_0_25px_rgba(34,197,94,0.3)]">
@@ -242,7 +244,7 @@ export function FacilityCommandCenter() {
         <div className={cn('grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 pt-8 border-t border-white/[0.08]', loading && 'opacity-50')}>
           {[
             { label: 'Grounds', value: kpis.fields, sub: `${kpis.matchReady} match-ready`, icon: <MapPin className="h-4 w-4 text-[#22c55e]" /> },
-            { label: 'Avg Turf Health', value: `${kpis.avg}`, sub: `Grade ${kpis.avg ? (kpis.avg >= 90 ? 'A' : kpis.avg >= 80 ? 'B' : kpis.avg >= 65 ? 'C' : kpis.avg >= 50 ? 'D' : 'F') : '—'}`, icon: <Leaf className="h-4 w-4 text-[#22c55e]" /> },
+            { label: 'Avg Turf Health', value: `${kpis.avg}`, sub: `Avg grade ${kpis.avg ? (kpis.avg >= 90 ? 'A' : kpis.avg >= 80 ? 'B' : kpis.avg >= 65 ? 'C' : kpis.avg >= 50 ? 'D' : 'F') : '—'}`, icon: <Leaf className="h-4 w-4 text-[#22c55e]" /> },
             { label: 'Booking Issues', value: kpis.issues, sub: `${conflicts.length} clashes · ${unbooked.length} unbooked · ${snap.unallocatedFixtures.length} unallocated`, icon: <AlertTriangle className={cn('h-4 w-4', kpis.issues ? 'text-rose-400' : 'text-white/30')} />, tone: kpis.issues ? 'text-rose-400' : 'text-white' },
             { label: 'Fixtures (14d)', value: snap.fixtures.length + snap.unallocatedFixtures.length, sub: `${prep.length} in prep window`, icon: <CalendarDays className="h-4 w-4 text-indigo-400" /> },
             { label: 'Open Maintenance', value: openTasks.length, sub: `${kpis.overdue} overdue`, icon: <Hammer className={cn('h-4 w-4', kpis.overdue ? 'text-amber-400' : 'text-white/30')} />, tone: kpis.overdue ? 'text-amber-400' : 'text-white' },

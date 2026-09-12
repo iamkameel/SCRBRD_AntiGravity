@@ -140,7 +140,8 @@ export function SportsDirectorDashboard() {
 
   // ── Derived ──
   const metrics = snapshot?.metrics;
-  const isFallback = snapshot?.source === 'fallback';
+  const isFallback = snapshot?.source !== 'live'; // fallback or error → demo dataset, nothing persists
+  const isError = snapshot?.source === 'error';
 
   const filteredTeams = useMemo(() => {
     const rows = snapshot?.readinessGrid ?? [];
@@ -272,9 +273,12 @@ export function SportsDirectorDashboard() {
                 <option value={DEMO_SCHOOL_ID} className="bg-[#0b0b0b]">Demo dataset</option>
               </select>
 
-              <Badge className={`text-[9px] uppercase font-mono gap-1.5 ${isFallback ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'}`}>
-                {isFallback ? <FlaskConical className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
-                {isFallback ? 'Demo data — no records for this school' : 'Live telemetry'}
+              <Badge
+                title={snapshot.error}
+                className={`text-[9px] uppercase font-mono gap-1.5 ${isError ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : isFallback ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30'}`}
+              >
+                {isError ? <AlertTriangle className="h-3 w-3" /> : isFallback ? <FlaskConical className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
+                {isError ? 'Firestore error — showing demo data' : isFallback ? 'Demo data — no records for this school' : 'Live telemetry'}
               </Badge>
 
               <button
@@ -291,6 +295,9 @@ export function SportsDirectorDashboard() {
                 {new Date(snapshot.generatedAt).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
+            {isError && (
+              <p role="alert" className="text-[10px] font-mono text-rose-300/90 pt-1">{snapshot.error}</p>
+            )}
           </div>
 
           {/* Quick Executive Actions */}

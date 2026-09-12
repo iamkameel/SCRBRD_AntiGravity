@@ -13,9 +13,9 @@
  * Falls back to a demo dataset when the school has no fields on record.
  */
 
-import { collection, doc, getDocs, where, documentId, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDocs, where, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { fetchCollection } from '@/lib/firestore';
+import { queryDocs, queryDocsLenient, fetchWhereIn, toDate, describeFirestoreError } from '@/lib/services/firestoreQuery';
 import type { Field, Match, Team, School } from '@/types/firestore';
 import type { GroundStatusLog, MaintenanceTask } from '@/types/schema_v4';
 import { toDateKey, minutesToTime, timeToMinutes, addDays, type UnifiedBooking, type FixtureSlot } from '@/lib/intelligence/turfEngine';
@@ -28,29 +28,10 @@ export interface FacilitySnapshot {
     maintenance: MaintenanceTask[];
     fixtures: FixtureSlot[];          // have a fieldId in this school
     unallocatedFixtures: FixtureSlot[]; // school home fixtures with no field
-    source: 'live' | 'fallback';
+    /** live = read from Firestore; fallback = school has no fields; error = a read was refused (see `error`). */
+    source: 'live' | 'fallback' | 'error';
+    error?: string;
     generatedAt: string;
-}
-
-const IN_LIMIT = 30;
-function chunk<T>(arr: T[], size = IN_LIMIT): T[][] {
-    const out: T[][] = [];
-    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-    return out;
-}
-async function fetchWhereIn<T>(col: string, field: string, ids: string[]): Promise<T[]> {
-    const u = Array.from(new Set(ids.filter(Boolean)));
-    if (!u.length) return [];
-    return (await Promise.all(chunk(u).map(c => fetchCollection<T>(col, [where(field, 'in', c)])))).flat();
-}
-
-function toDate(v: unknown): Date | null {
-    if (!v) return null;
-    if (v instanceof Date) return v;
-    if (v instanceof Timestamp) return v.toDate();
-    if (typeof v === 'object' && v && typeof (v as any).toDate === 'function') return (v as any).toDate();
-    const d = new Date(v as string);
-    return isNaN(d.getTime()) ? null : d;
 }
 
 function normaliseLog(raw: any): GroundStatusLog {
@@ -144,14 +125,15 @@ function isUpcoming(m: Match, todayKey: string, horizonDays: number): boolean {
 
 export const facilityEngineService = {
     async listSchools(): Promise<Pick<School, 'id' | 'name' | 'contactEmail'>[]> {
-        const s = await fetchCollection<School>('schools');
+        const s = await queryDocsLenient<School>('schools');
         return s.map(x => ({ id: x.id, name: x.name, contactEmail: x.contactEmail })).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     },
 
     async loadSnapshot(schoolId: string, horizonDays = 14): Promise<FacilitySnapshot> {
         const todayKey = toDateKey(new Date());
         try {
-            let fields = await fetchCollection<Field>('fields', [where('schoolId', '==', schoolId)]);
+            // Strict: a rules denial must surface as an error, not as "no fields".
+            let fields = await queryDocs<Field>('fields', [where('schoolId', '==', schoolId)]);
             if (!fields.length) return buildFallbackSnapshot(schoolId);
             fields = fields.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             const fieldIds = fields.map(f => f.id);
@@ -167,7 +149,7 @@ export const facilityEngineService = {
                 })),
                 fetchWhereIn<MaintenanceTask>('maintenance_tasks', 'fieldId', fieldIds),
                 fetchWhereIn<Match>('matches', 'fieldId', fieldIds),
-                fetchCollection<Team>('teams', [where('schoolId', '==', schoolId)]),
+                queryDocsLenient<Team>('teams', [where('schoolId', '==', schoolId)]),
             ]);
 
             const logsByField: Record<string, GroundStatusLog[]> = {};
@@ -192,8 +174,9 @@ export const facilityEngineService = {
                 source: 'live', generatedAt: new Date().toISOString(),
             };
         } catch (err) {
-            console.warn('[facilityEngineService] snapshot failed, using fallback:', err);
-            return buildFallbackSnapshot(schoolId);
+            const reason = describeFirestoreError(err);
+            console.warn('[facilityEngineService] snapshot failed, using fallback:', reason);
+            return { ...buildFallbackSnapshot(schoolId), source: 'error', error: reason };
         }
     },
 

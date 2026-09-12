@@ -12,6 +12,8 @@ export interface BookingData {
   organizer: string;
   type: 'Match' | 'Practice' | 'Maintenance' | 'Event';
   status?: 'Confirmed' | 'Pending' | 'Cancelled';
+  /** Links the booking to the match it holds the ground for (fixture reconciliation). */
+  fixtureId?: string;
   recurring?: {
     frequency: 'weekly' | 'biweekly' | 'monthly';
     endDate: Date | string;

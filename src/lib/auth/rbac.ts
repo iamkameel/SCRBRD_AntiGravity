@@ -91,6 +91,7 @@ export const MODULES = {
     school: 3,
     newsfeed: 6,
     inbox: 6,
+    media: 4,        // broadcast overlays, highlight clipper, bulletins
 } as const;
 
 export type Module = keyof typeof MODULES;
