@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, orderBy, query as firestoreQuery, doc, deleteDoc } from 'firebase/firestore';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, orderBy, query as firestoreQuery, doc, deleteDoc, limit, startAfter, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,19 +157,44 @@ const DEFAULT_SAMPLE_FIXTURES: DisplayFixture[] = [
   }
 ];
 
-const fetchFixtures = async (): Promise<DisplayFixture[]> => {
+const FIXTURES_PAGE_SIZE = 100;
+
+type FixtureRefs = {
+  teams: Map<string, any>;
+  divisions: Map<string, any>;
+  umpires: Map<string, any>;
+  scorers: Map<string, any>;
+};
+
+type FixturesPage = { items: DisplayFixture[]; cursor: QueryDocumentSnapshot | null };
+
+const toMap = (rows: any[]) => new Map<string, any>(rows.map(r => [r.id, r]));
+
+// Reference lists change rarely; fetched once and cached independently of the
+// fixture pages so paging never re-reads them.
+const fetchFixtureRefs = async (): Promise<FixtureRefs> => {
+  const [teams, divisions, umpires, scorers] = await Promise.all([
+    fetchTeams().catch(() => []),
+    fetchDivisions().catch(() => []),
+    fetchUmpires().catch(() => []),
+    fetchScorers().catch(() => [])
+  ]);
+  return { teams: toMap(teams), divisions: toMap(divisions), umpires: toMap(umpires), scorers: toMap(scorers) };
+};
+
+const fetchFixturesPage = async (cursor: QueryDocumentSnapshot | null, refs: FixtureRefs): Promise<FixturesPage> => {
+  const { teams, divisions, umpires, scorers } = refs;
   try {
     const matchesCollectionRef = collection(db, 'matches');
-    const q = firestoreQuery(matchesCollectionRef, orderBy('dateTime', 'desc'));
-    
-    const [querySnapshot, teams, divisions, umpires, scorers] = await Promise.all([
-      getDocs(q).catch(() => ({ docs: [] } as any)),
-      fetchTeams().catch(() => []),
-      fetchDivisions().catch(() => []),
-      fetchUmpires().catch(() => []),
-      fetchScorers().catch(() => [])
-    ]);
-    
+    const q = firestoreQuery(
+      matchesCollectionRef,
+      orderBy('dateTime', 'desc'),
+      ...(cursor ? [startAfter(cursor)] : []),
+      limit(FIXTURES_PAGE_SIZE)
+    );
+
+    const querySnapshot = await getDocs(q).catch(() => ({ docs: [] } as any));
+
     const fixturesList = (querySnapshot.docs || []).reduce((acc: DisplayFixture[], docSnapshot: any) => {
       const data = docSnapshot.data() as any;
       
@@ -188,14 +213,14 @@ const fetchFixtures = async (): Promise<DisplayFixture[]> => {
         scheduledDateTime = new Date();
       }
 
-      const homeTeam = teams.find((t: any) => t.id === data.homeTeamId);
-      const awayTeam = teams.find((t: any) => t.id === data.awayTeamId);
+      const homeTeam = teams.get(data.homeTeamId);
+      const awayTeam = teams.get(data.awayTeamId);
 
       let divisionName = data.division;
       if (!divisionName || divisionName === 'N/A') {
           const divId = data.divisionId || homeTeam?.divisionId;
           if (divId) {
-              const div = divisions.find((d: any) => d.id === divId);
+              const div = divisions.get(divId);
               if (div) divisionName = div.name;
           }
       }
@@ -205,12 +230,12 @@ const fetchFixtures = async (): Promise<DisplayFixture[]> => {
 
       const umpiresDisplayList = data.umpires && data.umpires.length > 0
         ? data.umpires.map((id: string) => {
-            const u = umpires.find((p: any) => p.id === id);
+            const u = umpires.get(id);
             return u ? (u.displayName || `${u.firstName} ${u.lastName}`) : id;
           }).filter(Boolean).join(', ')
         : 'Unassigned';
-      
-      const scorer = data.scorer ? scorers.find((s: any) => s.id === data.scorer) : null;
+
+      const scorer = data.scorer ? scorers.get(data.scorer) : null;
       const scorerName = scorer ? (scorer.displayName || `${scorer.firstName} ${scorer.lastName}`) : null;
 
       acc.push({
@@ -241,10 +266,13 @@ const fetchFixtures = async (): Promise<DisplayFixture[]> => {
       return acc;
     }, [] as DisplayFixture[]);
     
-    return fixturesList.length > 0 ? fixturesList : DEFAULT_SAMPLE_FIXTURES;
+    const docs = querySnapshot.docs || [];
+    const nextCursor = docs.length === FIXTURES_PAGE_SIZE ? docs[docs.length - 1] : null;
+    if (fixturesList.length === 0 && !cursor) return { items: DEFAULT_SAMPLE_FIXTURES, cursor: null };
+    return { items: fixturesList, cursor: nextCursor };
   } catch (error) {
     console.error('Error fetching fixtures, providing sample fixtures:', error);
-    return DEFAULT_SAMPLE_FIXTURES;
+    return { items: cursor ? [] : DEFAULT_SAMPLE_FIXTURES, cursor: null };
   }
 };
 
@@ -454,10 +482,24 @@ const CompactFixtureCard = ({ fixture, onAttemptDelete }: { fixture: DisplayFixt
 };
 
 export default function FixturesPage() {
-  const { data: fixtures, isLoading } = useQuery<DisplayFixture[], Error>({
-    queryKey: ['fixtures'],
-    queryFn: fetchFixtures,
+  const refsQuery = useQuery({
+    queryKey: ['fixture-refs'],
+    queryFn: fetchFixtureRefs,
+    staleTime: 30 * 60 * 1000,
   });
+  const refs = refsQuery.data;
+  const fixturesQuery = useInfiniteQuery({
+    queryKey: ['fixtures'],
+    queryFn: ({ pageParam }) => fetchFixturesPage(pageParam, refs!),
+    initialPageParam: null as QueryDocumentSnapshot | null,
+    getNextPageParam: (last) => last.cursor,
+    enabled: !!refs,
+  });
+  const fixtures = React.useMemo(
+    () => fixturesQuery.data?.pages.flatMap(p => p.items),
+    [fixturesQuery.data]
+  );
+  const isLoading = refsQuery.isLoading || fixturesQuery.isLoading;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -975,6 +1017,21 @@ export default function FixturesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {fixturesQuery.hasNextPage && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => fixturesQuery.fetchNextPage()}
+            disabled={fixturesQuery.isFetchingNextPage}
+            className="h-9 px-5 rounded-xl text-xs font-semibold border-white/10"
+          >
+            {fixturesQuery.isFetchingNextPage
+              ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> Loading older fixtures…</>
+              : `Load older fixtures (${fixtures?.length ?? 0} shown)`}
+          </Button>
+        </div>
+      )}
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={!!fixtureToDelete} onOpenChange={(open) => !open && setFixtureToDelete(null)}>

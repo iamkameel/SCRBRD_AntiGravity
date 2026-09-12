@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, limit, Timestamp } from 'firebase/fi
 import { Team, Person, Season } from '@/types/firestore';
 import { normalizePeople } from '@/lib/normalizePerson';
 import { serializeData } from '@/lib/serialize';
+import { unstable_cache } from 'next/cache';
 import {
   fetchPersonById,
   getMatchesByTeam,
@@ -514,34 +515,35 @@ export interface FilterOptions {
 /**
  * Fetch available filter options for the analytics dashboard
  */
-export async function getAnalyticsFilterOptionsAction(): Promise<{ success: boolean; data?: FilterOptions; error?: string }> {
-  try {
+// Names of teams/leagues/divisions change rarely; cache for 5 minutes so the
+// analytics filter bar doesn't re-read three collections on every mount.
+const getCachedFilterOptions = unstable_cache(
+  async (): Promise<FilterOptions> => {
     const [teamsSnapshot, leaguesSnapshot, divisionsSnapshot] = await Promise.all([
       getDocs(collection(db, 'teams')),
       getDocs(collection(db, 'leagues')),
       getDocs(collection(db, 'divisions'))
     ]);
 
-    const teams = teamsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-    const leagues = leaguesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-    const divisions = divisionsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+    return {
+      // Mock seasons for now as we don't have a dedicated collection yet
+      seasons: [
+        { id: '2024', name: '2024 Season' },
+        { id: '2023', name: '2023 Season' },
+        { id: '2022', name: '2022 Season' }
+      ],
+      divisions: divisionsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name })),
+      leagues: leaguesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name })),
+      teams: teamsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name })),
+    };
+  },
+  ['analytics-filter-options'],
+  { revalidate: 300 }
+);
 
-    // Mock seasons for now as we don't have a dedicated collection yet
-    const seasons = [
-      { id: '2024', name: '2024 Season' },
-      { id: '2023', name: '2023 Season' },
-      { id: '2022', name: '2022 Season' }
-    ];
-
-    return serializeData({
-      success: true,
-      data: {
-        seasons,
-        divisions,
-        leagues,
-        teams
-      }
-    });
+export async function getAnalyticsFilterOptionsAction(): Promise<{ success: boolean; data?: FilterOptions; error?: string }> {
+  try {
+    return serializeData({ success: true, data: await getCachedFilterOptions() });
   } catch (error) {
     console.error('Error fetching filter options:', error);
     return {

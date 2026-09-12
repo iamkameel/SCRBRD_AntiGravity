@@ -12,6 +12,7 @@ import {
   where,
   orderBy,
   limit,
+  documentId,
   DocumentData,
   QueryConstraint
 } from 'firebase/firestore';
@@ -200,11 +201,11 @@ export async function fetchPlayers(limitCount = 100) {
 }
 
 export async function fetchPersonById(id: string) {
-  // Workaround: getDoc has issues in Next.js server components with Firebase v12
-  // Use fetchCollection and filter by ID instead
+  // getDoc misbehaves in Next.js server components with Firebase v12, so this
+  // goes through getDocs — but filtered to the one document, not the whole
+  // collection.
   try {
-    const allPeople = await fetchCollection<any>('people', [], false);
-    const person = allPeople.find(p => p.id === id);
+    const [person] = await fetchCollection<any>('people', [where(documentId(), '==', id), limit(1)], false);
     return person ? normalizePerson(person) : null;
   } catch (error) {
     console.error(`Error fetching person by ID ${id}:`, error);
