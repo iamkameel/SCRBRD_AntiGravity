@@ -1,7 +1,8 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { groundskeeperSchema } from '@/lib/validations/groundskeeperSchema';
@@ -16,39 +17,49 @@ export interface GroundskeeperActionState {
     success?: boolean;
 }
 
+function getOptionalNum(val: FormDataEntryValue | null): number | undefined {
+    if (val === null || val === '') return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+}
+
 function extractGroundskeeperData(formData: FormData) {
-    // Parse nested attributes
-    const pitchAttributes = {
-        paceGeneration: Number(formData.get('pitchAttributes.paceGeneration')),
-        spinPromotion: Number(formData.get('pitchAttributes.spinPromotion')),
-        durability: Number(formData.get('pitchAttributes.durability')),
-        evenness: Number(formData.get('pitchAttributes.evenness')),
-        moistureControl: Number(formData.get('pitchAttributes.moistureControl')),
+    const pitchAttrsRaw = {
+        paceGeneration: getOptionalNum(formData.get('pitchAttributes.paceGeneration')),
+        spinPromotion: getOptionalNum(formData.get('pitchAttributes.spinPromotion')),
+        durability: getOptionalNum(formData.get('pitchAttributes.durability')),
+        evenness: getOptionalNum(formData.get('pitchAttributes.evenness')),
+        moistureControl: getOptionalNum(formData.get('pitchAttributes.moistureControl')),
     };
 
-    const outfieldAttributes = {
-        drainageManagement: Number(formData.get('outfieldAttributes.drainageManagement')),
-        grassHealth: Number(formData.get('outfieldAttributes.grassHealth')),
-        boundaryMarking: Number(formData.get('outfieldAttributes.boundaryMarking')),
-        rollering: Number(formData.get('outfieldAttributes.rollering')),
-        mowing: Number(formData.get('outfieldAttributes.mowing')),
+    const outfieldAttrsRaw = {
+        drainageManagement: getOptionalNum(formData.get('outfieldAttributes.drainageManagement')),
+        grassHealth: getOptionalNum(formData.get('outfieldAttributes.grassHealth')),
+        boundaryMarking: getOptionalNum(formData.get('outfieldAttributes.boundaryMarking')),
+        rollering: getOptionalNum(formData.get('outfieldAttributes.rollering')),
+        mowing: getOptionalNum(formData.get('outfieldAttributes.mowing')),
     };
+
+    // Filter out keys where value is undefined so Zod defaults take over
+    const pitchAttributes = Object.fromEntries(
+        Object.entries(pitchAttrsRaw).filter(([_, v]) => v !== undefined)
+    );
+    const outfieldAttributes = Object.fromEntries(
+        Object.entries(outfieldAttrsRaw).filter(([_, v]) => v !== undefined)
+    );
 
     return {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        email: formData.get('email'),
-        phoneNumber: formData.get('phoneNumber'),
+        firstName: (formData.get('firstName') as string) ?? '',
+        lastName: (formData.get('lastName') as string) ?? '',
+        dateOfBirth: (formData.get('dateOfBirth') as string) ?? '',
+        email: (formData.get('email') as string) ?? '',
+        phoneNumber: (formData.get('phoneNumber') as string) ?? '',
 
-        // Groundskeeper Profile Core
-        experienceYears: formData.get('experienceYears') ? Number(formData.get('experienceYears')) : 0,
+        experienceYears: getOptionalNum(formData.get('experienceYears')) ?? 0,
 
-        // Attribute Blocks
-        pitchAttributes,
-        outfieldAttributes,
+        pitchAttributes: Object.keys(pitchAttributes).length > 0 ? pitchAttributes : undefined,
+        outfieldAttributes: Object.keys(outfieldAttributes).length > 0 ? outfieldAttributes : undefined,
 
-        // Tags
         machineryLicenses: formData.get('machineryLicenses') ? JSON.parse(formData.get('machineryLicenses') as string) : [],
         primaryVenues: formData.get('primaryVenues') ? JSON.parse(formData.get('primaryVenues') as string) : [],
         groundskeeperTraits: formData.get('groundskeeperTraits') ? JSON.parse(formData.get('groundskeeperTraits') as string) : [],
@@ -81,6 +92,8 @@ function mapToFirestoreGroundskeeper(validatedData: any): Omit<Person, 'id' | 'c
 }
 
 export async function createGroundskeeperAction(prevState: GroundskeeperActionState, formData: FormData): Promise<GroundskeeperActionState> {
+    const user = await requireUser("logistics");
+
     const rawData = extractGroundskeeperData(formData);
     const validatedFields = groundskeeperSchema.safeParse(rawData);
 
@@ -92,13 +105,25 @@ export async function createGroundskeeperAction(prevState: GroundskeeperActionSt
         };
     }
 
+    let docId = '';
     try {
         const groundskeeperData = mapToFirestoreGroundskeeper(validatedFields.data);
 
-        await addDoc(collection(db, 'people'), {
+        const docRef = await adminDb.collection('people').add({
             ...groundskeeperData,
+            createdBy: user.uid,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+        });
+        docId = docRef.id;
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Logistics Admin',
+            actionType: 'LOGISTICS_CREATE',
+            entityType: 'groundskeeper',
+            entityId: docId,
+            description: `Groundskeeper profile created for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {
@@ -118,6 +143,8 @@ export async function updateGroundskeeperAction(
     prevState: GroundskeeperActionState,
     formData: FormData
 ): Promise<GroundskeeperActionState> {
+    const user = await requireUser("logistics");
+
     const rawData = extractGroundskeeperData(formData);
     const validatedFields = groundskeeperSchema.safeParse(rawData);
 
@@ -132,9 +159,19 @@ export async function updateGroundskeeperAction(
     try {
         const groundskeeperData = mapToFirestoreGroundskeeper(validatedFields.data);
 
-        await updateDoc(doc(db, 'people', id), {
+        await adminDb.collection('people').doc(id).update({
             ...groundskeeperData,
+            updatedBy: user.uid,
             updatedAt: new Date().toISOString(),
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Logistics Admin',
+            actionType: 'LOGISTICS_UPDATE',
+            entityType: 'groundskeeper',
+            entityId: id,
+            description: `Groundskeeper profile updated for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {

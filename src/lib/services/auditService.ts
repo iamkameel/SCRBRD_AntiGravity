@@ -10,6 +10,7 @@ export type AuditActionType =
     | "SECURITY_ALERT"
     | "LOGISTICS_UPDATE"
     | "LOGISTICS_CREATE"
+    | "STAFF_ASSIGNED"
     | "TACTICAL_DIRECTIVE_TRANSMITTED"
     | "TACTICAL_DIRECTIVE_ACCEPTED"
     | "TACTICAL_DIRECTIVE_MODIFIED"
@@ -23,7 +24,7 @@ export interface AuditLogEntry {
     actorId: string;
     actorName: string;
     actionType: AuditActionType;
-    entityType: "match" | "player" | "team" | "school" | "system" | "vehicle" | "transport_trip" | "ground_readiness" | "facility_booking" | "medical_incident" | "tactical_directive";
+    entityType: "match" | "player" | "team" | "school" | "system" | "vehicle" | "transport_trip" | "ground_readiness" | "facility_booking" | "medical_incident" | "tactical_directive" | "maintenance_task" | "groundskeeper" | "equipment" | "coach" | "scouting_report" | "umpire" | "scorer" | "field";
     entityId: string;
     description: string;
     beforeState?: any;
@@ -102,4 +103,3 @@ export async function getRecentAuditLogs(schoolId?: string, limitCount = 10) {
         return [];
     }
 }
-

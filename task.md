@@ -4,13 +4,13 @@
 
 - [x] **Audit**: Locate source of current team data (static vs Firestore) and analyze structure <!-- id: 1 -->
 - [x] **Schema**:- [x] Consolidate Match and Person types in `src/types/firestore.ts`
-- [/] Build comprehensive Firebase services for core entities
+- [x] Build comprehensive Firebase services for core entities
   - [x] Create `baseService.ts` for generic Firestore operations
   - [x] Create `matchService.ts`
   - [x] Create `personService.ts` (consolidated players, coaches, etc.)
   - [x] Create `teamService.ts` (refactored)
   - [x] Create `scoringService.ts`
-- [/] Integrate and complete the XState FSM for the scoring engine
+- [x] Integrate and complete the XState FSM for the scoring engine
   - [x] Refine `scoringHubMachine.ts` with strict types and transitions
 - [x] Update `useScoringHub.ts` for service layer integration
 - [x] Implement premium `ReviewConfirmStep.tsx` UI
@@ -50,3 +50,11 @@
 - [x] **Unify Team Schemas**: Consolidate `teamSchema.ts` and `teamSchemas.ts` <!-- id: 20 -->
 - [x] **Enhance Coach Form**: Add `SchoolTeamAssignment` to `CoachForm` <!-- id: 21 -->
 - [x] **RBAC Data Structure**: Ensure `assignedSchools` and `teamIds` are handled in `UserService` <!-- id: 22 -->
+
+## Phase 8: Player Development & Medical Engine (`/coach/development`)
+
+- [ ] **Firestore Service Integration**: Wire real player profiles, readiness scores, and active interventions into `CoachDevelopmentHub` <!-- id: 27 -->
+- [ ] **Medical Restriction Engine**: Enforce medical safety rules and workload limits in drill recommendations <!-- id: 28 -->
+- [ ] **Assessment & Prescription Actions**: Connect skill rubric logging and intervention assignment server actions <!-- id: 29 -->
+- [ ] **Verification**: Add Vitest tests for player development engine and run TypeScript check <!-- id: 30 -->
+

@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Save, AlertCircle, FileText, ClipboardList, TrendingUp, ShieldCheck, Brain, Target, Zap } from 'lucide-react';
-import { scoutingService } from '@/services/scoutingService';
-import { UUID } from '@/types/schema_v4';
+import { createScoutReportAction } from '@/app/actions/scoutingActions';
 import { D } from "@/lib/design-system";
 import { motion } from "framer-motion";
 
@@ -48,20 +47,24 @@ export default function ScoutReportForm({ playerId, onSave, onCancel }: ScoutRep
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const id = await scoutingService.saveScoutReport({
-                personId: playerId as UUID,
-                scoutId: 'current-user-scout' as UUID,
-                technicalScore,
-                tacticalScore,
-                physicalScore,
-                mentalScore,
-                competitivenessScore,
-                statisticalEvidenceScore,
-                prospectCategory,
-                confidenceLevel,
-                projectionNotes: notes
+            const res = await createScoutReportAction({
+                personId: playerId || 'p1',
+                personName: "Tracked Athlete",
+                roleArchetype: prospectCategory,
+                scoutGrade: liveGrade,
+                potentialScore: prospectCategory,
+                metrics: {
+                    velocity: technicalScore,
+                    accuracy: tacticalScore,
+                    stamina: physicalScore,
+                    composure: mentalScore,
+                    impact: competitivenessScore,
+                },
+                notes
             });
-            if (onSave) onSave(id);
+            if (res.success && res.id) {
+                if (onSave) onSave(res.id);
+            }
         } catch (error) {
             console.error("Failed to save scout report:", error);
         } finally {

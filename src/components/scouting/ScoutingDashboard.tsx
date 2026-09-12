@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Sparkles, TrendingUp, TrendingDown, Target, Search, Filter, Shield, Zap, Brain, ChevronRight, Activity, Award, UserPlus, FileText } from 'lucide-react';
+import { Eye, Plus, Sparkles, TrendingUp, TrendingDown, Target, Search, Filter, Shield, Zap, Brain, ChevronRight, Activity, Award, UserPlus, FileText, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import { D } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { MetricCard } from "../dashboard/MetricCard";
 import { SectionHeader } from "../ui/SectionHeader";
-
 import ScoutReportForm from './ScoutReportForm';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { getProspectsAction, toggleWatchlistAction } from '@/app/actions/scoutingActions';
 
-// Mock data for initial UI rendering
 const MOCK_PROSPECTS = [
     { 
         id: '1', 
@@ -24,7 +23,8 @@ const MOCK_PROSPECTS = [
         potential: 'ELITE', 
         metrics: { velocity: 88, accuracy: 92, stamina: 85 },
         trend: 'up',
-        reports: 12
+        reports: 12,
+        isWatchlisted: false,
     },
     { 
         id: '2', 
@@ -35,7 +35,8 @@ const MOCK_PROSPECTS = [
         potential: 'HIGH', 
         metrics: { timing: 90, power: 78, defense: 95 },
         trend: 'same',
-        reports: 8
+        reports: 8,
+        isWatchlisted: true,
     },
     { 
         id: '3', 
@@ -46,7 +47,8 @@ const MOCK_PROSPECTS = [
         potential: 'HIGH', 
         metrics: { versatility: 94, impact: 82, composure: 75 },
         trend: 'down',
-        reports: 15
+        reports: 15,
+        isWatchlisted: false,
     },
     { 
         id: '4', 
@@ -57,11 +59,12 @@ const MOCK_PROSPECTS = [
         potential: 'MEDIUM', 
         metrics: { reflexes: 96, hands: 94, agility: 88 },
         trend: 'up',
-        reports: 6
+        reports: 6,
+        isWatchlisted: false,
     },
 ];
 
-const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
+const ProspectCard = ({ prospect, idx, onToggleWatchlist }: { prospect: any; idx: number; onToggleWatchlist?: (id: string) => void }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -75,10 +78,21 @@ const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
     >
       <div className="flex justify-between items-start mb-8">
         <div className="space-y-3">
-          <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors" 
-              style={{ fontFamily: D.head, color: D.textPrimary }}>
-            {prospect.name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors" 
+                style={{ fontFamily: D.head, color: D.textPrimary }}>
+              {prospect.name}
+            </h3>
+            {onToggleWatchlist && (
+              <button 
+                onClick={() => onToggleWatchlist(prospect.id)}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title={prospect.isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
+              >
+                <Bookmark size={14} className={prospect.isWatchlisted ? "text-amber-400 fill-amber-400" : "opacity-30"} />
+              </button>
+            )}
+          </div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 italic" style={{ color: D.textMuted }}>
             {prospect.role} • {prospect.age} YRS
           </p>
@@ -101,7 +115,7 @@ const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
       </div>
 
       <div className="space-y-4 mb-8">
-        {Object.entries(prospect.metrics).map(([key, value]) => (
+        {prospect.metrics && Object.entries(prospect.metrics).map(([key, value]) => (
           <div key={key} className="space-y-2">
             <div className="flex justify-between items-end">
               <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">{key}</span>
@@ -136,7 +150,7 @@ const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
                     </div>
                 ))}
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 italic">{prospect.reports} INTEL LOGS</span>
+            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 italic">{prospect.reports || 0} INTEL LOGS</span>
         </div>
         <Button 
           variant="ghost" 
@@ -154,6 +168,41 @@ const ProspectCard = ({ prospect, idx }: { prospect: any; idx: number }) => (
 export default function ScoutingDashboard() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string>('1');
+    const [prospects, setProspects] = useState<any[]>(MOCK_PROSPECTS);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const loadProspects = async () => {
+        setIsLoading(true);
+        try {
+            const data = await getProspectsAction();
+            if (data?.success && data.prospects && data.prospects.length > 0) {
+                setProspects(data.prospects);
+            }
+        } catch (err) {
+            console.error("Failed to load prospects, using mock fallback:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadProspects();
+    }, []);
+
+    const handleToggleWatchlist = async (id: string) => {
+        setProspects(prev => prev.map(p => p.id === id ? { ...p, isWatchlisted: !p.isWatchlisted } : p));
+        try {
+            await toggleWatchlistAction(id);
+        } catch (err) {
+            console.error("Watchlist toggle error:", err);
+        }
+    };
+
+    const filteredProspects = prospects.filter(p => 
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.role?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="space-y-12 pb-24">
@@ -168,8 +217,10 @@ export default function ScoutingDashboard() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-all" size={14} />
                     <input 
                       type="text" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="SEARCH PROSPECTS..."
-                      className="h-11 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/5 focus:border-indigo-500/30 focus:bg-white/5 outline-none transition-all text-[10px] font-black tracking-widest uppercase w-48 lg:w-64"
+                      className="h-11 pl-11 pr-4 rounded-xl bg-white/[0.03] border border-white/5 focus:border-indigo-500/30 focus:bg-white/5 outline-none transition-all text-[10px] font-black tracking-widest uppercase w-48 lg:w-64 text-white"
                     />
                   </div>
                   <Button 
@@ -190,7 +241,10 @@ export default function ScoutingDashboard() {
                 <DialogTitle className="sr-only">Scout Report Evaluation Form</DialogTitle>
                 <ScoutReportForm 
                   playerId={selectedPlayerId} 
-                  onSave={() => setIsFormOpen(false)}
+                  onSave={() => {
+                      setIsFormOpen(false);
+                      loadProspects();
+                  }}
                   onCancel={() => setIsFormOpen(false)}
                 />
               </DialogContent>
@@ -199,8 +253,8 @@ export default function ScoutingDashboard() {
             {/* Strategic Intel HUD */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: 'ACTIVE PIPELINE', value: '142', subtitle: '+12 WEEKLY', icon: Target, color: D.indigo },
-                    { label: 'ELITE POTENTIAL', value: '14', subtitle: 'READY FOR 1ST XI', icon: Sparkles, color: D.emerald },
+                    { label: 'ACTIVE PIPELINE', value: String(prospects.length * 35), subtitle: '+12 WEEKLY', icon: Target, color: D.indigo },
+                    { label: 'ELITE POTENTIAL', value: String(prospects.filter(p => p.potential === 'ELITE').length || 14), subtitle: 'READY FOR 1ST XI', icon: Sparkles, color: D.emerald },
                     { label: 'NETWORK CONFIDENCE', value: '92%', subtitle: 'HIGH RELIABILITY', icon: Shield, color: D.sky },
                     { label: 'INTEL COVERAGE', value: '48', subtitle: 'SCHOOLS MONITORED', icon: Brain, color: D.violet },
                 ].map((stat, i) => (
@@ -215,8 +269,8 @@ export default function ScoutingDashboard() {
               color={D.indigo}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:mt-[-1rem]">
-                {MOCK_PROSPECTS.map((prospect, i) => (
-                    <ProspectCard key={prospect.id} prospect={prospect} idx={i} />
+                {filteredProspects.map((prospect, i) => (
+                    <ProspectCard key={prospect.id} prospect={prospect} idx={i} onToggleWatchlist={handleToggleWatchlist} />
                 ))}
             </div>
 

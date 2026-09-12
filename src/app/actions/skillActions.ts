@@ -337,6 +337,67 @@ export async function assignInterventionAction(intervention: {
 }
 
 /**
+ * Fetch active interventions for a player.
+ */
+export async function getPlayerInterventionsAction(personId: string) {
+    try {
+        const q = query(
+            collection(db, "coach_interventions"),
+            where("personId", "==", personId),
+            orderBy("assignedAt", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const interventions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        return { success: true, interventions };
+    } catch (error) {
+        console.error("Error fetching player interventions:", error);
+        return { success: false, error: "Failed to fetch interventions" };
+    }
+}
+
+/**
+ * Fetch active players with medical and performance metadata for the development hub.
+ */
+export async function getPlayersForDevelopmentAction() {
+    try {
+        const admin = (await import('@/lib/firebase-admin')).default;
+        const db = admin.firestore();
+
+        const snapshot = await db.collection('people')
+            .where('status', 'in', ['active', 'Active', 'player', 'Player'])
+            .limit(20)
+            .get();
+
+        if (snapshot.empty) {
+            return { success: true, players: [] };
+        }
+
+        const players = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Athlete',
+                role: (data.primaryRoleArchetype || data.playingRole || 'Opener') as RoleArchetype,
+                readinessStatus: (data.readinessStatus || 'Ready') as 'Ready' | 'Caution' | 'Restricted' | 'Unavailable',
+                medicalRestrictions: (data.medicalRestrictions || []) as string[],
+                dotBallPercentage: data.dotBallPercentage || 45,
+                strikeRate: data.strikeRate || 115,
+            };
+        });
+
+        return { success: true, players };
+    } catch (error) {
+        console.error("Error fetching players for development:", error);
+        return { success: false, error: "Failed to fetch players" };
+    }
+}
+
+/**
  * Fetch squad-wide skill matrix aggregation.
  */
 export async function getSquadSkillMatrixAction(teamId?: string) {

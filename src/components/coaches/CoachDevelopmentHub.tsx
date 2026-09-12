@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { D } from "@/lib/design-system";
 import {
     BrainCircuit,
@@ -41,7 +41,15 @@ import {
     generateDrillRecommendations,
     ROLE_DOMAIN_WEIGHTS
 } from "@/lib/developmentEngine";
-import { logSkillAssessmentAction, assignInterventionAction } from "@/app/actions/skillActions";
+import {
+    logSkillAssessmentAction,
+    assignInterventionAction,
+    getPlayersForDevelopmentAction,
+    getPlayerAssessmentsAction,
+    getPlayerInterventionsAction,
+    getPlayerReadinessAction,
+    getPlayerDevelopmentTrendAction
+} from "@/app/actions/skillActions";
 import { DrillRecommendation, Drill } from "@/types/drills";
 import { aiCoachAssistant, PlayerDiagnosis } from "@/services/aiCoachAssistant";
 import { MASTER_DRILL_LIBRARY } from "@/lib/drillLibrary";
@@ -134,6 +142,7 @@ const RATING_SCALE = [
 ];
 
 export function CoachDevelopmentHub() {
+    const [playersList, setPlayersList] = useState<PlayerOption[]>(DEFAULT_PLAYERS);
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerOption>(DEFAULT_PLAYERS[0]);
     const [activeStage, setActiveStage] = useState<number>(1);
     const [activeDomain, setActiveDomain] = useState<SkillDomain>("Batting");
@@ -170,6 +179,60 @@ export function CoachDevelopmentHub() {
             notes: "Focus on soft hands off tight seamers"
         }
     ]);
+
+    // Fetch players from Firestore on mount
+    useEffect(() => {
+        let isMounted = true;
+        async function loadPlayers() {
+            const res = await getPlayersForDevelopmentAction();
+            if (isMounted && res.success && res.players && res.players.length > 0) {
+                setPlayersList(res.players as PlayerOption[]);
+            }
+        }
+        loadPlayers();
+        return () => { isMounted = false; };
+    }, []);
+
+    // Fetch player assessments & interventions when selectedPlayer changes
+    useEffect(() => {
+        let isMounted = true;
+        async function loadPlayerData() {
+            if (!selectedPlayer?.id) return;
+            const [assessRes, intRes] = await Promise.all([
+                getPlayerAssessmentsAction(selectedPlayer.id),
+                getPlayerInterventionsAction(selectedPlayer.id)
+            ]);
+
+            if (isMounted) {
+                if (assessRes.success && assessRes.assessments && assessRes.assessments.length > 0) {
+                    setRatings(prevRatings => {
+                        const loadedRatings: Record<string, number> = { ...prevRatings };
+                        assessRes.assessments.forEach((a: any) => {
+                            if (a.attributeName && a.rating !== undefined) {
+                                loadedRatings[a.attributeName] = a.rating;
+                            }
+                        });
+                        return loadedRatings;
+                    });
+                }
+
+                if (intRes.success && intRes.interventions && intRes.interventions.length > 0) {
+                    const mappedInts = intRes.interventions.map((item: any) => ({
+                        id: item.id,
+                        drillName: item.drillName || "Training Intervention",
+                        targetAttribute: item.targetAttribute || "General",
+                        durationWeeks: item.durationWeeks || 2,
+                        status: item.status || "Active (Week 1)",
+                        assignedAt: item.assignedAt?.toDate ? item.assignedAt.toDate().toISOString().split('T')[0] : (item.assignedAt || "Recent"),
+                        notes: item.notes
+                    }));
+                    setActiveInterventions(mappedInts);
+                }
+            }
+        }
+        loadPlayerData();
+        return () => { isMounted = false; };
+    }, [selectedPlayer.id]);
 
     // Modal state for assigning drill
     const [assignModalDrill, setAssignModalDrill] = useState<Drill | null>(null);
@@ -358,13 +421,13 @@ export function CoachDevelopmentHub() {
                         <select
                             value={selectedPlayer.id}
                             onChange={(e) => {
-                                const found = DEFAULT_PLAYERS.find(p => p.id === e.target.value);
+                                const found = playersList.find(p => p.id === e.target.value);
                                 if (found) setSelectedPlayer(found);
                             }}
                             className="bg-black/40 border text-white font-bold text-xs rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500 transition-all cursor-pointer"
                             style={{ borderColor: D.borderMed }}
                         >
-                            {DEFAULT_PLAYERS.map(p => (
+                            {playersList.map(p => (
                                 <option key={p.id} value={p.id} className="bg-slate-900 text-white">
                                     {p.name} ({p.role})
                                 </option>

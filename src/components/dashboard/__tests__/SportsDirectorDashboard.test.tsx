@@ -18,6 +18,8 @@ vi.mock('@/lib/services/sportsDirectorService', async (importOriginal) => {
       listSchools: vi.fn().mockResolvedValue([]),
       getExecutiveSnapshot: vi.fn(),
       setSquadApproval: vi.fn().mockResolvedValue(undefined),
+      assignStaffRole: vi.fn().mockResolvedValue(undefined),
+      getRecentAuditLogs: vi.fn().mockResolvedValue([]),
       broadcastStaffPrompt: vi.fn().mockResolvedValue({ recipientCount: 5, outstandingItems: ['U15A: umpire unassigned'], broadcastId: 'b1' }),
     },
   };
@@ -31,6 +33,7 @@ describe('SportsDirectorDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (sportsDirectorService.listSchools as Mock).mockResolvedValue([]);
+    (sportsDirectorService.getRecentAuditLogs as Mock).mockResolvedValue([]);
   });
 
   it('renders the demo snapshot when no schools exist and flags it as demo data', async () => {
@@ -84,4 +87,42 @@ describe('SportsDirectorDashboard', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/rules denied reading "teams"/);
     await waitFor(() => expect(sportsDirectorService.getExecutiveSnapshot).toHaveBeenCalledWith('s1', 'St Test College'));
   });
+
+  it('filters squads by text input in live search', async () => {
+    render(<SportsDirectorDashboard />);
+    await screen.findByText(/Director Command/);
+    const searchInput = screen.getByPlaceholderText(/Search squad, opponent, venue.../i);
+
+    fireEvent.change(searchInput, { target: { value: 'U15A' } });
+    expect(screen.getAllByText('Readiness Score')).toHaveLength(1);
+    expect(screen.getByText('U15A Squad')).toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: 'NonExistentTeam' } });
+    expect(screen.queryAllByText('Readiness Score')).toHaveLength(0);
+    expect(screen.getByText(/No squads match this filter/i)).toBeInTheDocument();
+  });
+
+  it('opens quick staff assignment modal and assigns staff member in demo mode', async () => {
+    render(<SportsDirectorDashboard />);
+    await screen.findByText(/Director Command/);
+
+    const assignBtns = screen.getAllByRole('button', { name: /\+ Assign/i });
+    expect(assignBtns.length).toBeGreaterThan(0);
+    fireEvent.click(assignBtns[0]);
+
+    expect(screen.getByText(/Assign Official Scorer|Assign Match Umpire|Assign Head Coach/i)).toBeInTheDocument();
+    const inputName = screen.getByPlaceholderText(/e.g. David Miller/i);
+    fireEvent.change(inputName, { target: { value: 'Jane Doe' } });
+
+    const confirmBtn = screen.getByRole('button', { name: /Confirm Assignment/i });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith(expect.stringMatching(/Assigned Jane Doe/i));
+    });
+  });
 });
+
+
+
+

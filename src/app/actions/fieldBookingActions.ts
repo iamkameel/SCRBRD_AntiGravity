@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import admin from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 
 export interface BookingData {
   date: Date | string;
@@ -26,7 +27,7 @@ export async function createBookingAction(fieldId: string, bookingData: BookingD
   'use server';
 
   try {
-      await requireUser('fields');
+    const user = await requireUser('fields');
     const bookingRef = admin.firestore()
       .collection('fields')
       .doc(fieldId)
@@ -45,11 +46,21 @@ export async function createBookingAction(fieldId: string, bookingData: BookingD
           ? Timestamp.fromDate(bookingData.recurring.endDate)
           : Timestamp.fromDate(new Date(bookingData.recurring.endDate))
       } : undefined,
+      createdBy: user.uid,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
 
     await bookingRef.set(booking);
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Facility Manager',
+      actionType: 'LOGISTICS_CREATE',
+      entityType: 'facility_booking',
+      entityId: bookingRef.id,
+      description: `Created field booking "${bookingData.title}" on field ${fieldId} (${bookingData.type})`,
+    });
 
     revalidatePath(`/fields/${fieldId}`);
     revalidatePath('/fields');
@@ -105,13 +116,22 @@ export async function deleteBookingAction(fieldId: string, bookingId: string) {
   'use server';
 
   try {
-      await requireUser('fields');
+    const user = await requireUser('fields');
     await admin.firestore()
       .collection('fields')
       .doc(fieldId)
       .collection('bookings')
       .doc(bookingId)
       .delete();
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Facility Manager',
+      actionType: 'LOGISTICS_UPDATE',
+      entityType: 'facility_booking',
+      entityId: bookingId,
+      description: `Deleted field booking ${bookingId} on field ${fieldId}`,
+    });
 
     revalidatePath(`/fields/${fieldId}`);
     revalidatePath('/fields');

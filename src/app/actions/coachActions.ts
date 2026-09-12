@@ -1,11 +1,13 @@
 'use server';
 
-import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
 import { coachSchema } from '@/lib/validations/coachSchema';
 import { Person } from '@/types/firestore';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
+import { adminDb } from '@/lib/firebase-admin';
+import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 
 export type CoachActionState = {
     error?: string;
@@ -135,15 +137,26 @@ export async function createCoachAction(
     formData: FormData
 ): Promise<CoachActionState> {
     try {
+        const user = await requireUser('management');
         const rawData = extractCoachData(formData);
         const validatedData = coachSchema.parse(rawData);
         const newCoachData = mapToFirestoreCoach(validatedData);
 
-        await createDocument<Omit<Person, 'id'>>('people', {
+        const docRef = await adminDb.collection('people').add({
             ...newCoachData,
+            createdBy: user.uid,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-        } as any);
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'coach',
+            entityId: docRef.id,
+            description: `Assigned new coach profile: ${validatedData.firstName} ${validatedData.lastName} (${validatedData.role})`,
+        });
 
         revalidatePath('/people');
     } catch (error) {
@@ -168,14 +181,25 @@ export async function updateCoachAction(
     formData: FormData
 ): Promise<CoachActionState> {
     try {
+        const user = await requireUser('management');
         const rawData = extractCoachData(formData);
         const validatedData = coachSchema.parse(rawData);
         const updateData = mapToFirestoreCoach(validatedData);
 
-        await updateDocument<Person>('people', id, {
+        await adminDb.collection('people').doc(id).update({
             ...updateData,
+            updatedBy: user.uid,
             updatedAt: new Date().toISOString(),
-        } as any);
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'LOGISTICS_UPDATE',
+            entityType: 'coach',
+            entityId: id,
+            description: `Updated coach profile attributes: ${validatedData.firstName} ${validatedData.lastName}`,
+        });
 
         revalidatePath('/people');
         revalidatePath(`/people/${id}`);

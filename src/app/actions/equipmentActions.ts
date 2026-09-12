@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { equipmentSchema, EquipmentFormData } from '@/lib/validations/equipmentSchema';
-import { createDocument, updateDocument } from '@/lib/firestore';
-import { Equipment } from '@/types/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 
 export interface EquipmentActionState {
   error?: string;
@@ -11,27 +12,51 @@ export interface EquipmentActionState {
   fieldErrors?: Record<string, string[]>;
 }
 
+function extractEquipmentData(formData: FormData) {
+  const getStr = (key: string) => {
+    const val = formData.get(key);
+    return val !== null && val !== '' ? String(val) : undefined;
+  };
+
+  return {
+    name: formData.get('name') ? String(formData.get('name')) : '',
+    category: formData.get('category') ? String(formData.get('category')) : '',
+    quantity: formData.get('quantity') ? String(formData.get('quantity')) : '',
+    condition: formData.get('condition') ? String(formData.get('condition')) : '',
+    location: formData.get('location') ? String(formData.get('location')) : '',
+    purchaseDate: getStr('purchaseDate'),
+    purchasePrice: getStr('purchasePrice'),
+    supplier: getStr('supplier'),
+    serialNumber: getStr('serialNumber'),
+    notes: getStr('notes'),
+  };
+}
+
 export async function createEquipmentAction(
   prevState: EquipmentActionState,
   formData: FormData
 ): Promise<EquipmentActionState> {
   try {
-    const rawData = {
-      name: formData.get('name'),
-      category: formData.get('category'),
-      quantity: formData.get('quantity'),
-      condition: formData.get('condition'),
-      location: formData.get('location'),
-      purchaseDate: formData.get('purchaseDate'),
-      purchasePrice: formData.get('purchasePrice'),
-      supplier: formData.get('supplier'),
-      serialNumber: formData.get('serialNumber'),
-      notes: formData.get('notes'),
-    };
+    const user = await requireUser('logistics');
 
+    const rawData = extractEquipmentData(formData);
     const validatedData = equipmentSchema.parse(rawData);
 
-    await createDocument<Omit<Equipment, 'id'>>('equipment', validatedData as any);
+    const docRef = await adminDb.collection('equipment').add({
+      ...validatedData,
+      createdBy: user.uid,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Logistics Coordinator',
+      actionType: 'LOGISTICS_CREATE',
+      entityType: 'equipment',
+      entityId: docRef.id,
+      description: `Created equipment asset: ${validatedData.name} (${validatedData.category})`,
+    });
 
     revalidatePath('/equipment');
     return { success: true };
@@ -59,22 +84,25 @@ export async function updateEquipmentAction(
   formData: FormData
 ): Promise<EquipmentActionState> {
   try {
-    const rawData = {
-      name: formData.get('name'),
-      category: formData.get('category'),
-      quantity: formData.get('quantity'),
-      condition: formData.get('condition'),
-      location: formData.get('location'),
-      purchaseDate: formData.get('purchaseDate'),
-      purchasePrice: formData.get('purchasePrice'),
-      supplier: formData.get('supplier'),
-      serialNumber: formData.get('serialNumber'),
-      notes: formData.get('notes'),
-    };
+    const user = await requireUser('logistics');
 
+    const rawData = extractEquipmentData(formData);
     const validatedData = equipmentSchema.parse(rawData);
 
-    await updateDocument<Equipment>('equipment', equipmentId, validatedData as any);
+    await adminDb.collection('equipment').doc(equipmentId).update({
+      ...validatedData,
+      updatedBy: user.uid,
+      updatedAt: new Date().toISOString(),
+    });
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Logistics Coordinator',
+      actionType: 'LOGISTICS_UPDATE',
+      entityType: 'equipment',
+      entityId: equipmentId,
+      description: `Updated equipment asset: ${validatedData.name} (${validatedData.condition})`,
+    });
 
     revalidatePath('/equipment');
     revalidatePath(`/equipment/${equipmentId}`);
@@ -96,4 +124,3 @@ export async function updateEquipmentAction(
     };
   }
 }
-

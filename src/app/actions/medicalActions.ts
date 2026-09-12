@@ -1,10 +1,10 @@
 'use server';
 
 import { medicalService, MedicalIncident } from '@/lib/services/medicalService';
-import { recordAuditAction } from './auditActions';
+import { recordAuditLog } from '@/lib/services/auditService';
+import { requireUser } from '@/lib/auth/session';
+import { adminDb } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
-import { updateDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 export interface MedicalActionState {
     success: boolean;
@@ -17,15 +17,16 @@ export async function getMedicalIncidentsAction(personId?: string) {
 }
 
 export async function logMedicalIncidentAction(incident: Omit<MedicalIncident, 'id'>) {
+    const user = await requireUser('medical');
     const id = await medicalService.logIncident(incident);
 
-    await recordAuditAction({
+    await recordAuditLog({
+        actorId: user.uid,
+        actorName: user.email || 'Medical Staff',
         actionType: 'SECURITY_ALERT',
         entityType: 'medical_incident',
         entityId: id,
         description: `New medical incident reported for ${incident.personName || incident.personId}: ${incident.type} (${incident.severity}).`,
-        actorId: 'system-ops',
-        actorName: 'First Aider / Coordinator'
     });
 
     revalidatePath('/medical');
@@ -34,15 +35,16 @@ export async function logMedicalIncidentAction(incident: Omit<MedicalIncident, '
 }
 
 export async function updateMedicalStatusAction(id: string, status: MedicalIncident['status'], personName: string) {
+    const user = await requireUser('medical');
     await medicalService.updateIncidentStatus(id, status);
 
-    await recordAuditAction({
+    await recordAuditLog({
+        actorId: user.uid,
+        actorName: user.email || 'Medical Staff',
         actionType: 'LOGISTICS_UPDATE',
         entityType: 'medical_incident',
         entityId: id,
         description: `Medical status for ${personName} updated to ${status}.`,
-        actorId: 'system-ops',
-        actorName: 'Medical Staff'
     });
 
     revalidatePath('/medical');
@@ -50,7 +52,7 @@ export async function updateMedicalStatusAction(id: string, status: MedicalIncid
 
 /**
  * updateMedicalPersonAction — FormData-based action for MedicalForm on the people edit page.
- * Updates the person's medicalProfile fields in Firestore.
+ * Updates the person's medicalProfile fields in Firestore via adminDb.
  */
 export async function updateMedicalPersonAction(
     id: string,
@@ -58,6 +60,8 @@ export async function updateMedicalPersonAction(
     formData: FormData
 ): Promise<MedicalActionState> {
     try {
+        const user = await requireUser('medical');
+
         const firstName = formData.get('firstName') as string;
         const lastName = formData.get('lastName') as string;
         const qualification = formData.get('qualification') as string;
@@ -69,8 +73,7 @@ export async function updateMedicalPersonAction(
         const specializations = specializationsRaw ? JSON.parse(specializationsRaw) : [];
         const medicalTraits = medicalTraitsRaw ? JSON.parse(medicalTraitsRaw) : [];
 
-        const personRef = doc(db, 'people', id);
-        await updateDoc(personRef, {
+        await adminDb.collection('people').doc(id).update({
             firstName,
             lastName,
             'medicalProfile.qualification': qualification,
@@ -78,15 +81,17 @@ export async function updateMedicalPersonAction(
             'medicalProfile.experienceYears': experienceYears,
             'medicalProfile.specializations': specializations,
             'medicalProfile.medicalTraits': medicalTraits,
+            updatedBy: user.uid,
+            updatedAt: new Date().toISOString(),
         });
 
-        await recordAuditAction({
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Medical Staff',
             actionType: 'LOGISTICS_UPDATE',
             entityType: 'player',
             entityId: id,
             description: `Medical profile updated for ${firstName} ${lastName}.`,
-            actorId: 'system-ops',
-            actorName: 'Medical Staff'
         });
 
         revalidatePath(`/people/${id}`);

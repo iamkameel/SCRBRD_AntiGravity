@@ -2,28 +2,15 @@
 
 import { revalidatePath } from 'next/cache';
 import { fieldSchema } from '@/lib/validations/fieldSchema';
-import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
 import { Field } from '@/types/firestore';
 import { ZodError } from 'zod';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { requireUser } from '@/lib/auth/session';
-import {
-  collection,
-  addDoc,
-  updateDoc as firestoreUpdateDoc,
-  doc as firestoreDoc,
-  serverTimestamp,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs
-} from 'firebase/firestore';
+import { recordAuditLog } from '@/lib/services/auditService';
 import {
   GroundStatusLog,
   MaintenanceTask,
-  ISO8601Timestamp,
-  UUID
+  ISO8601Timestamp
 } from '@/types/schema_v4';
 
 export interface FieldActionState {
@@ -32,60 +19,74 @@ export interface FieldActionState {
   fieldErrors?: Record<string, string[]>;
 }
 
+function extractFieldData(formData: FormData) {
+  const getStr = (key: string) => {
+    const val = formData.get(key);
+    return val !== null && val !== '' ? String(val) : undefined;
+  };
+
+  return {
+    name: formData.get('name') ? String(formData.get('name')) : '',
+    abbreviatedName: getStr('abbreviatedName'),
+    nickName: getStr('nickName'),
+    location: getStr('location'),
+    address: getStr('address'),
+    latitude: getStr('latitude'),
+    longitude: getStr('longitude'),
+    schoolId: getStr('schoolId'),
+    capacity: getStr('capacity'),
+    pitchCount: getStr('pitchCount'),
+    boundaryMin: getStr('boundaryMin'),
+    boundaryMax: getStr('boundaryMax'),
+    pitchType: getStr('pitchType'),
+    scoreboardType: getStr('scoreboardType'),
+    facilities: formData.getAll('facilities') as string[],
+
+    status: getStr('status'),
+    fieldSize: getStr('fieldSize'),
+    surfaceConditionRating: getStr('surfaceConditionRating'),
+    grassCover: getStr('grassCover'),
+    moistureLevel: getStr('moistureLevel'),
+    firmness: getStr('firmness'),
+    contactPerson: getStr('contactPerson'),
+    contactPhone: getStr('contactPhone'),
+    groundsKeeperIds: formData.getAll('groundsKeeperIds') as string[],
+  };
+}
+
 export async function createFieldAction(
   prevState: FieldActionState,
   formData: FormData
 ): Promise<FieldActionState> {
   try {
-      await requireUser('fields');
-    const rawData = {
-      name: formData.get('name'),
-      location: formData.get('location'),
-      address: formData.get('address'),
-      coordinates: {
-        lat: Number(formData.get('latitude')),
-        lng: Number(formData.get('longitude')),
-      },
-      capacity: Number(formData.get('capacity')),
-      pitchCount: Number(formData.get('pitchCount')),
-      boundarySize: {
-        north: Number(formData.get('boundaryNorth')),
-        south: Number(formData.get('boundarySouth')),
-        east: Number(formData.get('boundaryEast')),
-        west: Number(formData.get('boundaryWest')),
-      },
-      pitchType: formData.get('pitchType'),
-      scoreboardType: formData.get('scoreboardType'),
-      facilities: formData.getAll('facilities'),
-
-      // New fields
-      status: formData.get('status'),
-      fieldSize: formData.get('fieldSize'),
-      surfaceConditionRating: formData.get('surfaceConditionRating'),
-      grassCover: formData.get('grassCover'),
-      moistureLevel: formData.get('moistureLevel'),
-      firmness: formData.get('firmness'),
-      contactPerson: formData.get('contactPerson'),
-      contactPhone: formData.get('contactPhone'),
-      groundsKeeperIds: formData.getAll('groundsKeeperIds'),
-    };
-
+    const user = await requireUser('fields');
+    const rawData = extractFieldData(formData);
     const validatedData = fieldSchema.parse(rawData);
 
+    const nowIso = new Date().toISOString();
     const newFieldData: Omit<Field, 'id'> = {
       ...validatedData,
-      // Transform flat surface fields into nested object
       surfaceDetails: {
         grassCover: validatedData.grassCover ? Number(validatedData.grassCover) : undefined,
         moistureLevel: validatedData.moistureLevel,
         firmness: validatedData.firmness,
       },
       surfaceConditionRating: validatedData.surfaceConditionRating ? Number(validatedData.surfaceConditionRating) : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdBy: user.uid,
+      createdAt: nowIso,
+      updatedAt: nowIso,
     } as any;
 
-    await createDocument<Omit<Field, 'id'>>('fields', newFieldData);
+    const docRef = await adminDb.collection('fields').add(newFieldData);
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Facility Admin',
+      actionType: 'LOGISTICS_CREATE',
+      entityType: 'field',
+      entityId: docRef.id,
+      description: `Created field facility: ${validatedData.name}`,
+    });
 
     revalidatePath('/fields');
     return { success: true };
@@ -110,54 +111,33 @@ export async function updateFieldAction(
   formData: FormData
 ): Promise<FieldActionState> {
   try {
-      await requireUser('fields');
-    const rawData = {
-      name: formData.get('name'),
-      location: formData.get('location'),
-      address: formData.get('address'),
-      coordinates: {
-        lat: Number(formData.get('latitude')),
-        lng: Number(formData.get('longitude')),
-      },
-      capacity: Number(formData.get('capacity')),
-      pitchCount: Number(formData.get('pitchCount')),
-      boundarySize: {
-        north: Number(formData.get('boundaryNorth')),
-        south: Number(formData.get('boundarySouth')),
-        east: Number(formData.get('boundaryEast')),
-        west: Number(formData.get('boundaryWest')),
-      },
-      pitchType: formData.get('pitchType'),
-      scoreboardType: formData.get('scoreboardType'),
-      facilities: formData.getAll('facilities'),
-
-      // New fields
-      status: formData.get('status'),
-      fieldSize: formData.get('fieldSize'),
-      surfaceConditionRating: formData.get('surfaceConditionRating'),
-      grassCover: formData.get('grassCover'),
-      moistureLevel: formData.get('moistureLevel'),
-      firmness: formData.get('firmness'),
-      contactPerson: formData.get('contactPerson'),
-      contactPhone: formData.get('contactPhone'),
-      groundsKeeperIds: formData.getAll('groundsKeeperIds'),
-    };
-
+    const user = await requireUser('fields');
+    const rawData = extractFieldData(formData);
     const validatedData = fieldSchema.parse(rawData);
 
+    const nowIso = new Date().toISOString();
     const updateData: Partial<Field> = {
       ...validatedData,
-      // Transform flat surface fields into nested object
       surfaceDetails: {
         grassCover: validatedData.grassCover ? Number(validatedData.grassCover) : undefined,
         moistureLevel: validatedData.moistureLevel,
         firmness: validatedData.firmness,
       },
       surfaceConditionRating: validatedData.surfaceConditionRating ? Number(validatedData.surfaceConditionRating) : undefined,
-      updatedAt: new Date().toISOString(),
+      updatedBy: user.uid,
+      updatedAt: nowIso,
     } as any;
 
-    await updateDocument<Field>('fields', id, updateData);
+    await adminDb.collection('fields').doc(id).update(updateData);
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Facility Admin',
+      actionType: 'LOGISTICS_UPDATE',
+      entityType: 'field',
+      entityId: id,
+      description: `Updated field facility: ${validatedData.name}`,
+    });
 
     revalidatePath('/fields');
     revalidatePath(`/fields/${id}`);
@@ -179,8 +159,18 @@ export async function updateFieldAction(
 
 export async function deleteFieldAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-      await requireUser('fields');
-    await deleteDocument('fields', id);
+    const user = await requireUser('fields');
+    await adminDb.collection('fields').doc(id).delete();
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Facility Admin',
+      actionType: 'LOGISTICS_UPDATE',
+      entityType: 'field',
+      entityId: id,
+      description: `Deleted field facility ${id}`,
+    });
+
     revalidatePath('/fields');
     return { success: true };
   } catch (error) {
@@ -194,19 +184,30 @@ export async function deleteFieldAction(id: string): Promise<{ success: boolean;
  */
 export async function logGroundStatusAction(data: Partial<GroundStatusLog>) {
   try {
-      await requireUser('fields');
-    const docRef = await addDoc(collection(db, 'ground_status_logs'), {
+    const user = await requireUser('fields');
+    const nowIso = new Date().toISOString();
+
+    const docRef = await adminDb.collection('ground_status_logs').add({
       ...data,
-      loggedAt: serverTimestamp() as unknown as ISO8601Timestamp
+      loggedBy: user.uid,
+      loggedAt: nowIso as unknown as ISO8601Timestamp,
     });
 
     if (data.fieldId) {
-      const fieldRef = firestoreDoc(db, 'fields', data.fieldId);
-      await firestoreUpdateDoc(fieldRef, {
+      await adminDb.collection('fields').doc(data.fieldId).update({
         lastStatus: data.conditionStatus,
-        updatedAt: serverTimestamp() as unknown as ISO8601Timestamp
-      } as any);
+        updatedAt: nowIso as unknown as ISO8601Timestamp,
+      });
     }
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Groundskeeper',
+      actionType: 'READINESS_OVERRIDE',
+      entityType: 'ground_readiness',
+      entityId: docRef.id,
+      description: `Logged ground status '${data.conditionStatus}' for field ${data.fieldId || 'N/A'}.`,
+    });
 
     revalidatePath('/dashboard/groundskeeper');
     return { success: true, id: docRef.id };
@@ -221,14 +222,13 @@ export async function logGroundStatusAction(data: Partial<GroundStatusLog>) {
  */
 export async function getLatestFieldStatusAction(fieldId: string) {
   try {
-    const q = query(
-      collection(db, 'ground_status_logs'),
-      where('fieldId', '==', fieldId),
-      orderBy('loggedAt', 'desc'),
-      limit(5)
-    );
+    const snapshot = await adminDb
+      .collection('ground_status_logs')
+      .where('fieldId', '==', fieldId)
+      .orderBy('loggedAt', 'desc')
+      .limit(5)
+      .get();
 
-    const snapshot = await getDocs(q);
     const logs = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -246,15 +246,12 @@ export async function getLatestFieldStatusAction(fieldId: string) {
  */
 export async function getSchoolFieldsAction(schoolId: string) {
   try {
-    // Note: We use queryDocuments from lib/firestore if possible, 
-    // but here we use direct firebase for specific filtering logic matching the schema
-    const q = query(
-      collection(db, 'fields'),
-      where('schoolId', '==', schoolId),
-      where('status', '==', 'ACTIVE')
-    );
+    const snapshot = await adminDb
+      .collection('fields')
+      .where('schoolId', '==', schoolId)
+      .where('status', '==', 'ACTIVE')
+      .get();
 
-    const snapshot = await getDocs(q);
     const fields = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -272,21 +269,44 @@ export async function getSchoolFieldsAction(schoolId: string) {
  */
 export async function upsertMaintenanceTaskAction(data: Partial<MaintenanceTask>) {
   try {
-      await requireUser('fields');
+    const user = await requireUser('fields');
+    const nowIso = new Date().toISOString();
+
     if (data.id) {
-      const docRef = firestoreDoc(db, 'maintenance_tasks', data.id);
-      await firestoreUpdateDoc(docRef, {
+      await adminDb.collection('maintenance_tasks').doc(data.id).update({
         ...data,
-        updatedAt: serverTimestamp() as unknown as ISO8601Timestamp
-      } as any);
+        updatedBy: user.uid,
+        updatedAt: nowIso as unknown as ISO8601Timestamp,
+      });
+
+      await recordAuditLog({
+        actorId: user.uid,
+        actorName: user.email || 'Facility Staff',
+        actionType: 'LOGISTICS_UPDATE',
+        entityType: 'maintenance_task',
+        entityId: data.id,
+        description: `Updated maintenance task: ${data.title || data.id}`,
+      });
+
       return { success: true, id: data.id };
     } else {
-      const docRef = await addDoc(collection(db, 'maintenance_tasks'), {
+      const docRef = await adminDb.collection('maintenance_tasks').add({
         ...data,
         status: data.status || 'PENDING',
-        createdAt: serverTimestamp() as unknown as ISO8601Timestamp,
-        updatedAt: serverTimestamp() as unknown as ISO8601Timestamp
+        createdBy: user.uid,
+        createdAt: nowIso as unknown as ISO8601Timestamp,
+        updatedAt: nowIso as unknown as ISO8601Timestamp,
       });
+
+      await recordAuditLog({
+        actorId: user.uid,
+        actorName: user.email || 'Facility Staff',
+        actionType: 'LOGISTICS_CREATE',
+        entityType: 'maintenance_task',
+        entityId: docRef.id,
+        description: `Created maintenance task: ${data.title || docRef.id}`,
+      });
+
       return { success: true, id: docRef.id };
     }
   } catch (error: any) {
@@ -300,14 +320,13 @@ export async function upsertMaintenanceTaskAction(data: Partial<MaintenanceTask>
  */
 export async function getPendingMaintenanceTasksAction(schoolId: string) {
   try {
-    const q = query(
-      collection(db, 'maintenance_tasks'),
-      where('status', '!=', 'COMPLETED'),
-      orderBy('status'),
-      orderBy('dueDate', 'asc')
-    );
+    const snapshot = await adminDb
+      .collection('maintenance_tasks')
+      .where('status', '!=', 'COMPLETED')
+      .orderBy('status')
+      .orderBy('dueDate', 'asc')
+      .get();
 
-    const snapshot = await getDocs(q);
     const tasks = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -325,13 +344,12 @@ export async function getPendingMaintenanceTasksAction(schoolId: string) {
  */
 export async function getMaintenanceTasksByFieldAction(fieldId: string) {
   try {
-    const q = query(
-      collection(db, 'maintenance_tasks'),
-      where('fieldId', '==', fieldId),
-      orderBy('dueDate', 'asc')
-    );
+    const snapshot = await adminDb
+      .collection('maintenance_tasks')
+      .where('fieldId', '==', fieldId)
+      .orderBy('dueDate', 'asc')
+      .get();
 
-    const snapshot = await getDocs(q);
     const tasks = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()

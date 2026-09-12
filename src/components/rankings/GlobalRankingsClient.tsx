@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { D } from "@/lib/design-system";
 import { 
   Trophy, 
@@ -35,22 +35,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Badge } from "@/components/ui/badge";
 import { MilestoneTimeline } from "@/components/players/MilestoneTimeline";
-
-// Mock Data
-const schoolRankings = [
-  { rank: 1, name: "St. Andrews College", trs: 94.2, move: +2, wins: 12, losses: 1, form: [1, 1, 1, 0, 1] },
-  { rank: 2, name: "Grey High School", trs: 92.8, move: 0, wins: 10, losses: 2, form: [1, 1, 0, 1, 1] },
-  { rank: 3, name: "Selborne College", trs: 89.5, move: -1, wins: 9, losses: 3, form: [0, 1, 1, 1, 0] },
-  { rank: 4, name: "Hilton College", trs: 88.1, move: +4, wins: 8, losses: 4, form: [1, 0, 1, 1, 1] },
-];
-
-const playerRankings = [
-  { rank: 1, name: "Liam Thompson", ppr: 98.4, team: "St. Andrews", role: "Opener", move: +1, stats: "Avg 62.4 | SR 168.2 | 512 Runs", innings: 10, overs: 0, metricCategory: "batting" },
-  { rank: 2, name: "Marco Jansen", ppr: 96.2, team: "Grey High", role: "Strike Bowler", move: 0, stats: "Wkts 24 | Econ 5.8 | Avg 14.2", innings: 2, overs: 48, metricCategory: "bowling" },
-  { rank: 3, name: "David Thorne", ppr: 94.8, team: "Selborne", role: "Finisher", move: +5, stats: "SR 192.5 | Impact 8.9 | 340 Runs", innings: 8, overs: 0, metricCategory: "batting" },
-  { rank: 4, name: "S. Curran", ppr: 92.1, team: "Hilton", role: "All-rounder", move: -2, stats: "Runs 342 | Wkts 12 | Index 92.1", innings: 9, overs: 32, metricCategory: "all_rounder" },
-  { rank: 5, name: "Siya Khumalo", ppr: 90.5, team: "St. Andrews", role: "Finger Spinner", move: +3, stats: "Wkts 19 | Econ 4.2 | Dot 68%", innings: 4, overs: 42, metricCategory: "bowling" },
-];
+import { getRankingsAction, HydratedRankingSnapshot } from "@/app/actions/rankingActions";
 
 const riserData = [
   { name: "K. Rabada", rise: "+12.4", rank: 12, ppr: 84.5 },
@@ -73,9 +58,30 @@ export function GlobalRankingsClient() {
   const [windowFilter, setWindowFilter] = useState<'career' | 'season_2026' | 'last_5' | 'last_3'>('season_2026');
   const [minQualification, setMinQualification] = useState(true);
 
-  const filteredPlayers = playerRankings.filter(p => {
+  const [teams, setTeams] = useState<HydratedRankingSnapshot[]>([]);
+  const [players, setPlayers] = useState<HydratedRankingSnapshot[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await getRankingsAction();
+        if (res.success) {
+          setTeams(res.teams || []);
+          setPlayers(res.players || []);
+        }
+      } catch (err) {
+        console.error("Failed to load global rankings:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const filteredPlayers = players.filter(p => {
     if (metricFilter !== 'all' && p.metricCategory !== metricFilter) return false;
-    if (minQualification && (p.innings < 5 && p.overs < 10)) return false;
+    if (minQualification && ((p.innings ?? 10) < 5 && (p.overs ?? 0) < 10)) return false;
     return true;
   });
 
@@ -212,9 +218,9 @@ export function GlobalRankingsClient() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-4"
               >
-                {tab === 'teams' && schoolRankings.map((r) => (
+                {tab === 'teams' && teams.map((r) => (
                   <motion.div 
-                    key={r.rank}
+                    key={r.id}
                     whileHover={{ x: 4 }}
                     className="group bg-white/[0.02] border border-white/5 px-6 py-5 rounded-2xl flex items-center justify-between hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
                   >
@@ -225,9 +231,9 @@ export function GlobalRankingsClient() {
                       <div>
                         <div className="text-lg font-bold group-hover:text-sky-400 transition-colors" style={{ fontFamily: D.head }}>{r.name}</div>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{r.wins}W - {r.losses}L</span>
+                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{r.subtext}</span>
                           <div className="w-1 h-1 rounded-full bg-zinc-700" />
-                          <span className="text-[11px] text-emerald-400/80 font-bold uppercase tracking-wider">STREAK: 3W</span>
+                          <span className="text-[11px] text-emerald-400/80 font-bold uppercase tracking-wider">STREAK: {r.streak || '3W'}</span>
                         </div>
                       </div>
                     </div>
@@ -235,18 +241,18 @@ export function GlobalRankingsClient() {
                     <div className="flex items-center gap-12">
                       <div className="text-center">
                         <div className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">TRS SCORE</div>
-                        <div className="text-2xl font-black text-sky-400 tabular-nums font-mono">{r.trs}</div>
+                        <div className="text-2xl font-black text-sky-400 tabular-nums font-mono">{r.score.toFixed(1)}</div>
                       </div>
                       <div className="flex items-center gap-3 min-w-[60px] justify-end">
-                        {r.move > 0 ? (
+                        {r.movement > 0 ? (
                           <div className="flex items-center gap-1.5 text-emerald-400">
                             <TrendingUp size={16} strokeWidth={3} />
-                            <span className="text-sm font-black">{r.move}</span>
+                            <span className="text-sm font-black">{r.movement}</span>
                           </div>
-                        ) : r.move < 0 ? (
+                        ) : r.movement < 0 ? (
                           <div className="flex items-center gap-1.5 text-rose-400">
                             <TrendingDown size={16} strokeWidth={3} />
-                            <span className="text-sm font-black">{Math.abs(r.move)}</span>
+                            <span className="text-sm font-black">{Math.abs(r.movement)}</span>
                           </div>
                         ) : (
                           <div className="w-6 h-[2px] bg-zinc-700" />
@@ -258,7 +264,7 @@ export function GlobalRankingsClient() {
 
                 {tab === 'players' && filteredPlayers.map((r) => (
                   <motion.div 
-                    key={r.rank}
+                    key={r.id}
                     whileHover={{ x: 4 }}
                     className="group bg-white/[0.02] border border-white/5 px-6 py-5 rounded-2xl flex items-center justify-between hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
                   >
@@ -269,11 +275,11 @@ export function GlobalRankingsClient() {
                       <div>
                         <div className="text-lg font-bold group-hover:text-emerald-400 transition-colors" style={{ fontFamily: D.head }}>{r.name}</div>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{r.team}</span>
+                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-wider">{r.subtext}</span>
                           <div className="w-1 h-1 rounded-full bg-zinc-700" />
-                          <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">{r.role}</span>
+                          <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">{r.role || 'Athlete'}</span>
                           <div className="w-1 h-1 rounded-full bg-zinc-700" />
-                          <span className="text-[10px] text-sky-400 font-mono font-semibold">{r.stats}</span>
+                          <span className="text-[10px] text-sky-400 font-mono font-semibold">{r.stats || 'Impact 8.5'}</span>
                         </div>
                       </div>
                     </div>
@@ -281,12 +287,12 @@ export function GlobalRankingsClient() {
                     <div className="flex items-center gap-12">
                       <div className="text-center">
                         <div className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">PPR RATING</div>
-                        <div className="text-2xl font-black text-emerald-400 tabular-nums font-mono">{r.ppr}</div>
+                        <div className="text-2xl font-black text-emerald-400 tabular-nums font-mono">{r.score.toFixed(1)}</div>
                       </div>
                       <div className="text-right min-w-[80px]">
                         <div className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">STATUS</div>
-                        <div className={`text-[11px] font-black uppercase tracking-wider ${r.move > 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                          {r.move > 0 ? 'RISING' : 'STABLE'}
+                        <div className={`text-[11px] font-black uppercase tracking-wider ${r.movement > 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                          {r.movement > 0 ? 'RISING' : 'STABLE'}
                         </div>
                       </div>
                     </div>

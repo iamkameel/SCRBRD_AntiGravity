@@ -1,7 +1,8 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { umpireSchema } from '@/lib/validations/umpireSchema';
@@ -16,55 +17,57 @@ export interface UmpireActionState {
     success?: boolean;
 }
 
+function getNum(val: FormDataEntryValue | null): number | undefined {
+    if (!val || val === '') return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+}
+
 function extractUmpireData(formData: FormData) {
     const preferredFormats = formData.getAll('preferredFormats') as string[];
 
-    // Parse nested attributes
     const decisionAttributes = {
-        lbwJudgement: Number(formData.get('decisionAttributes.lbwJudgement')),
-        caughtBehindAccuracy: Number(formData.get('decisionAttributes.caughtBehindAccuracy')),
-        runOutPositioning: Number(formData.get('decisionAttributes.runOutPositioning')),
-        boundaryCalls: Number(formData.get('decisionAttributes.boundaryCalls')),
-        drsAccuracy: Number(formData.get('decisionAttributes.drsAccuracy')),
-        consistency: Number(formData.get('decisionAttributes.consistency')),
+        lbwJudgement: getNum(formData.get('decisionAttributes.lbwJudgement')),
+        caughtBehindAccuracy: getNum(formData.get('decisionAttributes.caughtBehindAccuracy')),
+        runOutPositioning: getNum(formData.get('decisionAttributes.runOutPositioning')),
+        boundaryCalls: getNum(formData.get('decisionAttributes.boundaryCalls')),
+        drsAccuracy: getNum(formData.get('decisionAttributes.drsAccuracy')),
+        consistency: getNum(formData.get('decisionAttributes.consistency')),
     };
 
     const matchControlAttributes = {
-        playerManagement: Number(formData.get('matchControlAttributes.playerManagement')),
-        conflictResolution: Number(formData.get('matchControlAttributes.conflictResolution')),
-        timeManagement: Number(formData.get('matchControlAttributes.timeManagement')),
-        lawApplication: Number(formData.get('matchControlAttributes.lawApplication')),
-        communication: Number(formData.get('matchControlAttributes.communication')),
-        pressureHandling: Number(formData.get('matchControlAttributes.pressureHandling')),
+        playerManagement: getNum(formData.get('matchControlAttributes.playerManagement')),
+        conflictResolution: getNum(formData.get('matchControlAttributes.conflictResolution')),
+        timeManagement: getNum(formData.get('matchControlAttributes.timeManagement')),
+        lawApplication: getNum(formData.get('matchControlAttributes.lawApplication')),
+        communication: getNum(formData.get('matchControlAttributes.communication')),
+        pressureHandling: getNum(formData.get('matchControlAttributes.pressureHandling')),
     };
 
     const physicalAttributes = {
-        fitness: Number(formData.get('physicalAttributes.fitness')),
-        endurance: Number(formData.get('physicalAttributes.endurance')),
-        positioningAgility: Number(formData.get('physicalAttributes.positioningAgility')),
-        concentration: Number(formData.get('physicalAttributes.concentration')),
-        vision: Number(formData.get('physicalAttributes.vision')),
+        fitness: getNum(formData.get('physicalAttributes.fitness')),
+        endurance: getNum(formData.get('physicalAttributes.endurance')),
+        positioningAgility: getNum(formData.get('physicalAttributes.positioningAgility')),
+        concentration: getNum(formData.get('physicalAttributes.concentration')),
+        vision: getNum(formData.get('physicalAttributes.vision')),
     };
 
     return {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        email: formData.get('email'),
-        phoneNumber: formData.get('phoneNumber'),
+        firstName: (formData.get('firstName') as string) ?? '',
+        lastName: (formData.get('lastName') as string) ?? '',
+        dateOfBirth: (formData.get('dateOfBirth') as string) ?? '',
+        email: (formData.get('email') as string) ?? '',
+        phoneNumber: (formData.get('phoneNumber') as string) ?? '',
 
-        // Umpire Profile Core
         certificationLevel: formData.get('certificationLevel') || 'Level 1',
         homeAssociation: formData.get('homeAssociation') || '',
-        yearsActive: formData.get('yearsActive') ? Number(formData.get('yearsActive')) : 0,
+        yearsActive: getNum(formData.get('yearsActive')) ?? 0,
         preferredFormats,
 
-        // Attribute Blocks
         decisionAttributes,
         matchControlAttributes,
         physicalAttributes,
 
-        // Tags
         umpireTraits: formData.get('umpireTraits') ? JSON.parse(formData.get('umpireTraits') as string) : [],
     };
 }
@@ -99,6 +102,8 @@ function mapToFirestoreUmpire(validatedData: any): Omit<Person, 'id' | 'createdA
 }
 
 export async function createUmpireAction(prevState: UmpireActionState, formData: FormData): Promise<UmpireActionState> {
+    const user = await requireUser('management');
+
     const rawData = extractUmpireData(formData);
     const validatedFields = umpireSchema.safeParse(rawData);
 
@@ -110,13 +115,25 @@ export async function createUmpireAction(prevState: UmpireActionState, formData:
         };
     }
 
+    let createdId = '';
     try {
         const umpireData = mapToFirestoreUmpire(validatedFields.data);
 
-        await addDoc(collection(db, 'people'), {
+        const docRef = await adminDb.collection('people').add({
             ...umpireData,
+            createdBy: user.uid,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+        });
+        createdId = docRef.id;
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'umpire',
+            entityId: createdId,
+            description: `Umpire profile created for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {
@@ -136,6 +153,8 @@ export async function updateUmpireAction(
     prevState: UmpireActionState,
     formData: FormData
 ): Promise<UmpireActionState> {
+    const user = await requireUser('management');
+
     const rawData = extractUmpireData(formData);
     const validatedFields = umpireSchema.safeParse(rawData);
 
@@ -150,9 +169,19 @@ export async function updateUmpireAction(
     try {
         const umpireData = mapToFirestoreUmpire(validatedFields.data);
 
-        await updateDoc(doc(db, 'people', id), {
+        await adminDb.collection('people').doc(id).update({
             ...umpireData,
+            updatedBy: user.uid,
             updatedAt: new Date().toISOString(),
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'umpire',
+            entityId: id,
+            description: `Umpire profile updated for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {

@@ -19,6 +19,8 @@ import {
   FlaskConical,
   Loader2,
   CalendarX2,
+  Search,
+  History,
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,9 +83,21 @@ export function SportsDirectorDashboard() {
   const [snapshot, setSnapshot] = useState<DirectorSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterDivision, setFilterDivision] = useState<DivisionFilter>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const [busyRowId, setBusyRowId] = useState<string | null>(null);
   const [broadcasting, setBroadcasting] = useState(false);
   const [broadcastSent, setBroadcastSent] = useState(false);
+
+  // Staff assignment modal state
+  const [assignModal, setAssignModal] = useState<{ matchId: string; teamName: string; roleType: 'headCoach' | 'scorer' | 'umpire' } | null>(null);
+  const [assignPersonId, setAssignPersonId] = useState('');
+  const [assignPersonName, setAssignPersonName] = useState('');
+  const [assigning, setAssigning] = useState(false);
+
+  // Audit logs state
+  const [auditLogs, setAuditLogs] = useState<Array<{ id: string; actionType: string; description: string; actorName: string; timestamp: string }>>([]);
+  const [showAuditLogs, setShowAuditLogs] = useState(false);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   const actorId = user?.uid ?? 'anonymous';
   const actorName = user?.displayName ?? user?.email ?? 'Sports Director';
@@ -133,9 +147,79 @@ export function SportsDirectorDashboard() {
 
   useEffect(() => { loadSnapshot(); }, [loadSnapshot]);
 
+  const fetchAuditLogs = useCallback(async () => {
+    if (!selectedSchoolId) return;
+    setLoadingLogs(true);
+    try {
+      const logs = await sportsDirectorService.getRecentAuditLogs(selectedSchoolId, 10);
+      setAuditLogs(logs);
+    } finally {
+      setLoadingLogs(false);
+    }
+  }, [selectedSchoolId]);
+
+  useEffect(() => {
+    if (showAuditLogs) {
+      fetchAuditLogs();
+    }
+  }, [showAuditLogs, fetchAuditLogs]);
+
   const handleSchoolChange = (id: string) => {
     setSelectedSchoolId(id);
     if (id !== DEMO_SCHOOL_ID) setFilters({ schoolId: id });
+  };
+
+  const handleAssignStaff = async () => {
+    if (!assignModal || !assignPersonName.trim()) {
+      toast.error("Please enter staff member name");
+      return;
+    }
+    setAssigning(true);
+    try {
+      if (isFallback) {
+        // Update local state snapshot for demo fallback mode
+        setSnapshot(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            readinessGrid: prev.readinessGrid.map(t => {
+              if (t.id === assignModal.matchId) {
+                return {
+                  ...t,
+                  staffAssigned: {
+                    ...t.staffAssigned,
+                    [assignModal.roleType]: assignPersonName,
+                  },
+                };
+              }
+              return t;
+            }),
+          };
+        });
+        toast.success(`Assigned ${assignPersonName} as ${assignModal.roleType}`);
+      } else {
+        await sportsDirectorService.assignStaffRole({
+          matchId: assignModal.matchId,
+          roleType: assignModal.roleType,
+          personId: assignPersonId || `staff_${Date.now()}`,
+          personName: assignPersonName,
+          schoolId: selectedSchoolId ?? DEMO_SCHOOL_ID,
+          actorId,
+          actorName,
+          teamName: assignModal.teamName,
+        });
+        toast.success(`Assigned ${assignPersonName} as ${assignModal.roleType}`);
+        await loadSnapshot();
+      }
+      setAssignModal(null);
+      setAssignPersonName('');
+      setAssignPersonId('');
+      if (showAuditLogs) fetchAuditLogs();
+    } catch {
+      toast.error("Failed to assign staff member");
+    } finally {
+      setAssigning(false);
+    }
   };
 
   // ── Derived ──
@@ -144,13 +228,24 @@ export function SportsDirectorDashboard() {
   const isError = snapshot?.source === 'error';
 
   const filteredTeams = useMemo(() => {
-    const rows = snapshot?.readinessGrid ?? [];
-    if (filterDivision === 'ALL') return rows;
-    return rows.filter(t => {
-      const junior = isJuniorLabel(`${t.teamName} ${t.division}`);
-      return filterDivision === 'JUNIOR' ? junior : !junior;
-    });
-  }, [snapshot, filterDivision]);
+    let rows = snapshot?.readinessGrid ?? [];
+    if (filterDivision !== 'ALL') {
+      rows = rows.filter(t => {
+        const junior = isJuniorLabel(`${t.teamName} ${t.division}`);
+        return filterDivision === 'JUNIOR' ? junior : !junior;
+      });
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      rows = rows.filter(t =>
+        t.teamName.toLowerCase().includes(q) ||
+        t.opponent.toLowerCase().includes(q) ||
+        t.venue.toLowerCase().includes(q) ||
+        t.division.toLowerCase().includes(q)
+      );
+    }
+    return rows;
+  }, [snapshot, filterDivision, searchQuery]);
 
   const topRiskLabel = useMemo(() => {
     const first = snapshot?.workloadAlerts[0];
@@ -303,6 +398,16 @@ export function SportsDirectorDashboard() {
           {/* Quick Executive Actions */}
           <div className="flex flex-wrap items-center gap-3">
             <Button
+              onClick={() => setShowAuditLogs(prev => !prev)}
+              className={`rounded-full px-4 py-2.5 text-[10px] font-black uppercase tracking-widest h-10 transition-all ${
+                showAuditLogs ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+              }`}
+            >
+              <History className="h-3.5 w-3.5 mr-2 text-indigo-400" />
+              {showAuditLogs ? 'Hide Audit Log' : 'Audit Stream'}
+            </Button>
+
+            <Button
               onClick={handleBroadcast}
               disabled={broadcasting}
               className={`rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest h-10 transition-all ${
@@ -322,6 +427,51 @@ export function SportsDirectorDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* ─── AUDIT STREAM DRAWER ─── */}
+        {showAuditLogs && (
+          <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-indigo-400" />
+                <h3 className="text-sm font-black text-white uppercase tracking-wider" style={{ fontFamily: D.head }}>
+                  DIRECTOR AUDIT STREAM
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={fetchAuditLogs}
+                disabled={loadingLogs}
+                className="h-7 text-[10px] text-white/50 hover:text-white"
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${loadingLogs ? 'animate-spin' : ''}`} />
+                Refresh Logs
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
+              {auditLogs.length === 0 ? (
+                <p className="text-xs text-white/40 italic p-4 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                  No director action audit logs found for this school.
+                </p>
+              ) : (
+                auditLogs.map(log => (
+                  <div key={log.id} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[9px] uppercase font-mono">
+                        {log.actionType}
+                      </Badge>
+                      <span className="text-white/80 font-medium">{log.description}</span>
+                    </div>
+                    <div className="text-right text-[10px] text-white/40 font-mono">
+                      <span>{log.actorName}</span> · <span>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ─── EXECUTIVE KPI RUNWAY ─── */}
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-white/[0.08] transition-opacity ${loading ? 'opacity-50' : ''}`}>
@@ -382,19 +532,32 @@ export function SportsDirectorDashboard() {
             <p className="text-xs text-white/40 mt-1">Next fixture per squad — selection, availability, grounds, transport, and staff</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {(['ALL', 'SENIOR', 'JUNIOR'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setFilterDivision(tab)}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                  filterDivision === tab ? 'bg-[#22c55e] text-black shadow-lg shadow-[#22c55e]/20' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
-                }`}
-                style={{ fontFamily: D.mono }}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <input
+                type="text"
+                placeholder="Search squad, opponent, venue..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-[11px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#22c55e] w-52 transition-all font-sans"
+              />
+            </div>
+
+            <div className="flex items-center gap-1">
+              {(['ALL', 'SENIOR', 'JUNIOR'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setFilterDivision(tab)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                    filterDivision === tab ? 'bg-[#22c55e] text-black shadow-lg shadow-[#22c55e]/20' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+                  }`}
+                  style={{ fontFamily: D.mono }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -494,7 +657,20 @@ export function SportsDirectorDashboard() {
                     className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center col-span-2 sm:col-span-1"
                     title={`Coach: ${team.staffAssigned.headCoach} · Scorer: ${team.staffAssigned.scorer} · Umpire: ${team.staffAssigned.umpire}`}
                   >
-                    <span className="text-[8px] font-black text-white/30 uppercase block" style={{ fontFamily: D.mono }}>Staffing</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] font-black text-white/30 uppercase block" style={{ fontFamily: D.mono }}>Staffing</span>
+                      {staffGap && (
+                        <button
+                          onClick={() => {
+                            const unassignedRole = team.staffAssigned.scorer === 'Unassigned' ? 'scorer' : team.staffAssigned.umpire === 'Unassigned' ? 'umpire' : 'headCoach';
+                            setAssignModal({ matchId: team.id, teamName: team.teamName, roleType: unassignedRole });
+                          }}
+                          className="text-[8px] text-amber-300 font-bold hover:underline"
+                        >
+                          + Assign
+                        </button>
+                      )}
+                    </div>
                     <span className={`text-[10px] font-bold mt-0.5 block ${staffGap ? 'text-rose-400' : 'text-emerald-400'}`}>
                       {staffGap ? 'Action Req.' : 'Staffed'}
                     </span>
@@ -599,6 +775,75 @@ export function SportsDirectorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ─── QUICK STAFF ASSIGNMENT MODAL ─── */}
+      {assignModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0e0e0e] border border-white/10 rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
+                Assign {assignModal.roleType === 'scorer' ? 'Official Scorer' : assignModal.roleType === 'umpire' ? 'Match Umpire' : 'Head Coach'}
+              </h3>
+              <button onClick={() => setAssignModal(null)} className="text-white/40 hover:text-white text-sm font-bold">✕</button>
+            </div>
+
+            <p className="text-xs text-white/50">
+              Assigning staff role for <span className="text-white font-bold">{assignModal.teamName}</span> match.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] font-mono text-white/40 uppercase block mb-1">Staff Member Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. David Miller"
+                  value={assignPersonName}
+                  onChange={e => setAssignPersonName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#22c55e]"
+                />
+              </div>
+
+              {snapshot.staffRoster.length > 0 && (
+                <div>
+                  <label className="text-[10px] font-mono text-white/40 uppercase block mb-1">Or select from Roster</label>
+                  <select
+                    onChange={e => {
+                      const found = snapshot.staffRoster.find(s => s.id === e.target.value);
+                      if (found) {
+                        setAssignPersonId(found.id);
+                        setAssignPersonName(found.name);
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#22c55e]"
+                  >
+                    <option value="" className="bg-[#0b0b0b]">Select staff member...</option>
+                    {snapshot.staffRoster.map(s => (
+                      <option key={s.id} value={s.id} className="bg-[#0b0b0b]">{s.name} ({s.role})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+              <Button
+                variant="ghost"
+                onClick={() => setAssignModal(null)}
+                className="text-xs text-white/60 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignStaff}
+                disabled={assigning}
+                className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-black uppercase text-xs rounded-xl px-5 h-9"
+              >
+                {assigning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Confirm Assignment'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { fetchSchools, fetchMatches, fetchPlayers } from "@/lib/firestore";
 import { Match, School as SchoolType, Person } from "@/types/firestore";
 
+import { DialogTitle } from "@/components/ui/dialog";
+
 export function CommandMenu({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [schools, setSchools] = React.useState<SchoolType[]>([]);
@@ -66,6 +68,7 @@ export function CommandMenu({ defaultOpen = false }: { defaultOpen?: boolean }) 
       className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm p-4 cursor-default animate-in fade-in duration-300"
       onClick={() => setOpen(false)}
     >
+      <DialogTitle className="sr-only">Global Command Menu</DialogTitle>
       <div 
         className="w-full max-w-[640px] bg-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300 group"
         onClick={(e) => e.stopPropagation()}

@@ -830,6 +830,72 @@ export const sportsDirectorService = {
         return { recipientCount: recipients.length, outstandingItems, broadcastId };
     },
 
+    /**
+     * Assign or reassign a staff member (coach, scorer, umpire) to a match or team.
+     */
+    async assignStaffRole(params: {
+        matchId: string;
+        roleType: 'headCoach' | 'scorer' | 'umpire';
+        personId: string;
+        personName: string;
+        schoolId: string;
+        actorId: string;
+        actorName: string;
+        teamName: string;
+    }): Promise<void> {
+        const { matchId, roleType, personId, personName, schoolId, actorId, actorName, teamName } = params;
+        const nowIso = new Date().toISOString();
+
+        const updateData: Record<string, any> = { updatedAt: serverTimestamp() };
+        if (roleType === 'scorer') {
+            updateData.scorerId = personId;
+            updateData.scorer = personName;
+        } else if (roleType === 'umpire') {
+            updateData.umpire1Id = personId;
+            updateData.umpires = [personName];
+        }
+
+        if (Object.keys(updateData).length > 1) {
+            await updateDoc(doc(db, 'matches', matchId), updateData);
+        }
+
+        await recordAuditLog({
+            actorId,
+            actorName,
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'match',
+            entityId: matchId,
+            schoolId,
+            description: `Director assigned ${personName} as ${roleType} for ${teamName} (match ${matchId})`,
+        });
+    },
+
+    /**
+     * Fetch recent director action audit logs for a school.
+     */
+    async getRecentAuditLogs(schoolId: string, limitCount = 10): Promise<{ id: string; actionType: string; description: string; actorName: string; timestamp: string }[]> {
+        try {
+            const logsRef = collection(db, 'audit_logs');
+            const q = query(logsRef, where('schoolId', '==', schoolId));
+            const snap = await getDocs(q);
+            return snap.docs
+                .map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        actionType: data.actionType || 'AUDIT_LOG',
+                        description: data.description || '',
+                        actorName: data.actorName || 'Director',
+                        timestamp: toDate(data.timestamp)?.toISOString() || new Date().toISOString(),
+                    };
+                })
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                .slice(0, limitCount);
+        } catch {
+            return [];
+        }
+    },
+
     /** Printable executive briefing (opened in a new window by the dashboard). */
     buildBriefingHtml(snapshot: DirectorSnapshot): string {
         const { metrics, readinessGrid, staffRoster, workloadAlerts } = snapshot;

@@ -1,6 +1,7 @@
 "use server";
 
-import { recordAuditLog, AuditActionType } from "@/lib/services/auditService";
+import { requireUser } from "@/lib/auth/session";
+import { recordAuditLog } from "@/lib/services/auditService";
 import { revalidatePath } from "next/cache";
 
 export interface EngineHealthStatus {
@@ -146,18 +147,25 @@ export async function getWorkflowPipelinesAction(): Promise<WorkflowPipelineItem
 }
 
 export async function retryWorkflowAction(workflowId: string) {
-    await recordAuditLog({
-        actorId: "system-architect",
-        actorName: "System Architect Ops",
-        actionType: "LOGISTICS_UPDATE",
-        entityType: "system",
-        entityId: workflowId,
-        description: `Manually re-queued failed operational workflow #${workflowId}. Sync worker dispatched.`
-    });
+    try {
+        const user = await requireUser("management");
 
-    revalidatePath("/admin/system");
-    revalidatePath("/audit-log");
-    return { success: true, message: `Workflow #${workflowId} re-queued successfully.` };
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || "System Architect Ops",
+            actionType: "LOGISTICS_UPDATE",
+            entityType: "system",
+            entityId: workflowId,
+            description: `Manually re-queued failed operational workflow #${workflowId}. Sync worker dispatched.`
+        });
+
+        revalidatePath("/admin/system");
+        revalidatePath("/audit-log");
+        return { success: true, message: `Workflow #${workflowId} re-queued successfully.` };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to retry workflow";
+        return { success: false, error: message };
+    }
 }
 
 export async function dispatchSystemBroadcastAction(payload: {
@@ -165,15 +173,23 @@ export async function dispatchSystemBroadcastAction(payload: {
     message: string;
     audience: "ALL_SCHOOLS" | "COACHES_ONLY" | "SCORERS_ONLY";
 }) {
-    await recordAuditLog({
-        actorId: "system-architect",
-        actorName: "System Architect Ops",
-        actionType: "SECURITY_ALERT",
-        entityType: "system",
-        entityId: "system-broadcast",
-        description: `Platform System Broadcast dispatched to ${payload.audience}: "${payload.title}"`
-    });
+    try {
+        const user = await requireUser("management");
 
-    revalidatePath("/admin/system");
-    return { success: true, message: "System-wide broadcast dispatched successfully." };
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || "System Architect Ops",
+            actionType: "SECURITY_ALERT",
+            entityType: "system",
+            entityId: "system-broadcast",
+            description: `Platform System Broadcast dispatched to ${payload.audience}: "${payload.title}"`
+        });
+
+        revalidatePath("/admin/system");
+        return { success: true, message: "System-wide broadcast dispatched successfully." };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to dispatch broadcast";
+        return { success: false, error: message };
+    }
 }
+

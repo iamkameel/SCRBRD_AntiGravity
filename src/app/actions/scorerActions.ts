@@ -1,7 +1,8 @@
 'use server';
 
-import { db } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { requireUser } from '@/lib/auth/session';
+import { recordAuditLog } from '@/lib/services/auditService';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { scorerSchema } from '@/lib/validations/scorerSchema';
@@ -16,42 +17,44 @@ export interface ScorerActionState {
     success?: boolean;
 }
 
+function getNum(val: FormDataEntryValue | null): number | undefined {
+    if (!val || val === '') return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+}
+
 function extractScorerData(formData: FormData) {
-    // Parse nested attributes
     const technicalAttributes = {
-        softwareProficiency: Number(formData.get('technicalAttributes.softwareProficiency')),
-        lawKnowledge: Number(formData.get('technicalAttributes.lawKnowledge')),
-        linearScoring: Number(formData.get('technicalAttributes.linearScoring')),
-        digitalScoring: Number(formData.get('technicalAttributes.digitalScoring')),
-        problemSolving: Number(formData.get('technicalAttributes.problemSolving')),
+        softwareProficiency: getNum(formData.get('technicalAttributes.softwareProficiency')),
+        lawKnowledge: getNum(formData.get('technicalAttributes.lawKnowledge')),
+        linearScoring: getNum(formData.get('technicalAttributes.linearScoring')),
+        digitalScoring: getNum(formData.get('technicalAttributes.digitalScoring')),
+        problemSolving: getNum(formData.get('technicalAttributes.problemSolving')),
     };
 
     const professionalAttributes = {
-        concentration: Number(formData.get('professionalAttributes.concentration')),
-        speed: Number(formData.get('professionalAttributes.speed')),
-        accuracy: Number(formData.get('professionalAttributes.accuracy')),
-        communication: Number(formData.get('professionalAttributes.communication')),
-        punctuality: Number(formData.get('professionalAttributes.punctuality')),
-        collaboration: Number(formData.get('professionalAttributes.collaboration')),
+        concentration: getNum(formData.get('professionalAttributes.concentration')),
+        speed: getNum(formData.get('professionalAttributes.speed')),
+        accuracy: getNum(formData.get('professionalAttributes.accuracy')),
+        communication: getNum(formData.get('professionalAttributes.communication')),
+        punctuality: getNum(formData.get('professionalAttributes.punctuality')),
+        collaboration: getNum(formData.get('professionalAttributes.collaboration')),
     };
 
     return {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        email: formData.get('email'),
-        phoneNumber: formData.get('phoneNumber'),
+        firstName: (formData.get('firstName') as string) ?? '',
+        lastName: (formData.get('lastName') as string) ?? '',
+        dateOfBirth: (formData.get('dateOfBirth') as string) ?? '',
+        email: (formData.get('email') as string) ?? '',
+        phoneNumber: (formData.get('phoneNumber') as string) ?? '',
 
-        // Scorer Profile Core
         certificationLevel: formData.get('certificationLevel') || 'Level 1',
         preferredMethod: formData.get('preferredMethod') || 'Digital',
-        experienceYears: formData.get('experienceYears') ? Number(formData.get('experienceYears')) : 0,
+        experienceYears: getNum(formData.get('experienceYears')) ?? 0,
 
-        // Attribute Blocks
         technicalAttributes,
         professionalAttributes,
 
-        // Tags
         scorerTraits: formData.get('scorerTraits') ? JSON.parse(formData.get('scorerTraits') as string) : [],
     };
 }
@@ -82,6 +85,8 @@ function mapToFirestoreScorer(validatedData: any): Omit<Person, 'id' | 'createdA
 }
 
 export async function createScorerAction(prevState: ScorerActionState, formData: FormData): Promise<ScorerActionState> {
+    const user = await requireUser('management');
+
     const rawData = extractScorerData(formData);
     const validatedFields = scorerSchema.safeParse(rawData);
 
@@ -93,13 +98,25 @@ export async function createScorerAction(prevState: ScorerActionState, formData:
         };
     }
 
+    let createdId = '';
     try {
         const scorerData = mapToFirestoreScorer(validatedFields.data);
 
-        await addDoc(collection(db, 'people'), {
+        const docRef = await adminDb.collection('people').add({
             ...scorerData,
+            createdBy: user.uid,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+        });
+        createdId = docRef.id;
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'scorer',
+            entityId: createdId,
+            description: `Scorer profile created for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {
@@ -119,6 +136,8 @@ export async function updateScorerAction(
     prevState: ScorerActionState,
     formData: FormData
 ): Promise<ScorerActionState> {
+    const user = await requireUser('management');
+
     const rawData = extractScorerData(formData);
     const validatedFields = scorerSchema.safeParse(rawData);
 
@@ -133,9 +152,19 @@ export async function updateScorerAction(
     try {
         const scorerData = mapToFirestoreScorer(validatedFields.data);
 
-        await updateDoc(doc(db, 'people', id), {
+        await adminDb.collection('people').doc(id).update({
             ...scorerData,
+            updatedBy: user.uid,
             updatedAt: new Date().toISOString(),
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Management Staff',
+            actionType: 'STAFF_ASSIGNED',
+            entityType: 'scorer',
+            entityId: id,
+            description: `Scorer profile updated for ${validatedFields.data.firstName} ${validatedFields.data.lastName}.`,
         });
 
     } catch (error) {
