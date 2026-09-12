@@ -71,6 +71,7 @@ const navKeyToModuleMap: Record<string, Module> = {
 
   // Resources & Logistics
   'fields': 'fields',
+  'facilities-engine': 'fields',
   'equipment': 'logistics',
   'transport': 'logistics',
 

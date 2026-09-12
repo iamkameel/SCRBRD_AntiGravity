@@ -140,6 +140,7 @@ export const navGroups: NavGroup[] = [
     accentColor: '#8b5cf6', // Violet
     links: [
       { href: '/fields', label: 'Fields', icon: MapPin, key: 'fields' },
+      { href: '/facilities', label: 'Turf & Facility Engine', icon: Shovel, key: 'facilities-engine' },
       { href: '/equipment', label: 'Equipment', icon: Tractor, key: 'equipment' },
       { href: '/transport', label: 'Transport', icon: Truck, key: 'transport' },
       { href: '/sponsors', label: 'Sponsors', icon: Handshake, key: 'sponsors' },
