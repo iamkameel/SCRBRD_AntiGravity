@@ -45,6 +45,8 @@ interface PermissionViewContextType {
   /** The account's real role, resolved server-side from the session. */
   verifiedRole: Role;
   verifiedRoleName: SimulatedRole;
+  /** The role permission checks should use: verified, or a narrowed preview. */
+  effectiveRole: Role;
   /** Tier of `currentRole` — what permission checks should use. */
   tier: number;
   uid: string | null;
@@ -103,6 +105,7 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
     setCurrentRole: (role: SimulatedRole) => setSimulated(role),
     verifiedRole,
     verifiedRoleName: rbacRoleToDisplayName(verifiedRole) as SimulatedRole,
+    effectiveRole,
     tier: resolveRoleTier(effectiveRole),
     uid,
     loading,

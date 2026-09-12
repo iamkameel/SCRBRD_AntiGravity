@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Role, Module, hasModuleAccess, resolveRoleTier, MODULES } from './rbac';
+import { Module, hasModuleAccess, MODULES } from './rbac';
 import { usePermissionView } from '@/contexts/PermissionViewContext';
 
 /**
@@ -13,15 +13,7 @@ import { usePermissionView } from '@/contexts/PermissionViewContext';
  * requireUser() in each server action is what actually enforces it.
  */
 export function usePermissions() {
-    const { currentRole: _display, verifiedRole, tier: contextTier, loading, isSimulating } = usePermissionView();
-
-    // usePermissionView already narrows to the previewed role where allowed.
-    const role: Role = useMemo(() => {
-        if (!isSimulating) return verifiedRole;
-        return verifiedRole;
-    }, [verifiedRole, isSimulating]);
-
-    const effectiveTier = contextTier;
+    const { effectiveRole: role, tier, loading } = usePermissionView();
 
     const canAccess = useMemo(
         () => (module: Module) => hasModuleAccess(role, module),
@@ -35,7 +27,7 @@ export function usePermissions() {
 
     return {
         role,
-        tier: effectiveTier ?? resolveRoleTier(role),
+        tier,
         canAccess,
         permittedModules,
         /** Permissions are not yet known; render restricted UI until false. */

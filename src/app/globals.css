@@ -15,13 +15,12 @@
   /* --- Font families — reference Next.js injected vars so we get the
        optimised subset + correct variable font axes loaded by layout.tsx --- */
   --font-mono: var(--font-dm-mono, 'DM Mono', monospace);
-  --font-head: var(--font-syne, 'Syne', sans-serif);
-  --font-open-sans: var(--font-open-sans, 'Open Sans', sans-serif);
-  --font-sans: var(--font-open-sans, 'Open Sans', var(--font-dm-sans, sans-serif));
-  --font-body: var(--font-open-sans, 'Open Sans', var(--font-dm-sans, sans-serif));
+  --font-head: var(--font-dm-sans, 'DM Sans', sans-serif);
+  --font-sans: var(--font-dm-sans, 'DM Sans', sans-serif);
+  --font-body: var(--font-dm-sans, 'DM Sans', sans-serif);
 
   /* --- SCRBRD Accent Colours (semantic, consistent across themes) --- */
-  --scrbrd-indigo:  #6366f1;  /* Brand primary — nav active, primary buttons */
+  --scrbrd-indigo:  #b5f542;  /* Brand primary — nav active, primary buttons */
   --scrbrd-sky:     #0ea5e9;  /* Match / live data — scores, match cards */
   --scrbrd-emerald: #10b981;  /* Positive / live — wins, live status, fitness */
   --scrbrd-amber:   #f59e0b;  /* Warning / traction — notifications, upcoming */
@@ -34,15 +33,15 @@
   --scrbrd-pink:    #ec4899;  /* Secondary accent — decorative only */
 
   /* --- Gradients --- */
-  --grad-main: linear-gradient(135deg, #6366f1, #0ea5e9);
+  --grad-main: linear-gradient(135deg, #b5f542, #0ea5e9);
   --grad-gold: linear-gradient(135deg, #f59e0b, #f97316);
   --grad-live: linear-gradient(135deg, #10b981, #06b6d4);
 
   /* --- Border Radius Scale --- */
   --radius-sm:   6px;
   --radius-md:  10px;
-  --radius-lg:  14px;
-  --radius-xl:  18px;
+  --radius-lg:  20px;
+  --radius-xl:  24px;
   --radius-pill: 999px;
 
   /* --- Light Theme Surfaces --- */
@@ -67,7 +66,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
 
-  --primary: 239 84% 67%;           /* Indigo #6366f1 */
+  --primary: 85 90% 38%;           /* Indigo #b5f542 */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 210 20% 96%;
@@ -84,22 +83,22 @@
 
   --border: 220 13% 85%;
   --input: 220 13% 85%;
-  --ring: 239 84% 67%;
+  --ring: 85 90% 38%;
 
-  --radius: 0.875rem; /* 14px — D.lg per spec */
+  --radius: 1.25rem; /* 14px — D.lg per spec */
 
   /* Sidebar Light */
   --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 239 84% 67%;
+  --sidebar-primary: 85 90% 38%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 239 84% 95%;
   --sidebar-accent-foreground: 239 84% 30%;
   --sidebar-border: 220 13% 85%;
-  --sidebar-ring: 239 84% 67%;
+  --sidebar-ring: 85 90% 38%;
 
   /* Charts */
-  --chart-1: 239 84% 67%;
+  --chart-1: 85 90% 38%;
   --chart-2: 199 89% 48%;
   --chart-3: 158 64% 52%;
   --chart-4: 38 92% 50%;
@@ -108,35 +107,35 @@
 
 .dark {
   /* --- Dark Theme Surfaces (UIX Spec §2.2) --- */
-  --bg-app: #060910;
-  --surf0: #0a0f1a;
-  --surf1: #0f1621;
-  --surf2: #151d2e;
-  --surf3: #1c2640;
+  --bg-app: #0b0d0b;
+  --surf0: #101310;
+  --surf1: #171a17;
+  --surf2: #202520;
+  --surf3: #2b312b;
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-med: rgba(255, 255, 255, 0.12);
   --card-ghost: rgba(255, 255, 255, 0.03);
-  --text-primary: #f0f4ff;
-  --text-secondary: #8b9bc4;
-  --text-muted: #4a5570;
+  --text-primary: #f3f5ef;
+  --text-secondary: #b0b8ac;
+  --text-muted: #929c8d;
 
-  --background: 220 30% 4%;     /* #060910 — deepest layer */
-  --foreground: 220 40% 94%;    /* #f0f4ff — textPrimary */
+  --background: 120 8% 4%;     /* #0b0d0b — deepest layer */
+  --foreground: 80 23% 95%;    /* #f3f5ef — textPrimary */
 
-  --card: 220 27% 9%;           /* #0f1621 — surf1 */
-  --card-foreground: 220 40% 94%;
+  --card: 120 6% 10%;           /* #171a17 — surf1 */
+  --card-foreground: 80 23% 95%;
 
-  --popover: 220 27% 9%;
-  --popover-foreground: 220 40% 94%;
+  --popover: 120 6% 10%;
+  --popover-foreground: 80 23% 95%;
 
-  --primary: 239 84% 67%;       /* Indigo #6366f1 — brand primary */
-  --primary-foreground: 0 0% 100%;
+  --primary: 82 90% 61%;       /* Indigo #b5f542 — brand primary */
+  --primary-foreground: 120 15% 6%;
 
-  --secondary: 220 25% 13%;     /* #151d2e — surf2 */
-  --secondary-foreground: 220 40% 94%;
+  --secondary: 120 7% 14%;     /* #202520 — surf2 */
+  --secondary-foreground: 80 23% 95%;
 
-  --muted: 220 22% 17%;         /* #1c2640 — surf3 */
-  --muted-foreground: 218 20% 55%; /* #8b9bc4 — textSecondary */
+  --muted: 120 7% 18%;         /* #2b312b — surf3 */
+  --muted-foreground: 100 8% 67%; /* #b0b8ac — textSecondary */
 
   --accent: 199 89% 48%;        /* Sky #0ea5e9 */
   --accent-foreground: 0 0% 100%;
@@ -144,19 +143,19 @@
   --destructive: 347 77% 60%;   /* Rose #f43f5e */
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 27% 14%;        /* rgba(255,255,255,0.07) equivalent */
-  --input: 220 25% 13%;
-  --ring: 239 84% 67%;
+  --border: 120 6% 19%;        /* rgba(255,255,255,0.07) equivalent */
+  --input: 120 7% 14%;
+  --ring: 82 90% 61%;
 
   /* Sidebar Dark */
-  --sidebar-background: 220 30% 4%;
-  --sidebar-foreground: 220 40% 94%;
-  --sidebar-primary: 239 84% 67%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 25% 13%;
-  --sidebar-accent-foreground: 220 40% 94%;
-  --sidebar-border: 220 27% 10%;
-  --sidebar-ring: 239 84% 67%;
+  --sidebar-background: 120 8% 4%;
+  --sidebar-foreground: 80 23% 95%;
+  --sidebar-primary: 82 90% 61%;
+  --sidebar-primary-foreground: 120 15% 6%;
+  --sidebar-accent: 120 7% 14%;
+  --sidebar-accent-foreground: 80 23% 95%;
+  --sidebar-border: 120 6% 15%;
+  --sidebar-ring: 82 90% 61%;
 
   /* Charts — vibrant on dark */
   --chart-1: 199 89% 48%;   /* Sky — boundary */
@@ -241,10 +240,10 @@
 
   /* --- Glass morphism --- */
   .glass-card {
-    @apply bg-white/60 dark:bg-[#0f1621]/80 backdrop-blur-xl border border-white/40 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.4)];
+    @apply bg-white/60 dark:bg-[#171a17]/80 backdrop-blur-xl border border-white/40 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.4)];
   }
   .glass-morphism-premium {
-    @apply bg-white/30 dark:bg-[#060910]/70 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)];
+    @apply bg-white/30 dark:bg-[#0b0d0b]/70 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)];
   }
 
   /* --- Mesh backgrounds --- */
@@ -256,7 +255,7 @@
       radial-gradient(at 100% 0%, hsla(239, 84%, 90%, 1) 0, transparent 50%);
   }
   .bg-mesh-dark {
-    background-color: #060910;
+    background-color: #0b0d0b;
     background-image:
       radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0, transparent 40%),
       radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0, transparent 40%),
@@ -488,3 +487,21 @@
   .sh-press:disabled { cursor: not-allowed !important; opacity: .38 !important; }
 }
 
+
+/* Shared interaction and accessibility foundation. */
+@layer base {
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+  html { scroll-padding-top: 96px; }
+  body { font-size: 14px; line-height: 1.6; }
+  button, input, select, textarea { font: inherit; }
+  button:not(:disabled), a { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: hsl(var(--primary) / .3); }
+}
+@layer utilities {
+  .glass-card { background: hsl(var(--card) / .9); border: 1px solid hsl(var(--border)); box-shadow: 0 8px 28px rgb(0 0 0 / .08); }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

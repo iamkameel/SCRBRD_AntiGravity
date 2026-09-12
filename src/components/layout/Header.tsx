@@ -26,7 +26,7 @@ export function Header() {
   const { toggleSidebar, isMobile } = useSidebar();
   const pathname = usePathname();
   const currentPage = navLinks.find(link => link.href === pathname || (pathname.startsWith(link.href) && link.href !== '/'));
-  const { currentRole, setCurrentRole } = usePermissionView();
+  const { currentRole, setCurrentRole, canSimulate, isSimulating, verifiedRoleName } = usePermissionView();
   const { theme, setTheme } = useTheme();
   const { user, signOut, loading, userRole, availableRoles } = useAuth();
   const router = useRouter();
@@ -122,6 +122,15 @@ export function Header() {
             <span className="text-[9px] font-semibold uppercase tracking-[0.15em]" style={{ fontFamily: D.head }}>
                {currentRole}
             </span>
+            {isSimulating && (
+              <span
+                className="text-[8px] font-bold uppercase tracking-[0.12em] rounded px-1.5 py-0.5 border"
+                style={{ borderColor: `${roleColour}55`, background: `${roleColour}18` }}
+                title={`Previewing as ${currentRole}. Your account is ${verifiedRoleName}.`}
+              >
+                Preview
+              </span>
+            )}
           </div>
         )}
 
@@ -168,7 +177,7 @@ export function Header() {
         )}
 
         {/* Global Operational Switcher */}
-        {(userRole === 'System Architect' || (availableRoles && availableRoles.length > 1)) && (
+        {canSimulate && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border shadow-sm transition-all hover:bg-indigo-500/10 hover:border-indigo-500/30" style={{ borderColor: D.border, background: D.surf2, color: D.indigo }}>
@@ -182,11 +191,7 @@ export function Header() {
               <DropdownMenuSeparator className="opacity-10" />
               <div className="max-h-[60vh] overflow-y-auto pr-1">
                 <DropdownMenuRadioGroup value={currentRole} onValueChange={(value) => setCurrentRole(value as SimulatedRole)}>
-                    {Object.entries(ROLE_GROUPS).map(([group, roles]) => {
-                    const visibleRoles = userRole === 'System Architect'
-                        ? roles
-                        : roles.filter(role => availableRoles.includes(role));
-                    if (visibleRoles.length === 0) return null;
+                    {Object.entries(ROLE_GROUPS).map(([group, visibleRoles]) => {
                     return (
                         <div key={group} className="mb-2 last:mb-0">
                         <DropdownMenuLabel className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground px-4 py-2 mt-2 opacity-40">{group}</DropdownMenuLabel>

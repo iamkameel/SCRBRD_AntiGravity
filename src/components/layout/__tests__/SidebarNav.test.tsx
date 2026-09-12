@@ -11,6 +11,20 @@ vi.mock('@/contexts/PermissionViewContext', () => ({
   usePermissionView: vi.fn()
 }));
 
+vi.mock('@/lib/auth/usePermissions', () => ({
+  usePermissions: () => ({
+    canAccess: (moduleName: string) => {
+      if (moduleName === 'management') return false; // Simulated restriction for non-admin tests
+      return true;
+    },
+    userRole: 'ADMIN',
+    permissions: {},
+    isSuperAdmin: true,
+  })
+}));
+
+
+
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
   useRouter: vi.fn(() => ({
@@ -26,6 +40,7 @@ vi.mock('@/components/ui/collapsible', () => ({
   CollapsibleTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+
 
 // Mock ResizeObserver for SidebarProvider
 global.ResizeObserver = class ResizeObserver {

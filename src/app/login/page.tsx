@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ export default function LoginPage() {
   
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const validateForm = () => {
@@ -61,7 +62,9 @@ export default function LoginPage() {
         title: "Access Granted",
         description: "Welcome to the SCRBRD Hub.",
       });
-      router.push("/home");
+      // Return the user to whatever the middleware intercepted.
+      const next = searchParams.get("next");
+      router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/home");
     } catch (error: unknown) {
       console.error("Login error:", error);
       const errorMessage = error instanceof Error ? error.message : "Invalid credentials. Identity could not be verified.";

@@ -25,10 +25,9 @@ import { cookies } from 'next/headers';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { Module, Role, hasModuleAccess, resolveRoleTier } from './rbac';
 import { mapDisplayRoleToRbac } from './roleMapping';
+import { SESSION_COOKIE, SESSION_MAX_AGE_MS } from './sessionCookie';
 
-export const SESSION_COOKIE = '__scrbrd_session';
-/** Firebase caps session cookies at 14 days. */
-export const SESSION_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+export { SESSION_COOKIE, SESSION_MAX_AGE_MS } from './sessionCookie';
 
 export interface SessionUser {
     uid: string;

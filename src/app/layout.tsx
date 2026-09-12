@@ -60,7 +60,7 @@ export default function RootLayout({
               <DashboardProvider>
                 <ThemeProvider
                   attribute="class"
-                  defaultTheme="system"
+                  defaultTheme="dark"
                   enableSystem
                   disableTransitionOnChange
                 >

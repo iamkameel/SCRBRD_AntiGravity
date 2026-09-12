@@ -41,15 +41,16 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full relative bg-background text-foreground font-sans antialiased">
       <BackgroundEffects />
       <Sidebar />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:p-3 focus:text-primary-foreground">Skip to content</a>
       <main 
         className={cn(
-          "flex-1 transition-all duration-300 ease-in-out relative z-10 min-h-screen pb-12",
-          isCollapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"
+          "min-w-0 flex-1 transition-all duration-300 ease-in-out relative z-10 min-h-screen pb-12",
+          isCollapsed ? "md:ml-[80px]" : "md:ml-[260px]"
         )}
       >
         <Header />
         <EmailVerificationBanner />
-        <div className="p-4 sm:p-6 md:p-8 space-y-6">
+        <div id="main-content" tabIndex={-1} className="mx-auto max-w-[1800px] p-4 sm:p-6 xl:p-8 space-y-6 outline-none">
           <Breadcrumbs />
           {children}
         </div>

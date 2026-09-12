@@ -9,17 +9,17 @@
 
 // ── Dark Theme Surfaces ──────────────────────────────────────────
 export const DARK = {
-    bg: '#060910',   // App background — deepest layer
-    surf0: '#0a0f1a',   // Page canvas
-    surf1: '#0f1621',   // Card base layer, modals
-    surf2: '#151d2e',   // Input fields, secondary cards
-    surf3: '#1c2640',   // Hover states, chip backgrounds
+    bg: '#0b0d0b',   // App background — deepest layer
+    surf0: '#101310',   // Page canvas
+    surf1: '#171a17',   // Card base layer, modals
+    surf2: '#202520',   // Input fields, secondary cards
+    surf3: '#2b312b',   // Hover states, chip backgrounds
     border: 'rgba(255,255,255,0.07)',  // Hairline borders
     borderMed: 'rgba(255,255,255,0.12)', // Visible separators
     cardBg: 'rgba(255,255,255,0.03)', // Ghost card background
-    textPrimary: '#f0f4ff',   // Primary text
-    textSecondary: '#8b9bc4',   // Secondary text, labels
-    textMuted: '#4a5570',   // Muted text, placeholders
+    textPrimary: '#f3f5ef',   // Primary text
+    textSecondary: '#b0b8ac',   // Secondary text, labels
+    textMuted: '#929c8d',   // Muted text, placeholders
 } as const;
 
 // ── Light Theme Surfaces ─────────────────────────────────────────
@@ -39,7 +39,7 @@ export const LIGHT = {
 
 // ── Accent Colours — Semantic Mapping (§2.4) ─────────────────────
 export const ACCENTS = {
-    indigo: '#6366f1',  // Brand primary — nav active, primary buttons
+    indigo: '#b5f542',  // Brand primary — nav active, primary buttons
     sky: '#0ea5e9',  // Match / live data — scores, match cards
     emerald: '#10b981',  // Positive / live — wins, live status, fitness
     amber: '#f59e0b',  // Warning / traction — notifications, upcoming
@@ -54,7 +54,7 @@ export const ACCENTS = {
 
 // ── Gradients (§2.5) ─────────────────────────────────────────────
 export const GRADIENTS = {
-    main: 'linear-gradient(135deg, #6366f1, #0ea5e9)',
+    main: 'linear-gradient(135deg, #b5f542, #4bd887)',
     gold: 'linear-gradient(135deg, #f59e0b, #f97316)',
     live: 'linear-gradient(135deg, #10b981, #06b6d4)',
 } as const;
@@ -63,8 +63,8 @@ export const GRADIENTS = {
 export const RADIUS = {
     sm: '6px',
     md: '10px',
-    lg: '14px',
-    xl: '18px',
+    lg: '20px',
+    xl: '24px',
     pill: '999px',
 } as const;
 
@@ -73,9 +73,9 @@ export const FONTS = {
     // Reference CSS vars so inline style={{ fontFamily: D.head }} also gets the
     // Next.js-loaded optimised subset (same vars injected by layout.tsx)
     mono: "var(--font-dm-mono, 'DM Mono', monospace)",     // All numeric/data values
-    head: "var(--font-syne, 'Syne', sans-serif)",          // Main high-impact page titles
-    sans: "var(--font-open-sans, 'Open Sans', sans-serif)",// Clean subheadings & UI controls
-    body: "var(--font-open-sans, 'Open Sans', 'DM Sans', sans-serif)",    // Body copy & descriptions
+    head: "var(--font-dm-sans, 'DM Sans', sans-serif)",          // Main high-impact page titles
+    sans: "var(--font-dm-sans, 'DM Sans', sans-serif)",// Clean subheadings & UI controls
+    body: "var(--font-dm-sans, 'DM Sans', sans-serif)",    // Body copy & descriptions
 } as const;
 
 // ── Composite D token object (matches cricket_os.jsx API) ────────

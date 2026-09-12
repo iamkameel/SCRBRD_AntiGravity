@@ -26,7 +26,7 @@ export default function CollapsibleNavGroup({
   const pathname = usePathname();
   const GroupIcon = group.icon;
 
-  const accent = group.accentColor || D.indigo;
+  const accent = D.indigo;
 
   // Filter links based on query
   const filteredLinks = group.links.filter((link) =>
@@ -36,7 +36,9 @@ export default function CollapsibleNavGroup({
       : true
   );
 
-  const hasActiveLink = group.links.some((link) => pathname === link.href);
+  const hasActiveLink = group.links.some((link) => pathname === link.href || pathname.startsWith(link.href + '/'));
+
+  useEffect(() => { if (hasActiveLink) setIsOpen(true); }, [hasActiveLink]);
 
   // Auto-expand group if filter matches and query is not empty
   useEffect(() => {
@@ -55,7 +57,9 @@ export default function CollapsibleNavGroup({
       <div className="flex flex-col items-center gap-1.5 py-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div
+            <button
+              aria-label={group.label}
+              aria-expanded={isOpen}
               className={`
                 w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-sm
                 ${hasActiveLink ? 'scale-105 ring-2 ring-offset-1 ring-offset-background' : 'hover:bg-white/5 opacity-70 hover:opacity-100'}
@@ -68,7 +72,7 @@ export default function CollapsibleNavGroup({
               onClick={() => setIsOpen(!isOpen)}
             >
               {GroupIcon && <GroupIcon size={18} />}
-            </div>
+            </button>
           </TooltipTrigger>
           <TooltipContent side="right" className="font-semibold text-xs py-1.5 px-3">
             <div className="flex items-center gap-2">
@@ -83,17 +87,18 @@ export default function CollapsibleNavGroup({
         {isOpen && (
           <div className="flex flex-col items-center gap-1 py-1 w-full border-t border-white/5 my-1">
             {filteredLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
               const Icon = link.icon;
               return (
                 <Tooltip key={link.key}>
                   <TooltipTrigger asChild>
                     <Link
                       href={link.href}
+                      aria-current={isActive ? "page" : undefined}
                       onClick={onLinkClick}
                       className={`
                         w-8 h-8 rounded-lg flex items-center justify-center transition-all
-                        ${isActive ? 'bg-indigo-500/20 text-indigo-400 font-bold shadow-md' : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'}
+                        ${isActive ? 'bg-primary/15 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}
                       `}
                     >
                       {Icon && <Icon size={15} />}
@@ -116,6 +121,7 @@ export default function CollapsibleNavGroup({
     <div className="flex flex-col gap-1 my-0.5">
       {/* Group Header Button */}
       <button
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         className={`
           w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl
@@ -136,7 +142,7 @@ export default function CollapsibleNavGroup({
             {GroupIcon && <GroupIcon size={16} />}
           </div>
           <span
-            className="text-[10px] font-bold uppercase tracking-[0.18em] truncate"
+            className="text-[13px] font-medium truncate"
             style={{
               color: hasActiveLink ? accent : D.textMuted,
               fontFamily: D.head,
@@ -174,13 +180,14 @@ export default function CollapsibleNavGroup({
           >
             <ul className="flex flex-col gap-0.5 py-1 pl-4 pr-1 border-l-2 ml-4 border-slate-200/40 dark:border-slate-800/60">
               {filteredLinks.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
                 const Icon = link.icon;
 
                 return (
                   <li key={link.key}>
                     <Link
                       href={link.href}
+                      aria-current={isActive ? "page" : undefined}
                       onClick={onLinkClick}
                       className={`
                         relative flex items-center gap-3 px-3 py-2 rounded-xl
@@ -210,7 +217,7 @@ export default function CollapsibleNavGroup({
                         />
                       )}
 
-                      <span className="text-[11px] font-medium tracking-wide truncate">
+                      <span className="text-[13px] font-normal truncate">
                         {link.label}
                       </span>
 
