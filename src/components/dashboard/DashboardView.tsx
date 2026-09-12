@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { usePermissions } from "@/lib/auth/usePermissions";
 import { ROLES } from "@/lib/auth/rbac";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,38 +31,27 @@ import GuardianDashboard from "../dashboards/guardian-dashboard";
 import SpectatorDashboard from "../dashboards/spectator-dashboard";
 
 import { PlayerMicroPlanGenerator } from "../coaches/PlayerMicroPlanGenerator";
-import { GlobalRankingsClient } from "../rankings/GlobalRankingsClient";
+import { GlobalRankingsClient } from "@/components/charts/lazy";
 
 export default function DashboardView() {
   const { role: authRole } = usePermissions();
   const { user } = useAuth();
   const { filters, setFilters } = useDashboard();
-  const [person, setPerson] = useState<Person | null>(null);
-  const [loading, setLoading] = useState(true);
+  const email = user?.email ?? null;
+  const personQuery = useQuery({
+    queryKey: ['person-by-email', email],
+    queryFn: () => fetchPersonByEmail(email!),
+    enabled: !!email,
+    staleTime: 30 * 60 * 1000,
+  });
+  const person: Person | null = personQuery.data ?? null;
+  const loading = personQuery.isLoading;
 
   // Active OS Deck Mode tab: "operations" | "competition" | "squads" | "coaching" | "rankings" | "logistics"
   const [activeDeck, setActiveDeck] = useState<string>(filters.activeDeckMode || "operations");
 
   // Effective Role (simulated or authenticated)
   const activeRole = filters.simulatedRole || authRole;
-
-  useEffect(() => {
-    async function initDashboard() {
-      if (!user?.email) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const profile = await fetchPersonByEmail(user.email);
-        setPerson(profile);
-      } catch (err) {
-        console.error("Dashboard init error", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    initDashboard();
-  }, [user]);
 
   if (loading) {
     return (

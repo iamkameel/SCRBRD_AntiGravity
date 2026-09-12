@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,7 @@ export default function FixtureCentreCard({
   className
 }: FixtureCentreCardProps) {
   const [activeTab, setActiveTab] = useState<string>("live");
-  const [liveMatches, setLiveMatches] = useState<Match[]>([]);
-  const [recentMatches, setRecentMatches] = useState<Match[]>([]);
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
+  const autoSwitched = useRef(false);
 
   const { filters } = useDashboard();
 
@@ -65,46 +63,47 @@ export default function FixtureCentreCard({
     seasonId: mergedSeasonId
   }), [teamId, mergedSchoolId, playerId, assignedMatches, mergedSeasonId]);
 
+  // Server data is fetched once per key and shared by any other component
+  // using the same key; role/school scoping is applied client-side below.
+  const liveQuery = useQuery({
+    queryKey: ['matches', 'live'],
+    queryFn: getLiveMatchesAction,
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+  const recentQuery = useQuery({
+    queryKey: ['matches', 'recent', maxMatches * 2],
+    queryFn: () => getRecentMatchesAction(maxMatches * 2),
+  });
+  const upcomingQuery = useQuery({
+    queryKey: ['matches', 'upcoming', maxMatches * 2],
+    queryFn: () => getUpcomingMatchesAction(maxMatches * 2),
+  });
+
+  const loading = liveQuery.isLoading || recentQuery.isLoading || upcomingQuery.isLoading;
+
+  const liveMatches = useMemo(
+    () => filterMatchesByRole(liveQuery.data ?? [], role, roleContext),
+    [liveQuery.data, role, roleContext]
+  );
+  const recentMatches = useMemo(
+    () => filterMatchesByRole(recentQuery.data ?? [], role, roleContext).slice(0, maxMatches),
+    [recentQuery.data, role, roleContext, maxMatches]
+  );
+  const upcomingMatches = useMemo(
+    () => filterMatchesByRole(upcomingQuery.data ?? [], role, roleContext).slice(0, maxMatches),
+    [upcomingQuery.data, role, roleContext, maxMatches]
+  );
+
+  // On first load, land the user on a tab that has content.
   useEffect(() => {
-    const fetchMatches = async () => {
-      setLoading(true);
-      
-      try {
-        const [live, recent, upcoming] = await Promise.all([
-          getLiveMatchesAction(),
-          getRecentMatchesAction(maxMatches * 2),
-          getUpcomingMatchesAction(maxMatches * 2)
-        ]);
-
-        const filteredLive = filterMatchesByRole(live, role, roleContext);
-        const filteredRecent = filterMatchesByRole(recent, role, roleContext).slice(0, maxMatches);
-        const filteredUpcoming = filterMatchesByRole(upcoming, role, roleContext).slice(0, maxMatches);
-
-        setLiveMatches(filteredLive);
-        setRecentMatches(filteredRecent);
-        setUpcomingMatches(filteredUpcoming);
-        
-        if (filteredLive.length === 0 && activeTab === 'live') {
-          if (filteredUpcoming.length > 0) setActiveTab('upcoming');
-          else if (filteredRecent.length > 0) setActiveTab('results');
-        }
-      } catch (error) {
-        console.error('Error fetching matches:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMatches();
-
-    const interval = setInterval(async () => {
-      const live = await getLiveMatchesAction();
-      const filteredLive = filterMatchesByRole(live, role, roleContext);
-      setLiveMatches(filteredLive);
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [role, roleContext, maxMatches, activeTab, filters]);
+    if (loading || autoSwitched.current) return;
+    autoSwitched.current = true;
+    if (liveMatches.length === 0) {
+      if (upcomingMatches.length > 0) setActiveTab('upcoming');
+      else if (recentMatches.length > 0) setActiveTab('results');
+    }
+  }, [loading, liveMatches.length, upcomingMatches.length, recentMatches.length]);
 
   const renderMatchList = (matches: Match[], type: 'live' | 'results' | 'upcoming') => {
     if (loading) {

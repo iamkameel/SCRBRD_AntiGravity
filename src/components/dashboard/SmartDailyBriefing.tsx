@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Calendar, Trophy, Activity, ArrowRight, Bell, Loader2 } from "lucide-react";
 import { getAnalyticsDataAction, AnalyticsData } from "@/app/actions/analyticsActions";
 import { fetchUpcomingMatches } from "@/lib/firestore";
@@ -24,33 +25,26 @@ function getGreeting() {
 }
 
 export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const { filters } = useDashboard();
-  const [readinessAlerts, setReadinessAlerts] = useState<string[]>([]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [analyticsResult, upcomingMatches] = await Promise.all([
-          getAnalyticsDataAction(),
-          fetchUpcomingMatches(5),
-        ]);
-        if (analyticsResult.success && analyticsResult.data) {
-          setAnalytics(analyticsResult.data);
-          generateInsight(analyticsResult.data, upcomingMatches, filters);
-        }
-      } catch (error) {
-        console.error("Failed to load briefing data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [filters]);
+  const analyticsQuery = useQuery({
+    queryKey: ['analytics-data'],
+    queryFn: () => getAnalyticsDataAction(),
+  });
+  const upcomingQuery = useQuery({
+    queryKey: ['matches', 'upcoming-client', 5],
+    queryFn: () => fetchUpcomingMatches(5),
+  });
 
-  const generateInsight = (data: AnalyticsData, matches: Match[], filters: any) => {
+  const loading = analyticsQuery.isLoading || upcomingQuery.isLoading;
+  const analytics: AnalyticsData | null =
+    analyticsQuery.data?.success && analyticsQuery.data.data ? analyticsQuery.data.data : null;
+
+  // Insights are derived, not fetched: a filter change recomputes them from
+  // cached data instead of re-running the analytics action.
+  const readinessAlerts = useMemo(() => {
+    if (!analytics) return [] as string[];
+    const matches: Match[] = upcomingQuery.data ?? [];
     const alerts: string[] = [];
     const pendingMatches = matches.filter(m => {
       const isHomeConfirmed = !!m.teamSelection?.home?.confirmedAt;
@@ -60,15 +54,15 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
     if (pendingMatches.length > 0) {
       alerts.push(`warning:${pendingMatches.length} upcoming matches with pending team confirmations.`);
     }
-    if (data.topRunScorers.length > 0) {
-      const topScorer = data.topRunScorers[0];
+    if (analytics.topRunScorers.length > 0) {
+      const topScorer = analytics.topRunScorers[0];
       alerts.push(`insight:${topScorer.name} leads the run chart with ${topScorer.value} runs this season.`);
     }
     if (filters.schoolId !== 'all') {
       alerts.push(`insight:Currently showing insights tailored for your selected institution.`);
     }
-    setReadinessAlerts(alerts);
-  };
+    return alerts;
+  }, [analytics, upcomingQuery.data, filters.schoolId]);
 
   if (loading) {
     return (
@@ -110,7 +104,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
             </div>
 
             <h2
-              className="text-2xl md:text-3xl font-bold text-white tracking-tight"
+              className="text-lg md:text-xl font-bold text-white tracking-tight"
               style={{ fontFamily: D.head }}
             >
               {getGreeting()}, <span className="text-indigo-400">{userName || 'Coach'}</span>
