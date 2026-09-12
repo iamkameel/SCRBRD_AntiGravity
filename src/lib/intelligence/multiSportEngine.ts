@@ -1,5 +1,36 @@
 // Multi-Sport Engine Specification for SCRBRD School Sports OS
 
+export type SportDiscipline =
+    | 'CRICKET'
+    | 'SWIMMING'
+    | 'ATHLETICS'
+    | 'RUGBY'
+    | 'HOCKEY'
+    | 'NETBALL'
+    | 'SOCCER'
+    | 'BASKETBALL';
+
+export interface SportDisciplineInfo {
+    id: SportDiscipline;
+    name: string;
+    season: 'SUMMER' | 'WINTER' | 'ALL_YEAR';
+    scoringUnit: string;
+    iconName: string;
+    color: string;
+    activeSquadsCount: number;
+}
+
+export const SUPPORTED_SPORT_DISCIPLINES: SportDisciplineInfo[] = [
+    { id: 'CRICKET', name: 'Cricket', season: 'SUMMER', scoringUnit: 'Runs / Wickets', iconName: 'CricketBall', color: '#10b981', activeSquadsCount: 14 },
+    { id: 'SWIMMING', name: 'Swimming (Aquatics)', season: 'SUMMER', scoringUnit: 'Times (s) / House Points', iconName: 'Waves', color: '#3b82f6', activeSquadsCount: 8 },
+    { id: 'ATHLETICS', name: 'Athletics (Track & Field)', season: 'SUMMER', scoringUnit: 'Times / Marks / Points', iconName: 'Flame', color: '#f59e0b', activeSquadsCount: 12 },
+    { id: 'RUGBY', name: 'Rugby Union (15s & 7s)', season: 'WINTER', scoringUnit: 'Tries / Points', iconName: 'Shield', color: '#ef4444', activeSquadsCount: 16 },
+    { id: 'HOCKEY', name: 'Field Hockey', season: 'WINTER', scoringUnit: 'Goals', iconName: 'Activity', color: '#8b5cf6', activeSquadsCount: 12 },
+    { id: 'NETBALL', name: 'Netball', season: 'WINTER', scoringUnit: 'Goals', iconName: 'Target', color: '#ec4899', activeSquadsCount: 10 },
+    { id: 'SOCCER', name: 'Soccer / Football', season: 'WINTER', scoringUnit: 'Goals', iconName: 'Globe', color: '#06b6d4', activeSquadsCount: 14 },
+    { id: 'BASKETBALL', name: 'Basketball', season: 'ALL_YEAR', scoringUnit: 'Points', iconName: 'Zap', color: '#f97316', activeSquadsCount: 6 }
+];
+
 export interface SwimmingLaneResult {
     lane: number;
     swimmerId: string;
@@ -14,12 +45,12 @@ export interface SwimmingLaneResult {
 
 export interface SwimmingEvent {
     eventId: string;
-    eventName: string; // e.g. "U16 50m Freestyle Final"
+    eventName: string;
     stroke: 'Freestyle' | 'Backstroke' | 'Breaststroke' | 'Butterfly' | 'Medley Relay';
-    distance: string; // "50m", "100m", "4x50m"
+    distance: string;
     ageGroup: 'U14' | 'U15' | 'U16' | 'Open';
-    schoolRecord: string; // "00:26.85"
-    recordHolder: string; // "J. Miller (2022)"
+    schoolRecord: string;
+    recordHolder: string;
     status: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
     lanes: SwimmingLaneResult[];
 }
@@ -48,7 +79,7 @@ export interface SwimmingGala {
 export interface FieldEventAttempt {
     swimmerOrAthleteName: string;
     houseOrSchool: string;
-    attempts: (number | string | 'X' | 'PASS')[]; // Distances in meters, times in seconds, or 'X' for foul
+    attempts: (number | string | 'X' | 'PASS')[];
     bestMark: number;
     place: number;
     points: number;
@@ -56,7 +87,7 @@ export interface FieldEventAttempt {
 
 export interface AthleticsEvent {
     eventId: string;
-    eventName: string; // e.g. "Open High Jump" or "U15 100m Final"
+    eventName: string;
     category: 'TRACK' | 'FIELD';
     ageGroup: 'U14' | 'U15' | 'U16' | 'Open';
     schoolRecord: string;
@@ -73,6 +104,50 @@ export interface AthleticsMeet {
     status: 'LIVE' | 'UPCOMING' | 'COMPLETED';
     houses: HousePointsSummary[];
     events: AthleticsEvent[];
+}
+
+// Cross-Sport Player Passport Entry
+export interface MultiSportAthletePassport {
+    personId: string;
+    studentName: string;
+    grade: string;
+    houseName: string;
+    primarySport: SportDiscipline;
+    secondarySports: SportDiscipline[];
+    combinedWorkloadScore: number; // 0 - 100
+    workloadStatus: 'OPTIMAL' | 'MODERATE_LOAD' | 'HIGH_OVERLOAD_RISK';
+    sportProfiles: Array<{
+        discipline: SportDiscipline;
+        teamName: string;
+        roleOrPosition: string;
+        keyMetricSummary: string;
+        awardsCount: number;
+    }>;
+}
+
+// Universal Facility & Ground Booking Entry
+export interface FacilityReservation {
+    reservationId: string;
+    facilityName: string;
+    sportDiscipline: SportDiscipline;
+    squadName: string;
+    startTime: string;
+    endTime: string;
+    status: 'CONFIRMED' | 'CONFLICT_FLAGGED' | 'MAINTENANCE_HOLD';
+    notes: string;
+}
+
+// Institutional Championship Shield Model
+export interface ChampionshipStanding {
+    schoolOrHouse: string;
+    color: string;
+    cricketPoints: number;
+    swimmingPoints: number;
+    athleticsPoints: number;
+    rugbyPoints: number;
+    hockeyPoints: number;
+    overallScore: number;
+    rank: number;
 }
 
 export const MOCK_SWIMMING_GALA: SwimmingGala = {
@@ -167,3 +242,50 @@ export const MOCK_ATHLETICS_MEET: AthleticsMeet = {
         },
     ],
 };
+
+export const MOCK_MULTI_SPORT_PASSPORTS: MultiSportAthletePassport[] = [
+    {
+        personId: 'p-101',
+        studentName: 'Aidan Smith',
+        grade: 'Grade 11',
+        houseName: 'Nash',
+        primarySport: 'CRICKET',
+        secondarySports: ['RUGBY', 'SWIMMING'],
+        combinedWorkloadScore: 84,
+        workloadStatus: 'HIGH_OVERLOAD_RISK',
+        sportProfiles: [
+            { discipline: 'CRICKET', teamName: '1st XI Squad', roleOrPosition: 'Opener / Wicketkeeper', keyMetricSummary: '458 runs @ 45.8 Avg', awardsCount: 3 },
+            { discipline: 'RUGBY', teamName: '1st XV Squad', roleOrPosition: 'Fly-half (No. 10)', keyMetricSummary: '82 pts (4 Tries, 18 Conv, 6 Pen)', awardsCount: 2 },
+            { discipline: 'SWIMMING', teamName: 'Aquatics Gala Team', roleOrPosition: '50m Freestyle / Relay', keyMetricSummary: '00:26.10 Personal Best', awardsCount: 1 }
+        ]
+    },
+    {
+        personId: 'p-102',
+        studentName: 'Sebastian Roux',
+        grade: 'Grade 10',
+        houseName: 'Hill',
+        primarySport: 'SWIMMING',
+        secondarySports: ['ATHLETICS', 'HOCKEY'],
+        combinedWorkloadScore: 48,
+        workloadStatus: 'OPTIMAL',
+        sportProfiles: [
+            { discipline: 'SWIMMING', teamName: 'Open Swim Squad', roleOrPosition: '50m & 100m Freestyle', keyMetricSummary: 'School Record 00:25.42', awardsCount: 4 },
+            { discipline: 'ATHLETICS', teamName: 'Track Squad', roleOrPosition: '100m Sprint', keyMetricSummary: '10.94s Personal Best', awardsCount: 2 },
+            { discipline: 'HOCKEY', teamName: 'U16A Squad', roleOrPosition: 'Center Forward', keyMetricSummary: '12 Goals in 8 Matches', awardsCount: 1 }
+        ]
+    }
+];
+
+export const MOCK_FACILITY_RESERVATIONS: FacilityReservation[] = [
+    { reservationId: 'res-1', facilityName: 'Main Oval Turf 1', sportDiscipline: 'CRICKET', squadName: '1st XI Squad', startTime: '14:00', endTime: '17:30', status: 'CONFIRMED', notes: 'Match prep & turf practice' },
+    { reservationId: 'res-2', facilityName: 'Aquatics 50m Pool', sportDiscipline: 'SWIMMING', squadName: 'Senior Swim Squad', startTime: '06:00', endTime: '07:30', status: 'CONFIRMED', notes: 'Morning squad training' },
+    { reservationId: 'res-3', facilityName: 'Astro Turf 1', sportDiscipline: 'HOCKEY', squadName: '1st XI Hockey', startTime: '15:30', endTime: '17:00', status: 'CONFIRMED', notes: 'Inter-school fixture' },
+    { reservationId: 'res-4', facilityName: 'Burger Field Stadium', sportDiscipline: 'RUGBY', squadName: '1st XV Rugby', startTime: '16:00', endTime: '18:00', status: 'CONFLICT_FLAGGED', notes: 'Double booking detected with Athletics Track team!' }
+];
+
+export const MOCK_CHAMPIONSHIP_STANDINGS: ChampionshipStanding[] = [
+    { schoolOrHouse: 'St Stithians College / Nash', color: '#ef4444', cricketPoints: 95, swimmingPoints: 142, athleticsPoints: 172, rugbyPoints: 110, hockeyPoints: 88, overallScore: 607, rank: 1 },
+    { schoolOrHouse: 'KES / Hill', color: '#3b82f6', cricketPoints: 88, swimmingPoints: 128, athleticsPoints: 185, rugbyPoints: 120, hockeyPoints: 76, overallScore: 597, rank: 2 },
+    { schoolOrHouse: 'Jeppe Boys / Thomson', color: '#10b981', cricketPoints: 92, swimmingPoints: 115, athleticsPoints: 124, rugbyPoints: 95, hockeyPoints: 94, overallScore: 520, rank: 3 },
+    { schoolOrHouse: 'Hilton / Clayton', color: '#f59e0b', cricketPoints: 78, swimmingPoints: 98, athleticsPoints: 140, rugbyPoints: 105, hockeyPoints: 80, overallScore: 501, rank: 4 }
+];
