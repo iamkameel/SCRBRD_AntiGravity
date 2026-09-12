@@ -8,49 +8,48 @@ import admin from '../../lib/firebase-admin';
 export class RewardService {
 
     /**
-     * Applies reward transactions to a player's wallet and updates their tier status.
+     * Applies reward transactions for any number of players in one pass:
+     * transactions are queued on the batch and all affected wallets are read
+     * with a single getAll() so the cost is one round trip, not one per player.
      */
     static async applyTransactions(
-        playerId: string,
         transactions: Array<any>,
         batch: admin.firestore.WriteBatch
     ): Promise<void> {
         const db = admin.firestore();
-        const walletRef = db.collection('rewards_wallets').doc(playerId);
+        const pointsByPlayer = new Map<string, number>();
 
-        let totalPointsToAdd = 0;
         for (const tx of transactions) {
-            if (tx.playerId === playerId) {
-                totalPointsToAdd += tx.amount;
+            pointsByPlayer.set(tx.playerId, (pointsByPlayer.get(tx.playerId) || 0) + tx.amount);
 
-                const txId = db.collection('reward_transactions').doc().id;
-                const txRef = db.collection('reward_transactions').doc(txId);
-
-                batch.set(txRef, {
-                    ...tx,
-                    id: txId,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-            }
+            const txRef = db.collection('reward_transactions').doc();
+            batch.set(txRef, {
+                ...tx,
+                id: txRef.id,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
         }
 
-        if (totalPointsToAdd === 0) return;
+        const playerIds = [...pointsByPlayer.entries()].filter(([, pts]) => pts !== 0).map(([id]) => id);
+        if (playerIds.length === 0) return;
 
-        // Fetch current wallet to calculate tier updates
-        const walletDoc = await walletRef.get();
-        const walletData = walletDoc.exists ? walletDoc.data() : { lifetimePointsEarned: 0 };
+        const walletRefs = playerIds.map(id => db.collection('rewards_wallets').doc(id));
+        const walletDocs = await db.getAll(...walletRefs);
 
-        const newLifetime = (walletData?.lifetimePointsEarned || 0) + totalPointsToAdd;
-        const newTier = RewardsEngine.calculateTier(newLifetime);
-        const nextThreshold = RewardsEngine.getNextTierThreshold(newLifetime);
+        walletDocs.forEach((walletDoc, i) => {
+            const playerId = playerIds[i];
+            const totalPointsToAdd = pointsByPlayer.get(playerId)!;
+            const lifetime = (walletDoc.exists ? walletDoc.data()?.lifetimePointsEarned : 0) || 0;
+            const newLifetime = lifetime + totalPointsToAdd;
 
-        batch.set(walletRef, {
-            playerId,
-            totalPointsBalance: admin.firestore.FieldValue.increment(totalPointsToAdd),
-            lifetimePointsEarned: admin.firestore.FieldValue.increment(totalPointsToAdd),
-            currentTier: newTier,
-            nextTierThreshold: nextThreshold,
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+            batch.set(walletRefs[i], {
+                playerId,
+                totalPointsBalance: admin.firestore.FieldValue.increment(totalPointsToAdd),
+                lifetimePointsEarned: admin.firestore.FieldValue.increment(totalPointsToAdd),
+                currentTier: RewardsEngine.calculateTier(newLifetime),
+                nextTierThreshold: RewardsEngine.getNextTierThreshold(newLifetime),
+                lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        });
     }
 }

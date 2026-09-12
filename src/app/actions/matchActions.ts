@@ -5,7 +5,16 @@ import { MatchSchema } from '@/lib/validations/matchSchema';
 import admin from '@/lib/firebase-admin';
 import { Match, Person, Division } from '@/types/firestore';
 import { ScoringAction, WicketType, ShotType, PitchLength, BowlingLine, ScoringActionSource } from '@/types/scoring';
-import { computeProjection } from '@/lib/scoring/projectionService';
+import {
+  ProjectionFold,
+  FoldContext,
+  FOLD_VERSION,
+  applyActionToFold,
+  buildFoldFromActions,
+  projectionFromFold,
+  isInningsFoldComplete,
+  stripUndefined,
+} from '@/lib/scoring/incrementalProjection';
 import { ImpactEngine } from '@/services/impact/ImpactEngine';
 import { ImpactAttributor } from '@/services/impact/ImpactAttributor';
 import { RewardsEngine } from '@/services/rewards/RewardsEngine';
@@ -373,6 +382,50 @@ export async function updateLivePlayersAction(
   }
 }
 
+/**
+ * Loads the persisted projection fold for a match, or rebuilds it from the
+ * full action log when it is missing, from an older version, or out of step
+ * with the log (e.g. after an undo). Returns the fold plus the highest
+ * sequence number currently in the log.
+ */
+async function loadFold(
+  matchRef: FirebaseFirestore.DocumentReference,
+  ctx: FoldContext
+): Promise<{ fold: ProjectionFold; headSequence: number; rebuilt: boolean }> {
+  const actionsCol = matchRef.collection('scoring_actions');
+  const [foldDoc, lastActionSnap] = await Promise.all([
+    matchRef.collection('live').doc('fold').get(),
+    actionsCol.orderBy('sequenceNumber', 'desc').limit(1).get(),
+  ]);
+
+  const headSequence = lastActionSnap.empty ? 0 : (lastActionSnap.docs[0].data() as ScoringAction).sequenceNumber;
+  const stored = foldDoc.exists ? (foldDoc.data() as ProjectionFold) : null;
+
+  if (stored && stored.version === FOLD_VERSION && stored.headSequence === headSequence) {
+    return { fold: stored, headSequence, rebuilt: false };
+  }
+
+  const allSnap = await actionsCol.orderBy('sequenceNumber', 'asc').get();
+  const fold = buildFoldFromActions(allSnap.docs.map(d => d.data() as ScoringAction), ctx);
+  return { fold, headSequence: Math.max(headSequence, fold.headSequence), rebuilt: true };
+}
+
+function foldContextFor(matchId: string, match: Match): FoldContext {
+  return { matchId, homeTeamId: match.homeTeamId, awayTeamId: match.awayTeamId };
+}
+
+function writeFoldAndProjection(
+  batch: FirebaseFirestore.WriteBatch,
+  matchRef: FirebaseFirestore.DocumentReference,
+  fold: ProjectionFold,
+  ctx: FoldContext
+) {
+  const projection = projectionFromFold(fold, ctx);
+  batch.set(matchRef.collection('live').doc('score'), stripUndefined(projection));
+  batch.set(matchRef.collection('live').doc('fold'), stripUndefined(fold));
+  return projection;
+}
+
 export async function recordBallAction(matchId: string, ballData: any) {
   'use server';
 
@@ -380,77 +433,34 @@ export async function recordBallAction(matchId: string, ballData: any) {
     const db = admin.firestore();
     const matchRef = db.collection('matches').doc(matchId);
 
-    // 1. Fetch Match and existing Actions to determine state
-    const [matchDoc, actionsSnapshot] = await Promise.all([
-      matchRef.get(),
-      matchRef.collection('scoring_actions').orderBy('sequenceNumber', 'asc').get()
-    ]);
-
+    // 1. Fetch Match and the projection fold (3 small reads, not the whole ball log)
+    const matchDoc = await matchRef.get();
     if (!matchDoc.exists) {
       return { success: false, error: 'Match not found' };
     }
-
     const match = matchDoc.data() as Match;
-    const existingActions = actionsSnapshot.docs.map(doc => doc.data() as ScoringAction);
-    const validActions = existingActions.filter(a => !a.isVoided);
+    const ctx = foldContextFor(matchId, match);
+    const { fold, headSequence } = await loadFold(matchRef, ctx);
 
     // 2. Determine Sequence and Over/Ball numbers
-    const sequenceNumber = existingActions.length + 1;
+    const sequenceNumber = headSequence + 1;
 
     let inningsNumber: 1 | 2 = 1;
+    if (fold.innings2 || (fold.innings1 && isInningsFoldComplete(fold.innings1))) {
+      inningsNumber = 2;
+    }
+
     let overNumber = 0;
     let ballInOver = 1;
-
-    // Check current state from valid actions
-    if (validActions.length > 0) {
-      const lastAction = validActions[validActions.length - 1];
-      inningsNumber = lastAction.inningsNumber;
-
-      // Check if we need to switch innings (this should be handled by endInningsAction, but for safety)
-      // For now, assume innings is set correctly by previous actions or match state.
-      // Actually, recordBallAction assumes we are in the current innings.
-
-      // If the match status says we are in 2nd innings, ensure we use that.
-      // But projectionService handles innings separation.
-      // Let's rely on the last action's innings number, unless it's the first ball of 2nd innings.
-      // If validActions is empty for 2nd innings, we need to know we are in 2nd innings.
-      // We can check match.status or match.liveScore.inningsNumber if available, but we are moving away from reading liveScore directly.
-      // Let's assume the client sends the correct innings number or we infer it.
-      // For now, let's infer from lastAction. If no actions, it's 1.
-      // If endInningsAction was called, it should have set a flag or we should check match state.
-
-      // Better approach: Compute projection first to get current state?
-      // No, we need to create the action first.
-
-      // Let's assume innings 1 for now unless we find actions for innings 2.
-      // Or check if match has 'innings2' started.
-      // For this MVP refactor, let's stick to inferring from last action.
-
-      const currentOverActions = validActions.filter(a => a.inningsNumber === inningsNumber && a.overNumber === lastAction.overNumber);
-      const legalBallsInOver = currentOverActions.filter(a => a.isLegalDelivery).length;
-
+    const currentInnings = inningsNumber === 2 ? fold.innings2 : fold.innings1;
+    if (currentInnings?.lastAction) {
+      const legalBallsInOver = currentInnings.currentOverActions.filter(a => a.isLegalDelivery).length;
       if (legalBallsInOver >= 6) {
-        overNumber = lastAction.overNumber + 1;
+        overNumber = currentInnings.lastAction.overNumber + 1;
         ballInOver = 1;
       } else {
-        overNumber = lastAction.overNumber;
-        ballInOver = currentOverActions.length + 1;
-      }
-    } else {
-      // No actions yet. Check if we are in 2nd innings based on match state?
-      // If match.status is 'live' and we have no actions, it's 1st innings.
-      // If we are starting 2nd innings, there might be no actions for 2nd innings yet.
-      // But existingActions would contain 1st innings actions.
-
-      const innings1Actions = existingActions.filter(a => a.inningsNumber === 1);
-      if (innings1Actions.length > 0) {
-        // We have 1st innings actions. Are we in 2nd innings?
-        // We can check if 1st innings is complete.
-        // Let's use computeProjection to find out.
-        const projection = computeProjection(existingActions, matchId, match.homeTeamId, match.awayTeamId);
-        if (projection.innings1?.isComplete) {
-          inningsNumber = 2;
-        }
+        overNumber = currentInnings.lastAction.overNumber;
+        ballInOver = currentInnings.currentOverActions.length + 1;
       }
     }
 
@@ -518,21 +528,11 @@ export async function recordBallAction(matchId: string, ballData: any) {
     const batch = db.batch();
 
     // Save action
-    batch.set(matchRef.collection('scoring_actions').doc(actionId), newAction);
+    batch.set(matchRef.collection('scoring_actions').doc(actionId), stripUndefined(newAction));
 
-    // Compute new projection
-    const allActions = [...existingActions, newAction];
-    const projection = computeProjection(
-      allActions,
-      matchId,
-      match.homeTeamId,
-      match.awayTeamId,
-      // We could pass names here if we fetched them, but for now IDs are sufficient for the core logic.
-      // The UI enriches them.
-    );
-
-    // Save projection
-    batch.set(matchRef.collection('live').doc('score'), projection);
+    // Apply the ball to the fold and persist fold + projection
+    applyActionToFold(fold, newAction, ctx);
+    const projection = writeFoldAndProjection(batch, matchRef, fold, ctx);
 
     // 4.5. Match Impact Engine Integration
     try {
@@ -574,18 +574,15 @@ export async function recordBallAction(matchId: string, ballData: any) {
     // 4.6. Rewards Engine Integration
     try {
       const rewardTransactions = await RewardsEngine.processBallRewards(newAction, projection, match as any);
-
-      // Group transactions by player and apply via RewardService
-      const playerIds = Array.from(new Set(rewardTransactions.map(t => t.playerId)));
-      for (const pId of playerIds) {
-        const playerTxs = rewardTransactions.filter(t => t.playerId === pId).map(t => ({
+      await RewardService.applyTransactions(
+        rewardTransactions.map(t => ({
           ...t,
           walletId: `wallet_${t.playerId}`,
           sourceEventId: matchId,
           metadata: { ...t.metadata, ballActionId: actionId }
-        }));
-        await RewardService.applyTransactions(pId, playerTxs, batch);
-      }
+        })),
+        batch
+      );
     } catch (rewardsError) {
       console.error('Rewards Engine Error:', rewardsError);
     }
@@ -601,44 +598,18 @@ export async function recordBallAction(matchId: string, ballData: any) {
       }
     }
 
-    const bowlerStats = projection.bowlers.find(b => b.playerId === ballData.bowlerId);
-    let isHatTrick = false;
-    if (isWicket && projection.fallOfWickets.length >= 3) {
-      // Check last 3 wickets
-      const last3 = projection.fallOfWickets.slice(-3);
-      // We need to check if they are consecutive balls by the same bowler.
-      // The projection doesn't explicitly store "consecutive balls".
-      // We can check the actions.
-      const wicketActions = allActions.filter(a => a.isWicket && !a.isVoided).sort((a, b) => a.sequenceNumber - b.sequenceNumber);
-      if (wicketActions.length >= 3) {
-        const last3Actions = wicketActions.slice(-3);
-        const sameBowler = last3Actions.every(a => a.bowlerId === ballData.bowlerId);
-        // Check consecutiveness (sequence numbers might have gaps due to non-wicket balls, but hat-trick allows that? 
-        // No, hat-trick is consecutive balls *bowled*.
-        // Actually, standard definition: 3 wickets in 3 consecutive deliveries *by the bowler*.
-        // They don't have to be in the same over, or even same match (technically, but usually restricted).
-        // Let's check if the last 3 wickets by this bowler were consecutive *legal* deliveries?
-        // Or just check if the last 3 wickets in the match were by this bowler and consecutive?
-        // Simplest: Check if the last 3 wickets were by this bowler.
-        if (sameBowler) {
-          // Check if they are consecutive in terms of this bowler's deliveries.
-          // This is hard to check without iterating all balls.
-          // Let's use the simple logic from before: 3 wickets in the last 3 balls of history?
-          // The previous logic filtered `ballHistory`.
-          isHatTrick = true; // Simplified for now
-        }
-      }
-    }
+    // Simplified hat-trick: the last three wickets in the match fell to this bowler.
+    const last3Bowlers = fold.recentWicketBowlerIds;
+    const isHatTrick = isWicket
+      && projection.fallOfWickets.length >= 3
+      && last3Bowlers.length >= 3
+      && last3Bowlers.every(id => id === ballData.bowlerId);
 
     const isOverComplete = projection.currentOver.length === 0 && projection.currentInnings.balls > 0 && projection.currentInnings.balls % 6 === 0;
-    const isMaidenOver = isOverComplete && bowlerStats && bowlerStats.maidens > (existingActions.filter(a => a.bowlerId === ballData.bowlerId).length > 0 ? 0 : -1);
-    // Maiden check is tricky with just stats. 
-    // Let's re-calculate from current over actions.
     let calculatedMaiden = false;
     if (isOverComplete) {
-      const thisOverActions = allActions.filter(a => a.overNumber === overNumber && !a.isVoided);
-      const runsInOver = thisOverActions.reduce((sum, a) => sum + a.totalRuns, 0);
-      calculatedMaiden = runsInOver === 0;
+      const thisOverActions = (inningsNumber === 2 ? fold.innings2 : fold.innings1)?.currentOverActions ?? [];
+      calculatedMaiden = thisOverActions.reduce((sum, a) => sum + a.totalRuns, 0) === 0;
     }
 
     return {
@@ -663,22 +634,18 @@ export async function endInningsAction(matchId: string) {
     const db = admin.firestore();
     const matchRef = db.collection('matches').doc(matchId);
 
-    // Fetch current state to get sequence number
-    const [matchDoc, actionsSnapshot] = await Promise.all([
-      matchRef.get(),
-      matchRef.collection('scoring_actions').orderBy('sequenceNumber', 'desc').limit(1).get()
-    ]);
-
+    const matchDoc = await matchRef.get();
     if (!matchDoc.exists) {
       return { success: false, error: 'Match not found' };
     }
 
     const match = matchDoc.data() as Match;
-    const lastAction = actionsSnapshot.empty ? null : (actionsSnapshot.docs[0].data() as ScoringAction);
-    const nextSequence = (lastAction?.sequenceNumber || 0) + 1;
+    const ctx = foldContextFor(matchId, match);
+    const { fold, headSequence } = await loadFold(matchRef, ctx);
+    const nextSequence = headSequence + 1;
 
-    // Determine current innings number from last action or default to 1
-    const currentInningsNumber = lastAction?.inningsNumber || 1;
+    const currentInningsNumber: 1 | 2 = fold.innings2 ? 2 : 1;
+    const lastAction = (fold.innings2 ?? fold.innings1)?.lastAction ?? null;
 
     // Create INNINGS_END action
     const actionId = matchRef.collection('scoring_actions').doc().id;
@@ -704,44 +671,29 @@ export async function endInningsAction(matchId: string) {
       createdAt: new Date().toISOString()
     };
 
-    // Save action
-    await matchRef.collection('scoring_actions').doc(endInningsEvent.id).set(endInningsEvent);
-
-    // Re-compute projection
-    // We need all actions to recompute
-    const allActionsSnapshot = await matchRef.collection('scoring_actions').orderBy('sequenceNumber', 'asc').get();
-    const allActions = allActionsSnapshot.docs.map(doc => doc.data() as ScoringAction);
-
-    const projection = computeProjection(
-      allActions,
-      matchId,
-      match.homeTeamId,
-      match.awayTeamId
-    );
-
-    // Update live/score
-    await matchRef.collection('live').doc('score').set(projection);
+    // Save event, fold and projection atomically
+    const batch = db.batch();
+    batch.set(matchRef.collection('scoring_actions').doc(endInningsEvent.id), stripUndefined(endInningsEvent));
+    applyActionToFold(fold, endInningsEvent, ctx);
+    const projection = writeFoldAndProjection(batch, matchRef, fold, ctx);
 
     // 4.7. End of Innings Rewards Integration
     try {
-      const batch = db.batch();
       const rewardTransactions = await RewardsEngine.processInningsRewards(projection, match as any);
-
-      const playerIds = Array.from(new Set(rewardTransactions.map(t => t.playerId)));
-      for (const pId of playerIds) {
-        const playerTxs = rewardTransactions.filter(t => t.playerId === pId).map(t => ({
+      await RewardService.applyTransactions(
+        rewardTransactions.map(t => ({
           ...t,
           walletId: `wallet_${t.playerId}`,
           sourceEventId: matchId,
           metadata: { ...t.metadata, inningsNumber: projection.inningsNumber }
-        }));
-        await RewardService.applyTransactions(pId, playerTxs, batch);
-      }
-
-      await batch.commit();
+        })),
+        batch
+      );
     } catch (rewardsError) {
       console.error('Innings Rewards Error:', rewardsError);
     }
+
+    await batch.commit();
 
     // Record Audit Log
     await recordAuditLog({
@@ -835,26 +787,17 @@ export async function undoLastBallAction(matchId: string, reason: string) {
       voidedAt: new Date().toISOString()
     };
 
-    // 4. Re-compute Projection
-    // We replace the last action in the full list with the voided version
+    // 4. Rebuild the fold from the corrected log. Undo is rare, so a full
+    //    replay here is fine; it also keeps the persisted fold in sync so the
+    //    next ball takes the fast path.
     const updatedAllActions = allActions.map(a => a.id === lastAction.id ? updatedAction : a);
-
-    const projection = computeProjection(
-      updatedAllActions,
-      matchId,
-      match.homeTeamId,
-      match.awayTeamId
-    );
+    const ctx = foldContextFor(matchId, match);
+    const fold = buildFoldFromActions(updatedAllActions, ctx);
 
     // 5. Save Updates Atomically
     const batch = db.batch();
-
-    // Update the action
-    batch.set(matchRef.collection('scoring_actions').doc(lastAction.id), updatedAction);
-
-    // Update the projection
-    batch.set(matchRef.collection('live').doc('score'), projection);
-
+    batch.set(matchRef.collection('scoring_actions').doc(lastAction.id), stripUndefined(updatedAction));
+    writeFoldAndProjection(batch, matchRef, fold, ctx);
     await batch.commit();
 
     return { success: true, undoneRuns: lastAction.totalRuns };
@@ -1507,18 +1450,11 @@ export async function selectNewBowlerAction(matchId: string, playerId: string) {
 
 export async function getLiveMatchesAction(): Promise<Match[]> {
   try {
-    console.log('[matchActions] Fetching live matches...');
-    // Check for mock project
-    if (admin.app().options.credential && (admin.app().options as any).projectId === 'mock-project-id') {
-      console.warn('WARNING: Running with mock-project-id. Match data will be empty.');
-    }
-
     const snapshot = await admin.firestore().collection('matches')
       .where('status', 'in', ['live', 'LIVE', 'in_progress', 'IN_PROGRESS', 'scoring', 'SCORING'])
       .get();
 
     const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Match[];
-    console.log(`[matchActions] Found ${matches.length} live matches`);
     return serializeData(matches);
   } catch (error) {
     console.error('Error fetching live matches:', error);

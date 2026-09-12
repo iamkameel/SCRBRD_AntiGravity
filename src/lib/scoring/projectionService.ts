@@ -615,7 +615,7 @@ function calculateMaidenOvers(bowlerActions: ScoringAction[]): number {
 /**
  * Get balls in the current over
  */
-function getCurrentOverBalls(actions: ScoringAction[]): BallSummary[] {
+export function getCurrentOverBalls(actions: ScoringAction[]): BallSummary[] {
     if (actions.length === 0) return [];
 
     const lastAction = actions[actions.length - 1];
@@ -649,7 +649,7 @@ function getCurrentOverBalls(actions: ScoringAction[]): BallSummary[] {
 /**
  * Determine who should be on strike after the action
  */
-function getNextStriker(action: ScoringAction, allActions: ScoringAction[]): string | null {
+export function getNextStriker(action: ScoringAction, allActions: ScoringAction[]): string | null {
     if (action.isWicket) return null;
 
     // Check if strike should rotate
@@ -670,7 +670,7 @@ function getNextStriker(action: ScoringAction, allActions: ScoringAction[]): str
 /**
  * Determine who should be at non-striker end after the action
  */
-function getNextNonStriker(action: ScoringAction, allActions: ScoringAction[]): string | null {
+export function getNextNonStriker(action: ScoringAction, allActions: ScoringAction[]): string | null {
     const nextStriker = getNextStriker(action, allActions);
     if (nextStriker === action.strikerId) return action.nonStrikerId;
     return action.strikerId;
@@ -679,7 +679,7 @@ function getNextNonStriker(action: ScoringAction, allActions: ScoringAction[]): 
 /**
  * Compute match result from completed innings
  */
-function computeMatchResult(
+export function computeMatchResult(
     innings1: InningsProjection,
     innings2: InningsProjection,
     homeTeamId: string,
