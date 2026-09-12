@@ -320,15 +320,18 @@ export async function assignInterventionAction(intervention: {
     notes?: string;
 }) {
     try {
-        await requireUser("skills");
-        const docData = {
-            ...intervention,
-            assignedAt: serverTimestamp(),
-            status: 'Active',
-            createdAt: serverTimestamp()
-        };
+        // Admin SDK, not the client SDK: on the server the client SDK carries no
+        // auth context, so its writes are refused by the rules and fail silently.
+        const actor = await requireUser("skills");
+        const adminSdk = (await import('@/lib/firebase-admin')).default;
 
-        const docRef = await addDoc(collection(db, "coach_interventions"), docData);
+        const docRef = await adminSdk.firestore().collection("coach_interventions").add({
+            ...intervention,
+            assignedBy: actor.uid,
+            assignedAt: new Date().toISOString(),
+            status: 'Active',
+            createdAt: new Date().toISOString(),
+        });
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error("Error assigning intervention:", error);

@@ -14,18 +14,6 @@ interface EmptyStateProps {
   className?: string;
 }
 
-/**
- * Shared EmptyState component — glassmorphic card with icon, title, description,
- * and optional action button. Extracted from the proven MatchesClient.tsx pattern.
- *
- * Usage:
- *   <EmptyState
- *     icon={<Users className="h-8 w-8" />}
- *     title="No players found"
- *     description="Add players to your squad to get started."
- *     action={{ label: 'Add Player', onClick: () => router.push('/players/add') }}
- *   />
- */
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div
@@ -63,10 +51,6 @@ export function EmptyState({ icon, title, description, action, className }: Empt
   );
 }
 
-/**
- * ErrorState — used in error.tsx route segments.
- * Shows a red-tinted empty state with an error message and reset button.
- */
 export function ErrorState({
   error,
   reset,

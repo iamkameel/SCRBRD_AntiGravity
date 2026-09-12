@@ -71,7 +71,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-        <p className="text-xs font-semibold text-slate-400">Syncing Operational Matrix...</p>
+        <p className="text-xs font-semibold text-slate-400">Loading your daily briefing…</p>
       </div>
     );
   }
@@ -100,20 +100,20 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Strategic Intelligence</span>
+              <span>Daily briefing</span>
             </div>
 
             <h2
               className="text-lg md:text-xl font-bold text-white tracking-tight"
               style={{ fontFamily: D.head }}
             >
-              {getGreeting()}, <span className="text-indigo-400">{userName || 'Coach'}</span>
+              {getGreeting()}, <span className="text-indigo-400">{userName || 'there'}</span>
             </h2>
 
             {roleLabel && (
               <p className="text-xs font-medium text-slate-400 flex items-center gap-2" style={{ fontFamily: D.sans }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                Active Scope: <span className="text-slate-200 font-semibold">{roleLabel}</span> · 2026 Intelligence Cycle
+                Your role: <span className="text-slate-200 font-semibold">{roleLabel}</span>
               </p>
             )}
           </div>
@@ -164,7 +164,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
                 >
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   <p className="text-xs font-semibold text-slate-300" style={{ fontFamily: D.sans }}>
-                    Operational Stability Confirmed. No immediate interventions required.
+                    No updates to show right now. Check your fixtures to plan what’s next.
                   </p>
                 </div>
               )}
@@ -176,10 +176,10 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
             <Link href="/analytics">
               <button
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white transition-all shadow-md hover:opacity-90 active:scale-95"
-                style={{ background: D.indigo, fontFamily: D.sans }}
+                style={{ background: D.indigo, color: "#101610", fontFamily: D.sans }}
               >
                 <Activity className="h-4 w-4" />
-                Performance Audit
+                View performance
                 <ArrowRight className="h-4 w-4" />
               </button>
             </Link>

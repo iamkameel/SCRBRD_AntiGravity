@@ -14,12 +14,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+import { Suspense } from "react";
+
 interface LoginErrors {
   email?: string;
   password?: string;
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -31,6 +33,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
 
   const validateForm = () => {
     const newErrors: LoginErrors = {};
@@ -59,7 +62,7 @@ export default function LoginPage() {
     try {
       await signIn(email, password);
       toast({
-        title: "Access Granted",
+        title: "Signed in",
         description: "Welcome to the SCRBRD Hub.",
       });
       // Return the user to whatever the middleware intercepted.
@@ -67,9 +70,9 @@ export default function LoginPage() {
       router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/home");
     } catch (error: unknown) {
       console.error("Login error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Invalid credentials. Identity could not be verified.";
+      const errorMessage = error instanceof Error ? error.message : "Invalid credentials. Please check your email and password.";
       toast({
-        title: "Access Denied",
+        title: "Unable to sign in",
         description: errorMessage,
         variant: "destructive",
       });
@@ -85,13 +88,13 @@ export default function LoginPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full opacity-40 pointer-events-none" />
       <div className="absolute top-0 right-0 p-8 flex items-center gap-2 opacity-50">
         <Zap className="h-4 w-4 text-primary fill-primary" />
-        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Cricket OS v2.0</span>
+        <span className="text-[10px] font-medium tracking-wide">Your game. Connected.</span>
       </div>
 
       <div className="w-full max-w-[440px] relative z-10 animate-slide-in-up">
         <div className="flex flex-col items-center mb-10">
           <Link href="/" className="group mb-6">
-            <div className="flex items-center justify-center w-full max-w-[360px] h-32 mb-8 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 overflow-hidden shadow-2xl shadow-orange-500/20 backdrop-blur-xl p-6">
+            <div className="flex items-center justify-center w-full max-w-[360px] h-20 mb-3 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 overflow-hidden shadow-2xl shadow-primary/10 backdrop-blur-xl p-6">
               <Image
                 src="/images/scrbrd-logo.png"
                 alt="SCRBRD Logo"
@@ -102,15 +105,15 @@ export default function LoginPage() {
               />
             </div>
           </Link>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-gradient">WELCOME TO THE HUB</h1>
-          <p className="text-muted-foreground text-sm font-medium opacity-70">Enter your credentials to access the Operating System</p>
+          <h1 className="text-3xl font-black tracking-tight mb-2 text-gradient">Welcome back</h1>
+          <p className="text-muted-foreground text-sm font-medium opacity-70">Sign in to your cricket workspace.</p>
         </div>
 
         <Card className="glass-card border-white/5 shadow-2xl overflow-hidden">
           <CardContent className="pt-8 px-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest opacity-70">Identity (Email)</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
                 <div className="relative group">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input
@@ -130,7 +133,7 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest opacity-70">Secret (Password)</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Secret (Password)</Label>
                   <Link href="/forgot-password" className="text-[10px] font-bold text-primary uppercase tracking-[0.1em] hover:underline opacity-70">
                     Reset Password
                   </Link>
@@ -210,3 +213,12 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+

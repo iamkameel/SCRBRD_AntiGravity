@@ -315,7 +315,7 @@ export default function SkillAssessmentPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-[#05080f] text-[#f0f4ff] font-sans p-6 space-y-6 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-[#05080f] text-[#f3f5ef] font-sans p-6 space-y-6 max-w-6xl mx-auto">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
         <div>

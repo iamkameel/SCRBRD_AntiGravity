@@ -19,7 +19,7 @@ export function SchoolHero({ school }: SchoolHeroProps) {
       <div 
         className="absolute inset-0 z-10 opacity-90"
         style={{
-          background: `linear-gradient(135deg, ${primaryColor}ee 0%, #060910 85%, ${secondaryColor}33 100%)`
+          background: `linear-gradient(135deg, ${primaryColor}ee 0%, #0b0d0b 85%, ${secondaryColor}33 100%)`
         }}
       />
       <div className="absolute inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30" />
@@ -31,7 +31,7 @@ export function SchoolHero({ school }: SchoolHeroProps) {
           <div 
             className="relative h-24 w-24 md:h-32 md:w-32 rounded-2xl p-2 shadow-2xl shrink-0 -mb-10 md:mb-0 backdrop-blur-md flex items-center justify-center transition-transform hover:scale-105"
             style={{ 
-              backgroundColor: '#0f1621', 
+              backgroundColor: '#171a17', 
               border: `3px solid ${secondaryColor}`
             }}
           >

@@ -1,16 +1,5 @@
 'use client';
 
-/**
- * Pill — UIX Spec §6.7
- *
- * Inline filter chip. Background: color+15, border: color+28.
- * Interactive when onClick provided — cursor changes to pointer.
- *
- * Usage:
- *   <Pill color="#0ea5e9" onClick={handler} active>T20</Pill>
- *   <Pill color="#6366f1">All</Pill>
- */
-
 import React from 'react';
 import { D } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
@@ -48,12 +37,6 @@ export function Pill({ color = D.indigo, active = false, onClick, children, clas
   );
 }
 
-/**
- * PillGroup — convenience wrapper for a set of filter pills
- *
- * Usage:
- *   <PillGroup options={['all','live','upcoming']} value={filter} onValueChange={setFilter} color="#6366f1" />
- */
 interface PillGroupProps {
   options: string[];
   value: string;

@@ -1,19 +1,5 @@
 'use client';
 
-/**
- * PlayerAvatar — UIX Spec §6.3
- *
- * SCRBRD-spec initials avatar with gradient circle background.
- * Named PlayerAvatar to avoid collision with shadcn's Avatar primitive.
- *
- * Initials extracted from first letter of first and last word.
- * Font: DM Mono, font-weight: 700.
- *
- * Usage:
- *   <PlayerAvatar name="James Whitfield" size={32} color="#6366f1" />
- *   <PlayerAvatar name="Team A" size={40} color="#10b981" imageUrl="/path/to/img.jpg" />
- */
-
 import React from 'react';
 import NextImage from 'next/image';
 import { D } from '@/lib/design-system';

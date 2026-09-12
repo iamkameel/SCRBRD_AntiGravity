@@ -404,7 +404,7 @@ export function MatchManagementClient({
   const isHomeMatch = true; // In reality, depends on user's authorized school context
 
   return (
-    <div className="min-h-screen bg-[#05080f] text-[#f0f4ff] font-['DM_Sans',sans-serif] selection:bg-[#4f46e5]/30">
+    <div className="min-h-screen bg-[#05080f] text-[#f3f5ef] font-['DM_Sans',sans-serif] selection:bg-[#4f46e5]/30">
       {/* Top Navigation */}
       <header className="sticky top-0 z-40 bg-[#05080f]/80 backdrop-blur-xl border-b border-white/5 mx-auto w-full">
         <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">

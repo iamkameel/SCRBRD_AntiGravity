@@ -17,10 +17,10 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ["var(--font-open-sans)", "var(--font-dm-sans)", "sans-serif"],
+				sans: ["var(--font-dm-sans)", "sans-serif"],
 				open: ["var(--font-open-sans)", "sans-serif"],
 				mono: ["var(--font-dm-mono)", "monospace"],
-				head: ["var(--font-syne)", "sans-serif"],
+				head: ["var(--font-dm-sans)", "sans-serif"],
 			},
 			colors: {
 				background: 'hsl(var(--background))',

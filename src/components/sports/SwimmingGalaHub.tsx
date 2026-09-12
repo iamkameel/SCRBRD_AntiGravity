@@ -69,7 +69,7 @@ export function SwimmingGalaHubView() {
     };
 
     return (
-        <div className="space-y-6 font-sans text-zinc-900 dark:text-[#f0f4ff]">
+        <div className="space-y-6 font-sans text-zinc-900 dark:text-[#f3f5ef]">
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 pb-4">
                 <div className="flex items-center gap-3">

@@ -5,7 +5,7 @@ import { SquadDevelopmentDashboard } from '@/components/coaches/SquadDevelopment
 
 export default function SquadDevelopmentPage() {
   return (
-    <main className="min-h-screen bg-[#05080f] text-[#f0f4ff] font-sans p-6 space-y-6 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-[#05080f] text-[#f3f5ef] font-sans p-6 space-y-6 max-w-6xl mx-auto">
       <SquadDevelopmentDashboard />
     </main>
   );

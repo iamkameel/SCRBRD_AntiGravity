@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardWelcome } from "./DashboardWelcome";
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePermissions } from "@/lib/auth/usePermissions";
@@ -58,7 +59,7 @@ export default function DashboardView() {
       <div className="flex h-[60vh] w-full items-center justify-center flex-col gap-4">
         <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400" style={{ fontFamily: D.sans }}>
-          Syncing School Cricket OS Operational Deck...
+          Loading your dashboard…
         </p>
       </div>
     );
@@ -101,16 +102,17 @@ export default function DashboardView() {
   };
 
   const deckTabs = [
-    { id: "operations", label: "Match & Live Command", icon: Activity, color: D.indigo },
-    { id: "competition", label: "Competition & Fixtures", icon: Calendar, color: D.rose },
-    { id: "squads", label: "Team Ops & Selection", icon: Shield, color: D.emerald },
-    { id: "coaching", label: "Analytics & Intelligence", icon: Users, color: D.amber },
-    { id: "rankings", label: "Identity, History & Scouting", icon: Trophy, color: D.violet },
-    { id: "logistics", label: "Facilities, Transport & Med", icon: Truck, color: D.sky },
+    { id: "operations", label: "Overview", icon: Activity, color: D.indigo },
+    { id: "competition", label: "Fixtures", icon: Calendar, color: D.rose },
+    { id: "squads", label: "Teams", icon: Shield, color: D.emerald },
+    { id: "coaching", label: "Development", icon: Users, color: D.amber },
+    { id: "rankings", label: "Rankings", icon: Trophy, color: D.violet },
+    { id: "logistics", label: "Operations", icon: Truck, color: D.sky },
   ];
 
   return (
-    <div className="pb-20 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pb-8 space-y-6 animate-in fade-in duration-500">
+      <DashboardWelcome />
       {/* 1. Realtime Match Telemetry Ticker */}
       <LiveTelemetryTicker />
 
@@ -130,10 +132,10 @@ export default function DashboardView() {
               <UserCheck className="h-5 w-5 text-indigo-500 shrink-0" />
               <div>
                 <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
-                  Active Persona Simulation Mode
+                  Previewing another role
                 </p>
                 <p className="text-[11px] text-indigo-950 dark:text-indigo-200 font-medium" style={{ fontFamily: D.sans }}>
-                  Viewing platform layer as: <span className="font-bold text-indigo-600 dark:text-white uppercase">{activeRole}</span>
+                  Dashboard view: <span className="font-bold text-indigo-600 dark:text-white uppercase">{activeRole}</span>
                 </p>
               </div>
             </div>
@@ -143,7 +145,7 @@ export default function DashboardView() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-xs font-semibold text-indigo-900 dark:text-white transition-all"
             >
               <RefreshCw className="h-3.5 w-3.5 text-indigo-500" />
-              Reset Persona
+              Reset view
             </button>
           </motion.div>
         )}
@@ -155,6 +157,7 @@ export default function DashboardView() {
       {/* 5. Strategic 6-Layer OS Deck Navigation Tabs */}
       <div className="space-y-6">
         <div
+          role="tablist" aria-label="Dashboard sections"
           className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl no-scrollbar"
           style={{ background: D.surf1, borderColor: D.border }}
         >
@@ -164,6 +167,7 @@ export default function DashboardView() {
             return (
               <button
                 key={tab.id}
+                role="tab" aria-selected={activeDeck === tab.id} aria-controls="dashboard-panel" id={`dashboard-tab-${tab.id}`}
                 onClick={() => {
                   setActiveDeck(tab.id as any);
                   setFilters({ activeDeckMode: tab.id as any });
@@ -205,12 +209,13 @@ export default function DashboardView() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeDeck + (activeRole || "")}
+            id="dashboard-panel" role="tabpanel" aria-labelledby={`dashboard-tab-${activeDeck}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Deck 1: Match & Live Command */}
+            {/* Deck 1: Overview */}
             {activeDeck === "operations" && (
               <div className="space-y-8">
                 <SmartDailyBriefing
@@ -221,7 +226,7 @@ export default function DashboardView() {
               </div>
             )}
 
-            {/* Deck 2: Competition & Fixtures */}
+            {/* Deck 2: Fixtures */}
             {activeDeck === "competition" && (
               <div className="space-y-8">
                 <FixtureCentreCard role={activeRole || "schooladmin"} schoolId={person?.schoolId} />
@@ -235,21 +240,21 @@ export default function DashboardView() {
               </div>
             )}
 
-            {/* Deck 4: Analytics & Intelligence */}
+            {/* Deck 4: Development */}
             {activeDeck === "coaching" && (
               <div className="space-y-8">
                 <PlayerMicroPlanGenerator />
               </div>
             )}
 
-            {/* Deck 5: Identity, History & Scouting */}
+            {/* Deck 5: Rankings */}
             {activeDeck === "rankings" && (
               <div className="space-y-8">
                 <GlobalRankingsClient />
               </div>
             )}
 
-            {/* Deck 6: Facilities, Transport & Medical */}
+            {/* Deck 6: Operationsical */}
             {activeDeck === "logistics" && (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

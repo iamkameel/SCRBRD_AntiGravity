@@ -91,7 +91,7 @@ function AnalyticsLoadingSkeleton() {
           <div
             key={i}
             className="animate-pulse rounded-2xl p-6"
-            style={{ background: "#0f1621", height: 100 }}
+            style={{ background: "#171a17", height: 100 }}
           />
         ))}
       </div>
@@ -100,7 +100,7 @@ function AnalyticsLoadingSkeleton() {
           <div
             key={i}
             className="animate-pulse rounded-2xl"
-            style={{ background: "#0f1621", height: 280 }}
+            style={{ background: "#171a17", height: 280 }}
           />
         ))}
       </div>

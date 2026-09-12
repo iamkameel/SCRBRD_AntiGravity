@@ -36,9 +36,9 @@ export function DashboardFilterBar() {
 
   return (
     <div 
-      className="flex flex-wrap items-center gap-4 p-4 rounded-2xl mb-8 sticky top-4 z-50 shadow-2xl border transition-all duration-500 backdrop-blur-xl"
+      className="flex flex-wrap items-center gap-4 p-4 rounded-2xl  border transition-all duration-500 backdrop-blur-xl"
       style={{ 
-        background: `${D.surf1}f0`, 
+        background: D.surf1, 
         border: `1px solid ${D.border}`,
         boxShadow: `0 20px 40px -20px ${D.indigo}15`
       }}
@@ -51,8 +51,8 @@ export function DashboardFilterBar() {
           <Filter className="h-4 w-4" />
         </div>
         <div>
-           <span className="text-[9px] font-bold uppercase tracking-wider block leading-none text-slate-600 dark:text-slate-400" style={{ fontFamily: D.sans }}>SYSTEM</span>
-           <span className="text-xs font-bold uppercase tracking-tight text-slate-900 dark:text-white" style={{ fontFamily: D.head }}>CONTEXT</span>
+           <span className="text-[9px] font-bold uppercase tracking-wider block leading-none text-slate-600 dark:text-slate-400" style={{ fontFamily: D.sans }}>FILTER</span>
+           <span className="text-xs font-bold uppercase tracking-tight text-slate-900 dark:text-white" style={{ fontFamily: D.head }}>Your view</span>
         </div>
       </div>
 
@@ -68,10 +68,10 @@ export function DashboardFilterBar() {
               className="w-[150px] rounded-xl font-semibold text-xs h-9 transition-all border-none text-slate-800 dark:text-slate-200"
               style={{ background: D.surf2 }}
             >
-              <SelectValue placeholder="ALL SEASONS" />
+              <SelectValue placeholder="All seasons" />
             </SelectTrigger>
             <SelectContent className="rounded-xl p-1 border shadow-2xl" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
-              <SelectItem value="all" className="text-xs font-medium rounded-lg">ALL SEASONS</SelectItem>
+              <SelectItem value="all" className="text-xs font-medium rounded-lg">All seasons</SelectItem>
               {seasons.map((season) => (
                 <SelectItem key={season.id} value={season.id} className="text-xs font-medium rounded-lg">
                   {season.name}
@@ -95,7 +95,7 @@ export function DashboardFilterBar() {
               <SelectValue placeholder="ALL INSTITUTIONS" />
             </SelectTrigger>
             <SelectContent className="rounded-xl p-1 border shadow-2xl" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>
-              <SelectItem value="all" className="text-xs font-medium rounded-lg">ALL SCHOOLS</SelectItem>
+              <SelectItem value="all" className="text-xs font-medium rounded-lg">All schools</SelectItem>
               {schools.map((school) => (
                 <SelectItem key={school.id} value={school.id} className="text-xs font-medium rounded-lg">
                   {school.name}

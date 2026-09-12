@@ -1,12 +1,5 @@
 'use client';
 
-/**
- * SectionHeader — UIX Spec §6.9
- *
- * Fully migrated to D design tokens. High-performance section header
- * with semantic left accent and strategic typography.
- */
-
 import React from 'react';
 import { D } from '@/lib/design-system';
 
@@ -24,7 +17,6 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
     <div
       className={`flex items-start justify-between gap-6 mb-6 group ${className}`}
     >
-      {/* Left Accent Bar & Title */}
       <div className="flex items-start gap-3.5 min-w-0">
         <div className="relative shrink-0 mt-1">
            <div 
@@ -63,7 +55,6 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
         </div>
       </div>
 
-      {/* Action Hub */}
       {actions && (
         <div className="shrink-0 flex items-center gap-3">
           {actions}

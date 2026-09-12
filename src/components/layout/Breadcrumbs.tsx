@@ -63,7 +63,7 @@ export function Breadcrumbs() {
   const segments = pathname.split("/").filter(Boolean);
 
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: "OS HUB", href: "/home" },
+    { label: "Dashboard", href: "/home" },
   ];
 
   let currentPath = "";
@@ -74,7 +74,7 @@ export function Breadcrumbs() {
 
     const label = getDynamicLabel(segment, index, segments);
     breadcrumbs.push({
-        label: label.toUpperCase(),
+        label,
         href: currentPath,
     });
   });
@@ -95,7 +95,7 @@ export function Breadcrumbs() {
               <li className="flex items-center shrink-0">
                 {isLast ? (
                   <span 
-                    className="flex items-center gap-2 text-[9px] font-black tracking-[0.25em] italic" 
+                    className="flex items-center gap-2 text-xs font-medium" 
                     style={{ fontFamily: D.head, color: D.textPrimary }}
                   >
                     {isFirst ? <Home size={11} className="text-indigo-500" /> : <div className="w-1.5 h-1.5 rounded-full" style={{ background: D.indigo }} />}
@@ -104,7 +104,7 @@ export function Breadcrumbs() {
                 ) : (
                   <Link
                     href={crumb.href}
-                    className="flex items-center gap-2 text-[9px] font-black tracking-[0.25em] transition-all hover:text-indigo-500 opacity-40 hover:opacity-100"
+                    className="flex items-center gap-2 text-xs font-medium transition-all hover:text-indigo-500 hover:opacity-100"
                     style={{ fontFamily: D.head, color: D.textMuted }}
                   >
                     {isFirst && <Home size={11} />}

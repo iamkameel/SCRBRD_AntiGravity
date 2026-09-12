@@ -19,7 +19,7 @@ export function OppositionScoutingDossierView({ fixtureId = 'fix-1st-xi-kes' }: 
     };
 
     return (
-        <div className="space-y-6 font-sans text-[#f0f4ff] print:text-black print:bg-white">
+        <div className="space-y-6 font-sans text-[#f3f5ef] print:text-black print:bg-white">
             {/* Action Bar & Print Header */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 print:hidden">
                 <div className="flex items-center gap-3">

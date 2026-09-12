@@ -60,7 +60,7 @@ export default function MatchCalculatorsPage() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: D.bg, color: '#f0f4ff', padding: '32px 24px', fontFamily: D.sans }}>
+    <div style={{ minHeight: '100vh', background: D.bg, color: '#f3f5ef', padding: '32px 24px', fontFamily: D.sans }}>
       <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>

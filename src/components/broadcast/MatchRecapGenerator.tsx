@@ -19,7 +19,7 @@ export function MatchRecapGeneratorView({ fixtureId = 'fix-1st-xi-kes' }: { fixt
     };
 
     return (
-        <div className="space-y-8 font-sans text-[#f0f4ff]">
+        <div className="space-y-8 font-sans text-[#f3f5ef]">
             {/* Header Title */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">

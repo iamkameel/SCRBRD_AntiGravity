@@ -433,7 +433,7 @@ export function SchoolForm({ mode, schoolAction, initialState, initialData = {} 
               <div 
                 className="w-28 h-28 rounded-2xl p-2 flex items-center justify-center shadow-xl backdrop-blur-md transition-transform hover:scale-105"
                 style={{ 
-                  backgroundColor: '#0f1621',
+                  backgroundColor: '#171a17',
                   border: `3px solid ${secondaryColor}`
                 }}
               >
