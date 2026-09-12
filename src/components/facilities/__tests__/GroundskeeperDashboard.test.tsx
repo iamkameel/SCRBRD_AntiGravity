@@ -3,10 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { GroundskeeperDashboard } from "../GroundskeeperDashboard";
 
-vi.mock("@/services/fieldService", () => ({
-  fieldService: {
-    logGroundStatus: vi.fn().mockResolvedValue({ success: true, id: "log-101" }),
-  },
+vi.mock("@/app/actions/fieldActions", () => ({
+  logGroundStatusAction: vi.fn().mockResolvedValue({ success: true, id: "log-101" }),
+  upsertMaintenanceTaskAction: vi.fn().mockResolvedValue({ success: true, id: "m-101" }),
 }));
 
 describe("GroundskeeperDashboard Component", () => {
@@ -53,7 +52,7 @@ describe("GroundskeeperDashboard Component", () => {
     expect(screen.getByText(/5 \/ 8 Completed/i)).toBeInTheDocument();
   });
 
-  it("adds new work orders to the maintenance queue", () => {
+  it("adds new work orders to the maintenance queue", async () => {
     render(<GroundskeeperDashboard />);
 
     const input = screen.getByPlaceholderText(/New work order item\.\.\./i);
@@ -63,7 +62,7 @@ describe("GroundskeeperDashboard Component", () => {
     expect(screen.getByText(/Irrigation Sub-surface Leak Repair/i)).toBeInTheDocument();
   });
 
-  it("logs official pitch clearance certificate to fieldService", async () => {
+  it("logs official pitch clearance certificate to server action", async () => {
     render(<GroundskeeperDashboard />);
 
     const clearanceBtn = screen.getByRole("button", { name: /Issue Official Match Clearance/i });

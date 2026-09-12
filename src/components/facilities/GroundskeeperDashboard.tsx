@@ -1,29 +1,23 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { D } from '@/lib/design-system';
-import { fieldService } from "@/services/fieldService";
-import { motion, AnimatePresence } from "framer-motion";
+import { logGroundStatusAction, upsertMaintenanceTaskAction } from '@/app/actions/fieldActions';
+import { motion } from "framer-motion";
 import { 
   Sun, 
-  Wind, 
   CheckCircle2, 
   Clock, 
-  AlertTriangle, 
   Hammer, 
   Droplets, 
-  Thermometer,
-  Layout,
-  ChevronRight,
   ShieldCheck,
   RotateCcw,
-  Sparkles,
   Activity,
   Layers,
   Sliders,
@@ -108,7 +102,7 @@ const PREP_TASKS = [
 ];
 
 interface MaintenanceItem {
-  id: number;
+  id: string;
   task: string;
   priority: 'High' | 'Med' | 'Low';
   status: 'In Progress' | 'Pending' | 'Completed';
@@ -116,10 +110,10 @@ interface MaintenanceItem {
 }
 
 const INITIAL_MAINTENANCE: MaintenanceItem[] = [
-  { id: 1, task: 'Pop-up Irrigation Header Valve Repair', priority: 'High', status: 'In Progress', category: 'Plumbing' },
-  { id: 2, task: 'Sight Screen Canvas Tensioner Adjustment', priority: 'Low', status: 'Pending', category: 'Equipment' },
-  { id: 3, task: 'Boundary Rope Foam Segment Inspection', priority: 'Med', status: 'Pending', category: 'Safety' },
-  { id: 4, task: 'Roller Engine Oil & Hydraulic Fluid Change', priority: 'Med', status: 'In Progress', category: 'Machinery' }
+  { id: 'm-1', task: 'Pop-up Irrigation Header Valve Repair', priority: 'High', status: 'In Progress', category: 'Plumbing' },
+  { id: 'm-2', task: 'Sight Screen Canvas Tensioner Adjustment', priority: 'Low', status: 'Pending', category: 'Equipment' },
+  { id: 'm-3', task: 'Boundary Rope Foam Segment Inspection', priority: 'Med', status: 'Pending', category: 'Safety' },
+  { id: 'm-4', task: 'Roller Engine Oil & Hydraulic Fluid Change', priority: 'Med', status: 'In Progress', category: 'Machinery' }
 ];
 
 export function GroundskeeperDashboard() {
@@ -131,6 +125,7 @@ export function GroundskeeperDashboard() {
   const [rollerHours, setRollerHours] = useState<string>('1.5');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clearanceLogged, setClearanceLogged] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const currentPitch = pitches[selectedPitchIndex];
   const completedCount = tasks.filter(t => t.done).length;
@@ -140,34 +135,53 @@ export function GroundskeeperDashboard() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
-  const handleAddMaintenance = () => {
+  const handleAddMaintenance = async () => {
     if (!newTaskText.trim()) return;
-    const newItem: MaintenanceItem = {
-      id: Date.now(),
-      task: newTaskText.trim(),
+    const taskTitle = newTaskText.trim();
+    setNewTaskText('');
+
+    const localItem: MaintenanceItem = {
+      id: `m-${Date.now()}`,
+      task: taskTitle,
       priority: 'Med',
       status: 'Pending',
       category: 'General'
     };
-    setMaintenance(prev => [newItem, ...prev]);
-    setNewTaskText('');
+    setMaintenance(prev => [localItem, ...prev]);
+
+    try {
+      await upsertMaintenanceTaskAction({
+        fieldId: currentPitch.fieldId,
+        title: taskTitle,
+        description: `Created via Groundskeeper Hub for ${currentPitch.fieldName}`,
+        status: 'PENDING',
+      });
+    } catch (err: any) {
+      console.error('Failed to sync maintenance task with server:', err);
+    }
   };
 
   const handleConfirmReadiness = async () => {
     setIsSubmitting(true);
+    setServerError(null);
     try {
-      await fieldService.logGroundStatus({
+      const res = await logGroundStatusAction({
         fieldId: currentPitch.fieldId,
         conditionStatus: progressPercent >= 80 ? 'Optimal' : progressPercent >= 50 ? 'Playable' : 'Inspection Required',
         pitchReadiness: progressPercent,
         outfieldReadiness: 95,
         equipmentReadiness: 90,
-        loggedBy: 'Lead Groundskeeper',
         notes: `Pitch #${currentPitch.pitchNumber} cleared with ${progressPercent}% readiness. Clegg Hardness: ${currentPitch.cleggImpactValue} CIV, Moisture: ${currentPitch.moisturePct}%. Roller session: ${rollerHours} hrs.`
       });
-      setClearanceLogged(true);
-    } catch (err) {
+
+      if (res && res.success) {
+        setClearanceLogged(true);
+      } else {
+        setServerError(res?.error || 'Failed to log clearance');
+      }
+    } catch (err: any) {
       console.error('Failed to log ground status:', err);
+      setServerError(err.message || 'Server action error');
     } finally {
       setIsSubmitting(false);
     }
@@ -211,6 +225,12 @@ export function GroundskeeperDashboard() {
           ))}
         </div>
       </div>
+
+      {serverError && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold font-mono">
+          Error: {serverError}
+        </div>
+      )}
 
       {/* Surface Telemetry Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
