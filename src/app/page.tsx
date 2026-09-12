@@ -26,35 +26,15 @@ const tickerItems = [
 ];
 
 function Ticker() {
-  const [offset, setOffset] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let req: number;
-    const speed = 0.6;
-    const step = () => {
-      setOffset((prev) => {
-        const width = contentRef.current?.scrollWidth ?? 0;
-        const half = width / 2;
-        return prev <= -half ? 0 : prev - speed;
-      });
-      req = requestAnimationFrame(step);
-    };
-    req = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(req);
-  }, []);
-
+  // Content is doubled so a translateX(-50%) loop is seamless; the animation
+  // runs on the compositor instead of a React re-render per frame.
   const doubled = [...tickerItems, ...tickerItems];
 
   return (
     <div className="w-full overflow-hidden border-b border-t border-white/[0.06] bg-white/[0.015] py-2.5 relative z-10">
       <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-[#060606] to-transparent z-20 pointer-events-none" />
       <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-[#060606] to-transparent z-20 pointer-events-none" />
-      <div
-        ref={contentRef}
-        className="flex gap-10 whitespace-nowrap"
-        style={{ transform: `translateX(${offset}px)` }}
-      >
+      <div className="flex gap-10 whitespace-nowrap w-max scrbrd-ticker">
         {doubled.map((item, i) => (
           <div key={i} className="flex items-center gap-3 flex-shrink-0">
             <span
