@@ -22,13 +22,15 @@ const getSkillsData = (player: Person) => {
   // For now, we'll generate some based on role
   const isBowler = player.role === 'Bowler';
   const isBatsman = player.role === 'Batsman';
+  const isWicketkeeper = player.role?.toLowerCase().includes('keeper');
   const isAllRounder = player.role === 'All Rounder';
 
   return [
     { subject: 'Batting', A: isBatsman || isAllRounder ? 85 : 45, fullMark: 100 },
     { subject: 'Bowling', A: isBowler || isAllRounder ? 85 : 40, fullMark: 100 },
     { subject: 'Fielding', A: 75, fullMark: 100 },
-    { subject: 'Fitness', A: 80, fullMark: 100 },
+    { subject: 'Keeper', A: isWicketkeeper ? 88 : 50, fullMark: 100 },
+    { subject: 'Physical', A: 80, fullMark: 100 },
     { subject: 'Mental', A: 70, fullMark: 100 },
     { subject: 'Tactical', A: 65, fullMark: 100 },
   ];

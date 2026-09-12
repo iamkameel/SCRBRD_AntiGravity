@@ -26,7 +26,7 @@ import { PolarSpatialHeatmap } from './PolarSpatialHeatmap';
 import { VoiceScoringConsole } from './VoiceScoringConsole';
 import { 
   Undo, Save, Play, Pause, RotateCcw,
-  ChevronRight, AlertCircle, Users, Settings, Keyboard, Command, Newspaper
+  ChevronRight, AlertCircle, Users, Settings, Keyboard, Command, Newspaper, ArrowLeftRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -226,26 +226,35 @@ export function MatchScoringInterface({
     const newTotalRuns = innings.totalRuns + ball.runs;
     const newWickets = innings.wickets + (ball.isWicket ? 1 : 0);
 
-    setCurrentOver(newOver);
-    setInnings(prev => ({
-      ...prev,
-      totalRuns: newTotalRuns,
-      wickets: newWickets
-    }));
+    // Calculate strike rotation logic
+    let shouldSwapStrike = false;
+    if (ball.runs % 2 === 1) {
+      shouldSwapStrike = true;
+    }
 
     // Check if over is complete (6 legal balls)
     const legalBalls = newOver.filter(b => 
       !b.extras || (b.extrasType !== 'wide' && b.extrasType !== 'noball')
     ).length;
 
-    if (legalBalls === 6) {
-      // Complete the over
-      setInnings(prev => ({
-        ...prev,
-        overs: [...prev.overs, { balls: newOver, overNumber: prev.overs.length + 1 }]
-      }));
-      setCurrentOver([]);
+    const isOverComplete = legalBalls === 6;
+    if (isOverComplete) {
+      // End of over swaps strike again
+      shouldSwapStrike = !shouldSwapStrike;
     }
+
+    const nextBatsmen: [string, string] = shouldSwapStrike
+      ? [innings.currentBatsmen[1], innings.currentBatsmen[0]]
+      : [innings.currentBatsmen[0], innings.currentBatsmen[1]];
+
+    setCurrentOver(isOverComplete ? [] : newOver);
+    setInnings(prev => ({
+      ...prev,
+      totalRuns: newTotalRuns,
+      wickets: newWickets,
+      currentBatsmen: nextBatsmen,
+      overs: isOverComplete ? [...prev.overs, { balls: newOver, overNumber: prev.overs.length + 1 }] : prev.overs
+    }));
 
     // Update partnership tracking
     if (ball.isWicket) {
@@ -611,9 +620,23 @@ export function MatchScoringInterface({
 
       {/* Player Selection */}
       <Card className="p-6 border-border/50 shadow-md bg-card/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-6 border-b pb-4">
-          <Users className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-bold tracking-tight uppercase">Current Players</h3>
+        <div className="flex items-center justify-between gap-2 mb-6 border-b pb-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-bold tracking-tight uppercase">Current Players</h3>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInnings(prev => ({
+              ...prev,
+              currentBatsmen: [prev.currentBatsmen[1], prev.currentBatsmen[0]]
+            }))}
+            className="font-mono text-xs font-bold gap-1.5 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+            Swap Strike
+          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <PlayerSelector

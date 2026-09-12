@@ -132,61 +132,55 @@ export default function SponsorsPage() {
   return (
     <div className="space-y-10 pb-24 max-w-7xl mx-auto p-4 md:p-8">
       {/* Strategic Header */}
-      <div 
-        className="relative p-8 md:p-10 rounded-[3rem] border overflow-hidden shadow-2xl"
-        style={{ background: D.surf1, borderColor: D.border }}
-      >
+      <div className="relative p-8 md:p-10 rounded-[3rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] overflow-hidden shadow-2xl">
         <div className="absolute inset-0 opacity-10" style={{ background: D.gradGold }} />
         <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
-          <div 
-            className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner" 
-            style={{ background: D.surf2, border: `1px solid ${D.border}` }}
-          >
-            <Handshake className="h-12 w-12 text-amber-400" />
+          <div className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
+            <Handshake className="h-12 w-12 text-amber-500 dark:text-amber-400" />
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] italic text-amber-400">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] italic text-amber-600 dark:text-amber-400">
                 COMMERCIAL RIGHTS & SPONSOR ENGINE
               </span>
-              <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[9px] font-mono">
+              <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20 text-[9px] font-mono">
                 SCHOOL SPORTS FOUNDATION
               </Badge>
             </div>
             <h1 
-              className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-none" 
-              style={{ fontFamily: D.head, color: D.textPrimary }}
+              className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-none text-zinc-900 dark:text-white" 
+              style={{ fontFamily: D.head }}
             >
-              SPONSOR & <span className="text-amber-400">COMMERCIAL RIGHTS</span>
+              SPONSOR & <span className="text-amber-500 dark:text-amber-400">COMMERCIAL RIGHTS</span>
             </h1>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] mt-3 opacity-60 italic" style={{ color: D.textMuted }}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] mt-3 opacity-60 italic text-zinc-500 dark:text-zinc-400">
               PORTFOLIO MANAGEMENT • LIVE IMPRESSION TELEMETRY • AD PLACEMENT OVERLAYS • PROPOSAL GENERATOR
             </p>
           </div>
 
           <div className="lg:ml-auto grid grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto">
-            <div className="p-4 rounded-2xl border bg-black/20 text-center" style={{ borderColor: D.border }}>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40 block mb-1">TOTAL PORTFOLIO</span>
-              <div className="text-xl font-black text-amber-400 font-mono">R {(totalPortfolioValue / 1000).toFixed(0)}k</div>
+            <div className="p-4 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20 text-center">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white/40 block mb-1">TOTAL PORTFOLIO</span>
+              <div className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">R {(totalPortfolioValue / 1000).toFixed(0)}k</div>
             </div>
-            <div className="p-4 rounded-2xl border bg-black/20 text-center" style={{ borderColor: D.border }}>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40 block mb-1">LIVE IMPRESSIONS</span>
-              <div className="text-xl font-black text-emerald-400 font-mono">{(totalImpressions / 1000000).toFixed(2)}M</div>
+            <div className="p-4 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20 text-center">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white/40 block mb-1">LIVE IMPRESSIONS</span>
+              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{(totalImpressions / 1000000).toFixed(2)}M</div>
             </div>
-            <div className="p-4 rounded-2xl border bg-black/20 text-center col-span-2 md:col-span-1" style={{ borderColor: D.border }}>
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40 block mb-1">EST. DELIVERED ROI</span>
-              <div className="text-xl font-black text-sky-400 font-mono">3.8x</div>
+            <div className="p-4 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20 text-center col-span-2 md:col-span-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white/40 block mb-1">EST. DELIVERED ROI</span>
+              <div className="text-xl font-black text-sky-600 dark:text-sky-400 font-mono">3.8x</div>
             </div>
           </div>
         </div>
 
         {/* Portfolio Revenue Weight Bar */}
-        <div className="mt-8 pt-6 border-t space-y-2" style={{ borderColor: D.border }}>
-          <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400">
+        <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-white/10 space-y-2">
+          <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
             <span>COMMERCIAL ASSET WEIGHTING</span>
             <span>R {totalPortfolioValue.toLocaleString()} TOTAL CAPITAL RAISED</span>
           </div>
-          <div className="w-full h-3 rounded-full overflow-hidden flex bg-black/40 border border-white/5">
+          <div className="w-full h-3 rounded-full overflow-hidden flex bg-zinc-100 dark:bg-black/40 border border-zinc-200 dark:border-white/5">
             {sponsorsList.map((s, i) => (
               <div 
                 key={s.id || i}
@@ -203,13 +197,12 @@ export default function SponsorsPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-3 p-2 rounded-2xl border" style={{ background: D.surf1, borderColor: D.border }}>
+      <div className="flex flex-wrap items-center gap-3 p-2 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10]">
         <button
           onClick={() => setActiveTab('telemetry')}
           className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === 'telemetry' ? 'text-black shadow-xl' : 'opacity-40 hover:opacity-100'
+            activeTab === 'telemetry' ? 'bg-amber-500 text-black shadow-xl' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          style={{ background: activeTab === 'telemetry' ? D.amber : 'transparent', color: activeTab === 'telemetry' ? 'black' : D.textPrimary }}
         >
           <TrendingUp className="w-4 h-4" /> Commercial Telemetry
         </button>
@@ -217,9 +210,8 @@ export default function SponsorsPage() {
         <button
           onClick={() => setActiveTab('directory')}
           className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === 'directory' ? 'text-black shadow-xl' : 'opacity-40 hover:opacity-100'
+            activeTab === 'directory' ? 'bg-sky-500 text-black shadow-xl' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          style={{ background: activeTab === 'directory' ? D.sky : 'transparent', color: activeTab === 'directory' ? 'black' : D.textPrimary }}
         >
           <Building2 className="w-4 h-4" /> Partners & Contracts ({sponsorsList.length})
         </button>
@@ -227,9 +219,8 @@ export default function SponsorsPage() {
         <button
           onClick={() => setActiveTab('placements')}
           className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === 'placements' ? 'text-white shadow-xl' : 'opacity-40 hover:opacity-100'
+            activeTab === 'placements' ? 'bg-indigo-600 text-white shadow-xl' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          style={{ background: activeTab === 'placements' ? D.indigo : 'transparent', color: activeTab === 'placements' ? 'white' : D.textPrimary }}
         >
           <Eye className="w-4 h-4" /> Digital Ad Overlays ({MOCK_ASSET_PLACEMENTS.length})
         </button>
@@ -237,9 +228,8 @@ export default function SponsorsPage() {
         <button
           onClick={() => setActiveTab('proposal')}
           className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === 'proposal' ? 'text-black shadow-xl' : 'opacity-40 hover:opacity-100'
+            activeTab === 'proposal' ? 'bg-emerald-500 text-black shadow-xl' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
           }`}
-          style={{ background: activeTab === 'proposal' ? D.emerald : 'transparent', color: activeTab === 'proposal' ? 'black' : D.textPrimary }}
         >
           <FileText className="w-4 h-4" /> Proposal Generator
         </button>
@@ -250,58 +240,58 @@ export default function SponsorsPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left 2 Cols: Impression Breakdown by Sponsor */}
-            <div className="lg:col-span-2 p-8 rounded-[2.5rem] border space-y-6 shadow-2xl" style={{ background: D.surf1, borderColor: D.border }}>
-              <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: D.border }}>
+            <div className="lg:col-span-2 p-8 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-4">
                 <div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">BRAND EXPOSURE METRICS</span>
-                  <h3 className="text-xl font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">BRAND EXPOSURE METRICS</span>
+                  <h3 className="text-xl font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                     IMPRESSION TELEMETRY & ENGAGEMENT
                   </h3>
                 </div>
-                <Badge className="bg-emerald-500/10 text-emerald-300 font-mono text-[9px]">REAL-TIME SYNC</Badge>
+                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 font-mono text-[9px]">REAL-TIME SYNC</Badge>
               </div>
 
               <div className="space-y-4">
                 {MOCK_IMPRESSION_TELEMETRY.map((t) => (
-                  <div key={t.sponsorId} className="p-6 rounded-2xl border bg-black/20 border-white/10 space-y-4">
+                  <div key={t.sponsorId} className="p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20 space-y-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-sm">
+                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-sm">
                           {t.sponsorName.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <h4 className="text-base font-bold text-white">{t.sponsorName}</h4>
-                          <Badge className="bg-white/5 text-zinc-400 font-mono text-[9px]">{t.tier}</Badge>
+                          <h4 className="text-base font-bold text-zinc-900 dark:text-white">{t.sponsorName}</h4>
+                          <Badge className="bg-zinc-200 dark:bg-white/5 text-zinc-700 dark:text-zinc-400 font-mono text-[9px]">{t.tier}</Badge>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-6">
                         <div className="text-right">
-                          <span className="text-sm font-black text-amber-400 font-mono block">
+                          <span className="text-sm font-black text-amber-600 dark:text-amber-400 font-mono block">
                             {t.impressionsTotal.toLocaleString()} Views
                           </span>
-                          <span className="text-[10px] text-zinc-400 font-mono">CTR: {t.ctrPct}% ({t.clickThroughs.toLocaleString()} clicks)</span>
+                          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">CTR: {t.ctrPct}% ({t.clickThroughs.toLocaleString()} clicks)</span>
                         </div>
                         <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-right">
-                          <span className="text-[9px] font-mono text-emerald-300 block">Est. Value</span>
-                          <span className="text-xs font-black text-emerald-400 font-mono">R {t.estimatedValueDelivered.toLocaleString()}</span>
+                          <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-300 block">Est. Value</span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">R {t.estimatedValueDelivered.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Channels Breakdown */}
                     <div className="grid grid-cols-3 gap-3 pt-2">
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
-                        <span className="text-[9px] text-zinc-400 font-mono block">Scorecard Banner</span>
-                        <span className="text-xs font-bold text-white font-mono">{t.impressionsScorecard.toLocaleString()}</span>
+                      <div className="p-3 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/5 text-center">
+                        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block">Scorecard Banner</span>
+                        <span className="text-xs font-bold text-zinc-900 dark:text-white font-mono">{t.impressionsScorecard.toLocaleString()}</span>
                       </div>
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
-                        <span className="text-[9px] text-zinc-400 font-mono block">Broadcast Stream</span>
-                        <span className="text-xs font-bold text-sky-400 font-mono">{t.impressionsBroadcast.toLocaleString()}</span>
+                      <div className="p-3 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/5 text-center">
+                        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block">Broadcast Stream</span>
+                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 font-mono">{t.impressionsBroadcast.toLocaleString()}</span>
                       </div>
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
-                        <span className="text-[9px] text-zinc-400 font-mono block">Parent App Roster</span>
-                        <span className="text-xs font-bold text-indigo-400 font-mono">{t.impressionsApp.toLocaleString()}</span>
+                      <div className="p-3 rounded-xl bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/5 text-center">
+                        <span className="text-[9px] text-zinc-500 dark:text-zinc-400 font-mono block">Parent App Roster</span>
+                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 font-mono">{t.impressionsApp.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -311,77 +301,77 @@ export default function SponsorsPage() {
 
             {/* Right Col: ROI Benchmarks & Impression Channels */}
             <div className="space-y-6">
-              <div className="p-6 rounded-[2.5rem] border space-y-4" style={{ background: D.surf1, borderColor: D.border }}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-sky-400">COST PER THOUSAND (CPM)</span>
-                <h4 className="text-lg font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+              <div className="p-6 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-4 shadow-xl">
+                <span className="text-[9px] font-black uppercase tracking-widest text-sky-600 dark:text-sky-400">COST PER THOUSAND (CPM)</span>
+                <h4 className="text-lg font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                   EFFICIENCY COMPARISON
                 </h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                   SCRBRD Live Scorecards deliver direct targeted reach to school sports parents and alumni at a fraction of traditional TV ad costs.
                 </p>
 
                 <div className="space-y-3 pt-2">
                   <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-emerald-300 block">SCRBRD Live Sports</span>
-                      <span className="text-[9px] font-mono text-zinc-400">Direct Parent Engagement</span>
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">SCRBRD Live Sports</span>
+                      <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400">Direct Parent Engagement</span>
                     </div>
-                    <span className="text-sm font-black text-emerald-400 font-mono">R 0.60 CPM</span>
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">R 0.60 CPM</span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/5 flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-zinc-300 block">Traditional Broadcast TV</span>
-                      <span className="text-[9px] font-mono text-zinc-400">Mass Broad Audience</span>
+                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">Traditional Broadcast TV</span>
+                      <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400">Mass Broad Audience</span>
                     </div>
-                    <span className="text-sm font-bold text-zinc-400 font-mono">R 2.50 CPM</span>
+                    <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400 font-mono">R 2.50 CPM</span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center">
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/5 flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-zinc-300 block">Social Media Banners</span>
-                      <span className="text-[9px] font-mono text-zinc-400">Generic Ad Placement</span>
+                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">Social Media Banners</span>
+                      <span className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400">Generic Ad Placement</span>
                     </div>
-                    <span className="text-sm font-bold text-zinc-400 font-mono">R 1.80 CPM</span>
+                    <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400 font-mono">R 1.80 CPM</span>
                   </div>
                 </div>
               </div>
 
               {/* Live Channel Share */}
-              <div className="p-6 rounded-[2.5rem] border space-y-4" style={{ background: D.surf1, borderColor: D.border }}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">PLACEMENT DISTRIBUTION</span>
-                <h4 className="text-lg font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+              <div className="p-6 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-4 shadow-xl">
+                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">PLACEMENT DISTRIBUTION</span>
+                <h4 className="text-lg font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                   TOP AD PLACEMENT CHANNELS
                 </h4>
 
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono text-zinc-300">
+                    <div className="flex justify-between text-xs font-mono text-zinc-700 dark:text-zinc-300">
                       <span>Live Scorecards & Pitch Maps</span>
-                      <span className="text-amber-400">45%</span>
+                      <span className="text-amber-600 dark:text-amber-400">45%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-black/40 overflow-hidden">
-                      <div className="h-full bg-amber-400" style={{ width: '45%' }} />
+                    <div className="h-2 rounded-full bg-zinc-100 dark:bg-black/40 overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: '45%' }} />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono text-zinc-300">
+                    <div className="flex justify-between text-xs font-mono text-zinc-700 dark:text-zinc-300">
                       <span>OBS Live Broadcast Stream</span>
-                      <span className="text-sky-400">32%</span>
+                      <span className="text-sky-600 dark:text-sky-400">32%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-black/40 overflow-hidden">
-                      <div className="h-full bg-sky-400" style={{ width: '32%' }} />
+                    <div className="h-2 rounded-full bg-zinc-100 dark:bg-black/40 overflow-hidden">
+                      <div className="h-full bg-sky-500" style={{ width: '32%' }} />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono text-zinc-300">
+                    <div className="flex justify-between text-xs font-mono text-zinc-700 dark:text-zinc-300">
                       <span>Parent & Alumni Roster App</span>
-                      <span className="text-indigo-400">23%</span>
+                      <span className="text-indigo-600 dark:text-indigo-400">23%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-black/40 overflow-hidden">
-                      <div className="h-full bg-indigo-400" style={{ width: '23%' }} />
+                    <div className="h-2 rounded-full bg-zinc-100 dark:bg-black/40 overflow-hidden">
+                      <div className="h-full bg-indigo-500" style={{ width: '23%' }} />
                     </div>
                   </div>
                 </div>
@@ -394,7 +384,7 @@ export default function SponsorsPage() {
       {/* TAB 2: CORPORATE PARTNERS & CONTRACT MANAGER */}
       {activeTab === 'directory' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl border bg-black/20" style={{ borderColor: D.border }}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/20 shadow-lg">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-400" />
@@ -402,14 +392,14 @@ export default function SponsorsPage() {
                   placeholder="Search corporate partner or industry..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-black border-white/10 text-xs text-white rounded-xl w-64"
+                  className="pl-9 bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl w-64"
                 />
               </div>
 
               <select
                 value={selectedTierFilter}
                 onChange={e => setSelectedTierFilter(e.target.value)}
-                className="p-2.5 rounded-xl bg-black border border-white/10 text-xs text-white font-mono"
+                className="p-2.5 rounded-xl bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white font-mono outline-none"
               >
                 <option value="ALL">All Commercial Tiers</option>
                 <option value="TITLE_PARTNER">Title Partners</option>
@@ -429,46 +419,46 @@ export default function SponsorsPage() {
 
           {/* Add Sponsor Modal */}
           {showAddModal && (
-            <div className="p-8 rounded-3xl border bg-black/50 border-amber-500/30 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <h4 className="text-base font-black text-white uppercase italic">Add New Corporate Partner</h4>
-                <Button variant="ghost" onClick={() => setShowAddModal(false)} className="text-xs text-zinc-400">Close</Button>
+            <div className="p-8 rounded-3xl border border-zinc-200 dark:border-amber-500/30 bg-white dark:bg-black/50 space-y-6 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-zinc-200 dark:border-white/10 pb-4">
+                <h4 className="text-base font-black text-zinc-900 dark:text-white uppercase italic">Add New Corporate Partner</h4>
+                <Button variant="ghost" onClick={() => setShowAddModal(false)} className="text-xs text-zinc-500 dark:text-zinc-400">Close</Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Company Name</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Company Name</label>
                   <Input 
                     placeholder="e.g. Discovery Vitality" 
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Industry Sector</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Industry Sector</label>
                   <Input 
                     placeholder="e.g. Financial Services" 
                     value={newIndustry}
                     onChange={e => setNewIndustry(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Annual Investment (R)</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Annual Investment (R)</label>
                   <Input 
                     type="number"
                     value={newContribution}
                     onChange={e => setNewContribution(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white font-mono rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white font-mono rounded-xl"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Partnership Tier</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Partnership Tier</label>
                   <select
                     value={newTier}
                     onChange={e => setNewTier(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-black border border-white/10 text-xs text-white font-mono"
+                    className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white font-mono"
                   >
                     <option value="TITLE_PARTNER">Title Partner (R 500k+)</option>
                     <option value="BROADCAST_PARTNER">Broadcast Partner (R 250k+)</option>
@@ -477,21 +467,21 @@ export default function SponsorsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Website URL</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Website URL</label>
                   <Input 
                     placeholder="https://..." 
                     value={newWebsite}
                     onChange={e => setNewWebsite(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Contact Email</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Contact Email</label>
                   <Input 
                     placeholder="sponsorships@company.com" 
                     value={newContactEmail}
                     onChange={e => setNewContactEmail(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl"
                   />
                 </div>
               </div>
@@ -507,70 +497,70 @@ export default function SponsorsPage() {
             {filteredSponsors.map((s) => (
               <div 
                 key={s.id}
-                className="p-6 rounded-3xl border bg-black/30 border-white/10 space-y-6 flex flex-col justify-between hover:border-amber-500/40 transition-all"
+                className="p-6 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/30 space-y-6 flex flex-col justify-between hover:border-amber-500/40 transition-all shadow-lg"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-bold text-amber-400 text-lg">
+                      <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center font-bold text-amber-600 dark:text-amber-400 text-lg">
                         {s.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="text-lg font-bold text-white leading-snug">{s.name}</h4>
-                        <span className="text-xs text-zinc-400 block font-mono">{s.industry}</span>
+                        <h4 className="text-lg font-bold text-zinc-900 dark:text-white leading-snug">{s.name}</h4>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400 block font-mono">{s.industry}</span>
                       </div>
                     </div>
 
                     <button 
                       onClick={() => handleToggleSponsorStatus(s.id)}
                       className={`px-3 py-1 rounded-full text-[9px] font-mono font-bold transition-all ${
-                        s.active ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-500'
+                        s.active ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-500'
                       }`}
                     >
                       {s.active ? 'ACTIVE' : 'INACTIVE'}
                     </button>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
-                    <span className="text-xs text-zinc-400 font-mono">Annual Rights Fee</span>
-                    <span className="text-lg font-black text-amber-400 font-mono">
+                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/5 flex items-center justify-between">
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">Annual Rights Fee</span>
+                    <span className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono">
                       R {(s.contributionAmount || 0).toLocaleString()}
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-zinc-400 font-mono">
+                  <div className="space-y-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
                     <div className="flex justify-between">
                       <span>Tier:</span>
-                      <span className="text-white font-bold">{s.tier || 'SPONSOR'}</span>
+                      <span className="text-zinc-900 dark:text-white font-bold">{s.tier || 'SPONSOR'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Contract Expiry:</span>
-                      <span className="text-zinc-300">{s.contractExpiry || '2026-12-31'}</span>
+                      <span className="text-zinc-700 dark:text-zinc-300">{s.contractExpiry || '2026-12-31'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Contact:</span>
-                      <span className="text-zinc-300 truncate max-w-[160px]">{s.contactPerson || 'Sponsorship Manager'}</span>
+                      <span className="text-zinc-700 dark:text-zinc-300 truncate max-w-[160px]">{s.contactPerson || 'Sponsorship Manager'}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-white/10">
                   {s.website ? (
                     <a 
                       href={s.website} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-xs text-amber-400 hover:underline flex items-center gap-1 font-mono"
+                      className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-mono"
                     >
                       <Globe className="w-3.5 h-3.5" /> Website <ExternalLink className="w-3 h-3" />
                     </a>
                   ) : (
-                    <span className="text-xs text-zinc-500 italic">No URL</span>
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500 italic">No URL</span>
                   )}
 
                   <button 
                     onClick={() => handleDeleteSponsor(s.id)}
-                    className="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all"
+                    className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -585,25 +575,25 @@ export default function SponsorsPage() {
       {activeTab === 'placements' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           {/* Live Preview Box */}
-          <div className="p-8 rounded-[2.5rem] border space-y-6 shadow-2xl" style={{ background: D.surf1, borderColor: D.border }}>
-            <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: D.border }}>
+          <div className="p-8 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-4">
               <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">BROADCAST & APP OVERLAYS</span>
-                <h3 className="text-xl font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">BROADCAST & APP OVERLAYS</span>
+                <h3 className="text-xl font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                   LIVE AD PLACEMENT INSPECTOR
                 </h3>
               </div>
-              <Badge className="bg-indigo-500/10 text-indigo-300 font-mono text-[9px]">OBS & SCORECARD ENGINE</Badge>
+              <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono text-[9px]">OBS & SCORECARD ENGINE</Badge>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Placement Mockup 1: Score Bug */}
-              <div className="p-6 rounded-3xl border bg-black/40 border-indigo-500/30 space-y-4">
+              <div className="p-6 rounded-3xl border border-indigo-500/30 bg-zinc-50 dark:bg-black/40 space-y-4">
                 <div className="flex justify-between items-center">
-                  <Badge className="bg-indigo-500/20 text-indigo-300 font-mono text-[9px]">PLACEMENT #1: SCORE BUG</Badge>
-                  <span className="text-xs text-emerald-400 font-mono">Standard Bank (Title Partner)</span>
+                  <Badge className="bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-mono text-[9px]">PLACEMENT #1: SCORE BUG</Badge>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono">Standard Bank (Title Partner)</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-700 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-7 px-3 bg-blue-700 text-white text-xs font-black rounded flex items-center">
                       ST STITHIANS 1st XI
@@ -617,12 +607,12 @@ export default function SponsorsPage() {
               </div>
 
               {/* Placement Mockup 2: Wagon Wheel */}
-              <div className="p-6 rounded-3xl border bg-black/40 border-indigo-500/30 space-y-4">
+              <div className="p-6 rounded-3xl border border-indigo-500/30 bg-zinc-50 dark:bg-black/40 space-y-4">
                 <div className="flex justify-between items-center">
-                  <Badge className="bg-indigo-500/20 text-indigo-300 font-mono text-[9px]">PLACEMENT #2: WAGON WHEEL</Badge>
-                  <span className="text-xs text-sky-400 font-mono">Investec (Broadcast Partner)</span>
+                  <Badge className="bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-mono text-[9px]">PLACEMENT #2: WAGON WHEEL</Badge>
+                  <span className="text-xs text-sky-600 dark:text-sky-400 font-mono">Investec (Broadcast Partner)</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-700 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-sky-400" />
                     <span className="text-xs font-bold text-white">Interactive Pitch & Shot Map</span>
@@ -636,30 +626,30 @@ export default function SponsorsPage() {
           </div>
 
           {/* Placements Inventory Table */}
-          <div className="p-8 rounded-[2.5rem] border space-y-6 shadow-2xl" style={{ background: D.surf1, borderColor: D.border }}>
-            <h4 className="text-lg font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+          <div className="p-8 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-6 shadow-2xl">
+            <h4 className="text-lg font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
               COMMERCIAL PLACEMENT INVENTORY
             </h4>
 
             <div className="space-y-4">
               {MOCK_ASSET_PLACEMENTS.map((ap) => (
-                <div key={ap.id} className="p-6 rounded-2xl border bg-black/20 border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div key={ap.id} className="p-6 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
-                      <Tv className="w-5 h-5 text-indigo-400" />
+                      <Tv className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-white">{ap.placementName}</h4>
-                      <span className="text-xs text-zinc-400 font-mono">Location Code: {ap.locationCode}</span>
+                      <h4 className="text-base font-bold text-zinc-900 dark:text-white">{ap.placementName}</h4>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">Location Code: {ap.locationCode}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <span className="text-xs font-bold text-white block">{ap.currentSponsorName}</span>
-                      <span className="text-[10px] text-zinc-400 font-mono">{ap.impressions28Days.toLocaleString()} Views / 28 Days</span>
+                      <span className="text-xs font-bold text-zinc-900 dark:text-white block">{ap.currentSponsorName}</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">{ap.impressions28Days.toLocaleString()} Views / 28 Days</span>
                     </div>
-                    <Badge className="bg-emerald-500/20 text-emerald-300 text-xs font-mono">{ap.status}</Badge>
+                    <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-mono">{ap.status}</Badge>
                   </div>
                 </div>
               ))}
@@ -673,30 +663,30 @@ export default function SponsorsPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Form Builder */}
-            <div className="p-8 rounded-[2.5rem] border space-y-6 shadow-2xl" style={{ background: D.surf1, borderColor: D.border }}>
+            <div className="p-8 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] space-y-6 shadow-2xl">
               <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">FOUNDATION PITCH DECK BUILDER</span>
-                <h3 className="text-2xl font-black uppercase italic text-white" style={{ fontFamily: D.head }}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">FOUNDATION PITCH DECK BUILDER</span>
+                <h3 className="text-2xl font-black uppercase italic text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                   SPONSORSHIP PROPOSAL GENERATOR
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Target Corporate Prospect</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Target Corporate Prospect</label>
                   <Input 
                     value={proposalProspect}
                     onChange={e => setProposalProspect(e.target.value)}
-                    className="bg-black border-white/10 text-xs text-white rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white rounded-xl"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Target Rights Tier</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Target Rights Tier</label>
                   <select
                     value={proposalTier}
                     onChange={e => setProposalTier(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-black border border-white/10 text-xs text-white font-mono"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white font-mono"
                   >
                     <option value="TITLE_PARTNER">Title Partner (R 500,000 / yr)</option>
                     <option value="BROADCAST_PARTNER">Broadcast Partner (R 250,000 / yr)</option>
@@ -706,21 +696,21 @@ export default function SponsorsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-zinc-400 block mb-1">Contract Duration (Years)</label>
+                  <label className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 block mb-1">Contract Duration (Years)</label>
                   <Input 
                     type="number"
                     min={1}
                     max={5}
                     value={proposalDurationYears}
                     onChange={e => setProposalDurationYears(parseInt(e.target.value) || 1)}
-                    className="bg-black border-white/10 text-xs text-white font-mono rounded-xl"
+                    className="bg-zinc-50 dark:bg-black border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white font-mono rounded-xl"
                   />
                 </div>
               </div>
             </div>
 
             {/* Generated Proposal Sheet */}
-            <div className="p-8 rounded-[2.5rem] border bg-gradient-to-br from-slate-900 via-black to-slate-950 border-amber-500/30 space-y-6 shadow-2xl relative overflow-hidden">
+            <div className="p-8 rounded-[2.5rem] border bg-gradient-to-br from-zinc-900 via-zinc-950 to-black dark:from-slate-900 dark:via-black dark:to-slate-950 border-amber-500/30 space-y-6 shadow-2xl relative overflow-hidden text-white">
               <div className="flex justify-between items-start border-b border-white/10 pb-4">
                 <div>
                   <Badge className="bg-amber-500/20 text-amber-300 font-mono text-[9px] mb-2">OFFICIAL PROPOSAL DRAFT</Badge>

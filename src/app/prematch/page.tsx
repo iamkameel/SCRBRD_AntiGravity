@@ -183,11 +183,12 @@ export default function StandalonePreMatchPage() {
           matchId={currentFixture.id}
           homeTeamName={currentFixture.home}
           awayTeamName={currentFixture.away}
+          hideHeader={true}
         />
       )}
 
       {activeTab === 'selection' && (
-        <MatchDaySquadManager />
+        <MatchDaySquadManager hideHeader={true} />
       )}
 
       {activeTab === 'ground' && (

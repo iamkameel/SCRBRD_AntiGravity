@@ -72,10 +72,10 @@ export default function AdminDashboard() {
              <Terminal className="h-7 w-7 text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
               Command <span style={{ color: D.indigo }}>Centre</span>
             </h1>
-            <p className="text-xs font-normal text-slate-400 mt-1.5 leading-relaxed" style={{ fontFamily: D.sans }}>
+            <p className="text-xs font-normal text-slate-400 mt-1 leading-relaxed" style={{ fontFamily: D.sans }}>
               Global oversight and system architecture governance · Real-time telemetry active
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
                    <Globe className="h-4.5 w-4.5" style={{ color: D.indigo }} />
                 </div>
                 <div>
-                   <h3 className="text-lg font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Global OS Event Stream</h3>
+                   <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Global OS Event Stream</h3>
                    <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Real-time cross-school telemetry</p>
                 </div>
               </div>

@@ -12,7 +12,7 @@ import type { LiveMatchState, MilestoneAlert } from '@/services/liveMatchSync';
  * exactly what the stream receives.
  */
 
-export const OVERLAY_MODES = ['lower-third', 'full-scorecard', 'partnership', 'bowler-card', 'target-bar', 'hero'] as const;
+export const OVERLAY_MODES = ['lower-third', 'full-scorecard', 'partnership', 'bowler-card', 'target-bar', 'hero', 'manhattan', 'wagon-wheel'] as const;
 export type OverlayMode = typeof OVERLAY_MODES[number];
 
 export interface OverlayState {
@@ -163,6 +163,59 @@ export function OverlayGraphic({ state }: { state: OverlayState }) {
           <span className="text-white font-bold">{s.battingTeam} need <span className="text-amber-400">{s.requiredRuns} runs</span>{s.remainingBalls !== undefined && <> from <span className="text-cyan-400">{s.remainingBalls} balls</span></>}</span>
         </div>
         <div className="text-slate-400">Target: <span className="text-white font-bold">{s.target}</span>{s.requiredRunRate !== undefined && <> • RRR: <span className="text-emerald-400 font-bold">{s.requiredRunRate.toFixed(2)} rpo</span></>}</div>
+      </div>
+    );
+  }
+
+  if (s.type === 'manhattan') {
+    return (
+      <div className="w-full max-w-xl mx-auto bg-slate-950/95 border border-white/15 rounded-2xl p-5 shadow-2xl backdrop-blur-2xl space-y-3 font-mono">
+        <div className="flex justify-between items-center border-b border-white/10 pb-2">
+          <div className="text-xs font-bold text-indigo-400 uppercase tracking-widest">MANHATTAN OVER-BY-OVER</div>
+          <div className="text-xs text-white font-bold">{s.battingTeam} · {s.runs}/{s.wickets}</div>
+        </div>
+        <div className="h-28 flex items-end justify-between gap-1 pt-4 pb-1 px-2 border-b border-white/10">
+          {[8, 4, 12, 6, 15, 9, 3, 11, 14, 7, 5, 18, 10, 8, 6].map((runs, idx) => (
+            <div key={idx} className="flex-1 flex flex-col items-center gap-1 group">
+              <span className="text-[8px] font-bold text-amber-400 opacity-80">{runs}</span>
+              <div 
+                className="w-full bg-gradient-to-t from-indigo-600 to-cyan-400 rounded-t-sm transition-all" 
+                style={{ height: `${(runs / 20) * 100}%` }} 
+              />
+              <span className="text-[8px] text-slate-500">{idx + 1}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between text-[10px] text-slate-400 pt-1">
+          <span>Current RR: <b className="text-white">{(s.runs / Math.max(1, parseFloat(s.overs))).toFixed(2)}</b></span>
+          <span>Max Over: <b className="text-amber-400">18 Runs (Over 12)</b></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (s.type === 'wagon-wheel') {
+    return (
+      <div className="w-full max-w-sm mx-auto bg-slate-950/95 border border-white/15 rounded-2xl p-5 shadow-2xl backdrop-blur-2xl space-y-3 font-mono text-center">
+        <div className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center justify-center gap-2">
+          <span>SHOT SPATIAL CLUSTER</span>
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        </div>
+        <div className="relative w-44 h-44 mx-auto rounded-full border-2 border-emerald-500/40 bg-emerald-950/30 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-4 rounded-full border border-emerald-500/20" />
+          <div className="absolute w-2 h-10 bg-amber-500/40 rounded-sm" />
+          {/* Spatial Shot Vector Lines */}
+          <div className="absolute w-full h-[1px] bg-sky-400/50 rotate-45 transform origin-center" />
+          <div className="absolute w-full h-[1px] bg-rose-400/50 -rotate-30 transform origin-center" />
+          <div className="absolute w-full h-[1px] bg-emerald-400/60 rotate-120 transform origin-center" />
+          <div className="absolute w-full h-[1px] bg-amber-400/70 -rotate-75 transform origin-center" />
+          <div className="w-4 h-4 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b] z-10" />
+        </div>
+        <div className="text-xs text-white font-bold">{s.striker.name} ({s.striker.runs}* off {s.striker.balls}b)</div>
+        <div className="flex justify-around text-[10px] text-slate-400 border-t border-white/10 pt-2">
+          <span>Off-side: <b className="text-sky-400">62%</b></span>
+          <span>Leg-side: <b className="text-rose-400">38%</b></span>
+        </div>
       </div>
     );
   }

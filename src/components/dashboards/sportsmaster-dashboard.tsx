@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import MetricCard from '../dashboard/MetricCard';
-import FixtureCentreCard from '../dashboard/FixtureCentreCard';
 import { Shield, CalendarDays, Users, CheckCircle2, History, Activity, TrendingUp, ArrowUpRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,7 +88,7 @@ export default function SportsmasterDashboard() {
              <Shield className="h-7 w-7 text-indigo-400" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
               Sportsmaster <span className="text-indigo-400">Command</span>
             </h1>
             <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>
@@ -285,10 +285,82 @@ export default function SportsmasterDashboard() {
         </div>
       </div>
 
-      {/* Fixture Centre Integration */}
+      {/* Quick Operations & Match Dispatcher */}
       <div className="space-y-4">
-        <SectionHeader title="Match Monitor" sub="Institutional fixture hub & scheduling interface." />
-        <FixtureCentreCard role="Sports-Master" maxMatches={3} schoolId={person?.schoolId} />
+        <SectionHeader title="Quick Operations & Match Dispatch" sub="Direct operational shortcuts for departmental management." />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link href="/fixtures/create">
+            <div 
+              className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-indigo-500/50 hover:bg-white/[0.03] group cursor-pointer"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-400">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Schedule Fixture</h4>
+                <p className="text-[10px] text-slate-400">Create & allocate venues</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/prematch">
+            <div 
+              className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-emerald-500/50 hover:bg-white/[0.03] group cursor-pointer"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Pre-Match Cockpit</h4>
+                <p className="text-[10px] text-slate-400">Readiness & team lineups</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/scoring">
+            <div 
+              className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-amber-500/50 hover:bg-white/[0.03] group cursor-pointer"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                  <Activity className="h-5 w-5" />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Live Scorer Console</h4>
+                <p className="text-[10px] text-slate-400">Ball-by-ball match engine</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/coach/development">
+            <div 
+              className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-sky-500/50 hover:bg-white/[0.03] group cursor-pointer"
+              style={{ background: D.surf1, borderColor: D.border }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-400">
+                  <Users className="h-5 w-5" />
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-sky-400 transition-colors" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Coach & Skill Engine</h4>
+                <p className="text-[10px] text-slate-400">Drill matrix & development</p>
+              </div>
+            </div>
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -42,8 +42,8 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up h-64 flex items-center justify-center">
-          <p className="text-[10px] uppercase font-black tracking-[0.2em] text-white/30" style={{ fontFamily: D.mono }}>Loading Intel...</p>
+        <div className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up h-64 flex items-center justify-center shadow-sm">
+          <p className="text-[10px] uppercase font-black tracking-[0.2em] text-zinc-400 dark:text-white/30" style={{ fontFamily: D.mono }}>Loading Intel...</p>
         </div>
       </div>
     );
@@ -52,9 +52,9 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
   if (performanceData.length === 0) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up h-64 flex flex-col items-center justify-center gap-4">
-          <Activity className="h-8 w-8 text-white/10" />
-          <p className="text-[10px] uppercase font-black tracking-[0.2em] text-white/30" style={{ fontFamily: D.mono }}>Insufficient Data for Analysis</p>
+        <div className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up h-64 flex flex-col items-center justify-center gap-4 shadow-sm">
+          <Activity className="h-8 w-8 text-zinc-300 dark:text-white/10" />
+          <p className="text-[10px] uppercase font-black tracking-[0.2em] text-zinc-400 dark:text-white/30" style={{ fontFamily: D.mono }}>Insufficient Data for Analysis</p>
         </div>
       </div>
     );
@@ -63,12 +63,12 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Batting Form - Runs */}
-      <div className="col-span-1 lg:col-span-2 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up">
-        <div className="p-8 border-b border-white/10 flex items-center justify-between">
-          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-primary" style={{ fontFamily: D.mono }}>
+      <div className="col-span-1 lg:col-span-2 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up shadow-sm">
+        <div className="p-8 border-b border-zinc-200 dark:border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-[#22c55e]" style={{ fontFamily: D.mono }}>
             Career Runway (Batting)
           </h3>
-          <Target className="h-4 w-4 text-white/20" />
+          <Target className="h-4 w-4 text-zinc-400 dark:text-white/20" />
         </div>
         <div className="p-8">
           <div className="h-[300px] w-full">
@@ -80,9 +80,9 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
-                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" vertical={false} />
+                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
+                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(10,10,10,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '1rem', backdropFilter: 'blur(10px)', color: 'white' }}
                   itemStyle={{ color: '#10b981', fontFamily: D.head, fontWeight: 900 }}
@@ -104,20 +104,20 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
       </div>
 
       {/* Batting Average Trend */}
-      <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up" style={{ animationDelay: '100ms' }}>
-        <div className="p-8 border-b border-white/10 flex items-center justify-between">
-          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: D.mono }}>
+      <div className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up shadow-sm" style={{ animationDelay: '100ms' }}>
+        <div className="p-8 border-b border-zinc-200 dark:border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-white/80" style={{ fontFamily: D.mono }}>
             Average Control
           </h3>
-          <Activity className="h-4 w-4 text-white/20" />
+          <Activity className="h-4 w-4 text-zinc-400 dark:text-white/20" />
         </div>
         <div className="p-8">
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
-                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" vertical={false} />
+                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
+                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(10,10,10,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '1rem', backdropFilter: 'blur(10px)', color: 'white' }}
                   itemStyle={{ color: '#3b82f6', fontFamily: D.head, fontWeight: 900 }}
@@ -139,25 +139,25 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
       </div>
 
       {/* Strike Rate */}
-      <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up" style={{ animationDelay: '200ms' }}>
-        <div className="p-8 border-b border-white/10 flex items-center justify-between">
-          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/80" style={{ fontFamily: D.mono }}>
+      <div className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up shadow-sm" style={{ animationDelay: '200ms' }}>
+        <div className="p-8 border-b border-zinc-200 dark:border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-white/80" style={{ fontFamily: D.mono }}>
             Tempo (Strike Rate)
           </h3>
-          <Activity className="h-4 w-4 text-white/20" />
+          <Activity className="h-4 w-4 text-zinc-400 dark:text-white/20" />
         </div>
         <div className="p-8">
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
-                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" vertical={false} />
+                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
+                <YAxis fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(10,10,10,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '1rem', backdropFilter: 'blur(10px)', color: 'white' }}
                   itemStyle={{ color: '#f59e0b', fontFamily: D.head, fontWeight: 900 }}
                   labelStyle={{ color: 'rgba(255,255,255,0.5)', fontFamily: D.mono, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                  cursor={{ fill: 'rgba(150,150,150,0.05)' }}
                 />
                 <Bar dataKey="strikeRate" name="Strike Rate" fill="#f59e0b" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -167,26 +167,26 @@ export function PlayerPerformanceCharts({ player }: PlayerPerformanceChartsProps
       </div>
 
       {/* Bowling Performance */}
-      <div className="col-span-1 lg:col-span-2 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up" style={{ animationDelay: '300ms' }}>
-        <div className="p-8 border-b border-white/10 flex items-center justify-between">
-          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-400" style={{ fontFamily: D.mono }}>
+      <div className="col-span-1 lg:col-span-2 rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl overflow-hidden sh-slide-up shadow-sm" style={{ animationDelay: '300ms' }}>
+        <div className="p-8 border-b border-zinc-200 dark:border-white/10 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400" style={{ fontFamily: D.mono }}>
             Bowling Threat Vector
           </h3>
-          <Target className="h-4 w-4 text-white/20" />
+          <Target className="h-4 w-4 text-zinc-400 dark:text-white/20" />
         </div>
         <div className="p-8">
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
-                <YAxis yAxisId="left" orientation="left" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(239,68,68,0.5)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
-                <YAxis yAxisId="right" orientation="right" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(139,92,246,0.5)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={10} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" vertical={false} />
+                <XAxis dataKey="matchDate" fontSize={10} fontFamily={D.mono} tick={{ fill: 'currentColor', opacity: 0.5, fontWeight: 900 }} tickLine={false} axisLine={false} dy={10} />
+                <YAxis yAxisId="left" orientation="left" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(239,68,68,0.7)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={-10} />
+                <YAxis yAxisId="right" orientation="right" fontSize={10} fontFamily={D.mono} tick={{ fill: 'rgba(139,92,246,0.7)', fontWeight: 900 }} tickLine={false} axisLine={false} dx={10} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(10,10,10,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '1rem', backdropFilter: 'blur(10px)', color: 'white' }}
                   itemStyle={{ fontFamily: D.head, fontWeight: 900 }}
                   labelStyle={{ color: 'rgba(255,255,255,0.5)', fontFamily: D.mono, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                  cursor={{ fill: 'rgba(150,150,150,0.05)' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontFamily: D.mono, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, paddingTop: '20px' }} />
                 <Bar yAxisId="left" dataKey="wickets" name="Wickets" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />

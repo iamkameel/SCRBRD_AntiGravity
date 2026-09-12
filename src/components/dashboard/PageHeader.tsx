@@ -29,21 +29,20 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
         style={{ background: `${D.indigo}15` }} 
       />
       
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-        <div className="space-y-3">
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1.5">
           <h1 
-            className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-[0.9]"
+            className="text-xl md:text-2xl font-bold tracking-tight text-white"
             style={{ 
               fontFamily: D.head, 
               color: D.textPrimary,
-              letterSpacing: '-0.04em'
             }}
           >
             {title}
           </h1>
           <p 
-            className="text-[12px] font-black uppercase tracking-[0.3em] max-w-2xl opacity-50"
-            style={{ color: D.textMuted }}
+            className="text-xs font-medium text-slate-400 max-w-2xl leading-relaxed"
+            style={{ fontFamily: D.sans }}
           >
             {description}
           </p>

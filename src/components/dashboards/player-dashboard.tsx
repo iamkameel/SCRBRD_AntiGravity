@@ -100,23 +100,23 @@ export default function PlayerDashboard() {
              <Star className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
           </div>
           <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
-              PLAYER <span style={{ color: D.indigo }}>OPS</span>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+              Player <span style={{ color: D.indigo }}>Ops</span>
             </h1>
-            <p className="text-[12px] font-black uppercase tracking-[0.3em] mt-3 opacity-60 italic" style={{ color: D.textMuted }}>
-                IDENTITY: {person?.firstName?.toUpperCase()} {person?.lastName?.toUpperCase()} · OPERATIONAL STATUS: VERIFIED
+            <p className="text-xs font-medium text-slate-400 mt-1" style={{ fontFamily: D.sans }}>
+                Identity: <span className="text-slate-200 font-semibold">{person?.firstName} {person?.lastName}</span> · Operational Status: Verified
             </p>
           </div>
-          <div className="md:ml-auto flex gap-4 w-full md:w-auto">
+          <div className="md:ml-auto flex gap-3 w-full md:w-auto">
              <Button
                variant="outline"
                onClick={() => setViewMode('passport')}
-               className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5"
+               className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 border transition-all hover:bg-white/5"
                style={{ background: D.surf2 }}
              >
-               PASSPORT
+               Passport
              </Button>
-             <Button className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl" style={{ background: D.indigo, color: 'white' }}>MATCH CENTRE</Button>
+             <Button className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 shadow-lg text-white" style={{ background: D.indigo }}>Match Centre</Button>
           </div>
         </div>
       </div>
@@ -192,8 +192,8 @@ export default function PlayerDashboard() {
         >
           <div className="flex items-center justify-between p-8 border-b" style={{ borderColor: D.border, background: D.surf2 }}>
             <div>
-              <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>PERFORMANCE TREND</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>DEVELOPMENT FEEDBACK LOOP</p>
+              <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Performance Trend</h3>
+              <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Development feedback loop</p>
             </div>
             <div className="p-3 rounded-xl shadow-inner border" style={{ background: D.surf1, borderColor: D.border }}>
                 <TrendingUp size={20} className="text-emerald-500" />
@@ -220,8 +220,8 @@ export default function PlayerDashboard() {
                 <Calendar size={20} />
              </div>
              <div>
-               <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>UPCOMING</h3>
-               <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>TEMPORAL EVENT LOG</p>
+               <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Upcoming</h3>
+               <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Temporal event log</p>
              </div>
           </div>
           <div className="p-8 space-y-4">

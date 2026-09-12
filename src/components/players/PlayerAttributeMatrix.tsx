@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { D } from '@/lib/design-system';
-import { SkillAssessment, SkillDomain, RatingScale1to9 } from "@/types/schema_v4";
+import { SkillAssessment, SkillDomain } from "@/types/schema_v4";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, ChevronDown, ChevronUp, Layers } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PlayerAttributeMatrixProps {
   assessments: SkillAssessment[];
   playingRole?: string;
+  onInspectAttribute?: (domain: string, attribute: string, rating: number) => void;
 }
 
 const DOMAINS: SkillDomain[] = [
@@ -31,33 +34,38 @@ const ATTRIBUTE_MAP: Record<SkillDomain, string[]> = {
   Wicketkeeping: ["Setup", "Glove Work", "Collection", "Hands", "Standing Back", "Standing Up", "Leg Side", "Footwork", "Stumping", "Gather/Release", "Reaction", "Comms"],
 };
 
-// Ratings color mapping (FM Style)
+// Ratings color mapping (FM Style) - light/dark mode responsive
 const getRatingColor = (rating: number) => {
-  if (rating >= 8) return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"; // Elite
-  if (rating >= 7) return "text-emerald-400/80 bg-emerald-400/5 border-emerald-400/10"; // Very Good
-  if (rating >= 5) return "text-blue-400 bg-blue-400/10 border-blue-400/20"; // Good
-  if (rating >= 3) return "text-amber-400 bg-amber-400/10 border-amber-400/20"; // Average
-  return "text-red-400 bg-red-400/10 border-red-400/20"; // Poor
+  if (rating >= 8) return "text-[#22c55e] bg-emerald-500/10 border-emerald-500/30"; // Elite
+  if (rating >= 7) return "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"; // Very Good
+  if (rating >= 5) return "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20"; // Good
+  if (rating >= 3) return "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"; // Average
+  return "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20"; // Developing
 };
 
-export function PlayerAttributeMatrix({ assessments, playingRole }: PlayerAttributeMatrixProps) {
-  // Helper to get rating for an attribute
+export function PlayerAttributeMatrix({ assessments, playingRole, onInspectAttribute }: PlayerAttributeMatrixProps) {
+  const [collapsedDomains, setCollapsedDomains] = useState<Record<string, boolean>>({
+    Fielding: true,
+    Wicketkeeping: playingRole?.toLowerCase().includes("wicketkeeper") ? false : true,
+  });
+
+  const toggleDomain = (domain: string) => {
+    setCollapsedDomains((prev) => ({ ...prev, [domain]: !prev[domain] }));
+  };
+
   const getRating = (domain: SkillDomain, attr: string): number => {
     const assessment = assessments.find(
       (a) => a.domain === domain && a.attributeName.toLowerCase() === attr.toLowerCase()
     );
-    return assessment ? assessment.rating as number : 0;
+    return assessment ? (assessment.rating as number) : 0;
   };
 
-  // Mock data generator for demo purposes if no assessments provided
   const getMockRating = (domain: string, attr: string): number => {
-    // Determine base rating on role
     let base = 5;
     if (playingRole?.toLowerCase().includes("batsman") && domain === "Batting") base = 7;
     if (playingRole?.toLowerCase().includes("bowler") && domain === "Bowling") base = 7;
     if (domain === "Mental" || domain === "Physical") base = 6;
-    
-    // Some randomness
+
     const seed = (domain.length + attr.length) % 5;
     return Math.min(9, Math.max(1, base + seed - 2));
   };
@@ -67,65 +75,77 @@ export function PlayerAttributeMatrix({ assessments, playingRole }: PlayerAttrib
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {DOMAINS.map((domain) => {
           const attributes = ATTRIBUTE_MAP[domain];
-          // Determine if domain is relevant to role
-          const isRelevant = 
-            (playingRole?.toLowerCase().includes("batsman") && (domain === "Batting" || domain === "Tactical")) ||
-            (playingRole?.toLowerCase().includes("bowler") && (domain === "Bowling" || domain === "Tactical")) ||
-            (playingRole?.toLowerCase().includes("wicketkeeper") && (domain === "Wicketkeeping" || domain === "Batting")) ||
-            (domain === "Mental" || domain === "Physical" || domain === "Fielding");
-
-          if (!isRelevant && domain !== "Tactical") return null;
+          const isCollapsed = collapsedDomains[domain];
 
           return (
-            <div 
-              key={domain} 
-              className="rounded-[1.5rem] border border-white/10 bg-[#0C0C0C] overflow-hidden sh-fade-in"
+            <div
+              key={domain}
+              className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-[#0c0c10]/80 overflow-hidden shadow-sm transition-all hover:border-zinc-300 dark:hover:border-white/20"
             >
-              <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                <h3 
-                  className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50" 
-                  style={{ fontFamily: D.mono }}
-                >
-                  {domain} Profile
-                </h3>
-                <div className="h-1.5 w-1.5 rounded-full bg-primary/40 animate-pulse" />
+              <div 
+                className="px-5 py-3.5 border-b border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02] flex items-center justify-between cursor-pointer select-none"
+                onClick={() => toggleDomain(domain)}
+              >
+                <div className="flex items-center gap-2">
+                  <Layers className="h-3.5 w-3.5 text-emerald-600 dark:text-[#22c55e]" />
+                  <h3
+                    className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900 dark:text-white"
+                    style={{ fontFamily: D.mono }}
+                  >
+                    {domain} Domain
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold text-zinc-400 dark:text-white/30" style={{ fontFamily: D.mono }}>
+                    {attributes.length} attrs
+                  </span>
+                  {isCollapsed ? (
+                    <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+                  ) : (
+                    <ChevronUp className="h-3.5 w-3.5 text-zinc-400" />
+                  )}
+                </div>
               </div>
-              
-              <div className="p-4 space-y-1">
-                {attributes.map((attr) => {
-                  const rating = assessments.length > 0 
-                    ? getRating(domain, attr) 
-                    : getMockRating(domain, attr);
-                  
-                  return (
-                    <div 
-                      key={attr} 
-                      className="group flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold text-white/60 group-hover:text-white/90 transition-colors">
-                          {attr}
-                        </span>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3 w-3 text-white/10 cursor-help opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-[#111] border-white/10 text-[10px] text-white/60 max-w-[200px]">
-                            Assessment for {attr} in the {domain} domain.
-                          </TooltipContent>
-                        </Tooltip>
+
+              {!isCollapsed && (
+                <div className="p-4 space-y-1">
+                  {attributes.map((attr) => {
+                    const rating = assessments.length > 0 ? getRating(domain, attr) : getMockRating(domain, attr);
+
+                    return (
+                      <div
+                        key={attr}
+                        onClick={() => onInspectAttribute?.(domain, attr, rating)}
+                        className="group flex items-center justify-between py-1.5 px-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-zinc-700 dark:text-white/70 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                            {attr}
+                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-zinc-400 dark:text-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-zinc-900 text-white dark:bg-[#111] dark:border-white/10 text-[10px] max-w-[200px]">
+                              Click to inspect {attr} analytical history and evidence.
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+
+                        <div
+                          className={cn(
+                            "w-7 h-7 flex items-center justify-center rounded-lg border text-xs font-black transition-all group-hover:scale-105",
+                            getRatingColor(rating)
+                          )}
+                          style={{ fontFamily: D.mono }}
+                        >
+                          {rating || "-"}
+                        </div>
                       </div>
-                      
-                      <div className={cn(
-                        "w-7 h-7 flex items-center justify-center rounded-md border text-xs font-black",
-                        getRatingColor(rating)
-                      )} style={{ fontFamily: D.mono }}>
-                        {rating || "-"}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

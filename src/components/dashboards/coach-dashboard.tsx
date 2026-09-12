@@ -101,7 +101,7 @@ export default function CoachDashboard() {
               <Sparkles className="h-3 w-3" />
               <span>Intelligence Broadcast</span>
             </div>
-            <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+            <h3 className="text-lg md:text-xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
               {intelligence?.watchlistFlags?.length > 0
                 ? `${intelligence.watchlistFlags.length} Critical Player Flags Detected`
                 : 'All Squad Parameters Stable'}

@@ -97,21 +97,52 @@ export function WagonWheelGrid({
     setHoverPos({ x: svgX, y: svgY, zone });
   };
 
+  const [batHand, setBatHand] = useState<'R' | 'L'>('R');
+
   return (
     <div className={cn("flex flex-col items-center space-y-4", className)}>
       {/* Field Canvas Header */}
       <div className="w-full flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs uppercase font-mono tracking-widest text-slate-300">
+          <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span className="text-xs uppercase font-mono tracking-widest text-zinc-600 dark:text-slate-300">
             Interactive Wagon Wheel
           </span>
         </div>
-        {activeShot && (
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-mono text-xs">
-            {activeShot.zoneInfo.zoneName} ({activeShot.distance}%)
-          </Badge>
-        )}
+        
+        <div className="flex items-center gap-2">
+          {/* Handedness Toggle */}
+          <div className="flex items-center bg-zinc-200 dark:bg-slate-800/80 p-0.5 rounded-lg text-[10px] font-mono border border-zinc-300 dark:border-white/10">
+            <button
+              onClick={() => setBatHand('R')}
+              className={cn(
+                "px-2 py-0.5 rounded-md font-bold transition-all",
+                batHand === 'R'
+                  ? "bg-emerald-500 text-white shadow-sm"
+                  : "text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              RHB
+            </button>
+            <button
+              onClick={() => setBatHand('L')}
+              className={cn(
+                "px-2 py-0.5 rounded-md font-bold transition-all",
+                batHand === 'L'
+                  ? "bg-emerald-500 text-white shadow-sm"
+                  : "text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              LHB
+            </button>
+          </div>
+
+          {activeShot && (
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 font-mono text-xs">
+              {activeShot.zoneInfo.zoneName} ({activeShot.distance}%)
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="relative group">
@@ -120,7 +151,7 @@ export function WagonWheelGrid({
           height="380"
           viewBox="0 0 400 400"
           className={cn(
-            "rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-white/10 shadow-2xl backdrop-blur-xl transition-all duration-300",
+            "rounded-2xl bg-white dark:bg-gradient-to-b dark:from-slate-900/90 dark:to-slate-950/90 border border-zinc-200 dark:border-white/10 shadow-2xl backdrop-blur-xl transition-all duration-300",
             !disabled && "cursor-crosshair hover:border-emerald-500/40"
           )}
           onClick={handleFieldClick}
@@ -128,16 +159,16 @@ export function WagonWheelGrid({
           onMouseLeave={() => setHoverPos(null)}
         >
           {/* Outer Boundary Circle */}
-          <circle cx="200" cy="200" r="185" fill="rgba(16, 185, 129, 0.04)" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="2" />
+          <circle cx="200" cy="200" r="185" fill="rgba(16, 185, 129, 0.05)" stroke="rgba(16, 185, 129, 0.35)" strokeWidth="2" />
           
           {/* Inner 30-Yard Ring */}
-          <circle cx="200" cy="200" r="95" fill="none" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1.5" strokeDasharray="5 5" />
+          <circle cx="200" cy="200" r="95" fill="none" stroke="rgba(100, 116, 139, 0.25)" strokeWidth="1.5" strokeDasharray="5 5" />
           
           {/* Pitch Area */}
-          <rect x="193" y="170" width="14" height="60" fill="rgba(255, 255, 255, 0.12)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" rx="2" />
+          <rect x="193" y="170" width="14" height="60" fill="rgba(100, 116, 139, 0.15)" stroke="rgba(100, 116, 139, 0.3)" strokeWidth="1" rx="2" />
 
           {/* Sector Lines (Faint Grid) */}
-          <g opacity="0.12" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1">
+          <g opacity="0.2" stroke="rgba(100, 116, 139, 0.4)" strokeWidth="1">
             <line x1="200" y1="15" x2="200" y2="385" />
             <line x1="15" y1="200" x2="385" y2="200" />
             <line x1="69" y1="69" x2="331" y2="331" />
@@ -167,7 +198,7 @@ export function WagonWheelGrid({
           {/* Hover Aim Target */}
           {hoverPos && !disabled && (
             <g>
-              <line x1="200" y1="200" x2={hoverPos.x} y2={hoverPos.y} stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1.5" strokeDasharray="3 3" />
+              <line x1="200" y1="200" x2={hoverPos.x} y2={hoverPos.y} stroke="rgba(16, 185, 129, 0.6)" strokeWidth="1.5" strokeDasharray="3 3" />
               <circle cx={hoverPos.x} cy={hoverPos.y} r="6" fill="rgba(16, 185, 129, 0.4)" stroke="#10b981" strokeWidth="1.5" />
             </g>
           )}
@@ -181,18 +212,18 @@ export function WagonWheelGrid({
             </g>
           )}
 
-          {/* Field Directional Markers */}
-          <g fill="rgba(255,255,255,0.4)" fontSize="10" fontFamily="sans-serif" fontWeight="600" textAnchor="middle">
+          {/* Field Directional Markers - Adjusts based on Handedness */}
+          <g fill="rgba(100, 116, 139, 0.6)" fontSize="10" fontFamily="sans-serif" fontWeight="600" textAnchor="middle">
             <text x="200" y="32">LONG-OFF</text>
             <text x="200" y="378">LONG-ON</text>
-            <text x="32" y="204">COVER</text>
-            <text x="368" y="204">MID-WICKET</text>
+            <text x="34" y="204">{batHand === 'R' ? 'COVER' : 'MID-WICK'}</text>
+            <text x="366" y="204">{batHand === 'R' ? 'MID-WICK' : 'COVER'}</text>
           </g>
         </svg>
 
         {/* Hover Zone Readout */}
         {hoverPos && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-white/10 text-[11px] font-mono text-slate-300 shadow-lg pointer-events-none backdrop-blur-md">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-zinc-900/90 dark:bg-slate-900/90 border border-zinc-700 dark:border-white/10 text-[11px] font-mono text-zinc-100 dark:text-slate-300 shadow-lg pointer-events-none backdrop-blur-md">
             {hoverPos.zone.zoneName} • {hoverPos.zone.ringName}
           </div>
         )}
@@ -200,21 +231,22 @@ export function WagonWheelGrid({
 
       {/* Shot Metrics Bar */}
       {activeShot && (
-        <div className="w-full grid grid-cols-3 gap-2 text-center p-3 rounded-xl bg-white/5 border border-white/10 text-xs">
+        <div className="w-full grid grid-cols-3 gap-2 text-center p-3 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs">
           <div>
-            <div className="text-slate-400 text-[10px] uppercase font-medium">Zone</div>
-            <div className="font-semibold text-slate-200 truncate">{activeShot.zoneInfo.zoneName}</div>
+            <div className="text-zinc-500 dark:text-slate-400 text-[10px] uppercase font-medium">Zone</div>
+            <div className="font-semibold text-zinc-900 dark:text-slate-200 truncate">{activeShot.zoneInfo.zoneName}</div>
           </div>
           <div>
-            <div className="text-slate-400 text-[10px] uppercase font-medium">Sector Ring</div>
-            <div className="font-semibold text-slate-200">{activeShot.zoneInfo.ringName}</div>
+            <div className="text-zinc-500 dark:text-slate-400 text-[10px] uppercase font-medium">Sector Ring</div>
+            <div className="font-semibold text-zinc-900 dark:text-slate-200">{activeShot.zoneInfo.ringName}</div>
           </div>
           <div>
-            <div className="text-slate-400 text-[10px] uppercase font-medium">Vector Angle</div>
-            <div className="font-mono font-bold text-emerald-400">{activeShot.angle}°</div>
+            <div className="text-zinc-500 dark:text-slate-400 text-[10px] uppercase font-medium">Vector Angle</div>
+            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{activeShot.angle}°</div>
           </div>
         </div>
       )}
     </div>
   );
 }
+

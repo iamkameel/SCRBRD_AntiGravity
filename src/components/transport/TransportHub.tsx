@@ -380,26 +380,24 @@ export function TransportHub() {
     <div className="space-y-10 pb-24">
       
       {/* Header Banner */}
-      <div className="relative p-10 rounded-[3rem] border overflow-hidden shadow-2xl" 
-           style={{ background: D.surf1, borderColor: D.border }}>
+      <div className="relative p-10 rounded-[3rem] border border-zinc-200 dark:border-white/10 overflow-hidden shadow-2xl bg-white dark:bg-[#0c0c10]">
         <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
         <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
-          <div className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner shrink-0" 
-               style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
-             <Bus className="h-12 w-12 text-indigo-400" />
+          <div className="h-24 w-24 rounded-3xl flex items-center justify-center shadow-inner shrink-0 border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-[#181820]">
+             <Bus className="h-12 w-12 text-indigo-500 dark:text-indigo-400" />
           </div>
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-none" 
-                style={{ fontFamily: D.head, color: D.textPrimary }}>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase italic leading-none text-zinc-900 dark:text-white" 
+                style={{ fontFamily: D.head }}>
               TRANSPORT <span style={{ color: D.amber }}>HUB</span> & LOGISTICS
             </h1>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] mt-3 opacity-60 italic" style={{ color: D.textMuted }}>
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] mt-3 opacity-60 italic text-zinc-500 dark:text-zinc-400">
                 SCHOOL FLEET ASSET DEPLOYMENT • REAL-TIME PASSENGER MANIFEST & BOARDING ENGINE
             </p>
           </div>
 
           <div className="lg:ml-auto flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-             <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border backdrop-blur-xl" style={{ background: D.surf2, borderColor: D.border }}>
+             <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-[#181820] backdrop-blur-xl">
                 {[
                   { id: 'trips', label: `TRIP MANIFESTS (${trips.length})` },
                   { id: 'fleet', label: `FLEET ASSETS (${fleet.length})` },
@@ -411,7 +409,7 @@ export function TransportHub() {
                       onClick={() => setActiveTab(t.id as any)}
                       className={cn(
                         "relative h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors duration-300 select-none",
-                        isActive ? "text-slate-900 font-bold" : "text-white/40 hover:text-white"
+                        isActive ? "text-slate-900 font-bold" : "text-zinc-500 dark:text-white/40 hover:text-zinc-900 dark:hover:text-white"
                       )}
                       style={{ fontFamily: D.head }}
                     >
@@ -445,20 +443,19 @@ export function TransportHub() {
         <div className="lg:col-span-7 space-y-6">
           
           {/* Search and Filters */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl border bg-black/20" style={{ borderColor: D.border }}>
-            <Search className="h-5 w-5 text-white/40" />
+          <div className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-black/20">
+            <Search className="h-5 w-5 text-zinc-400 dark:text-white/40" />
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search fixture, destination, or driver..."
-              className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-white/30"
-              style={{ color: D.textPrimary }}
+              className="w-full bg-transparent text-sm font-semibold outline-none text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-white/30"
             />
             {activeTab === 'fleet' && (
               <Button 
                 onClick={() => setIsAddVehicleOpen(true)}
                 size="sm"
-                className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border border-amber-500/30 text-amber-400 bg-amber-500/10">
+                className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border border-amber-500/30 text-amber-500 dark:text-amber-400 bg-amber-500/10">
                 + ADD VEHICLE
               </Button>
             )}
@@ -498,75 +495,77 @@ export function TransportHub() {
                       onClick={() => setSelectedTripId(trip.id)}
                       className={cn(
                         "group p-6 rounded-[2rem] border transition-all duration-300 cursor-pointer relative overflow-hidden",
-                        isSelected ? "bg-amber-500/10 border-amber-500/50 shadow-2xl shadow-amber-500/10" : "bg-[rgba(18,18,24,0.6)] border-white/10 hover:border-white/20"
+                        isSelected 
+                          ? "bg-amber-500/10 border-amber-500/50 shadow-2xl shadow-amber-500/10" 
+                          : "bg-white dark:bg-[rgba(18,18,24,0.6)] border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 shadow-sm"
                       )}
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                         <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-mono font-bold opacity-40">{trip.id}</span>
+                          <span className="text-[10px] font-mono font-bold text-zinc-400 dark:text-white/40">{trip.id}</span>
                           <Badge className={cn(
                             "text-[9px] font-black uppercase tracking-widest h-6 px-3 border",
-                            trip.status === 'READY FOR DEPARTURE' ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" :
-                            trip.status === 'IN TRANSIT' ? "bg-sky-500/20 text-sky-400 border-sky-500/40" :
-                            trip.status === 'ARRIVED' ? "bg-purple-500/20 text-purple-400 border-purple-500/40" : "bg-amber-500/20 text-amber-400 border-amber-500/40"
+                            trip.status === 'READY FOR DEPARTURE' ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40" :
+                            trip.status === 'IN TRANSIT' ? "bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/40" :
+                            trip.status === 'ARRIVED' ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/40" : "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40"
                           )}>
                             {trip.status}
                           </Badge>
                           <Badge className={cn(
                             "text-[9px] font-black uppercase tracking-widest h-6 px-3 border",
-                            auditReport.readinessGrade === 'READY' ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" :
-                            auditReport.readinessGrade === 'WARNING' ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                            auditReport.readinessGrade === 'READY' ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" :
+                            auditReport.readinessGrade === 'WARNING' ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30" : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30"
                           )}>
                             AUDIT: {auditReport.readinessGrade}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
+                          <span className="text-[11px] font-mono font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">
                             DEPARTURE: {trip.time}
                           </span>
                           <Link 
                             href={`/transport/driver/${trip.id}`} 
                             onClick={(e) => e.stopPropagation()}
-                            className="h-7 px-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600 hover:text-white flex items-center gap-1 transition-colors"
+                            className="h-7 px-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-500/10 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 dark:border-indigo-500/40 hover:bg-indigo-600 hover:text-white flex items-center gap-1 transition-colors"
                           >
                             <Navigation size={11} /> PWA
                           </Link>
                         </div>
                       </div>
 
-                      <h3 className="text-xl font-black italic uppercase tracking-tight mb-2" style={{ fontFamily: D.head }}>
+                      <h3 className="text-xl font-black italic uppercase tracking-tight mb-2 text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                         {trip.fixture}
                       </h3>
 
-                      <div className="flex items-center gap-2 text-xs font-semibold text-white/60 mb-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-white/60 mb-3">
                         <MapPin className="h-4 w-4 text-amber-500 shrink-0" />
                         <span>{trip.destination}</span>
                       </div>
 
                       {auditReport.missingEssentialRoles.length > 0 && (
-                        <div className="mb-3 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2 text-[10px] font-mono text-rose-300">
-                          <AlertCircle size={12} className="shrink-0 text-rose-400" />
+                        <div className="mb-3 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2 text-[10px] font-mono text-rose-700 dark:text-rose-300">
+                          <AlertCircle size={12} className="shrink-0 text-rose-500 dark:text-rose-400" />
                           <span>MISSING ESSENTIALS: {auditReport.missingEssentialRoles.join(', ')}</span>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-black/30 border border-white/5 mb-4 text-center">
+                      <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-zinc-50 dark:bg-black/30 border border-zinc-200 dark:border-white/5 mb-4 text-center">
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-white/40">VEHICLE</p>
-                          <p className="text-xs font-bold font-mono text-white/90">{trip.vehicleName}</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/40">VEHICLE</p>
+                          <p className="text-xs font-bold font-mono text-zinc-900 dark:text-white/90">{trip.vehicleName}</p>
                         </div>
-                        <div className="border-x border-white/10">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-white/40">DRIVER</p>
-                          <p className="text-xs font-bold font-mono text-white/90">{trip.driver}</p>
+                        <div className="border-x border-zinc-200 dark:border-white/10">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/40">DRIVER</p>
+                          <p className="text-xs font-bold font-mono text-zinc-900 dark:text-white/90">{trip.driver}</p>
                         </div>
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-white/40">BOARDING</p>
-                          <p className="text-xs font-bold font-mono text-emerald-400">{tripBoarded} / {tripTotal} ({tripBoardingPct}%)</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/40">BOARDING</p>
+                          <p className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">{tripBoarded} / {tripTotal} ({tripBoardingPct}%)</p>
                         </div>
                       </div>
 
                       {/* Boarding Progress Bar */}
-                      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-zinc-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
                         <div 
                           className="bg-emerald-500 h-full transition-all duration-500"
                           style={{ width: `${tripBoardingPct}%` }}
@@ -585,41 +584,41 @@ export function TransportHub() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-6"
               >
                 {fleet.map((veh) => (
-                  <div key={veh.id} className="p-6 rounded-[2rem] border bg-[rgba(18,18,24,0.6)] border-white/10 space-y-4">
+                  <div key={veh.id} className="p-6 rounded-[2rem] border bg-white dark:bg-[rgba(18,18,24,0.6)] border-zinc-200 dark:border-white/10 space-y-4 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <div className="h-12 w-12 rounded-2xl flex items-center justify-center border bg-white/5 border-white/10">
-                        <Bus className="h-6 w-6 text-amber-400" />
+                      <div className="h-12 w-12 rounded-2xl flex items-center justify-center border bg-zinc-100 dark:bg-white/5 border-zinc-200 dark:border-white/10">
+                        <Bus className="h-6 w-6 text-amber-500 dark:text-amber-400" />
                       </div>
                       <Badge className={cn(
                         "text-[9px] font-black uppercase tracking-widest h-6 border",
-                        veh.status === 'AVAILABLE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                        veh.status === 'MAINTENANCE' ? "bg-rose-500/10 text-rose-400 border-rose-500/30" : "bg-sky-500/10 text-sky-400 border-sky-500/30"
+                        veh.status === 'AVAILABLE' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" :
+                        veh.status === 'MAINTENANCE' ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30" : "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30"
                       )}>
                         {veh.status}
                       </Badge>
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-mono text-white/40 italic">{veh.registration}</span>
-                      <h4 className="text-lg font-black italic uppercase tracking-tight" style={{ fontFamily: D.head }}>{veh.name}</h4>
+                      <span className="text-[10px] font-mono text-zinc-400 dark:text-white/40 italic">{veh.registration}</span>
+                      <h4 className="text-lg font-black italic uppercase tracking-tight text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>{veh.name}</h4>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-black/20 text-center text-xs font-mono">
+                    <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-zinc-50 dark:bg-black/20 text-center text-xs font-mono border border-zinc-200 dark:border-white/5">
                       <div>
-                        <span className="text-[8px] font-black text-white/40 block">SEATS</span>
-                        <span className="font-bold">{veh.capacity}</span>
+                        <span className="text-[8px] font-black text-zinc-400 dark:text-white/40 block">SEATS</span>
+                        <span className="font-bold text-zinc-900 dark:text-white">{veh.capacity}</span>
                       </div>
-                      <div className="border-x border-white/10">
-                        <span className="text-[8px] font-black text-white/40 block">ODOMETER</span>
-                        <span className="font-bold">{veh.mileage}</span>
+                      <div className="border-x border-zinc-200 dark:border-white/10">
+                        <span className="text-[8px] font-black text-zinc-400 dark:text-white/40 block">ODOMETER</span>
+                        <span className="font-bold text-zinc-900 dark:text-white">{veh.mileage}</span>
                       </div>
                       <div>
-                        <span className="text-[8px] font-black text-white/40 block">HEALTH</span>
-                        <span className={cn("font-bold", veh.health > 80 ? "text-emerald-400" : "text-rose-400")}>{veh.health}%</span>
+                        <span className="text-[8px] font-black text-zinc-400 dark:text-white/40 block">HEALTH</span>
+                        <span className={cn("font-bold", veh.health > 80 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>{veh.health}%</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] font-mono text-white/50 pt-2 border-t border-white/5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-white/50 pt-2 border-t border-zinc-100 dark:border-white/5">
                       <span>DRIVER: {veh.driverAssigned || 'UNASSIGNED'}</span>
                       <span>LAST SVC: {veh.lastService}</span>
                     </div>
@@ -634,50 +633,50 @@ export function TransportHub() {
         {/* Right / Secondary Column: Interactive Passenger Manifest & Dispatcher (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           
-          <div className="p-8 rounded-[2.5rem] border bg-[rgba(18,18,24,0.8)] border-white/10 space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="p-8 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[rgba(18,18,24,0.8)] space-y-6 shadow-2xl relative overflow-hidden">
             
             {/* Manifest Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-6">
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-6">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">PASSENGER MANIFEST CHECK-IN</span>
-                <h3 className="text-xl font-black italic uppercase tracking-tight mt-1" style={{ fontFamily: D.head }}>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">PASSENGER MANIFEST CHECK-IN</span>
+                <h3 className="text-xl font-black italic uppercase tracking-tight mt-1 text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>
                   {selectedTrip.fixture}
                 </h3>
               </div>
               <Button 
                 onClick={() => boardAllPassengers(selectedTrip.id)}
                 size="sm" 
-                className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500 hover:text-black">
+                className="h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500 hover:text-black">
                 <Check className="mr-1 h-3.5 w-3.5" /> BOARD ALL
               </Button>
             </div>
 
             {/* Boarding Counter & Telemetry */}
-            <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/5 space-y-3">
               <div className="flex items-center justify-between text-xs font-mono font-bold">
-                <span className="text-white/60">BOARDING CLEARANCE:</span>
-                <span className="text-emerald-400">{boardedCount} / {totalCount} ({boardingPct}%)</span>
+                <span className="text-zinc-600 dark:text-white/60">BOARDING CLEARANCE:</span>
+                <span className="text-emerald-600 dark:text-emerald-400">{boardedCount} / {totalCount} ({boardingPct}%)</span>
               </div>
-              <div className="w-full bg-white/10 h-3 rounded-full overflow-hidden">
+              <div className="w-full bg-zinc-200 dark:bg-white/10 h-3 rounded-full overflow-hidden">
                 <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${boardingPct}%` }} />
               </div>
               
-              <div className="flex items-center justify-between text-[10px] font-mono text-white/50 pt-2 border-t border-white/5">
-                <span>DRIVER: <strong className="text-white">{selectedTrip.driver}</strong></span>
-                <span>VEHICLE: <strong className="text-white">{selectedTrip.vehicleName}</strong></span>
+              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-white/50 pt-2 border-t border-zinc-200 dark:border-white/5">
+                <span>DRIVER: <strong className="text-zinc-900 dark:text-white">{selectedTrip.driver}</strong></span>
+                <span>VEHICLE: <strong className="text-zinc-900 dark:text-white">{selectedTrip.vehicleName}</strong></span>
               </div>
             </div>
 
             {/* Trip Lifecycle Action Bar */}
             <div className="space-y-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block">TRIP DISPATCHER STATUS</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/40 block">TRIP DISPATCHER STATUS</span>
               <div className="grid grid-cols-3 gap-2">
                 <Button 
                   onClick={() => updateTripState(selectedTrip.id, 'READY FOR DEPARTURE')}
                   size="sm" 
                   className={cn(
                     "h-10 rounded-xl text-[9px] font-black uppercase tracking-wider border",
-                    selectedTrip.status === 'READY FOR DEPARTURE' ? "bg-amber-500 text-black border-amber-500" : "bg-white/5 text-white/60 border-white/10"
+                    selectedTrip.status === 'READY FOR DEPARTURE' ? "bg-amber-500 text-black border-amber-500" : "bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/60 border-zinc-200 dark:border-white/10"
                   )}>
                   READY
                 </Button>
@@ -686,7 +685,7 @@ export function TransportHub() {
                   size="sm" 
                   className={cn(
                     "h-10 rounded-xl text-[9px] font-black uppercase tracking-wider border",
-                    selectedTrip.status === 'IN TRANSIT' ? "bg-sky-500 text-black border-sky-500" : "bg-white/5 text-white/60 border-white/10"
+                    selectedTrip.status === 'IN TRANSIT' ? "bg-sky-500 text-black border-sky-500" : "bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/60 border-zinc-200 dark:border-white/10"
                   )}>
                   IN TRANSIT
                 </Button>
@@ -695,7 +694,7 @@ export function TransportHub() {
                   size="sm" 
                   className={cn(
                     "h-10 rounded-xl text-[9px] font-black uppercase tracking-wider border",
-                    selectedTrip.status === 'ARRIVED' ? "bg-purple-500 text-black border-purple-500" : "bg-white/5 text-white/60 border-white/10"
+                    selectedTrip.status === 'ARRIVED' ? "bg-purple-500 text-black border-purple-500" : "bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/60 border-zinc-200 dark:border-white/10"
                   )}>
                   ARRIVED
                 </Button>
@@ -707,15 +706,15 @@ export function TransportHub() {
               {selectedTrip.passengers.map((p) => (
                 <div 
                   key={p.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl border bg-black/20 border-white/5 hover:border-white/15 transition-all"
+                  className="flex items-center justify-between p-3.5 rounded-xl border bg-zinc-50 dark:bg-black/20 border-zinc-200 dark:border-white/5 hover:border-zinc-300 dark:hover:border-white/15 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center font-bold text-xs font-mono text-amber-400">
+                    <div className="h-9 w-9 rounded-lg bg-zinc-200 dark:bg-white/5 flex items-center justify-center font-bold text-xs font-mono text-amber-600 dark:text-amber-400">
                       {p.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">{p.name}</p>
-                      <span className="text-[9px] font-mono text-white/40 uppercase">{p.role}</span>
+                      <p className="text-xs font-bold text-zinc-900 dark:text-white">{p.name}</p>
+                      <span className="text-[9px] font-mono text-zinc-400 dark:text-white/40 uppercase">{p.role}</span>
                     </div>
                   </div>
 
@@ -723,7 +722,7 @@ export function TransportHub() {
                     {p.emergencyPhone && (
                       <button 
                         onClick={() => setSelectedPassengerForCall(p)}
-                        className="p-2 rounded-lg bg-white/5 hover:bg-white/15 text-white/60 transition-colors"
+                        className="p-2 rounded-lg bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/15 text-zinc-600 dark:text-white/60 transition-colors"
                         title="Contact Guardian / Emergency">
                         <PhoneCall size={13} />
                       </button>
@@ -733,8 +732,8 @@ export function TransportHub() {
                       onClick={() => togglePassengerBoarding(selectedTrip.id, p.id)}
                       className={cn(
                         "h-8 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider border transition-all flex items-center gap-1.5",
-                        p.status === 'BOARDED' ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" :
-                        p.status === 'ABSENT' ? "bg-rose-500/20 text-rose-400 border-rose-500/40" : "bg-white/5 text-white/50 border-white/10"
+                        p.status === 'BOARDED' ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40" :
+                        p.status === 'ABSENT' ? "bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/40" : "bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/50 border-zinc-200 dark:border-white/10"
                       )}>
                       {p.status === 'BOARDED' && <CheckCircle2 size={12} />}
                       {p.status === 'ABSENT' && <XCircle size={12} />}
@@ -746,11 +745,11 @@ export function TransportHub() {
             </div>
 
             {/* Route Stops Summary */}
-            <div className="pt-4 border-t border-white/10 space-y-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block">PLANNED ROUTE STOPS</span>
+            <div className="pt-4 border-t border-zinc-200 dark:border-white/10 space-y-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/40 block">PLANNED ROUTE STOPS</span>
               <div className="space-y-1.5">
                 {selectedTrip.routeStops.map((stop, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs font-mono text-white/70">
+                  <div key={idx} className="flex items-center gap-2 text-xs font-mono text-zinc-600 dark:text-white/70">
                     <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
                     <span>{stop}</span>
                   </div>
@@ -772,24 +771,24 @@ export function TransportHub() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#121218] border border-white/20 p-8 rounded-[2.5rem] max-w-sm w-full space-y-6 text-center"
+              className="bg-white dark:bg-[#121218] border border-zinc-200 dark:border-white/20 p-8 rounded-[2.5rem] max-w-sm w-full space-y-6 text-center shadow-2xl"
             >
-              <div className="h-16 w-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/40">
+              <div className="h-16 w-16 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/40">
                 <PhoneCall size={28} />
               </div>
 
               <div>
-                <h3 className="text-xl font-black italic uppercase" style={{ fontFamily: D.head }}>{selectedPassengerForCall.name}</h3>
-                <p className="text-xs font-mono text-white/50 mt-1">EMERGENCY GUARDIAN CONTACT</p>
+                <h3 className="text-xl font-black italic uppercase text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>{selectedPassengerForCall.name}</h3>
+                <p className="text-xs font-mono text-zinc-500 dark:text-white/50 mt-1">EMERGENCY GUARDIAN CONTACT</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-lg font-bold text-emerald-400">
+              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {selectedPassengerForCall.emergencyPhone}
               </div>
 
               <Button 
                 onClick={() => setSelectedPassengerForCall(null)}
-                className="w-full h-12 rounded-xl font-black text-xs uppercase bg-white/10 hover:bg-white/20">
+                className="w-full h-12 rounded-xl font-black text-xs uppercase bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-white/20">
                 CLOSE
               </Button>
             </motion.div>
@@ -805,64 +804,64 @@ export function TransportHub() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#121218] border border-white/20 p-8 rounded-[2.5rem] max-w-md w-full space-y-6"
+              className="bg-white dark:bg-[#121218] border border-zinc-200 dark:border-white/20 p-8 rounded-[2.5rem] max-w-md w-full space-y-6 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-xl font-black italic uppercase" style={{ fontFamily: D.head }}>CREATE NEW TRIP</h3>
-                <button onClick={() => setIsCreateTripOpen(false)} className="text-white/40 hover:text-white"><X size={20} /></button>
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-4">
+                <h3 className="text-xl font-black italic uppercase text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>CREATE NEW TRIP</h3>
+                <button onClick={() => setIsCreateTripOpen(false)} className="text-zinc-400 dark:text-white/40 hover:text-zinc-900 dark:hover:text-white"><X size={20} /></button>
               </div>
 
               <form onSubmit={handleCreateTripSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-white/50 block mb-1">FIXTURE TITLE</label>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">FIXTURE TITLE</label>
                   <input 
                     value={newTripFixture}
                     onChange={e => setNewTripFixture(e.target.value)}
                     placeholder="e.g. VS HILTON COLLEGE (1ST XI AWAY)"
-                    className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-semibold outline-none focus:border-amber-500"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase text-white/50 block mb-1">DESTINATION VENUE</label>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">DESTINATION VENUE</label>
                   <input 
                     value={newTripDestination}
                     onChange={e => setNewTripDestination(e.target.value)}
                     placeholder="e.g. Hilton Oval, Hilton"
-                    className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-semibold outline-none focus:border-amber-500"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-white/50 block mb-1">DEPARTURE TIME</label>
+                    <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">DEPARTURE TIME</label>
                     <input 
                       value={newTripTime}
                       onChange={e => setNewTripTime(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-mono outline-none focus:border-amber-500"
+                      className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-white/50 block mb-1">ASSIGNED DRIVER</label>
+                    <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">ASSIGNED DRIVER</label>
                     <input 
                       value={newTripDriver}
                       onChange={e => setNewTripDriver(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-mono outline-none focus:border-amber-500"
+                      className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase text-white/50 block mb-1">ASSIGNED VEHICLE</label>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">ASSIGNED VEHICLE</label>
                   <select 
                     value={newTripVehicleId}
                     onChange={e => setNewTripVehicleId(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-mono outline-none focus:border-amber-500 text-white"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-mono outline-none focus:border-amber-500 text-zinc-900 dark:text-white"
                   >
                     {fleet.map(v => (
-                      <option key={v.id} value={v.id} className="bg-[#121218]">{v.name} ({v.capacity} Seats)</option>
+                      <option key={v.id} value={v.id} className="bg-white dark:bg-[#121218] text-zinc-900 dark:text-white">{v.name} ({v.capacity} Seats)</option>
                     ))}
                   </select>
                 </div>
@@ -884,43 +883,43 @@ export function TransportHub() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#121218] border border-white/20 p-8 rounded-[2.5rem] max-w-md w-full space-y-6"
+              className="bg-white dark:bg-[#121218] border border-zinc-200 dark:border-white/20 p-8 rounded-[2.5rem] max-w-md w-full space-y-6 shadow-2xl"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-xl font-black italic uppercase" style={{ fontFamily: D.head }}>ADD FLEET VEHICLE</h3>
-                <button onClick={() => setIsAddVehicleOpen(false)} className="text-white/40 hover:text-white"><X size={20} /></button>
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-4">
+                <h3 className="text-xl font-black italic uppercase text-zinc-900 dark:text-white" style={{ fontFamily: D.head }}>ADD FLEET VEHICLE</h3>
+                <button onClick={() => setIsAddVehicleOpen(false)} className="text-zinc-400 dark:text-white/40 hover:text-zinc-900 dark:hover:text-white"><X size={20} /></button>
               </div>
 
               <form onSubmit={handleAddVehicleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-white/50 block mb-1">VEHICLE NAME</label>
+                  <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">VEHICLE NAME</label>
                   <input 
                     value={newVehName}
                     onChange={e => setNewVehName(e.target.value)}
                     placeholder="e.g. EAGLE EXPRESS (22-SEATER)"
-                    className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-semibold outline-none focus:border-amber-500"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-white/50 block mb-1">REGISTRATION</label>
+                    <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">REGISTRATION</label>
                     <input 
                       value={newVehReg}
                       onChange={e => setNewVehReg(e.target.value)}
                       placeholder="e.g. GP 992-101"
-                      className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-mono outline-none focus:border-amber-500"
+                      className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-white/50 block mb-1">CAPACITY (SEATS)</label>
+                    <label className="text-[10px] font-black uppercase text-zinc-500 dark:text-white/50 block mb-1">CAPACITY (SEATS)</label>
                     <input 
                       type="number"
                       value={newVehCapacity}
                       onChange={e => setNewVehCapacity(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-black/40 border border-white/10 text-sm font-mono outline-none focus:border-amber-500"
+                      className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:border-amber-500"
                       required
                     />
                   </div>

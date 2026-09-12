@@ -40,7 +40,7 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
           <div className="flex items-center gap-2.5">
             {icon && <div className="shrink-0">{icon}</div>}
             <h2
-              className="text-xl md:text-2xl font-bold tracking-tight text-slate-100 truncate"
+              className="text-base md:text-lg font-bold tracking-tight text-white truncate"
               style={{
                 fontFamily: D.head,
                 color: D.textPrimary,

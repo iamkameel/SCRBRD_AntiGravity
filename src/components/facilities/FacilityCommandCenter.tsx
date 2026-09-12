@@ -202,39 +202,39 @@ export function FacilityCommandCenter() {
   return (
     <div className="space-y-8 pb-16">
       {/* ─── HEADER ─── */}
-      <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 bg-[#080808] p-8 md:p-10 shadow-2xl">
+      <div className="relative rounded-[2.5rem] overflow-hidden border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#080808] p-8 md:p-10 shadow-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(34,197,94,0.15)_0%,transparent_60%)]" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-[#22c55e]"><Shovel className="h-6 w-6" /></div>
+              <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-[#22c55e]"><Shovel className="h-6 w-6" /></div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#22c55e]" style={{ fontFamily: D.mono }}>Grounds Operations</span>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter" style={{ fontFamily: D.head }}>
-                  Turf & Facility <span className="text-white/40">Engine</span>
+                <h1 className="text-3xl md:text-4xl font-black text-zinc-900 dark:text-white tracking-tighter" style={{ fontFamily: D.head }}>
+                  Turf & Facility <span className="text-zinc-400 dark:text-white/40">Engine</span>
                 </h1>
               </div>
             </div>
-            <p className="text-xs text-white/50 max-w-xl font-medium">
+            <p className="text-xs text-zinc-600 dark:text-white/50 max-w-xl font-medium">
               Turf health across every ground, booking clashes, fixtures with no booking, pitch-prep countdowns and wear-balanced allocation.
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <select
                 value={schoolId ?? ''} onChange={e => { setSchoolId(e.target.value); if (e.target.value !== DEMO_SCHOOL_ID) setFilters({ schoolId: e.target.value }); }}
-                className="h-8 rounded-lg bg-white/5 border border-white/10 text-white text-[11px] font-bold px-3 focus:outline-none focus:border-[#22c55e]/50" style={{ fontFamily: D.mono }} aria-label="Select school"
+                className="h-8 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white text-[11px] font-bold px-3 focus:outline-none focus:border-[#22c55e]/50" style={{ fontFamily: D.mono }} aria-label="Select school"
               >
-                {schools.map(s => <option key={s.id} value={s.id} className="bg-[#0b0b0b]">{s.name}</option>)}
-                <option value={DEMO_SCHOOL_ID} className="bg-[#0b0b0b]">Demo dataset</option>
+                {schools.map(s => <option key={s.id} value={s.id} className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">{s.name}</option>)}
+                <option value={DEMO_SCHOOL_ID} className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Demo dataset</option>
               </select>
-              <Badge title={snap.error} className={cn('text-[9px] uppercase font-mono gap-1.5', isError ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : isDemo ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30')}>
+              <Badge title={snap.error} className={cn('text-[9px] uppercase font-mono gap-1.5', isError ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/30' : isDemo ? 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30' : 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30')}>
                 {isError ? <AlertTriangle className="h-3 w-3" /> : isDemo ? <FlaskConical className="h-3 w-3" /> : <Radio className="h-3 w-3" />}
                 {isError ? 'Firestore error — showing demo data' : isDemo ? 'Demo data — no fields for this school' : 'Live'}
               </Badge>
-              <button onClick={load} disabled={loading} className="h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50" style={{ fontFamily: D.mono }}>
+              <button onClick={load} disabled={loading} className="h-8 px-3 rounded-lg bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-white/60 hover:text-zinc-900 dark:hover:text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50" style={{ fontFamily: D.mono }}>
                 <RefreshCw className={cn('h-3 w-3', loading && 'animate-spin')} /> Refresh
               </button>
             </div>
-            {isError && <p role="alert" className="text-[10px] font-mono text-rose-300/90 pt-1">{snap.error}</p>}
+            {isError && <p role="alert" className="text-[10px] font-mono text-rose-500 dark:text-rose-300/90 pt-1">{snap.error}</p>}
           </div>
           <Button onClick={() => setQuick({ fieldId: snap.fields[0]?.id ?? '', date: todayKey, startTime: '15:00', endTime: '17:00', title: '', type: 'Practice', organizer: '' })}
             className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-black uppercase tracking-widest text-[10px] rounded-full px-6 h-10 shadow-[0_0_25px_rgba(34,197,94,0.3)]">
@@ -243,28 +243,28 @@ export function FacilityCommandCenter() {
         </div>
 
         {/* KPIs */}
-        <div className={cn('grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 pt-8 border-t border-white/[0.08]', loading && 'opacity-50')}>
+        <div className={cn('grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 pt-8 border-t border-zinc-200 dark:border-white/[0.08]', loading && 'opacity-50')}>
           {[
             { label: 'Grounds', value: kpis.fields, sub: `${kpis.matchReady} match-ready`, icon: <MapPin className="h-4 w-4 text-[#22c55e]" /> },
             { label: 'Avg Turf Health', value: `${kpis.avg}`, sub: `Avg grade ${kpis.avg ? (kpis.avg >= 90 ? 'A' : kpis.avg >= 80 ? 'B' : kpis.avg >= 65 ? 'C' : kpis.avg >= 50 ? 'D' : 'F') : '—'}`, icon: <Leaf className="h-4 w-4 text-[#22c55e]" /> },
-            { label: 'Booking Issues', value: kpis.issues, sub: `${conflicts.length} clashes · ${unbooked.length} unbooked · ${snap.unallocatedFixtures.length} unallocated`, icon: <AlertTriangle className={cn('h-4 w-4', kpis.issues ? 'text-rose-400' : 'text-white/30')} />, tone: kpis.issues ? 'text-rose-400' : 'text-white' },
-            { label: 'Fixtures (14d)', value: snap.fixtures.length + snap.unallocatedFixtures.length, sub: `${prep.length} in prep window`, icon: <CalendarDays className="h-4 w-4 text-indigo-400" /> },
-            { label: 'Open Maintenance', value: openTasks.length, sub: `${kpis.overdue} overdue`, icon: <Hammer className={cn('h-4 w-4', kpis.overdue ? 'text-amber-400' : 'text-white/30')} />, tone: kpis.overdue ? 'text-amber-400' : 'text-white' },
+            { label: 'Booking Issues', value: kpis.issues, sub: `${conflicts.length} clashes · ${unbooked.length} unbooked · ${snap.unallocatedFixtures.length} unallocated`, icon: <AlertTriangle className={cn('h-4 w-4', kpis.issues ? 'text-rose-500 dark:text-rose-400' : 'text-zinc-400 dark:text-white/30')} />, tone: kpis.issues ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-900 dark:text-white' },
+            { label: 'Fixtures (14d)', value: snap.fixtures.length + snap.unallocatedFixtures.length, sub: `${prep.length} in prep window`, icon: <CalendarDays className="h-4 w-4 text-indigo-500 dark:text-indigo-400" /> },
+            { label: 'Open Maintenance', value: openTasks.length, sub: `${kpis.overdue} overdue`, icon: <Hammer className={cn('h-4 w-4', kpis.overdue ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-400 dark:text-white/30')} />, tone: kpis.overdue ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white' },
           ].map(k => (
-            <div key={k.label} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <div className="flex items-center justify-between"><span className="text-[9px] font-black uppercase tracking-widest text-white/40" style={{ fontFamily: D.mono }}>{k.label}</span>{k.icon}</div>
-              <p className={cn('text-3xl font-black mt-2', k.tone ?? 'text-white')} style={{ fontFamily: D.head }}>{k.value}</p>
-              <p className="text-[10px] font-medium text-white/40 mt-1">{k.sub}</p>
+            <div key={k.label} className="p-4 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between"><span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>{k.label}</span>{k.icon}</div>
+              <p className={cn('text-3xl font-black mt-2', k.tone ?? 'text-zinc-900 dark:text-white')} style={{ fontFamily: D.head }}>{k.value}</p>
+              <p className="text-[10px] font-medium text-zinc-500 dark:text-white/40 mt-1">{k.sub}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* ─── TURF HEALTH GRID ─── */}
-      <section className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-2xl p-6 md:p-8 space-y-5">
+      <section className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-black/40 backdrop-blur-2xl p-6 md:p-8 space-y-5 shadow-xl">
         <div className="flex items-center gap-2">
           <Leaf className="h-4 w-4 text-[#22c55e]" />
-          <h2 className="text-xl font-black text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>TURF <span className="text-[#22c55e] italic">HEALTH</span></h2>
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>TURF <span className="text-[#22c55e] italic">HEALTH</span></h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {snap.fields.map(f => {
@@ -272,33 +272,33 @@ export function FacilityCommandCenter() {
             const wk = weekLoad(snap.bookings, f.id, week);
             const next = snap.fixtures.filter(x => x.fieldId === f.id && x.date >= todayKey).sort((a, b) => a.date.localeCompare(b.date))[0];
             return (
-              <div key={f.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-4">
+              <div key={f.id} className="p-5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-white truncate">{f.name}</h3>
-                    <p className="text-[10px] text-white/40 font-mono truncate">{f.pitchType ?? 'Turf'} · {f.fieldSize ?? '—'}{f.floodlights ? ' · Lights' : ''}</p>
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{f.name}</h3>
+                    <p className="text-[10px] text-zinc-500 dark:text-white/40 font-mono truncate">{f.pitchType ?? 'Turf'} · {f.fieldSize ?? '—'}{f.floodlights ? ' · Lights' : ''}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <div className={cn('text-3xl font-black leading-none', GRADE_TONE[h.grade])} style={{ fontFamily: D.head }}>{h.score}</div>
                     <div className={cn('text-[10px] font-black uppercase', GRADE_TONE[h.grade])}>Grade {h.grade}</div>
                   </div>
                 </div>
-                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden"><div className={cn('h-full rounded-full', h.grade === 'A' || h.grade === 'B' ? 'bg-[#22c55e]' : h.grade === 'C' ? 'bg-amber-400' : 'bg-rose-400')} style={{ width: `${h.score}%` }} /></div>
-                <p className="text-[11px] font-bold text-white/70">{h.label}</p>
+                <div className="h-1.5 rounded-full bg-zinc-200 dark:bg-white/5 overflow-hidden"><div className={cn('h-full rounded-full', h.grade === 'A' || h.grade === 'B' ? 'bg-[#22c55e]' : h.grade === 'C' ? 'bg-amber-400' : 'bg-rose-400')} style={{ width: `${h.score}%` }} /></div>
+                <p className="text-[11px] font-bold text-zinc-700 dark:text-white/70">{h.label}</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {h.factors.filter(x => ['condition', 'pitch', 'moisture', 'freshness', 'wear', 'outfield'].includes(x.key)).map(x => (
-                    <div key={x.key} className="p-1.5 rounded-lg bg-black/40 border border-white/5 text-center" title={x.note}>
-                      <div className="text-[7px] font-black uppercase text-white/30 truncate" style={{ fontFamily: D.mono }}>{x.label.split(' ')[0]}</div>
-                      <div className={cn('text-[11px] font-bold', x.score >= 80 ? 'text-white' : x.score >= 60 ? 'text-amber-400' : 'text-rose-400')}>{x.score}</div>
+                    <div key={x.key} className="p-1.5 rounded-lg bg-zinc-100 dark:bg-black/40 border border-zinc-200 dark:border-white/5 text-center" title={x.note}>
+                      <div className="text-[7px] font-black uppercase text-zinc-400 dark:text-white/30 truncate" style={{ fontFamily: D.mono }}>{x.label.split(' ')[0]}</div>
+                      <div className={cn('text-[11px] font-bold', x.score >= 80 ? 'text-zinc-900 dark:text-white' : x.score >= 60 ? 'text-amber-500 dark:text-amber-400' : 'text-rose-500 dark:text-rose-400')}>{x.score}</div>
                     </div>
                   ))}
                 </div>
                 {h.risks.length > 0 && (
-                  <ul className="space-y-1">{h.risks.slice(0, 2).map(r => <li key={r} className="text-[10px] text-rose-300/90 flex gap-1.5"><AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />{r}</li>)}</ul>
+                  <ul className="space-y-1">{h.risks.slice(0, 2).map(r => <li key={r} className="text-[10px] text-rose-600 dark:text-rose-300/90 flex gap-1.5"><AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />{r}</li>)}</ul>
                 )}
-                <div className="flex items-center justify-between text-[10px] font-mono text-white/40 pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-white/40 pt-2 border-t border-zinc-200 dark:border-white/5">
                   <span>{wk.count} bookings · {wk.hours}h this week</span>
-                  {next ? <span className="text-white/60">Next: {dayLabel(next.date).dow} {dayLabel(next.date).dom}</span> : <span>No fixture</span>}
+                  {next ? <span className="text-zinc-700 dark:text-white/60">Next: {dayLabel(next.date).dow} {dayLabel(next.date).dom}</span> : <span>No fixture</span>}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setLogModal({
@@ -311,7 +311,7 @@ export function FacilityCommandCenter() {
                     moistureLevel: 18,
                     grassLength: 6,
                     notes: ''
-                  })} className="flex-1 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><FlaskConical className="h-3 w-3" /> Log Pitch</button>
+                  })} className="flex-1 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><FlaskConical className="h-3 w-3" /> Log Pitch</button>
                   <button onClick={() => setQuick({ fieldId: f.id, date: todayKey, startTime: '15:00', endTime: '17:00', title: '', type: 'Practice', organizer: '' })} className="flex-1 h-8 rounded-lg bg-[#22c55e]/10 border border-[#22c55e]/30 text-[#22c55e] text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1"><Plus className="h-3 w-3" /> Book</button>
                 </div>
               </div>
@@ -508,40 +508,40 @@ export function FacilityCommandCenter() {
 
       {/* ─── QUICK BOOK DIALOG ─── */}
       <Dialog open={!!quick} onOpenChange={o => !o && setQuick(null)}>
-        <DialogContent className="bg-[#0b0b0b] border-white/10 text-white sm:max-w-md">
+        <DialogContent className="bg-white dark:bg-[#0b0b0b] border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white sm:max-w-md">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: D.head }}>{quick?.fixtureId ? 'Book ground for fixture' : 'New booking'}</DialogTitle>
-            <DialogDescription className="text-white/50 text-xs">Conflicts are checked against everything already on the grid.</DialogDescription>
+            <DialogDescription className="text-zinc-500 dark:text-white/50 text-xs">Conflicts are checked against everything already on the grid.</DialogDescription>
           </DialogHeader>
           {quick && (() => {
             const clash = snap.bookings.filter(b => b.fieldId === quick.fieldId && b.date === quick.date && b.status !== 'Cancelled' && b.startTime < quick.endTime && quick.startTime < b.endTime);
-            const inputCls = 'h-9 w-full rounded-lg bg-white/5 border border-white/10 px-3 text-xs text-white focus:outline-none focus:border-[#22c55e]/50';
+            const inputCls = 'h-9 w-full rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-3 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-[#22c55e]/50';
             return (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Ground</span>
-                    <select value={quick.fieldId} onChange={e => setQuick({ ...quick, fieldId: e.target.value })} className={inputCls}>{snap.fields.map(f => <option key={f.id} value={f.id} className="bg-[#0b0b0b]">{f.name} · {health[f.id].grade}</option>)}</select></label>
-                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Title</span>
+                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Ground</span>
+                    <select value={quick.fieldId} onChange={e => setQuick({ ...quick, fieldId: e.target.value })} className={inputCls}>{snap.fields.map(f => <option key={f.id} value={f.id} className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">{f.name} · {health[f.id].grade}</option>)}</select></label>
+                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Title</span>
                     <input value={quick.title} onChange={e => setQuick({ ...quick, title: e.target.value })} placeholder="U15A practice" className={inputCls} /></label>
-                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Date</span>
+                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Date</span>
                     <input type="date" value={quick.date} onChange={e => setQuick({ ...quick, date: e.target.value })} className={inputCls} /></label>
-                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Type</span>
-                    <select value={quick.type} onChange={e => setQuick({ ...quick, type: e.target.value as BookingType })} className={inputCls}>{(Object.keys(TYPE_CHIP) as BookingType[]).map(t => <option key={t} value={t} className="bg-[#0b0b0b]">{t}</option>)}</select></label>
-                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Start</span>
+                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Type</span>
+                    <select value={quick.type} onChange={e => setQuick({ ...quick, type: e.target.value as BookingType })} className={inputCls}>{(Object.keys(TYPE_CHIP) as BookingType[]).map(t => <option key={t} value={t} className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">{t}</option>)}</select></label>
+                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Start</span>
                     <input type="time" value={quick.startTime} onChange={e => setQuick({ ...quick, startTime: e.target.value })} className={inputCls} /></label>
-                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>End</span>
+                  <label className="space-y-1"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>End</span>
                     <input type="time" value={quick.endTime} onChange={e => setQuick({ ...quick, endTime: e.target.value })} className={inputCls} /></label>
-                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Organiser</span>
+                  <label className="space-y-1 col-span-2"><span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Organiser</span>
                     <input value={quick.organizer} onChange={e => setQuick({ ...quick, organizer: e.target.value })} placeholder="Coach / department" className={inputCls} /></label>
                 </div>
                 {clash.length > 0 && (
-                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-[11px] text-rose-200 space-y-0.5">
+                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-[11px] text-rose-600 dark:text-rose-200 space-y-0.5">
                     <div className="font-bold flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" /> Overlaps {clash.length} existing booking{clash.length > 1 ? 's' : ''}</div>
                     {clash.map(b => <div key={b.id} className="font-mono opacity-80">{b.startTime}–{b.endTime} {b.title}</div>)}
                   </div>
                 )}
                 <div className="flex justify-end gap-2 pt-1">
-                  <Button variant="ghost" onClick={() => setQuick(null)} className="text-white/60">Cancel</Button>
+                  <Button variant="ghost" onClick={() => setQuick(null)} className="text-zinc-600 dark:text-white/60">Cancel</Button>
                   <Button disabled={!quick.title || !quick.fieldId || quick.startTime >= quick.endTime || busy === 'book'} onClick={() => submitBooking(quick)}
                     className={cn('font-black uppercase text-[10px] tracking-wider', clash.length ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-[#22c55e] hover:bg-[#16a34a] text-black')}>
                     {busy === 'book' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : clash.length ? 'Book anyway' : 'Confirm booking'}
@@ -555,59 +555,59 @@ export function FacilityCommandCenter() {
 
       {/* Groundskeeper Telemetry Modal */}
       <Dialog open={!!logModal} onOpenChange={o => !o && setLogModal(null)}>
-        <DialogContent className="bg-[#0b0b0b] border-white/10 text-white sm:max-w-lg">
+        <DialogContent className="bg-white dark:bg-[#0b0b0b] border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: D.head }}>Log Groundskeeper Telemetry</DialogTitle>
-            <DialogDescription className="text-white/50 text-xs">
+            <DialogDescription className="text-zinc-500 dark:text-white/50 text-xs">
               Record Clegg Impact Value, moisture level, grass height, and readiness to update field health and match readiness protocols.
             </DialogDescription>
           </DialogHeader>
           {logModal && (() => {
-            const inputCls = 'h-9 w-full rounded-lg bg-white/5 border border-white/10 px-3 text-xs text-white focus:outline-none focus:border-amber-500/50';
+            const inputCls = 'h-9 w-full rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-3 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500/50';
             const fName = snap.fields.find(f => f.id === logModal.fieldId)?.name ?? 'Field';
             return (
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-200 flex items-center justify-between">
                   <div>
                     <span className="font-bold block">{fName}</span>
-                    <span className="text-[10px] text-amber-300/70 font-mono">Current Status: {logModal.conditionStatus}</span>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-300/70 font-mono">Current Status: {logModal.conditionStatus}</span>
                   </div>
-                  <FlaskConical className="h-5 w-5 text-amber-400" />
+                  <FlaskConical className="h-5 w-5 text-amber-500 dark:text-amber-400" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="space-y-1 col-span-2">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Condition Status</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Condition Status</span>
                     <select value={logModal.conditionStatus} onChange={e => setLogModal({ ...logModal, conditionStatus: e.target.value as any })} className={inputCls}>
-                      <option value="Excellent" className="bg-[#0b0b0b]">Excellent (Match-Ready)</option>
-                      <option value="Good" className="bg-[#0b0b0b]">Good (Playable)</option>
-                      <option value="Fair" className="bg-[#0b0b0b]">Fair (Inspection Required)</option>
-                      <option value="Poor" className="bg-[#0b0b0b]">Poor (Heavy Wear)</option>
-                      <option value="Unplayable" className="bg-[#0b0b0b]">Unplayable (Waterlogged / Damaged)</option>
+                      <option value="Excellent" className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Excellent (Match-Ready)</option>
+                      <option value="Good" className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Good (Playable)</option>
+                      <option value="Fair" className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Fair (Inspection Required)</option>
+                      <option value="Poor" className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Poor (Heavy Wear)</option>
+                      <option value="Unplayable" className="bg-white dark:bg-[#0b0b0b] text-zinc-900 dark:text-white">Unplayable (Waterlogged / Damaged)</option>
                     </select>
                   </label>
                   <label className="space-y-1">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Clegg Impact Value (CIV)</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Clegg Impact Value (CIV)</span>
                     <input type="number" value={logModal.cleggValue} onChange={e => setLogModal({ ...logModal, cleggValue: Number(e.target.value) })} className={inputCls} placeholder="85-95" />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Moisture Content (%)</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Moisture Content (%)</span>
                     <input type="number" value={logModal.moistureLevel} onChange={e => setLogModal({ ...logModal, moistureLevel: Number(e.target.value) })} className={inputCls} placeholder="12-22%" />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Grass Cut Height (mm)</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Grass Cut Height (mm)</span>
                     <input type="number" value={logModal.grassLength} onChange={e => setLogModal({ ...logModal, grassLength: Number(e.target.value) })} className={inputCls} placeholder="6mm" />
                   </label>
                   <label className="space-y-1">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Pitch Readiness Score (0-100)</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Pitch Readiness Score (0-100)</span>
                     <input type="number" value={logModal.pitchReadiness} onChange={e => setLogModal({ ...logModal, pitchReadiness: Number(e.target.value) })} className={inputCls} />
                   </label>
                   <label className="space-y-1 col-span-2">
-                    <span className="text-[9px] font-black uppercase text-white/40" style={{ fontFamily: D.mono }}>Groundskeeper & Agronomy Notes</span>
+                    <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-white/40" style={{ fontFamily: D.mono }}>Groundskeeper & Agronomy Notes</span>
                     <input value={logModal.notes} onChange={e => setLogModal({ ...logModal, notes: e.target.value })} placeholder="e.g., Heavy roller applied; pitch mown to 6mm for weekend 1st XI derby." className={inputCls} />
                   </label>
                 </div>
-                <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-                  <Button variant="ghost" onClick={() => setLogModal(null)} className="text-white/60">Cancel</Button>
+                <div className="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-white/10">
+                  <Button variant="ghost" onClick={() => setLogModal(null)} className="text-zinc-600 dark:text-white/60">Cancel</Button>
                   <Button disabled={busy === 'log'} onClick={async () => {
                     setBusy('log');
                     try {

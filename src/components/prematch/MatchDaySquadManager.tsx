@@ -69,7 +69,11 @@ const MOCK_SQUAD: SquadPlayer[] = [
   { id: 'p14', name: 'Z. Patel', role: 'Standby Batter', battingStyle: 'LHB', bowlingStyle: 'Slow Left-arm', status: 'standby', availability: 'pending', orderIndex: 14 },
 ];
 
-export function MatchDaySquadManager() {
+export interface MatchDaySquadManagerProps {
+  hideHeader?: boolean;
+}
+
+export function MatchDaySquadManager({ hideHeader = false }: MatchDaySquadManagerProps) {
   const [players, setPlayers] = useState<SquadPlayer[]>(MOCK_SQUAD);
   const [isLocked, setIsLocked] = useState<boolean>(false);
   const [version, setVersion] = useState<number>(1);
@@ -135,57 +139,102 @@ export function MatchDaySquadManager() {
   return (
     <div className="space-y-6">
       {/* Header & Status Banner */}
-      <div className="p-6 rounded-3xl border border-white/10 flex flex-col xl:flex-row xl:items-center justify-between gap-6" style={{ background: D.surf1 }}>
-        <div className="space-y-2">
+      {!hideHeader ? (
+        <div className="p-6 rounded-3xl border border-white/10 flex flex-col xl:flex-row xl:items-center justify-between gap-6" style={{ background: D.surf1 }}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 font-black text-xs px-3 py-1 uppercase tracking-widest">
+                Match-Day Squad Engine v{version}.0
+              </Badge>
+              <Badge 
+                className={`font-black text-xs px-3 py-1 uppercase tracking-widest flex items-center gap-1.5 ${
+                  isLocked 
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                }`}
+              >
+                {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                {isLocked ? 'Squad Confirmed & Locked' : 'Selection Open / Draft State'}
+              </Badge>
+            </div>
+            <h2 className="text-2xl font-black uppercase italic tracking-tight" style={{ fontFamily: D.head, color: D.textPrimary }}>
+              Playing XI & Selection Package
+            </h2>
+            <p className="text-xs font-medium text-muted-foreground">
+              Versioned selection protocol, captaincy confirmation, and emergency replacement audit trail.
+            </p>
+          </div>
+
           <div className="flex items-center gap-3 flex-wrap">
-            <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 font-black text-xs px-3 py-1 uppercase tracking-widest">
-              Match-Day Squad Engine v{version}.0
+            <Button
+              variant="outline"
+              disabled={isLocked}
+              onClick={() => setReplacementModalOpen(true)}
+              className="h-11 px-5 rounded-2xl font-bold text-xs uppercase tracking-wider border-white/10 hover:bg-white/5 text-white"
+            >
+              <ArrowRightLeft className="w-4 h-4 mr-2 text-sky-400" /> Log Replacement
+            </Button>
+
+            <Button
+              onClick={handleToggleLock}
+              className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg ${
+                isLocked 
+                  ? 'bg-amber-500 text-black hover:bg-amber-400' 
+                  : 'bg-emerald-500 text-black hover:bg-emerald-400'
+              }`}
+            >
+              {isLocked ? (
+                <><Unlock className="w-4 h-4 mr-2" /> Unlock Squad</>
+              ) : (
+                <><Lock className="w-4 h-4 mr-2" /> Confirm & Lock XI</>
+              )}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        /* Compact Control Bar when embedded in tabs */
+        <div className="p-4 rounded-2xl border flex items-center justify-between gap-4" style={{ background: D.surf1, borderColor: D.border }}>
+          <div className="flex items-center gap-3">
+            <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 font-black text-[10px] px-2.5 py-0.5 uppercase tracking-widest">
+              Squad Engine v{version}.0
             </Badge>
             <Badge 
-              className={`font-black text-xs px-3 py-1 uppercase tracking-widest flex items-center gap-1.5 ${
+              className={`font-black text-[10px] px-2.5 py-0.5 uppercase tracking-widest flex items-center gap-1.5 ${
                 isLocked 
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
                   : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
               }`}
             >
-              {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-              {isLocked ? 'Squad Confirmed & Locked' : 'Selection Open / Draft State'}
+              {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+              {isLocked ? 'Squad Locked' : 'Selection Open'}
             </Badge>
           </div>
-          <h2 className="text-2xl font-black uppercase italic tracking-tight" style={{ fontFamily: D.head, color: D.textPrimary }}>
-            Playing XI & Selection Package
-          </h2>
-          <p className="text-xs font-medium text-muted-foreground">
-            Versioned selection protocol, captaincy confirmation, and emergency replacement audit trail.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <Button
-            variant="outline"
-            disabled={isLocked}
-            onClick={() => setReplacementModalOpen(true)}
-            className="h-11 px-5 rounded-2xl font-bold text-xs uppercase tracking-wider border-white/10 hover:bg-white/5"
-          >
-            <ArrowRightLeft className="w-4 h-4 mr-2 text-sky-400" /> Log Replacement
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isLocked}
+              onClick={() => setReplacementModalOpen(true)}
+              className="h-9 px-3 rounded-xl font-bold text-xs border-white/10 hover:bg-white/5 text-white"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5 text-sky-400" /> Log Replacement
+            </Button>
 
-          <Button
-            onClick={handleToggleLock}
-            className={`h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg ${
-              isLocked 
-                ? 'bg-amber-500 text-black hover:bg-amber-400' 
-                : 'bg-emerald-500 text-black hover:bg-emerald-400'
-            }`}
-          >
-            {isLocked ? (
-              <><Unlock className="w-4 h-4 mr-2" /> Unlock Squad</>
-            ) : (
-              <><Lock className="w-4 h-4 mr-2" /> Confirm & Lock XI</>
-            )}
-          </Button>
+            <Button
+              size="sm"
+              onClick={handleToggleLock}
+              className={`h-9 px-4 rounded-xl font-black text-xs uppercase shadow-md ${
+                isLocked 
+                  ? 'bg-amber-500 text-black hover:bg-amber-400' 
+                  : 'bg-emerald-500 text-black hover:bg-emerald-400'
+              }`}
+            >
+              {isLocked ? 'Unlock Squad' : 'Confirm & Lock XI'}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Grid: Playing XI + Standby & Audit */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -43,22 +43,22 @@ export function MatchDayTeamSheet() {
   };
 
   return (
-    <Card className="p-6 bg-slate-900/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl text-slate-100 space-y-6 print:bg-white print:text-black print:p-0 print:border-none">
+    <Card className="p-6 bg-white dark:bg-slate-900/90 border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl text-zinc-900 dark:text-slate-100 space-y-6 print:bg-white print:text-black print:p-0 print:border-none">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-6 print:border-black">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 pb-6 print:border-black">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 print:hidden">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 print:hidden">
             <FileText className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-white font-['Syne',sans-serif] tracking-tight print:text-black">Official Match-Day Team Sheet</h2>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-mono text-[10px] print:hidden">
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white font-['Syne',sans-serif] tracking-tight print:text-black">Official Match-Day Team Sheet</h2>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-mono text-[10px] print:hidden">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Head Coach Approved
               </Badge>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5 print:text-gray-600">St John&apos;s College 1st XI vs King Edward VII School • Mitchell Field</p>
+            <p className="text-xs text-zinc-500 dark:text-slate-400 mt-0.5 print:text-gray-600">St John&apos;s College 1st XI vs King Edward VII School • Mitchell Field</p>
           </div>
         </div>
 
@@ -73,31 +73,31 @@ export function MatchDayTeamSheet() {
       </div>
 
       {/* Fixture Metadata Box */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-white/5 border border-white/10 text-xs font-mono print:bg-gray-100 print:text-black print:border-gray-300">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-xs font-mono print:bg-gray-100 print:text-black print:border-gray-300">
         <div>
-          <span className="text-slate-400 block print:text-gray-500">Date & Time</span>
-          <span className="font-bold text-white print:text-black">10 March 2026 • 09:30 AM</span>
+          <span className="text-zinc-500 dark:text-slate-400 block print:text-gray-500">Date & Time</span>
+          <span className="font-bold text-zinc-900 dark:text-white print:text-black">10 March 2026 • 09:30 AM</span>
         </div>
         <div>
-          <span className="text-slate-400 block print:text-gray-500">Competition</span>
-          <span className="font-bold text-amber-400 print:text-black">Gauteng 1st XI Premier League</span>
+          <span className="text-zinc-500 dark:text-slate-400 block print:text-gray-500">Competition</span>
+          <span className="font-bold text-amber-600 dark:text-amber-400 print:text-black">Gauteng 1st XI Premier League</span>
         </div>
         <div>
-          <span className="text-slate-400 block print:text-gray-500">Match Format</span>
-          <span className="font-bold text-cyan-400 print:text-black">50-Over Limited Overs</span>
+          <span className="text-zinc-500 dark:text-slate-400 block print:text-gray-500">Match Format</span>
+          <span className="font-bold text-cyan-600 dark:text-cyan-400 print:text-black">50-Over Limited Overs</span>
         </div>
         <div>
-          <span className="text-slate-400 block print:text-gray-500">Umpire Assignments</span>
-          <span className="font-bold text-white print:text-black">R. Gibson & P. Mthembu</span>
+          <span className="text-zinc-500 dark:text-slate-400 block print:text-gray-500">Umpire Assignments</span>
+          <span className="font-bold text-zinc-900 dark:text-white print:text-black">R. Gibson & P. Mthembu</span>
         </div>
       </div>
 
       {/* Playing XI Table */}
       <div className="space-y-3">
-        <div className="text-xs font-mono uppercase font-bold text-slate-400 print:text-black">Starting Playing XI</div>
-        <div className="border border-white/10 rounded-xl overflow-hidden print:border-gray-400">
+        <div className="text-xs font-mono uppercase font-bold text-zinc-500 dark:text-slate-400 print:text-black">Starting Playing XI</div>
+        <div className="border border-zinc-200 dark:border-white/10 rounded-xl overflow-hidden print:border-gray-400">
           <table className="w-full text-xs text-left font-mono">
-            <thead className="bg-white/5 text-slate-400 border-b border-white/10 print:bg-gray-200 print:text-black print:border-gray-400">
+            <thead className="bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-slate-400 border-b border-zinc-200 dark:border-white/10 print:bg-gray-200 print:text-black print:border-gray-400">
               <tr>
                 <th className="p-3">#</th>
                 <th className="p-3">Player Name</th>
@@ -106,25 +106,25 @@ export function MatchDayTeamSheet() {
                 <th className="p-3">Medical / Clearance Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 print:divide-gray-300">
-              {MOCK_PLAYING_XI.map((p, idx) => (
-                <tr key={p.id} className="hover:bg-white/5 print:hover:bg-transparent">
-                  <td className="p-3 font-bold text-indigo-400 print:text-black">{p.shirtNumber}</td>
-                  <td className="p-3 font-bold text-white print:text-black">{p.name}</td>
-                  <td className="p-3 text-slate-300 print:text-black">{p.role}</td>
+            <tbody className="divide-y divide-zinc-200 dark:divide-white/5 print:divide-gray-300">
+              {MOCK_PLAYING_XI.map((p) => (
+                <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-white/5 print:hover:bg-transparent">
+                  <td className="p-3 font-bold text-indigo-600 dark:text-indigo-400 print:text-black">{p.shirtNumber}</td>
+                  <td className="p-3 font-bold text-zinc-900 dark:text-white print:text-black">{p.name}</td>
+                  <td className="p-3 text-zinc-700 dark:text-slate-300 print:text-black">{p.role}</td>
                   <td className="p-3">
                     {p.isCaptain && <Badge className="bg-amber-500 text-slate-950 font-bold text-[9px] mr-1">CAPTAIN (C)</Badge>}
                     {p.isViceCaptain && <Badge className="bg-slate-400 text-slate-950 font-bold text-[9px] mr-1">VICE CAPTAIN (VC)</Badge>}
                     {p.isWicketkeeper && <Badge className="bg-cyan-500 text-slate-950 font-bold text-[9px]">WK</Badge>}
                   </td>
-                  <td className="p-3 text-amber-400 print:text-gray-700">
+                  <td className="p-3 text-amber-600 dark:text-amber-400 print:text-gray-700">
                     {p.medicalNote ? (
                       <span className="flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 print:hidden" />
+                        <AlertCircle className="w-3 h-3 text-amber-500 shrink-0 print:hidden" />
                         {p.medicalNote}
                       </span>
                     ) : (
-                      <span className="text-slate-500 print:text-gray-400">Full Clearance</span>
+                      <span className="text-zinc-400 dark:text-slate-500 print:text-gray-400">Full Clearance</span>
                     )}
                   </td>
                 </tr>
@@ -136,15 +136,15 @@ export function MatchDayTeamSheet() {
 
       {/* Reserves */}
       <div className="space-y-3">
-        <div className="text-xs font-mono uppercase font-bold text-slate-400 print:text-black">12th Man & Reserves</div>
+        <div className="text-xs font-mono uppercase font-bold text-zinc-500 dark:text-slate-400 print:text-black">12th Man & Reserves</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {MOCK_RESERVES.map(p => (
-            <div key={p.id} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between text-xs font-mono print:bg-gray-100 print:border-gray-300 print:text-black">
+            <div key={p.id} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/5 flex items-center justify-between text-xs font-mono print:bg-gray-100 print:border-gray-300 print:text-black">
               <div>
-                <span className="font-bold text-white print:text-black">#{p.shirtNumber} {p.name}</span>
-                <div className="text-slate-400 text-[11px] print:text-gray-600">{p.role}</div>
+                <span className="font-bold text-zinc-900 dark:text-white print:text-black">#{p.shirtNumber} {p.name}</span>
+                <div className="text-zinc-500 dark:text-slate-400 text-[11px] print:text-gray-600">{p.role}</div>
               </div>
-              <Badge variant="outline" className="bg-slate-950 text-slate-400 border-white/10 print:border-gray-400 print:text-black">
+              <Badge variant="outline" className="bg-zinc-200 dark:bg-slate-950 text-zinc-700 dark:text-slate-400 border-zinc-300 dark:border-white/10 print:border-gray-400 print:text-black">
                 RESERVE
               </Badge>
             </div>
@@ -153,18 +153,18 @@ export function MatchDayTeamSheet() {
       </div>
 
       {/* Official Signatures Box */}
-      <div className="pt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-3 gap-6 font-mono text-xs print:border-black">
+      <div className="pt-6 border-t border-zinc-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-3 gap-6 font-mono text-xs print:border-black">
         <div className="space-y-6">
-          <div className="text-slate-400 print:text-gray-600">Head Coach Signature:</div>
-          <div className="border-b border-white/20 pb-1 text-slate-300 print:border-black print:text-black">G. Steyn (Head Coach)</div>
+          <div className="text-zinc-500 dark:text-slate-400 print:text-gray-600">Head Coach Signature:</div>
+          <div className="border-b border-zinc-300 dark:border-white/20 pb-1 text-zinc-800 dark:text-slate-300 print:border-black print:text-black">G. Steyn (Head Coach)</div>
         </div>
         <div className="space-y-6">
-          <div className="text-slate-400 print:text-gray-600">Team Manager Signature:</div>
-          <div className="border-b border-white/20 pb-1 text-slate-300 print:border-black print:text-black">R. Botha (Master i/c Cricket)</div>
+          <div className="text-zinc-500 dark:text-slate-400 print:text-gray-600">Team Manager Signature:</div>
+          <div className="border-b border-zinc-300 dark:border-white/20 pb-1 text-zinc-800 dark:text-slate-300 print:border-black print:text-black">R. Botha (Master i/c Cricket)</div>
         </div>
         <div className="space-y-6">
-          <div className="text-slate-400 print:text-gray-600">Match Umpire Confirmation:</div>
-          <div className="border-b border-white/20 pb-1 text-slate-300 print:border-black print:text-black">R. Gibson (Official Umpire)</div>
+          <div className="text-zinc-500 dark:text-slate-400 print:text-gray-600">Match Umpire Confirmation:</div>
+          <div className="border-b border-zinc-300 dark:border-white/20 pb-1 text-zinc-800 dark:text-slate-300 print:border-black print:text-black">R. Gibson (Official Umpire)</div>
         </div>
       </div>
     </Card>

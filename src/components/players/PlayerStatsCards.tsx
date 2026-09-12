@@ -14,10 +14,10 @@ function StatRow({ label, value, total, color = "#22c55e" }: { label: string; va
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-end">
-        <span className="text-[9px] font-black uppercase tracking-widest text-white/30" style={{ fontFamily: D.mono }}>{label}</span>
-        <span className="text-xs font-black text-white/80">{value}</span>
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/30" style={{ fontFamily: D.mono }}>{label}</span>
+        <span className="text-xs font-black text-zinc-800 dark:text-white/80">{value}</span>
       </div>
-      <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-white/[0.06] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
           style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }}
@@ -30,11 +30,11 @@ function StatRow({ label, value, total, color = "#22c55e" }: { label: string; va
 function BigStat({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: string }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-[9px] font-black uppercase tracking-widest text-white/25" style={{ fontFamily: D.mono }}>{label}</div>
-      <div className="text-3xl font-black tracking-tighter leading-none" style={{ fontFamily: D.head, color: accent || "rgba(255,255,255,0.85)" }}>
+      <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/25" style={{ fontFamily: D.mono }}>{label}</div>
+      <div className="text-3xl font-black tracking-tighter leading-none text-zinc-900 dark:text-white/90" style={{ fontFamily: D.head, color: accent || undefined }}>
         {value}
       </div>
-      {sub && <div className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sub}</div>}
+      {sub && <div className="text-[9px] font-bold text-zinc-400 dark:text-white/30 uppercase tracking-widest">{sub}</div>}
     </div>
   );
 }
@@ -51,21 +51,21 @@ export function BattingStatsCard({ player, index = 0 }: StatsCardProps) {
 
   return (
     <div
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col"
+      className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col shadow-sm"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* Accent bar */}
       <div className="h-1 w-full bg-gradient-to-r from-[#22c55e]/30 via-[#22c55e] to-[#22c55e]/30" />
 
-      <div className="p-7 border-b border-white/[0.06] flex items-center justify-between">
+      <div className="p-7 border-b border-zinc-200 dark:border-white/[0.06] flex items-center justify-between">
         <div>
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#22c55e]" style={{ fontFamily: D.mono }}>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-[#22c55e]" style={{ fontFamily: D.mono }}>
             Batting Profile
           </h3>
-          <p className="text-[9px] text-white/25 mt-0.5 font-medium">Career accumulation</p>
+          <p className="text-[9px] text-zinc-400 dark:text-white/25 mt-0.5 font-medium">Career accumulation</p>
         </div>
-        <div className="w-8 h-8 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center">
-          <Target className="h-4 w-4 text-[#22c55e]" />
+        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+          <Target className="h-4 w-4 text-emerald-600 dark:text-[#22c55e]" />
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export function BattingStatsCard({ player, index = 0 }: StatsCardProps) {
           <BigStat label="Strike Rate" value={strikeRate.toFixed(1)} />
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-white/[0.05]">
+        <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-white/[0.05]">
           <StatRow label="50s" value={fifties} total={matches} color="#22c55e" />
           <StatRow label="100s" value={hundreds} total={Math.max(fifties, 1)} color="#22c55e" />
           <StatRow label="High Score" value={highScore} total={200} color="#22c55e" />
@@ -98,20 +98,20 @@ export function BowlingStatsCard({ player, index = 1 }: StatsCardProps) {
 
   return (
     <div
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col"
+      className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col shadow-sm"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="h-1 w-full bg-gradient-to-r from-blue-500/30 via-blue-500 to-blue-500/30" />
 
-      <div className="p-7 border-b border-white/[0.06] flex items-center justify-between">
+      <div className="p-7 border-b border-zinc-200 dark:border-white/[0.06] flex items-center justify-between">
         <div>
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400" style={{ fontFamily: D.mono }}>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 dark:text-blue-400" style={{ fontFamily: D.mono }}>
             Bowling Profile
           </h3>
-          <p className="text-[9px] text-white/25 mt-0.5 font-medium">Wicket-taking analysis</p>
+          <p className="text-[9px] text-zinc-400 dark:text-white/25 mt-0.5 font-medium">Wicket-taking analysis</p>
         </div>
         <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-          <Activity className="h-4 w-4 text-blue-400" />
+          <Activity className="h-4 w-4 text-blue-500 dark:text-blue-400" />
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export function BowlingStatsCard({ player, index = 1 }: StatsCardProps) {
           <BigStat label="Economy" value={economy?.toFixed(2) || "0.00"} />
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-white/[0.05]">
+        <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-white/[0.05]">
           <StatRow label="Wkts per match" value={Number(strikeRate)} total={5} color="#60a5fa" />
           <StatRow label="Economy quality" value={economy > 0 ? Math.max(0, 10 - economy) : 0} total={10} color="#60a5fa" />
         </div>
@@ -141,20 +141,20 @@ export function FieldingStatsCard({ player, index = 2 }: StatsCardProps) {
 
   return (
     <div
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col"
+      className="rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl overflow-hidden sh-slide-up flex flex-col shadow-sm"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="h-1 w-full bg-gradient-to-r from-sky-400/30 via-sky-400 to-sky-400/30" />
 
-      <div className="p-7 border-b border-white/[0.06] flex items-center justify-between">
+      <div className="p-7 border-b border-zinc-200 dark:border-white/[0.06] flex items-center justify-between">
         <div>
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400" style={{ fontFamily: D.mono }}>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-500 dark:text-sky-400" style={{ fontFamily: D.mono }}>
             Fielding Profile
           </h3>
-          <p className="text-[9px] text-white/25 mt-0.5 font-medium">Dismissals & involvement</p>
+          <p className="text-[9px] text-zinc-400 dark:text-white/25 mt-0.5 font-medium">Dismissals & involvement</p>
         </div>
         <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
-          <Shield className="h-4 w-4 text-sky-400" />
+          <Shield className="h-4 w-4 text-sky-500 dark:text-sky-400" />
         </div>
       </div>
 
@@ -163,29 +163,29 @@ export function FieldingStatsCard({ player, index = 2 }: StatsCardProps) {
         <div className="flex items-end justify-between">
           <BigStat label="Total Dismissals" value={total} accent="#38bdf8" />
           <div className="text-right">
-            <div className="text-[9px] font-black uppercase tracking-widest text-white/25 mb-1" style={{ fontFamily: D.mono }}>Best Zone</div>
-            <span className="text-xs font-black text-sky-400">Mid-wicket</span>
+            <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/25 mb-1" style={{ fontFamily: D.mono }}>Best Zone</div>
+            <span className="text-xs font-black text-sky-500 dark:text-sky-400">Mid-wicket</span>
           </div>
         </div>
 
-        <div className="space-y-3 pt-4 border-t border-white/[0.05]">
+        <div className="space-y-3 pt-4 border-t border-zinc-200 dark:border-white/[0.05]">
           {[
             { label: "Catches Taken", value: catches, max: Math.max(total, 10) },
             { label: "Run-outs", value: runOuts, max: Math.max(total, 10) },
             { label: "Stumpings", value: stumpings, max: Math.max(total, 10) },
           ].map((row, i) => (
-            <div key={i} className="flex items-center justify-between gap-4 group hover:bg-white/[0.02] -mx-2 px-2 py-1.5 rounded-lg transition-all">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/30" style={{ fontFamily: D.mono }}>
+            <div key={i} className="flex items-center justify-between gap-4 group hover:bg-zinc-100 dark:hover:bg-white/[0.02] -mx-2 px-2 py-1.5 rounded-lg transition-all">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-white/30" style={{ fontFamily: D.mono }}>
                 {row.label}
               </span>
               <div className="flex items-center gap-3">
-                <div className="w-20 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="w-20 h-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] overflow-hidden">
                   <div
                     className="h-full rounded-full bg-sky-400 transition-all duration-700"
                     style={{ width: `${row.max > 0 ? (row.value / row.max) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="text-sm font-black text-white/80 w-4 text-right" style={{ fontFamily: D.head }}>
+                <span className="text-sm font-black text-zinc-800 dark:text-white/80 w-4 text-right" style={{ fontFamily: D.head }}>
                   {row.value}
                 </span>
               </div>

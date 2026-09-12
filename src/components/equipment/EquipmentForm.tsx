@@ -100,92 +100,56 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
   };
 
   const InputWrapper = ({ label, error, children, icon: Icon }: any) => (
-    <div style={{ marginBottom: '24px' }}>
-      <label style={{ 
-        display: 'block', 
-        fontSize: '11px', 
-        fontWeight: 900, 
-        color: D.textMuted, 
-        textTransform: 'uppercase', 
-        letterSpacing: '0.05em',
-        marginBottom: '8px',
-        fontFamily: D.head
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {Icon && <Icon size={12} />}
+    <div className="mb-6">
+      <label className="block text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2" style={{ fontFamily: D.head }}>
+        <div className="flex items-center gap-1.5">
+          {Icon && <Icon size={12} className="text-indigo-500" />}
           {label}
         </div>
       </label>
       {children}
       {error && (
-        <p style={{ color: D.rose, fontSize: '11px', marginTop: '4px', fontWeight: 600 }}>{error}</p>
+        <p className="text-rose-600 dark:text-rose-400 text-[11px] mt-1 font-semibold">{error}</p>
       )}
     </div>
   );
 
-  const inputStyle = {
-    width: '100%',
-    background: D.surf2,
-    border: `1px solid ${D.border}`,
-    borderRadius: D.lg,
-    padding: '12px 16px',
-    fontSize: '14px',
-    color: D.textPrimary,
-    fontFamily: D.body,
-    outline: 'none',
-    transition: 'border-color 0.2s ease',
-  };
+  const inputClassName = "w-full bg-zinc-50 dark:bg-[#181820] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white outline-none focus:border-indigo-500 transition-colors";
 
   return (
-    <div style={{ color: D.textPrimary }}>
+    <div className="text-zinc-900 dark:text-white">
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+      <div className="flex items-center gap-4 mb-8">
         <button 
           onClick={() => window.history.back()}
-          style={{ 
-            background: D.surf1, 
-            border: `1px solid ${D.border}`, 
-            borderRadius: '50%', 
-            width: '40px', 
-            height: '40px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: D.textMuted
-          }} className="hover:text-white hover:border-white/50">
+          className="bg-zinc-100 dark:bg-[#0c0c10] border border-zinc-200 dark:border-white/10 rounded-full w-10 h-10 flex items-center justify-center cursor-pointer text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/30 transition-all"
+        >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 style={{ fontFamily: D.head, fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em' }}>
-            {mode === 'create' ? 'GENERATE' : 'EDIT'} <span style={{ color: D.textMuted }}>RESOURCE</span>
+          <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: D.head }}>
+            {mode === 'create' ? 'GENERATE' : 'EDIT'} <span className="text-zinc-500 dark:text-zinc-400">RESOURCE</span>
           </h1>
-          <p style={{ color: D.textMuted, fontSize: '14px' }}>Assign operational parameters to school assets.</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Assign operational parameters to school assets.</p>
         </div>
       </div>
 
-      <form action={action} style={{ 
-        background: D.surf1, 
-        border: `1px solid ${D.border}`, 
-        borderRadius: D.xl, 
-        padding: '32px',
-        backdropFilter: 'blur(20px)'
-      }}>
+      <form action={action} className="bg-white dark:bg-[#0c0c10] border border-zinc-200 dark:border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-xl">
         
         {state.success && (
-          <div style={{ background: `${D.emerald}15`, border: `1px solid ${D.emerald}30`, borderRadius: D.lg, padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-            <CheckCircle2 size={18} color={D.emerald} />
-            <span style={{ fontSize: '13px', fontWeight: 800, color: D.emerald }}>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3 mb-8">
+            <CheckCircle2 size={18} className="text-emerald-500" />
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
               Asset {mode === 'create' ? 'registered' : 'updated'} successfully in OS ledger.
             </span>
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Left Column */}
           <div>
-            <h3 style={{ fontFamily: D.head, fontSize: '14px', fontWeight: 900, marginBottom: '24px', opacity: 0.5 }}>IDENTIFICATION</h3>
+            <h3 className="text-xs font-black mb-6 opacity-50 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" style={{ fontFamily: D.head }}>IDENTIFICATION</h3>
             
             <InputWrapper label="Resource Name *" error={clientErrors.name || state.fieldErrors?.name?.[0]} icon={Box}>
               <input 
@@ -193,13 +157,13 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
                 defaultValue={initialData.name}
                 onBlur={(e) => validateField('name', e.target.value)}
                 placeholder="e.g. Premium Match Balls"
-                style={inputStyle}
+                className={inputClassName}
                 required 
               />
             </InputWrapper>
 
             <InputWrapper label="Category *" error={state.fieldErrors?.category?.[0]} icon={Tag}>
-              <select name="category" defaultValue={initialData.category} style={inputStyle} required>
+              <select name="category" defaultValue={initialData.category} className={inputClassName} required>
                 <option value="">Select category...</option>
                 <option value="Bats">Bats</option>
                 <option value="Balls">Balls</option>
@@ -212,20 +176,20 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
               </select>
             </InputWrapper>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid grid-cols-2 gap-4">
                <InputWrapper label="Quantity *" error={clientErrors.quantity || state.fieldErrors?.quantity?.[0]} icon={Hash}>
                 <input 
                   name="quantity"
                   type="number"
                   defaultValue={initialData.quantity}
                   onBlur={(e) => validateField('quantity', e.target.value)}
-                  style={inputStyle}
+                  className={inputClassName}
                   required 
                 />
               </InputWrapper>
 
               <InputWrapper label="Condition *" icon={Activity}>
-                <select name="condition" defaultValue={initialData.condition || 'Good'} style={inputStyle} required>
+                <select name="condition" defaultValue={initialData.condition || 'Good'} className={inputClassName} required>
                   <option value="Excellent">Excellent</option>
                   <option value="Good">Good</option>
                   <option value="Fair">Fair</option>
@@ -238,7 +202,7 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
 
           {/* Right Column */}
           <div>
-            <h3 style={{ fontFamily: D.head, fontSize: '14px', fontWeight: 900, marginBottom: '24px', opacity: 0.5 }}>LOGISTICS</h3>
+            <h3 className="text-xs font-black mb-6 opacity-50 text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" style={{ fontFamily: D.head }}>LOGISTICS</h3>
 
             <InputWrapper label="Storage Location *" error={clientErrors.location || state.fieldErrors?.location?.[0]} icon={ShieldAlert}>
               <input 
@@ -246,19 +210,19 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
                 defaultValue={initialData.location}
                 onBlur={(e) => validateField('location', e.target.value)}
                 placeholder="e.g. South Pavilion"
-                style={inputStyle}
+                className={inputClassName}
                 required 
               />
             </InputWrapper>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="grid grid-cols-2 gap-4">
               <InputWrapper label="Acquisition Date" error={clientErrors.purchaseDate} icon={Calendar}>
                 <input 
                   name="purchaseDate"
                   type="date"
                   defaultValue={initialData.purchaseDate?.split('T')[0]}
                   onBlur={(e) => validateField('purchaseDate', e.target.value)}
-                  style={inputStyle}
+                  className={inputClassName}
                 />
               </InputWrapper>
 
@@ -270,7 +234,7 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
                   defaultValue={initialData.purchasePrice}
                   onBlur={(e) => validateField('purchasePrice', e.target.value)}
                   placeholder="0.00"
-                  style={inputStyle}
+                  className={inputClassName}
                 />
               </InputWrapper>
             </div>
@@ -281,7 +245,7 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
                 defaultValue={initialData.notes}
                 onBlur={(e) => validateField('notes', e.target.value)}
                 placeholder="Maintenance logs, serial numbers, etc."
-                style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }}
+                className={`${inputClassName} min-h-[100px] resize-y`}
                 maxLength={500}
               />
             </InputWrapper>
@@ -290,28 +254,18 @@ export function EquipmentForm({ mode, equipmentAction, initialState, initialData
         </div>
 
         {state.error && (
-          <div style={{ background: `${D.rose}15`, border: `1px solid ${D.rose}30`, borderRadius: D.lg, padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '32px' }}>
-            <AlertTriangle size={18} color={D.rose} />
-            <span style={{ fontSize: '13px', fontWeight: 800, color: D.rose }}>{state.error}</span>
+          <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-center gap-3 mt-8">
+            <AlertTriangle size={18} className="text-rose-500" />
+            <span className="text-xs font-bold text-rose-600 dark:text-rose-400">{state.error}</span>
           </div>
         )}
 
-        <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: `1px solid ${D.border}`, paddingTop: '32px' }}>
+        <div className="mt-10 flex justify-end gap-3 border-t border-zinc-200 dark:border-white/10 pt-8">
           <button 
             type="button" 
             onClick={() => window.history.back()}
-            style={{ 
-              background: 'transparent', 
-              color: D.textMuted, 
-              border: `1px solid ${D.border}`, 
-              borderRadius: D.lg, 
-              padding: '12px 24px', 
-              fontFamily: D.head, 
-              fontWeight: 900, 
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-            className="hover:text-white hover:border-white/50"
+            className="bg-transparent text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-white/10 rounded-xl px-6 py-3 font-black text-sm hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/30 cursor-pointer transition-all"
+            style={{ fontFamily: D.head }}
           >
             DISCARD
           </button>

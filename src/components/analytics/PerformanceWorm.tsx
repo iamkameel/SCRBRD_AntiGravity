@@ -46,27 +46,27 @@ export function PerformanceWorm() {
   };
 
   return (
-    <Card className="bg-black/60 border-white/10 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
-      <div className="p-8 border-b border-white/5 flex items-center justify-between">
+    <Card className="bg-white dark:bg-black/60 border-zinc-200 dark:border-white/10 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="p-8 border-b border-zinc-200 dark:border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-white tracking-tighter uppercase" style={{ fontFamily: D.syne }}>
+            <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase" style={{ fontFamily: D.syne }}>
               PERFORMANCE <span className="text-primary italic">WORM</span>
             </h2>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Relative Scoring Velocity</p>
+            <p className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase tracking-[0.2em]">Relative Scoring Velocity</p>
           </div>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-white/40" />
-            <span className="text-[10px] font-black text-white/40 uppercase">Innings 1</span>
+            <div className="w-3 h-3 rounded-full bg-zinc-400 dark:bg-white/40" />
+            <span className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase">Innings 1</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-[10px] font-black text-white/40 uppercase">Innings 2</span>
+            <span className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase">Innings 2</span>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function PerformanceWorm() {
               <line 
                 key={step}
                 x1={padding} y1={getY(maxRuns * step)} x2={width - padding} y2={getY(maxRuns * step)}
-                className="stroke-white/5 stroke-[1px]"
+                className="stroke-zinc-200 dark:stroke-white/5 stroke-[1px]"
               />
             ))}
 
@@ -88,7 +88,7 @@ export function PerformanceWorm() {
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 0.3 }}
               d={generateLine(INNINGS_1)}
-              className="fill-none stroke-white stroke-[2px]"
+              className="fill-none stroke-zinc-400 dark:stroke-white stroke-[2px]"
               strokeDasharray="4 4"
             />
 
@@ -109,23 +109,23 @@ export function PerformanceWorm() {
             ))}
 
             {/* Labels */}
-            <text x={padding} y={height - 10} className="fill-white/20 text-[10px] font-black uppercase tracking-widest">Start</text>
-            <text x={width - padding} y={height - 10} textAnchor="end" className="fill-white/20 text-[10px] font-black uppercase tracking-widest">Target</text>
+            <text x={padding} y={height - 10} className="fill-zinc-400 dark:fill-white/20 text-[10px] font-black uppercase tracking-widest">Start</text>
+            <text x={width - padding} y={height - 10} textAnchor="end" className="fill-zinc-400 dark:fill-white/20 text-[10px] font-black uppercase tracking-widest">Target</text>
           </svg>
         </div>
 
         <div className="mt-12 grid grid-cols-3 gap-8">
-          <div className="p-6 rounded-3xl bg-white/5 border border-white/10">
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Current RPO</p>
-            <p className="text-3xl font-black text-white italic tabular-nums" style={{ fontFamily: D.head }}>8.67</p>
+          <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
+            <p className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase tracking-widest mb-2">Current RPO</p>
+            <p className="text-3xl font-black text-zinc-900 dark:text-white italic tabular-nums" style={{ fontFamily: D.head }}>8.67</p>
           </div>
           <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Required RPO</p>
             <p className="text-3xl font-black text-primary italic tabular-nums" style={{ fontFamily: D.head }}>6.45</p>
           </div>
-          <div className="p-6 rounded-3xl bg-white/5 border border-white/10">
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Win Prob (%)</p>
-            <p className="text-3xl font-black text-emerald-400 italic tabular-nums" style={{ fontFamily: D.head }}>72.4%</p>
+          <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10">
+            <p className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase tracking-widest mb-2">Win Prob (%)</p>
+            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 italic tabular-nums" style={{ fontFamily: D.head }}>72.4%</p>
           </div>
         </div>
       </CardContent>

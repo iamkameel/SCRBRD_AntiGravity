@@ -45,13 +45,15 @@ interface PreMatchReadinessBoardProps {
   homeTeamName?: string;
   awayTeamName?: string;
   onSignOffComplete?: () => void;
+  hideHeader?: boolean;
 }
 
 export function PreMatchReadinessBoard({
   matchId = 'match-101',
   homeTeamName = 'Westville 1st XI',
   awayTeamName = 'Kearsney 1st XI',
-  onSignOffComplete
+  onSignOffComplete,
+  hideHeader = false
 }: PreMatchReadinessBoardProps) {
   const [items, setItems] = useState<ReadinessCheckItem[]>([
     {
@@ -162,64 +164,66 @@ export function PreMatchReadinessBoard({
   return (
     <div className="space-y-6">
       {/* Top Banner Overview */}
-      <div 
-        className="p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden"
-        style={{ background: D.surf2, borderColor: D.border }}
-      >
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/40 text-[9px] font-black uppercase">
-              FIXTURE PRE-MATCH READINESS
-            </Badge>
-            <span className="text-[10px] font-bold opacity-50 uppercase" style={{ color: D.textMuted }}>
-              MATCH ID: {matchId}
-            </span>
-          </div>
-
-          <h2 className="text-2xl font-black italic uppercase tracking-tight flex items-center gap-3" style={{ fontFamily: D.head, color: D.textPrimary }}>
-            {homeTeamName} <span style={{ color: D.textMuted }}>VS</span> {awayTeamName}
-          </h2>
-
-          <p className="text-xs font-bold opacity-60 flex items-center gap-2" style={{ color: D.textMuted }}>
-            <Calendar className="w-3.5 h-3.5 text-indigo-400" /> SATURDAY 09:00 AM • WESTVILLE MAIN OVAL
-          </p>
-        </div>
-
-        {/* Readiness Telemetry Gauge */}
-        <div className="flex items-center gap-6 p-4 rounded-2xl border shrink-0" style={{ background: D.surf1, borderColor: D.border }}>
-          <div className="text-center">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] block opacity-50" style={{ color: D.textMuted }}>
-              READINESS INDEX
-            </span>
-            <span 
-              className={`text-3xl font-black italic ${
-                overallPct >= 90 ? 'text-emerald-400' : overallPct >= 75 ? 'text-amber-400' : 'text-rose-400'
-              }`}
-              style={{ fontFamily: D.head }}
-            >
-              {overallPct}%
-            </span>
-          </div>
-
-          <div className="h-10 w-[1px] bg-white/10" />
-
-          <div>
-            {isSignedOff ? (
-              <Badge className="bg-emerald-500 text-black font-black uppercase px-4 py-2 text-xs gap-1.5 shadow-lg">
-                <CheckCircle2 className="w-4 h-4" /> SIGNED OFF FOR MATCH
+      {!hideHeader && (
+        <div 
+          className="p-6 rounded-3xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden"
+          style={{ background: D.surf2, borderColor: D.border }}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/40 text-[9px] font-black uppercase">
+                FIXTURE PRE-MATCH READINESS
               </Badge>
-            ) : (
-              <Button
-                disabled={overallPct < 70}
-                onClick={handleSignOffFixture}
-                className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-xs px-5 h-11 rounded-xl shadow-lg gap-2"
+              <span className="text-[10px] font-bold opacity-50 uppercase" style={{ color: D.textMuted }}>
+                MATCH ID: {matchId}
+              </span>
+            </div>
+
+            <h2 className="text-2xl font-black italic uppercase tracking-tight flex items-center gap-3" style={{ fontFamily: D.head, color: D.textPrimary }}>
+              {homeTeamName} <span style={{ color: D.textMuted }}>VS</span> {awayTeamName}
+            </h2>
+
+            <p className="text-xs font-bold opacity-60 flex items-center gap-2" style={{ color: D.textMuted }}>
+              <Calendar className="w-3.5 h-3.5 text-indigo-400" /> SATURDAY 09:00 AM • WESTVILLE MAIN OVAL
+            </p>
+          </div>
+
+          {/* Readiness Telemetry Gauge */}
+          <div className="flex items-center gap-6 p-4 rounded-2xl border shrink-0" style={{ background: D.surf1, borderColor: D.border }}>
+            <div className="text-center">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] block opacity-50" style={{ color: D.textMuted }}>
+                READINESS INDEX
+              </span>
+              <span 
+                className={`text-3xl font-black italic ${
+                  overallPct >= 90 ? 'text-emerald-400' : overallPct >= 75 ? 'text-amber-400' : 'text-rose-400'
+                }`}
+                style={{ fontFamily: D.head }}
               >
-                <ShieldCheck className="w-4 h-4" /> SIGN-OFF FIXTURE
-              </Button>
-            )}
+                {overallPct}%
+              </span>
+            </div>
+
+            <div className="h-10 w-[1px] bg-white/10" />
+
+            <div>
+              {isSignedOff ? (
+                <Badge className="bg-emerald-500 text-black font-black uppercase px-4 py-2 text-xs gap-1.5 shadow-lg">
+                  <CheckCircle2 className="w-4 h-4" /> SIGNED OFF FOR MATCH
+                </Badge>
+              ) : (
+                <Button
+                  disabled={overallPct < 70}
+                  onClick={handleSignOffFixture}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase text-xs px-5 h-11 rounded-xl shadow-lg gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" /> SIGN-OFF FIXTURE
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Embedded Live Transport Telemetry Stream */}
       <MatchTransportTelemetry fixtureId={matchId} homeTeamName={homeTeamName} awayTeamName={awayTeamName} />

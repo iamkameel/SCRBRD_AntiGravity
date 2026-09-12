@@ -65,13 +65,13 @@ export function WagonWheelHeatmap({
   };
 
   return (
-    <Card className="bg-black/60 border-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl">
-      <div className="p-6 border-b border-white/5 flex items-center justify-between">
+    <Card className="bg-white dark:bg-black/60 border-zinc-200 dark:border-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl">
+      <div className="p-6 border-b border-zinc-200 dark:border-white/5 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-black text-white tracking-tighter uppercase" style={{ fontFamily: D.syne }}>
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase" style={{ fontFamily: D.syne }}>
             {title}
           </h2>
-          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">{subtitle}</p>
+          <p className="text-[9px] font-black text-zinc-500 dark:text-white/40 uppercase tracking-[0.2em] mt-1">{subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -79,12 +79,12 @@ export function WagonWheelHeatmap({
             size="sm" 
             onClick={() => setViewMode(viewMode === 'standard' ? 'heatmap' : 'standard')}
             className={`h-8 px-3 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${
-              viewMode === 'heatmap' ? 'bg-primary text-black' : 'bg-white/5 text-white/40'
+              viewMode === 'heatmap' ? 'bg-primary text-black' : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/40'
             }`}
           >
             {viewMode === 'heatmap' ? 'Heatmap On' : 'Standard'}
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 text-white/40">
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-white/40">
             <Filter className="w-4 h-4" />
           </Button>
         </div>
@@ -96,18 +96,18 @@ export function WagonWheelHeatmap({
             {/* Outer Circle (Boundary) */}
             <circle 
               cx={center} cy={center} r={radius} 
-              className="fill-none stroke-white/10 stroke-[1px] group-hover:stroke-primary/20 transition-colors"
+              className="fill-none stroke-zinc-300 dark:stroke-white/10 stroke-[1px] group-hover:stroke-primary/40 transition-colors"
             />
             
             {/* Pitch area */}
             <rect 
               x={center - 8} y={center - 20} width={16} height={40} rx={2}
-              className="fill-white/10"
+              className="fill-zinc-200 dark:fill-white/10 stroke-zinc-400 dark:stroke-white/20"
             />
 
             {/* Zone Dividers */}
-            <line x1={center} y1={center - radius} x2={center} y2={center + radius} className="stroke-white/5 stroke-[1px] dash-array-2" strokeDasharray="4 4" />
-            <line x1={center - radius} y1={center} x2={center + radius} y2={center} className="stroke-white/5 stroke-[1px] dash-array-2" strokeDasharray="4 4" />
+            <line x1={center} y1={center - radius} x2={center} y2={center + radius} className="stroke-zinc-300 dark:stroke-white/5 stroke-[1px]" strokeDasharray="4 4" />
+            <line x1={center - radius} y1={center} x2={center + radius} y2={center} className="stroke-zinc-300 dark:stroke-white/5 stroke-[1px]" strokeDasharray="4 4" />
 
             {/* Standard Lines */}
             <AnimatePresence>
@@ -146,13 +146,13 @@ export function WagonWheelHeatmap({
             {/* Hit points */}
             {activeShots.map((shot, i) => {
               const { x, y } = getCoordinates(shot.angle, shot.distance);
-              const color = shot.runs === 6 ? '#10b981' : shot.runs === 4 ? '#3b82f6' : '#ffffff';
+              const color = shot.runs === 6 ? '#10b981' : shot.runs === 4 ? '#3b82f6' : '#0f172a';
               return (
                 <motion.circle
                   key={`point-${i}`}
                   initial={{ scale: 0 }} animate={{ scale: 1 }}
                   cx={x} cy={y} r={3}
-                  className="fill-white group-hover:r-[4px] transition-all cursor-pointer"
+                  className="fill-zinc-900 dark:fill-white group-hover:r-[4px] transition-all cursor-pointer"
                   style={{ fill: color }}
                 />
               );
@@ -161,10 +161,10 @@ export function WagonWheelHeatmap({
 
           {/* Zone Labels overlay */}
           <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] font-black text-white/20 uppercase tracking-widest">Straight</span>
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black text-white/20 uppercase tracking-widest">Behind</span>
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-[8px] font-black text-white/20 uppercase tracking-widest">Off Side</span>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-[8px] font-black text-white/20 uppercase tracking-widest">On Side</span>
+            <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest">Straight</span>
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest">Behind</span>
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-[8px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest">Off Side</span>
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-[8px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest">On Side</span>
           </div>
         </div>
 
@@ -172,14 +172,14 @@ export function WagonWheelHeatmap({
         <div className="mt-10 grid grid-cols-3 gap-6 w-full px-4">
           <div className="text-center">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Strongest</p>
-            <p className="text-sm font-black text-white uppercase italic" style={{ fontFamily: D.syne }}>Cover Drive</p>
+            <p className="text-sm font-black text-zinc-900 dark:text-white uppercase italic" style={{ fontFamily: D.syne }}>Cover Drive</p>
           </div>
-          <div className="text-center border-x border-white/5">
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Efficiency</p>
-            <p className="text-sm font-black text-white uppercase tabular-nums italic" style={{ fontFamily: D.syne }}>68% Zone Hits</p>
+          <div className="text-center border-x border-zinc-200 dark:border-white/5">
+            <p className="text-[10px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest mb-1">Efficiency</p>
+            <p className="text-sm font-black text-zinc-900 dark:text-white uppercase tabular-nums italic" style={{ fontFamily: D.syne }}>68% Zone Hits</p>
           </div>
           <div className="text-center">
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Weakness</p>
+            <p className="text-[10px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest mb-1">Weakness</p>
             <p className="text-sm font-black text-rose-500 uppercase italic" style={{ fontFamily: D.syne }}>Fine Leg</p>
           </div>
         </div>
