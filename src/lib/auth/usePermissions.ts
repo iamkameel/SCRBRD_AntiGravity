@@ -1,78 +1,44 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ROLES, Role, Module, hasModuleAccess, resolveRoleTier, MODULES } from './rbac';
+import { Role, Module, hasModuleAccess, resolveRoleTier, MODULES } from './rbac';
 import { usePermissionView } from '@/contexts/PermissionViewContext';
-import { useAuth } from '@/contexts/AuthContext';
-
-// Helper to convert simulated display names to our static ROLES keys
-const mapSimulatedToRole = (simulated: string): Role => {
-    const normalized = simulated.toLowerCase().replace(/[\s-]/g, '_');
-
-    // Administrative
-    if (normalized === 'system_architect') return ROLES.PLATFORMOPS;
-    if (normalized === 'admin') return ROLES.SUPERADMIN;
-    if (normalized === 'sportsmaster') return ROLES.SPORTSMASTER;
-    if (normalized === 'school_admin') return ROLES.SCHOOLADMIN;
-
-    // Team Staff
-    if (normalized === 'coach') return ROLES.COACH;
-    if (normalized === 'assistant_coach') return ROLES.COACHSUPPORT;
-    if (normalized === 'team_manager') return ROLES.SCHOOLSTAFF;
-    if (normalized === 'captain') return ROLES.SELECTOR;
-
-    // Players & Spectators
-    if (normalized === 'player') return ROLES.PLAYER;
-    if (normalized === 'guardian') return ROLES.PARENT;
-    if (normalized === 'spectator') return ROLES.EXTERNAL;
-
-    // Support & Medical
-    if (normalized === 'trainer') return ROLES.MEDICALOFFICER;
-    if (normalized === 'physiotherapist') return ROLES.MEDICALOFFICER;
-    if (normalized === 'doctor') return ROLES.MEDICALOFFICER;
-    if (normalized === 'first_aid') return ROLES.MEDICALOFFICER;
-
-    // Officials & Ground Staff
-    if (normalized === 'umpire') return ROLES.MATCHOFFICIAL;
-    if (normalized === 'scorer') return ROLES.MATCHOFFICIAL;
-    if (normalized === 'grounds_keeper') return ROLES.GROUNDSKEEPER;
-    if (normalized === 'driver') return ROLES.DRIVER;
-
-    return ROLES.EXTERNAL; // Default fallback (Spectator)
-}
 
 /**
- * A hook to access the current user's role and RBAC permissions.
- * Prioritizes authenticated userRole from AuthContext, with simulator override support.
+ * The current user's role and what it may reach.
+ *
+ * The role comes from the verified session (resolved server-side), never from
+ * a client-selected value — an administrator may preview a *lower* privileged
+ * role, but nothing here can widen access. This decides what to render;
+ * requireUser() in each server action is what actually enforces it.
  */
 export function usePermissions() {
-    const { currentRole } = usePermissionView();
-    let authUserRole: string | null = null;
+    const { currentRole: _display, verifiedRole, tier: contextTier, loading, isSimulating } = usePermissionView();
 
-    try {
-        const auth = useAuth();
-        authUserRole = auth.userRole;
-    } catch {
-        // AuthProvider not present in context scope
-    }
+    // usePermissionView already narrows to the previewed role where allowed.
+    const role: Role = useMemo(() => {
+        if (!isSimulating) return verifiedRole;
+        return verifiedRole;
+    }, [verifiedRole, isSimulating]);
 
-    const activeRoleName = (authUserRole && authUserRole !== 'Player') ? authUserRole : currentRole;
-    const role = useMemo(() => mapSimulatedToRole(activeRoleName), [activeRoleName]);
-    const tier = resolveRoleTier(role);
+    const effectiveTier = contextTier;
 
-    const canAccess = useMemo(() => {
-        return (module: Module) => hasModuleAccess(role, module);
-    }, [role]);
+    const canAccess = useMemo(
+        () => (module: Module) => hasModuleAccess(role, module),
+        [role]
+    );
 
-    // Expose permitted modules for navigation mapping
-    const permittedModules = useMemo(() => {
-        return (Object.keys(MODULES) as Module[]).filter(mod => hasModuleAccess(role, mod));
-    }, [role]);
+    const permittedModules = useMemo(
+        () => (Object.keys(MODULES) as Module[]).filter(mod => hasModuleAccess(role, mod)),
+        [role]
+    );
 
     return {
         role,
-        tier,
+        tier: effectiveTier ?? resolveRoleTier(role),
         canAccess,
-        permittedModules
+        permittedModules,
+        /** Permissions are not yet known; render restricted UI until false. */
+        loading,
     };
 }

@@ -8,6 +8,30 @@
 
 import { ROLES, Role } from './rbac';
 
+/** Reverse of mapDisplayRoleToRbac, for showing the verified role in the UI. */
+export function rbacRoleToDisplayName(role: Role): string {
+    switch (role) {
+        case ROLES.PLATFORMOPS: return 'System Architect';
+        case ROLES.SUPERADMIN: return 'Admin';
+        case ROLES.LEAGUEADMIN: return 'Admin';
+        case ROLES.TOURNAMENTDIRECTOR: return 'Admin';
+        case ROLES.SPORTSMASTER: return 'Sportsmaster';
+        case ROLES.SCHOOLADMIN: return 'School Admin';
+        case ROLES.SCHOOLSTAFF: return 'Team Manager';
+        case ROLES.COACH: return 'Coach';
+        case ROLES.COACHSUPPORT: return 'Assistant Coach';
+        case ROLES.SELECTOR: return 'Captain';
+        case ROLES.MEDICALOFFICER: return 'Physiotherapist';
+        case ROLES.MATCHOFFICIAL: return 'Scorer';
+        case ROLES.GROUNDSKEEPER: return 'Grounds-Keeper';
+        case ROLES.DRIVER: return 'Driver';
+        case ROLES.PLAYER: return 'Player';
+        case ROLES.ADULTPLAYER: return 'Player';
+        case ROLES.PARENT: return 'Guardian';
+        default: return 'Spectator';
+    }
+}
+
 export function mapDisplayRoleToRbac(displayRole: string | null | undefined): Role {
     if (!displayRole) return ROLES.EXTERNAL;
     const normalized = displayRole.toLowerCase().replace(/[\s-]/g, '_');

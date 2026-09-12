@@ -1,10 +1,12 @@
+"use client";
+
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { WagonWheelChart } from '@/components/scoring/WagonWheelChart';
-import { Award, ChevronDown, ChevronUp, Eye, PieChart, Sparkles, UserCheck } from 'lucide-react';
+import { Award, Bell, BellOff, PieChart, Sparkles, TrendingUp, Users, Activity } from 'lucide-react';
+import { D } from '@/lib/design-system';
 
 export interface BatterScorecardRow {
   id: string;
@@ -70,11 +72,42 @@ export function SpectatorScorecard({
   const [activeInningsTab, setActiveInningsTab] = useState<'inn1' | 'inn2'>('inn1');
   const [activeSubTab, setActiveSubTab] = useState<'scorecard' | 'commentary' | 'partnerships' | 'analytics'>('scorecard');
   const [selectedBatterWagonWheel, setSelectedBatterWagonWheel] = useState<BatterScorecardRow | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
 
   const currentInningsData = activeInningsTab === 'inn1' ? firstInnings : (secondInnings || firstInnings);
 
   return (
     <div className="w-full flex flex-col gap-4 text-white">
+      {/* Header Bar with Parent Push Notification Toggle */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-black/40 border border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+              PARENT & SPECTATOR LIVE MATCH HUB
+            </div>
+            <div className="text-[11px] text-zinc-400 font-mono">
+              REAL-TIME SCORECARD • WAGON WHEEL ANALYTICS • OVER-BY-OVER WORM
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+          className={cn(
+            "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all border",
+            notificationsEnabled
+              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
+              : "bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:bg-white/10"
+          )}
+        >
+          {notificationsEnabled ? <Bell className="w-4 h-4 text-emerald-400 animate-bounce" /> : <BellOff className="w-4 h-4" />}
+          <span>{notificationsEnabled ? "Parent Push Alerts: ON" : "Enable Child Event Push Alerts"}</span>
+        </button>
+      </div>
+
       {/* Optional Player of the Match Banner */}
       {playerOfTheMatch && (
         <Card className="overflow-hidden bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 border-amber-500/30">
@@ -137,13 +170,13 @@ export function SpectatorScorecard({
           { id: 'scorecard', label: 'SCORECARD' },
           { id: 'commentary', label: 'COMMENTARY' },
           { id: 'partnerships', label: 'PARTNERSHIPS' },
-          { id: 'analytics', label: 'ANALYTICS' },
+          { id: 'analytics', label: 'ANALYTICS & WORM' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveSubTab(tab.id as any)}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-black tracking-wider transition-all",
+              "px-3.5 py-1.5 rounded-lg text-xs font-black tracking-wider transition-all",
               activeSubTab === tab.id
                 ? "bg-white/15 text-white shadow"
                 : "text-muted-foreground hover:text-white hover:bg-white/5"
@@ -227,7 +260,7 @@ export function SpectatorScorecard({
                           </td>
                         </tr>
 
-                        {/* Interactive In-Row Wagon Wheel Breakdown (Matching Image 4) */}
+                        {/* Interactive In-Row Wagon Wheel Breakdown */}
                         {isSelected && (
                           <tr>
                             <td colSpan={7} className="p-4 bg-slate-900/90 border-y border-emerald-500/30 animate-in fade-in">
@@ -336,22 +369,117 @@ export function SpectatorScorecard({
         </div>
       )}
 
-      {/* Placeholders for Sub-tabs */}
+      {/* Commentary Sub-Tab */}
       {activeSubTab === 'commentary' && (
-        <div className="p-6 bg-slate-950/80 border border-white/10 rounded-2xl text-center text-muted-foreground font-semibold">
-          Live commentary stream feeds into this panel...
+        <div className="p-6 bg-slate-950/90 border border-white/10 rounded-2xl space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+              BALL-BY-BALL LIVE STREAM FEED
+            </span>
+            <Badge className="bg-emerald-500/20 text-emerald-300 text-[9px] font-mono">
+              WEBSOCKET REALTIME
+            </Badge>
+          </div>
+          <div className="space-y-3 font-mono text-xs">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <span className="text-emerald-400 font-bold">Over 19.6:</span> FOUR! Driven cleanly through covers by opening batter to finish the over.
+            </div>
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <span className="text-amber-400 font-bold">Over 19.5:</span> 2 runs, worked fine to deep backward square.
+            </div>
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">
+              <span className="text-rose-400 font-bold">Over 19.4:</span> WICKET! Caught at long-on trying to clear the boundary!
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Partnerships Sub-Tab */}
       {activeSubTab === 'partnerships' && (
-        <div className="p-6 bg-slate-950/80 border border-white/10 rounded-2xl text-center text-muted-foreground font-semibold">
-          Partnership progression charts and run contribution breakdowns...
+        <div className="p-6 bg-slate-950/90 border border-white/10 rounded-2xl space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+              <Users className="w-4 h-4" /> INNINGS PARTNERSHIP BREAKDOWN
+            </span>
+            <span className="text-[10px] text-zinc-400 font-mono">Wicket progression</span>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="font-bold text-white">1st Wicket: 54 runs (42 balls)</span>
+                <span className="text-emerald-400 font-bold">4.2 RR</span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-black/60 overflow-hidden flex border border-white/10">
+                <div className="h-full bg-emerald-500" style={{ width: "65%" }} />
+                <div className="h-full bg-cyan-400" style={{ width: "35%" }} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="font-bold text-white">2nd Wicket: 78 runs (58 balls)</span>
+                <span className="text-emerald-400 font-bold">8.1 RR</span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-black/60 overflow-hidden flex border border-white/10">
+                <div className="h-full bg-indigo-500" style={{ width: "40%" }} />
+                <div className="h-full bg-amber-400" style={{ width: "60%" }} />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Analytics & Worm Sub-Tab */}
       {activeSubTab === 'analytics' && (
-        <div className="p-6 bg-slate-950/80 border border-white/10 rounded-2xl text-center text-muted-foreground font-semibold">
-          Worm chart, run rate telemetry, and win probability dynamics...
+        <div className="p-6 bg-slate-950/90 border border-white/10 rounded-2xl space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> LIVE WORM & RUN-RATE COMPARISON
+            </span>
+            <span className="text-[10px] text-zinc-400 font-mono">Innings 1 vs Innings 2</span>
+          </div>
+
+          {/* SVG Worm Canvas */}
+          <div className="h-48 w-full bg-black/40 rounded-xl border border-white/10 p-4 relative flex items-center justify-center">
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 400 150">
+              {/* Grid Lines */}
+              <line x1="0" y1="30" x2="400" y2="30" stroke="#ffffff10" strokeDasharray="4" />
+              <line x1="0" y1="75" x2="400" y2="75" stroke="#ffffff10" strokeDasharray="4" />
+              <line x1="0" y1="120" x2="400" y2="120" stroke="#ffffff10" strokeDasharray="4" />
+
+              {/* Innings 1 Curve (Emerald) */}
+              <path
+                d="M 0,140 Q 100,100 200,60 T 400,20"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="3"
+              />
+              {/* Innings 2 Curve (Amber) */}
+              {secondInnings && (
+                <path
+                  d="M 0,140 Q 120,110 240,50 T 360,10"
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="3"
+                  strokeDasharray="6"
+                />
+              )}
+            </svg>
+          </div>
+
+          <div className="flex items-center justify-center gap-6 text-xs font-mono pt-2">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span>{firstInnings.teamName} (Innings 1)</span>
+            </div>
+            {secondInnings && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <span>{secondInnings.teamName} (Innings 2)</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
