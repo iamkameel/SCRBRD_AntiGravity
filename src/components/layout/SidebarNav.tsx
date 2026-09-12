@@ -63,6 +63,9 @@ const navKeyToModuleMap: Record<string, Module> = {
   // Communications
   'inbox-newsfeed': 'dashboard',
   'broadcast-media': 'media',
+  'multi-sport-platform': 'competitions',
+  'swimming-gala': 'competitions',
+  'athletics-meet': 'competitions',
   'broadcast-recap': 'media',
 
   // Coaching & Training

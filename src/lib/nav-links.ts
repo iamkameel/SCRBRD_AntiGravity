@@ -64,6 +64,7 @@ export const navGroups: NavGroup[] = [
     defaultOpen: true,
     accentColor: '#10b981', // Emerald
     links: [
+      { href: '/sports/multi-sport', label: 'Multi-Sport Platform', icon: Layers, key: 'multi-sport-platform' },
       { href: '/swimming', label: 'Swimming Gala Engine', icon: Waves, key: 'swimming-gala' },
       { href: '/athletics', label: 'Athletics Track & Field', icon: Flag, key: 'athletics-meet' },
       { href: '/media', label: 'Broadcast & Media', icon: Tv, key: 'broadcast-media' },
@@ -117,18 +118,6 @@ export const navGroups: NavGroup[] = [
       { href: '/planner', label: 'Session Planner', icon: ClipboardList, key: 'session-planner' },
       { href: '/drills', label: 'Drill Library', icon: Dumbbell, key: 'drill-library' },
       { href: '/coaches', label: 'Player Development', icon: Target, key: 'player-development' },
-    ]
-  },
-  {
-    id: 'multi-sport',
-    label: 'Multi-Sport OS',
-    icon: Waves,
-    key: 'group-multi-sport',
-    defaultOpen: false,
-    accentColor: '#06b6d4', // Cyan
-    links: [
-      { href: '/swimming', label: 'Swimming Gala Engine', icon: Waves, key: 'swimming-gala' },
-      { href: '/athletics', label: 'Athletics Track & Field', icon: Trophy, key: 'athletics-meet' },
     ]
   },
   {
