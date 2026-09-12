@@ -1,8 +1,13 @@
 // Firebase Client Configuration
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getAnalytics, Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "mock-api-key",
@@ -17,24 +22,21 @@ const firebaseConfig = {
 // Initialize Firebase (only once)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore and Auth
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-
-// Initialize Analytics (only on client side)
-let analytics: Analytics | null = null;
-if (typeof window !== 'undefined' && getApps().length > 0) {
-  analytics = getAnalytics(app);
+function createFirestore(): Firestore {
+  // Persistent cache needs IndexedDB, so only in the browser. initializeFirestore
+  // throws if this app's Firestore was already configured (HMR re-evaluation);
+  // fall back to the existing instance in that case.
+  if (typeof window === 'undefined') return getFirestore(app);
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch {
+    return getFirestore(app);
+  }
 }
 
-export { analytics };
+export const db = createFirestore();
+export const auth = getAuth(app);
+
 export default app;
-
-// Export Firebase Storage for uploads
-import { getStorage } from 'firebase/storage';
-export const storage = getStorage(app);
-
-// Data Connect
-import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig } from '@/generated/dataconnect';
-export const dataconnect = getDataConnect(app, connectorConfig);

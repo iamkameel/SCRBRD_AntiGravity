@@ -19,7 +19,7 @@ import { fieldSchema } from "@/lib/validations/fieldSchema";
 import { z } from "zod";
 import { toast } from "sonner";
 import { WeatherWidget } from "@/components/fixtures/WeatherWidget";
-import { storage } from "@/lib/firebase";
+import { storage } from "@/lib/firebase-storage";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 interface FieldFormProps {

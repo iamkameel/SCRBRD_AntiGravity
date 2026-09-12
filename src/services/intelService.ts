@@ -1,7 +1,6 @@
 import { Rankings } from '@/types/firestore';
 import { UUID } from '@/types/schema_v4';
 // We'll import what we can from the generated SDK, but fall back to manual execution for new queries
-import { dataconnect } from '@/lib/firebase';
 import { executeQuery } from 'firebase/data-connect';
 
 /**

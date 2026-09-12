@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Save, CheckCircle2, AlertTriangle, GraduationCap, Palette, Image as ImageIcon, X } from "lucide-react";
-import { storage } from "@/lib/firebase";
+import { storage } from "@/lib/firebase-storage";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { useFormStatus } from "react-dom";
 import { schoolSchema } from "@/lib/validations/schoolSchema";
