@@ -1,4 +1,4 @@
-import { AnalyticsHubClient } from "@/components/analytics/AnalyticsHubClient";
+import { AnalyticsHubClient } from "@/components/charts/lazy";
 
 export default function AnalyticsHubPage() {
   // In a real implementation, we would fetch institutional data here

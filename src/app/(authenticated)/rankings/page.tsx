@@ -1,6 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { GlobalRankingsClient } from '@/components/rankings/GlobalRankingsClient';
+import { GlobalRankingsClient } from '@/components/charts/lazy';
 
 export const metadata: Metadata = {
     title: 'Rankings | SCRBRD',

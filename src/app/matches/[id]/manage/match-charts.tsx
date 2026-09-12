@@ -1,8 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ManhattanChart as ManhattanChartComponent } from "@/components/charts/ManhattanChart";
-import { WormChart as WormChartComponent } from "@/components/charts/WormChart";
+import { ManhattanChart as ManhattanChartComponent, WormChart as WormChartComponent } from "@/components/charts/lazy";
 import { WagonWheel as WagonWheelComponent } from "@/components/charts/WagonWheel";
 import { PitchMap as PitchMapComponent } from "@/components/charts/PitchMap";
 

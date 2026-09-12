@@ -1,7 +1,6 @@
 "use client";
 
-import { WormChart } from "./WormChart";
-import { ManhattanChart } from "./ManhattanChart";
+import { AnalyticsWormChart as WormChart, AnalyticsManhattanChart as ManhattanChart } from "@/components/charts/lazy";
 import { Innings } from "@/types/firestore";
 
 interface MatchAnalyticsDashboardProps {

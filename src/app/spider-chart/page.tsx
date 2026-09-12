@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Radar as RadarIcon } from "lucide-react";
-import { SkillsRadar } from "@/components/charts/SkillsRadar";
+import { SkillsRadar } from "@/components/charts/lazy";
 import { useState } from "react";
 import Head from "next/head";
 import { Button } from "@/components/ui/button";

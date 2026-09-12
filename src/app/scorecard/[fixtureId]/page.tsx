@@ -12,8 +12,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Star, Trophy } from "lucide-react";
 import { format } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { PartnershipChart } from '@/components/charts/lazy';
+import type { PartnershipChartDataItem } from '@/components/scoring/PartnershipChart';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,16 +71,6 @@ function getOrdinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
-}
-
-interface PartnershipChartDataItem {
-  wicketOrdinal: string;
-  batsman1Name: string;
-  batsman2Name: string;
-  partnershipRuns: number;
-  // These are total runs for the batsmen at the point the partnership ended or innings ended
-  batsman1TotalRunsAtWicket: number; 
-  batsman2TotalRunsAtWicket: number;
 }
 
 function generatePartnershipUIData(innings: InningsData): PartnershipChartDataItem[] {
@@ -190,38 +180,6 @@ function generatePartnershipUIData(innings: InningsData): PartnershipChartDataIt
   }
   return partnerships.filter(p => p.partnershipRuns >= 0 && ((p.batsman1Name !== 'N/A' && p.batsman1Name !== 'Partner') || (p.batsman2Name !== 'N/A' && p.batsman2Name !== 'Partner')));
 }
-
-const PartnershipTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const partnershipData = payload[0].payload as PartnershipChartDataItem; // Explicit type
-    let partnerDisplay = "";
-    if (partnershipData.batsman1Name && partnershipData.batsman1Name !== "N/A" && partnershipData.batsman1Name !== "Partner") {
-        partnerDisplay += partnershipData.batsman1Name;
-    }
-    if (partnershipData.batsman2Name && partnershipData.batsman2Name !== "N/A" && partnershipData.batsman2Name !== "Partner") {
-        if (partnerDisplay && partnershipData.batsman1Name !== partnershipData.batsman2Name) partnerDisplay += " & ";
-        else if (!partnerDisplay) partnerDisplay += partnershipData.batsman2Name;
-        
-        if(partnershipData.batsman1Name !== partnershipData.batsman2Name){
-             partnerDisplay += partnershipData.batsman2Name;
-        } else if (!partnerDisplay) { // Only one distinct name, was set as batsman1Name
-            partnerDisplay = partnershipData.batsman1Name; // Display at least one name if only one is valid
-        }
-
-    }
-    if (!partnerDisplay) partnerDisplay = "Partnership";
-
-
-    return (
-      <div className="bg-card text-card-foreground p-3 rounded-md shadow-md border">
-        <p className="font-semibold mb-1">{label}</p>
-        <p>{partnerDisplay}</p>
-        <p>Partnership Total: {partnershipData.partnershipRuns} runs</p>
-      </div>
-    );
-  }
-}
-
 
 export default function ScorecardPage() {
   const params = useParams();
@@ -526,9 +484,6 @@ export default function ScorecardPage() {
 
                     {result.innings.map((inningData, index) => {
                       const partnershipVisualData = generatePartnershipUIData(inningData);
-                      const chartConfig = {
-                        partnershipRuns: { label: "Partnership Runs", color: "hsl(var(--chart-1))" },
-                      };
                       return (
                         <TabsContent key={`content-innings-${inningData.inningsNumber}`} value={`innings-${inningData.inningsNumber}`} className="mt-4">
                           <Accordion type="multiple" defaultValue={['batting', 'bowling', 'extras']} className="w-full space-y-4">
@@ -584,21 +539,7 @@ export default function ScorecardPage() {
                                 <div className="p-4 pt-0">
                                   <h4 className="text-md font-semibold mb-3">Batting Partnerships for {inningData.battingTeam}</h4>
                                   {partnershipVisualData.length > 0 ? (
-                                    <ChartContainer config={chartConfig} className="min-h-[300px] w-full aspect-auto">
-                                      <BarChart
-                                        layout="vertical"
-                                        data={partnershipVisualData}
-                                        margin={{ top: 5, right: 40, left: 30, bottom: 20 }} // Increased margins
-                                        barCategoryGap="25%" // Adjusted gap
-                                      >
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} />
-                                        <YAxis dataKey="wicketOrdinal" type="category" width={120} interval={0} tick={{ fontSize: 12, dy: 5 }} />
-                                        <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-                                        <RechartsTooltip content={<PartnershipTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-                                        <Legend content={<ChartLegendContent />} verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px' }}/>
-                                        <Bar dataKey="partnershipRuns" name="Runs" fill="var(--color-partnershipRuns)" radius={[0, 4, 4, 0]} />
-                                      </BarChart>
-                                    </ChartContainer>
+                                    <PartnershipChart data={partnershipVisualData} />
                                   ) : (
                                     <p className="text-sm text-muted-foreground">Partnership data not available for visualization.</p>
                                   )}

@@ -16,8 +16,8 @@ import { useRouter } from "next/navigation";
 import { fetchSchools, fetchMatches, fetchPlayers } from "@/lib/firestore";
 import { Match, School as SchoolType, Person } from "@/types/firestore";
 
-export function CommandMenu() {
-  const [open, setOpen] = React.useState(false);
+export function CommandMenu({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const [open, setOpen] = React.useState(defaultOpen);
   const [schools, setSchools] = React.useState<SchoolType[]>([]);
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [players, setPlayers] = React.useState<Person[]>([]);

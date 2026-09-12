@@ -10,7 +10,7 @@ import { Person } from "@/types/firestore";
 import { fetchPlayers } from "@/lib/firestore";
 import { calculatePlayerSimilarity, ScoutingReport } from "@/lib/scoutingEngine";
 import { generateScoutingReportFlow } from "@/ai/flows/generate-scouting-report";
-import { SkillsRadar } from "@/components/charts/SkillsRadar";
+import { SkillsRadar } from "@/components/charts/lazy";
 import { Search, Sparkles, User, BarChart2, TrendingUp, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";

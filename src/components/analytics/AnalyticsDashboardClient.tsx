@@ -25,10 +25,9 @@ import { AnalyticsFiltersPanel, AnalyticsFilters } from "./AnalyticsFilters";
 import { TopPerformersList } from "./TopPerformersList";
 import { MatchPredictionCard } from "./MatchPredictionCard";
 import { PlayerForecastCard } from "./PlayerForecastCard";
-import { TeamStrengthAnalysis } from "./TeamStrengthAnalysis";
+import { TeamStrengthAnalysis, PerformanceTimeline } from "@/components/charts/lazy";
 import { HeadToHeadAnalytics } from "./HeadToHeadAnalytics";
 import { WinLossGauge } from "@/components/charts/WinLossGauge";
-import { PerformanceTimeline } from "@/components/charts/PerformanceTimeline";
 import { motion } from "framer-motion";
 import { D } from "@/lib/design-system";
 

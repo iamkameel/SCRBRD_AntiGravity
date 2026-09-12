@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SkillsRadar } from "@/components/charts/SkillsRadar";
+import { SkillsRadar } from "@/components/charts/lazy";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

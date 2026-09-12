@@ -17,7 +17,7 @@ import { D } from '@/lib/design-system';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 
-import { PlayerPassportView } from '../players/PlayerPassportView';
+import { PlayerPassportView } from '@/components/charts/lazy';
 
 export default function PlayerDashboard() {
   const { user } = useAuth();
