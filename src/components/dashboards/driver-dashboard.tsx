@@ -22,7 +22,7 @@ export default function DriverDashboard() {
   useEffect(() => {
     if (user?.email) {
       getDriverTripsAction(user.email)
-        .then(setTrips)
+        .then(res => setTrips(res.success ? res.data : []))
         .finally(() => setLoading(false));
     } else {
         setLoading(false);

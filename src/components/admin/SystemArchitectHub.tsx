@@ -69,7 +69,7 @@ export function SystemArchitectHub() {
   const handleRetryWorkflow = async (id: string) => {
     try {
       const res = await retryWorkflowAction(id);
-      setActionMessage(res.message);
+      setActionMessage(res.message ?? null);
       setWorkflows(prev => prev.map(w => w.id === id ? { ...w, status: "IN_PROGRESS", errorDetail: undefined } : w));
       setTimeout(() => setActionMessage(null), 4000);
     } catch (err) {
@@ -86,7 +86,7 @@ export function SystemArchitectHub() {
         message: broadcastMessage,
         audience: broadcastAudience
       });
-      setActionMessage(res.message);
+      setActionMessage(res.message ?? null);
       setIsBroadcastOpen(false);
       setBroadcastTitle("");
       setBroadcastMessage("");
