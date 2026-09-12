@@ -7,6 +7,9 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         globals: true,
+        // React 19's production build has no `act`, so RTL tests break if the
+        // shell exports NODE_ENV=production. Force the test build regardless.
+        env: { NODE_ENV: 'test' },
         setupFiles: ['./tests/setup.ts'],
         exclude: ['**/e2e/**', '**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**'],
     },
