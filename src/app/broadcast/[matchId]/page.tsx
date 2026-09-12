@@ -1,60 +1,61 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
+import { useEffect, useState, use } from 'react';
 import { BroadcastOverlay } from "@/components/broadcast/BroadcastOverlay";
-import { replayInningsEvents } from "@/services/scoring/replayEngine";
-import { BallEvent } from "@/types/schema_v4";
+import { liveMatchSync, LiveMatchState } from "@/services/liveMatchSync";
 
 interface PageProps {
   params: Promise<{ matchId: string }>;
 }
 
+/**
+ * Transparent OBS / vMix browser-source page.
+ *   /broadcast/<fixtureId>?chroma=1   → solid green background for keying
+ *   /broadcast/<fixtureId>?mode=lower-third|full-scorecard|partnership|bowler-card|target-bar
+ * Subscribes to the same live bus the scorer writes to.
+ */
 export default function BroadcastPage({ params }: PageProps) {
   const { matchId } = use(params);
-  const [matchData, setMatchData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<LiveMatchState | null>(null);
+  const [chroma, setChroma] = useState(false);
 
   useEffect(() => {
-    // Demo ball events stream for live broadcast overlay
-    const demoEvents: BallEvent[] = [
-      {
-        id: 'b1',
-        fixtureId: matchId,
-        inningsId: 'inn-1',
-        overNumber: 15,
-        ballNumber: 4,
-        strikerId: 'p1',
-        nonStrikerId: 'p2',
-        bowlerId: 'b1',
-        runsBat: 4,
-        runsExtras: 0,
-        runsTotal: 4,
-        extraType: null,
-        wicketFlag: false,
-        ballSequenceGlobal: 1,
-        timestamp: Date.now()
-      } as any
-    ];
+    const qs = new URLSearchParams(window.location.search);
+    setChroma(['1', 'true', 'on'].includes((qs.get('chroma') || '').toLowerCase()));
 
-    const state = replayInningsEvents(demoEvents, { inningsNumber: 1 });
-    setMatchData(state);
-    setLoading(false);
+    liveMatchSync.connectFirestore(matchId);
+    const unsubscribe = liveMatchSync.subscribe(setState);
+    return () => unsubscribe();
   }, [matchId]);
 
-  if (loading) return <div className="fixed inset-0 bg-transparent" />;
+  if (!state) return <div className="fixed inset-0" style={{ background: chroma ? '#00FF00' : 'transparent' }} />;
+
+  const b = state.currentBowler;
+  const oversStr = `${state.oversCompleted}.${state.ballsInOver}`;
+  const ballsBowled = state.oversCompleted * 6 + state.ballsInOver;
+  const projected = ballsBowled > 0 ? Math.round(state.totalRuns / ballsBowled * 300) : undefined; // 50-over projection
+  const targetText = state.targetRuns
+    ? `${Math.max(0, state.targetRuns - state.totalRuns)} runs to win`
+    : state.statusMessage;
 
   return (
-    <div className="fixed inset-0 bg-transparent overflow-hidden">
-      <BroadcastOverlay 
-        score={matchData?.runs?.toString() || "142"}
-        wickets={matchData?.wickets || 3}
-        overs={matchData?.oversDisplay || "15.4"}
-        batterName="Liam Peterson"
-        batterRuns={48}
-        batterBalls={32}
-        bowlerName="K. Rabada"
-        bowlerFigures="3.4-0-22-2"
-        milestone="Half-Century (50 Off 32 Balls)"
+    <div className="fixed inset-0 overflow-hidden" style={{ background: chroma ? '#00FF00' : 'transparent' }}>
+      <BroadcastOverlay
+        teamName={state.battingTeamName}
+        score={String(state.totalRuns)}
+        wickets={state.wickets}
+        overs={oversStr}
+        batterName={state.striker.name}
+        batterRuns={state.striker.runs}
+        batterBalls={state.striker.ballsFacing}
+        bowlerName={b.name}
+        bowlerFigures={`${b.overs}-${b.maidens}-${b.runsConceded}-${b.wicketsTaken}`}
+        projectedText={projected ? `${projected} @ ${state.currentRunRate.toFixed(1)} RPO` : `${state.currentRunRate.toFixed(1)} RPO`}
+        targetText={targetText}
+        milestone={state.activeMilestoneAlert?.title}
+        milestoneKey={state.activeMilestoneAlert?.id}
+        milestoneValue={state.activeMilestoneAlert?.type === 'WICKET' ? `${state.wickets}` : `${state.striker.runs}*`}
+        milestoneSub={state.activeMilestoneAlert?.type === 'WICKET' ? 'Wickets down' : `${state.striker.ballsFacing} balls faced`}
       />
     </div>
   );

@@ -23,6 +23,13 @@ interface BroadcastProps {
   bowlerName: string;
   bowlerFigures: string;
   milestone?: string;
+  /** Change this to re-fire the milestone animation even if the title repeats. */
+  milestoneKey?: string;
+  milestoneValue?: string;
+  milestoneSub?: string;
+  teamName?: string;
+  projectedText?: string;
+  targetText?: string;
 }
 
 export function BroadcastOverlay({
@@ -34,7 +41,13 @@ export function BroadcastOverlay({
   batterBalls = 32,
   bowlerName = "K. Rabada",
   bowlerFigures = "3.4-0-22-2",
-  milestone
+  milestone,
+  milestoneKey,
+  milestoneValue = "50*",
+  milestoneSub = "32 Balls Faced",
+  teamName = "Griquas U15",
+  projectedText = "214 @ 8.4 RPO",
+  targetText = "73 runs to win"
 }: Partial<BroadcastProps>) {
   const [showMilestone, setShowMilestone] = useState(!!milestone);
 
@@ -44,7 +57,8 @@ export function BroadcastOverlay({
       const timer = setTimeout(() => setShowMilestone(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [milestone]);
+    setShowMilestone(false);
+  }, [milestone, milestoneKey]);
 
   return (
     <div className="fixed inset-0 pointer-events-none flex flex-col justify-end p-12 z-50">
@@ -68,8 +82,8 @@ export function BroadcastOverlay({
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-4xl font-black text-black tracking-tighter tabular-nums" style={{ fontFamily: D.head }}>50*</p>
-                <p className="text-[9px] font-black text-black/40 uppercase tracking-widest">32 Balls Faced</p>
+                <p className="text-4xl font-black text-black tracking-tighter tabular-nums" style={{ fontFamily: D.head }}>{milestoneValue}</p>
+                <p className="text-[9px] font-black text-black/40 uppercase tracking-widest">{milestoneSub}</p>
               </div>
             </motion.div>
           )}
@@ -87,7 +101,7 @@ export function BroadcastOverlay({
           >
             <div className="bg-black border-l-8 border-primary px-8 py-4 shadow-2xl skew-x-[-12deg] flex items-center gap-6">
               <div className="skew-x-[12deg]">
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Griquas U15</p>
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">{teamName}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-black text-white tracking-tighter tabular-nums" style={{ fontFamily: D.head }}>{score}</span>
                   <span className="text-3xl font-black text-primary/80 tracking-tighter tabular-nums" style={{ fontFamily: D.head }}>/{wickets}</span>
@@ -112,13 +126,13 @@ export function BroadcastOverlay({
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <div>
                   <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Projected Score</p>
-                  <p className="text-lg font-black text-white tabular-nums" style={{ fontFamily: D.syne }}>214 @ 8.4 RPO</p>
+                  <p className="text-lg font-black text-white tabular-nums" style={{ fontFamily: D.syne }}>{projectedText}</p>
                 </div>
               </div>
               <div className="w-px h-8 bg-white/10" />
               <div>
                 <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Target</p>
-                <p className="text-lg font-black text-primary tabular-nums" style={{ fontFamily: D.syne }}>73 runs to win</p>
+                <p className="text-lg font-black text-primary tabular-nums" style={{ fontFamily: D.syne }}>{targetText}</p>
               </div>
             </div>
           </motion.div>

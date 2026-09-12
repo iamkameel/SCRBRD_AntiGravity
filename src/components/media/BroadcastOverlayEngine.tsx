@@ -40,11 +40,13 @@ const DEFAULT_OVERLAY: OverlayState = {
 
 export function BroadcastOverlayEngine() {
   const [overlay, setOverlay] = useState<OverlayState>(DEFAULT_OVERLAY);
+  const [fixtureId, setFixtureId] = useState<string>('fix-1st-xi-kes');
   const [chromaKeyMode, setChromaKeyMode] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = liveMatchSync.subscribe((liveState: LiveMatchState) => {
+      setFixtureId(liveState.fixtureId);
       setOverlay(prev => ({
         ...prev,
         battingTeam: liveState.battingTeamName,
@@ -78,8 +80,12 @@ export function BroadcastOverlayEngine() {
     return () => unsubscribe();
   }, []);
 
+  const obsUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/broadcast/${fixtureId}?mode=${overlay.type}${chromaKeyMode ? '&chroma=1' : ''}`
+    : '';
+
   const handleCopyObsUrl = () => {
-    navigator.clipboard.writeText('https://scrbrd.app/overlay/obs?matchId=fix-1st-xi-kes&chroma=true');
+    navigator.clipboard.writeText(obsUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -151,7 +157,7 @@ export function BroadcastOverlayEngine() {
       <div className="space-y-2">
         <div className="text-xs font-mono uppercase text-slate-400 flex items-center justify-between">
           <span>Live Broadcast Viewport Preview</span>
-          <span className="text-[10px] text-indigo-400">1920 x 1080 (16:9 HD)</span>
+          <span className="text-[10px] text-indigo-400 truncate max-w-[60%]" title={obsUrl}>{obsUrl || '1920 x 1080 (16:9 HD)'}</span>
         </div>
 
         <div className={cn(
@@ -223,6 +229,35 @@ export function BroadcastOverlayEngine() {
                   <span>{overlay.nonStriker.name}</span>
                   <span className="font-bold text-slate-300">{overlay.nonStriker.runs} ({overlay.nonStriker.balls}b)</span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* PARTNERSHIP OVERLAY */}
+          {overlay.type === 'partnership' && (
+            <div className="w-full bg-slate-950/95 border border-white/15 rounded-xl p-4 flex items-center justify-between text-xs font-mono backdrop-blur-2xl">
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Current Partnership</div>
+                <div className="text-2xl font-black text-white">{overlay.striker.runs + overlay.nonStriker.runs} <span className="text-xs font-normal text-slate-400">({overlay.striker.balls + overlay.nonStriker.balls}b)</span></div>
+              </div>
+              <div className="flex gap-6 text-slate-200">
+                <div><span className="text-amber-400 font-bold">* {overlay.striker.name}</span> {overlay.striker.runs} ({overlay.striker.balls}b)</div>
+                <div><span className="text-slate-400">{overlay.nonStriker.name}</span> {overlay.nonStriker.runs} ({overlay.nonStriker.balls}b)</div>
+              </div>
+            </div>
+          )}
+
+          {/* BOWLER CARD OVERLAY */}
+          {overlay.type === 'bowler-card' && (
+            <div className="w-full bg-slate-950/95 border border-white/15 rounded-xl p-4 flex items-center justify-between text-xs font-mono backdrop-blur-2xl">
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Bowling · {overlay.bowlingTeam}</div>
+                <div className="text-xl font-black text-white">{overlay.bowler.name}</div>
+              </div>
+              <div className="grid grid-cols-4 gap-4 text-center">
+                {[['O', overlay.bowler.overs], ['M', overlay.bowler.maidens], ['R', overlay.bowler.runs], ['W', overlay.bowler.wickets]].map(([k, v]) => (
+                  <div key={String(k)}><div className="text-[10px] text-slate-500">{k}</div><div className="text-lg font-black text-amber-400">{v}</div></div>
+                ))}
               </div>
             </div>
           )}

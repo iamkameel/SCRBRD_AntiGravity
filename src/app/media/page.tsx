@@ -2,6 +2,7 @@
 
 import { BroadcastOverlayEngine } from "@/components/media/BroadcastOverlayEngine";
 import { AutomatedMatchBulletin } from "@/components/media/AutomatedMatchBulletin";
+import { HighlightClipper } from "@/components/media/HighlightClipper";
 
 export default function MediaPage() {
   return (
@@ -16,6 +17,9 @@ export default function MediaPage() {
 
       {/* Broadcast Overlay Switcher */}
       <BroadcastOverlayEngine />
+
+      {/* Highlight Clipper — auto-marks clip-worthy moments on the stream timeline */}
+      <HighlightClipper />
 
       {/* Automated School News Bulletin */}
       <AutomatedMatchBulletin />
