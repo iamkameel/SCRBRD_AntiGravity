@@ -9,10 +9,8 @@ import 'dotenv/config'; // Load env vars from .env
 import { adminDb } from '../src/lib/firebase-admin';
 import { store } from '../src/lib/store';
 
-// Check if we are using mock credentials
-if (process.env.FIREBASE_PRIVATE_KEY?.includes('BEGIN RSA PRIVATE KEY')) {
-    console.log('⚠️  Using Mock Private Key. This will likely fail against real Firestore unless using Emulator.');
-}
+// Credentials are validated by lib/firebase-admin, which throws when any are
+// missing. There is no mock-key fallback to detect any more.
 
 async function migrateData() {
     console.log('🚀 Starting migration of store data to Firestore (Admin SDK)...\n');

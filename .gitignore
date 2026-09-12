@@ -32,3 +32,9 @@ ts-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+
+# Service-account credentials — never commit these
+*-firebase-adminsdk-*.json
+serviceAccountKey*.json
+**/service-account*.json
+*.pem
