@@ -41,7 +41,7 @@ import { Milestone } from '@/types/schema_v4';
 import { PlayerHonoursCabinet } from "@/components/player/PlayerHonoursCabinet";
 import { WagonWheelHeatmap } from "@/components/analytics/WagonWheelHeatmap";
 import { PlayerComparisonTool } from "./PlayerComparisonTool";
-import { PlayerCareerHistoryTab } from "./PlayerCareerHistoryTab";
+import { PlayerCareerHistoryTab } from "@/components/charts/lazy";
 import { SkillAssessment, ReadinessScore } from "@/types/schema_v4";
 import { PlayerContextFilterBar, PlayerContextFilterState } from "./PlayerContextFilterBar";
 import { InspectorDrawer, InspectorData } from "./InspectorDrawer";
@@ -467,15 +467,15 @@ export function PlayerDetailClient({
                 <PlayerAttributeMatrix 
                   assessments={assessments} 
                   playingRole={player.role || player.playingRole} 
-                  onInspectAttribute={(attrName, score) => {
+                  onInspectAttribute={(domain, attrName, rating) => {
                     openInspector({
                       title: attrName,
-                      category: 'Skill Matrix Domain',
+                      subtitle: `${domain} domain`,
+                      category: 'Skill Assessment',
                       metrics: [
-                        { label: 'Coach Rating', value: `${score} / 9`, accent: true },
-                        { label: 'Normalized Index', value: `${Math.round(((Number(score) - 1) / 8) * 100)}%` },
+                        { label: 'Coach Rating', value: `${rating} / 9`, accent: true },
+                        { label: 'Normalised Index', value: `${Math.round(((rating - 1) / 8) * 100)}%` },
                       ],
-                      coachNotes: `Attribute evaluated against standard school cricket benchmarks for ${player.role || 'Player'}.`
                     });
                   }}
                 />

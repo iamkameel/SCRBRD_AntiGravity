@@ -69,7 +69,7 @@ export function NRRScenarioCalculator({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-slate-950 border-white/10 text-white rounded-3xl p-6 shadow-2xl">
         <DialogHeader>
-          <DialogTitle id={titleId} className="text-xl font-black italic tracking-tight uppercase flex items-center gap-2" style={{ fontFamily: D.head }}>
+          <DialogTitle id={titleId} className="text-xl font-bold tracking-tight uppercase flex items-center gap-2" style={{ fontFamily: D.head }}>
             <Calculator className="w-5 h-5 text-sky-400" />
             NRR "What-If" Scenario Simulator
           </DialogTitle>
@@ -102,7 +102,7 @@ export function NRRScenarioCalculator({
                 <button
                   type="button"
                   onClick={() => setMaxMatchOvers(50)}
-                  className={`h-10 rounded-xl text-xs font-black transition-all ${
+                  className={`h-10 rounded-xl text-xs font-bold transition-all ${
                     maxMatchOvers === 50 ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30' : 'bg-white/5 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -111,7 +111,7 @@ export function NRRScenarioCalculator({
                 <button
                   type="button"
                   onClick={() => setMaxMatchOvers(20)}
-                  className={`h-10 rounded-xl text-xs font-black transition-all ${
+                  className={`h-10 rounded-xl text-xs font-bold transition-all ${
                     maxMatchOvers === 20 ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30' : 'bg-white/5 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -126,7 +126,7 @@ export function NRRScenarioCalculator({
             {/* Batting Input */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">Batting Performance</span>
+                <span className="text-xs font-bold uppercase text-emerald-400 tracking-wider">Batting Performance</span>
                 <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 cursor-pointer">
                   <input
                     type="checkbox"
@@ -164,7 +164,7 @@ export function NRRScenarioCalculator({
             {/* Bowling Input */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-rose-400 tracking-wider">Bowling Performance</span>
+                <span className="text-xs font-bold uppercase text-rose-400 tracking-wider">Bowling Performance</span>
                 <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 cursor-pointer">
                   <input
                     type="checkbox"
@@ -205,7 +205,7 @@ export function NRRScenarioCalculator({
             <button
               type="button"
               onClick={() => setOutcome('WIN')}
-              className={`flex-1 h-9 rounded-xl text-xs font-black transition-all ${
+              className={`flex-1 h-9 rounded-xl text-xs font-bold transition-all ${
                 outcome === 'WIN' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'bg-white/5 text-slate-400 hover:text-white'
               }`}
             >
@@ -214,7 +214,7 @@ export function NRRScenarioCalculator({
             <button
               type="button"
               onClick={() => setOutcome('LOSS')}
-              className={`flex-1 h-9 rounded-xl text-xs font-black transition-all ${
+              className={`flex-1 h-9 rounded-xl text-xs font-bold transition-all ${
                 outcome === 'LOSS' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30' : 'bg-white/5 text-slate-400 hover:text-white'
               }`}
             >
@@ -223,7 +223,7 @@ export function NRRScenarioCalculator({
             <button
               type="button"
               onClick={() => setOutcome('TIE')}
-              className={`flex-1 h-9 rounded-xl text-xs font-black transition-all ${
+              className={`flex-1 h-9 rounded-xl text-xs font-bold transition-all ${
                 outcome === 'TIE' ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'bg-white/5 text-slate-400 hover:text-white'
               }`}
             >
@@ -234,7 +234,7 @@ export function NRRScenarioCalculator({
           {/* Live Projection Display Card */}
           <div className="p-5 rounded-2xl border bg-gradient-to-br from-indigo-900/40 via-slate-900 to-slate-950 border-indigo-500/30 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 Live Projection Results
               </span>
@@ -267,7 +267,7 @@ export function NRRScenarioCalculator({
 
               <div className="bg-black/40 p-3 rounded-xl border border-sky-500/20">
                 <div className="text-[10px] uppercase font-bold text-sky-400">Projected NRR</div>
-                <div className="text-base font-mono font-black text-sky-300">
+                <div className="text-base font-mono font-bold text-sky-300">
                   {projection.projectedNRR > 0 ? `+${projection.projectedNRR.toFixed(3)}` : projection.projectedNRR.toFixed(3)}
                 </div>
               </div>
@@ -281,7 +281,7 @@ export function NRRScenarioCalculator({
 
               <div className="bg-black/40 p-3 rounded-xl border border-amber-500/20">
                 <div className="text-[10px] uppercase font-bold text-amber-400">Projected Rank</div>
-                <div className="text-base font-mono font-black text-amber-300" style={{ fontFamily: D.head }}>
+                <div className="text-base font-mono font-bold text-amber-300" style={{ fontFamily: D.head }}>
                   #{projection.projectedRank}
                 </div>
               </div>

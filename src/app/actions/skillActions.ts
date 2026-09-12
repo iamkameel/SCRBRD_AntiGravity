@@ -15,25 +15,61 @@ import {
     updateDoc
 } from "firebase/firestore";
 import { SkillAssessment, PerformanceIndex, DevelopmentTrend, RoleArchetype, SkillDomain, RatingScale1to9, ReadinessScore } from "@/types/schema_v4";
+import { requireUser } from "@/lib/auth/session";
 
 /**
  * Log a new skill assessment for a player.
  */
 export async function logSkillAssessmentAction(assessment: Omit<SkillAssessment, 'id' | 'assessedAt'>) {
     try {
+        // Skill ratings drive selection and development decisions, so an
+        // assessment must be attributable and may never be self-awarded.
+        // The `skills` module is tier 4, which already excludes players.
+        const actor = await requireUser("skills");
+        const actorPersonId = await resolveActorPersonId(actor.uid, actor.email);
+
+        if (actorPersonId && actorPersonId === assessment.personId) {
+            return { success: false, error: "You cannot assess your own attributes." };
+        }
+
+        const adminSdk = (await import('@/lib/firebase-admin')).default;
         const assessmentData = {
             ...assessment,
-            assessedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
+            // Ignore any client-supplied assessor: attribution comes from the
+            // verified session, never from the request body.
+            assessorId: actorPersonId ?? actor.uid,
+            assessorUid: actor.uid,
+            assessedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
         };
 
-        const docRef = await addDoc(collection(db, "skill_assessments"), assessmentData);
+        const docRef = await adminSdk.firestore().collection("skill_assessments").add(assessmentData);
 
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error("Error logging skill assessment:", error);
-        return { success: false, error: "Failed to log assessment" };
+        return { success: false, error: (error as Error).message || "Failed to log assessment" };
     }
+}
+
+/** Maps a signed-in account to its person record, for self-assessment checks. */
+async function resolveActorPersonId(uid: string, email: string | null): Promise<string | null> {
+    try {
+        const adminSdk = (await import('@/lib/firebase-admin')).default;
+        const adminDb = adminSdk.firestore();
+
+        const userDoc = await adminDb.collection('users').doc(uid).get();
+        const linked = userDoc.exists ? (userDoc.data()?.personId as string | undefined) : undefined;
+        if (linked) return linked;
+
+        if (email) {
+            const byEmail = await adminDb.collection('people').where('email', '==', email).limit(1).get();
+            if (!byEmail.empty) return byEmail.docs[0].id;
+        }
+    } catch {
+        // Fall through: the tier check above is still enforced.
+    }
+    return null;
 }
 
 /**
@@ -284,6 +320,7 @@ export async function assignInterventionAction(intervention: {
     notes?: string;
 }) {
     try {
+        await requireUser("skills");
         const docData = {
             ...intervention,
             assignedAt: serverTimestamp(),

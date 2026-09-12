@@ -46,7 +46,7 @@ export function CompetitionStandingsTable({
             <Trophy className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-black uppercase italic tracking-tight text-white" style={{ fontFamily: D.head }}>
+            <h3 className="text-base font-bold uppercase tracking-tight text-white" style={{ fontFamily: D.head }}>
               {leagueTitle}
             </h3>
             <p className="text-xs font-bold text-muted-foreground flex items-center gap-2">
@@ -84,7 +84,7 @@ export function CompetitionStandingsTable({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b text-[10px] font-black uppercase tracking-wider text-muted-foreground" style={{ background: D.surf1, borderColor: D.border }}>
+              <tr className="border-b text-[10px] font-bold uppercase tracking-wider text-muted-foreground" style={{ background: D.surf1, borderColor: D.border }}>
                 <th className="p-4 w-12 text-center">POS</th>
                 <th className="p-4">SCHOOL / TEAM</th>
                 <th className="p-4 text-center">P</th>
@@ -112,7 +112,7 @@ export function CompetitionStandingsTable({
                   >
                     {/* Rank */}
                     <td className="p-4 text-center">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-xs font-black font-mono ${
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-xl text-xs font-bold font-mono ${
                         isLeader ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' :
                         isPlayoffZone ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' :
                         'bg-white/5 text-slate-400'
@@ -124,16 +124,16 @@ export function CompetitionStandingsTable({
                     {/* Team Name */}
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-white" style={{ fontFamily: D.head }}>
+                        <span className="font-bold text-sm text-white" style={{ fontFamily: D.head }}>
                           {row.teamName}
                         </span>
                         {isLeader && (
-                          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] font-black uppercase px-2 py-0.5">
+                          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] font-bold uppercase px-2 py-0.5">
                             Leader
                           </Badge>
                         )}
                         {row.rank === 4 && (
-                          <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[9px] font-black uppercase px-2 py-0.5">
+                          <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[9px] font-bold uppercase px-2 py-0.5">
                             Playoff Cutoff
                           </Badge>
                         )}
@@ -149,7 +149,7 @@ export function CompetitionStandingsTable({
 
                     {/* Points */}
                     <td className="p-4 text-center">
-                      <span className="text-base font-black italic text-white font-mono" style={{ fontFamily: D.head }}>
+                      <span className="text-base font-bold text-white font-mono" style={{ fontFamily: D.head }}>
                         {row.points}
                       </span>
                     </td>
@@ -169,7 +169,7 @@ export function CompetitionStandingsTable({
                         {row.form.slice(-5).map((f, i) => (
                           <span
                             key={i}
-                            className={`w-5 h-5 rounded-md flex items-center justify-center font-mono font-black text-[9px] ${
+                            className={`w-5 h-5 rounded-md flex items-center justify-center font-mono font-bold text-[9px] ${
                               f === 'W' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
                               f === 'L' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
                               'bg-amber-500/20 text-amber-300 border border-amber-500/30'

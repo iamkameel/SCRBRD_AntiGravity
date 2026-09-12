@@ -24,6 +24,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { serializeData } from '@/lib/serialize';
+import { requireUser } from '@/lib/auth/session';
 import { MOCK_MATCHES } from '@/lib/mockMatchData';
 
 export type MatchActionState = {
@@ -37,6 +38,7 @@ export async function createMatchAction(
   formData: FormData
 ): Promise<MatchActionState> {
   try {
+    await requireUser('matches');
     const rawData = {
       homeTeamId: formData.get('homeTeamId'),
       awayTeamId: formData.get('awayTeamId'),
@@ -119,6 +121,7 @@ export async function updateMatchAction(
   formData: FormData
 ): Promise<MatchActionState> {
   try {
+    await requireUser('matches');
     const rawData = {
       homeTeamId: formData.get('homeTeamId'),
       awayTeamId: formData.get('awayTeamId'),
@@ -176,6 +179,7 @@ export async function updateMatchAction(
 
 export async function deleteMatchAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireUser('matches');
     await deleteDocument('matches', id);
     revalidatePath('/matches');
     return { success: true };
@@ -193,6 +197,7 @@ export async function updateTossAction(
 ) {
   console.log('updateTossAction called with:', { matchId, tossResult });
   try {
+    const actor = await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const matchDoc = await matchRef.get();
 
@@ -242,8 +247,8 @@ export async function updateTossAction(
 
     // Record Audit Log
     await recordAuditLog({
-      actorId: 'SYSTEM', // In practice, get from session
-      actorName: 'Official Scorer',
+      actorId: actor.uid,
+      actorName: actor.email ?? actor.uid,
       actionType: 'MATCH_RESULT_VERIFIED', // Close enough for toss start
       entityType: 'match',
       entityId: matchId,
@@ -272,6 +277,7 @@ export async function updateLivePlayersAction(
   'use server';
 
   try {
+    const actor = await requireUser('scoring');
     const liveScoreRef = admin.firestore()
       .collection('matches')
       .doc(matchId)
@@ -364,8 +370,8 @@ export async function updateLivePlayersAction(
     // Record Audit Log for replacement/update
     if (updates.strikerId || updates.nonStrikerId || updates.bowlerId) {
       await recordAuditLog({
-        actorId: 'SCORER',
-        actorName: 'Scorer',
+        actorId: actor.uid,
+        actorName: actor.email ?? actor.uid,
         actionType: 'PLAYER_REPLACED',
         entityType: 'match',
         entityId: matchId,
@@ -430,6 +436,7 @@ export async function recordBallAction(matchId: string, ballData: any) {
   'use server';
 
   try {
+    await requireUser('scoring');
     const db = admin.firestore();
     const matchRef = db.collection('matches').doc(matchId);
 
@@ -631,6 +638,7 @@ export async function endInningsAction(matchId: string) {
   'use server';
 
   try {
+    const actor = await requireUser('scoring');
     const db = admin.firestore();
     const matchRef = db.collection('matches').doc(matchId);
 
@@ -697,8 +705,8 @@ export async function endInningsAction(matchId: string) {
 
     // Record Audit Log
     await recordAuditLog({
-      actorId: 'SCORER',
-      actorName: 'Scorer',
+      actorId: actor.uid,
+      actorName: actor.email ?? actor.uid,
       actionType: 'MATCH_RESULT_VERIFIED',
       entityType: 'match',
       entityId: matchId,
@@ -730,6 +738,7 @@ export async function endInningsAction(matchId: string) {
 export async function startSecondInningsAction(matchId: string) {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const liveScoreRef = matchRef.collection('live').doc('score');
 
@@ -755,6 +764,7 @@ export async function undoLastBallAction(matchId: string, reason: string) {
   'use server';
 
   try {
+    await requireUser('scoring');
     const db = admin.firestore();
     const matchRef = db.collection('matches').doc(matchId);
 
@@ -1070,11 +1080,12 @@ export async function saveTeamSelectionAction(
 ) {
   'use server';
   try {
+    const actor = await requireUser('squad');
     const updateData = {
       [`teamSelection.${teamType}`]: {
         ...selection,
         confirmedAt: new Date().toISOString(),
-        confirmedBy: 'user' // In real app, get from auth
+        confirmedBy: actor.uid
       }
     };
 
@@ -1096,6 +1107,7 @@ export async function saveTossResultAction(
 ) {
   'use server';
   try {
+    await requireUser('scoring');
     const updateData = {
       'preMatch.toss': {
         ...result,
@@ -1119,6 +1131,7 @@ export async function saveTossResultAction(
 export async function saveScorerChecklistAction(matchId: string, checklist: any) {
   'use server';
   try {
+    await requireUser('scoring');
     const updateData = {
       'preMatch.scorerChecklist': {
         ...checklist,
@@ -1139,6 +1152,7 @@ export async function saveScorerChecklistAction(matchId: string, checklist: any)
 export async function endMatchAction(matchId: string, result: { winnerId?: string; margin?: string; resultText: string }) {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const liveScoreRef = matchRef.collection('live').doc('score');
 
@@ -1193,6 +1207,7 @@ export async function endMatchAction(matchId: string, result: { winnerId?: strin
 export async function retireBatterAction(matchId: string, playerId: string, retirementType: 'retired_hurt' | 'retired_out' = 'retired_out') {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const liveScoreRef = matchRef.collection('live').doc('score');
 
@@ -1243,6 +1258,7 @@ export async function retireBatterAction(matchId: string, playerId: string, reti
 export async function saveBattingOrderAction(matchId: string, orderData: { home: string[], away: string[] }) {
   'use server';
   try {
+    await requireUser('squad');
     const updateData = {
       'preMatch.battingOrder': {
         ...orderData,
@@ -1267,6 +1283,7 @@ export async function initializeLiveMatchAction(
 ) {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const matchDoc = await matchRef.get();
 
@@ -1363,6 +1380,7 @@ export async function initializeLiveMatchAction(
 export async function selectNewBatsmanAction(matchId: string, playerId: string) {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const liveScoreRef = matchRef.collection('live').doc('score');
 
@@ -1401,6 +1419,7 @@ export async function selectNewBatsmanAction(matchId: string, playerId: string) 
 export async function selectNewBowlerAction(matchId: string, playerId: string) {
   'use server';
   try {
+    await requireUser('scoring');
     const matchRef = admin.firestore().collection('matches').doc(matchId);
     const liveScoreRef = matchRef.collection('live').doc('score');
 

@@ -30,6 +30,7 @@ import { Division } from "@/types/firestore";
 import { checkPlayerEligibility } from "@/lib/utils/EligibilityValidator";
 import { calculateAge } from "@/lib/utils/dateUtils";
 import { getTeamAction } from "@/app/actions/teamActions";
+import { getSessionUserAction, canAccessModuleAction, ClientSessionUser } from "@/app/actions/authActions";
 
 import { BattingOrderEditor } from "@/components/matches/BattingOrderEditor";
 import { getMockSquad } from "@/lib/mockMatchData";
@@ -50,6 +51,10 @@ export default function PreMatchPage() {
   const [homeTeamName, setHomeTeamName] = useState<string>("Home Team");
   const [awayTeamName, setAwayTeamName] = useState<string>("Away Team");
 
+  // Verified session (advisory — actions enforce authorization server-side)
+  const [sessionUser, setSessionUser] = useState<ClientSessionUser | null>(null);
+  const [canManageSquad, setCanManageSquad] = useState(false);
+
   // Workflow State
   const [homeTeamConfirmed, setHomeTeamConfirmed] = useState(false);
   const [awayTeamConfirmed, setAwayTeamConfirmed] = useState(false);
@@ -60,6 +65,14 @@ export default function PreMatchPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // 0. Who is actually asking?
+        const [user, mayManageSquad] = await Promise.all([
+          getSessionUserAction(),
+          canAccessModuleAction('squad'),
+        ]);
+        setSessionUser(user);
+        setCanManageSquad(mayManageSquad);
+
         // 1. Fetch Match Details
         const matchData = await getMatchDetailsAction(matchId);
         if (!matchData) {
@@ -116,12 +129,6 @@ export default function PreMatchPage() {
     );
   }
 
-  // Mock User Context - In real app, get this from AuthContext
-  const currentUser = {
-    role: 'system_architect', // Change this to test different perspectives
-    teamId: match.homeTeamId // Matches match.homeTeamId
-  };
-
   // Privacy & Release Logic
   const getMatchTime = (date: any) => {
     if (!date) return 0;
@@ -138,17 +145,19 @@ export default function PreMatchPage() {
   const bothTeamsConfirmed = homeTeamConfirmed && awayTeamConfirmed;
   const isSelectionReleased = isWithin24Hours || bothTeamsConfirmed;
 
-  // Permission Logic
-  const isSuperUser = ['system_architect', 'admin'].includes(currentUser.role);
-  const isAdmin = currentUser.role === 'admin' || currentUser.role === 'scorer';
-  const isHomeTeam = currentUser.role === 'home_coach' || currentUser.teamId === match.homeTeamId;
-  const isAwayTeam = currentUser.role === 'away_coach' || currentUser.teamId === match.awayTeamId;
+  // Permission Logic — derived from the verified session. This hides what a
+  // role may not do; the actions enforce it server-side regardless.
+  // Note: team-specific scoping (this coach owns the home team) needs the
+  // person→team link, which the session does not carry yet; until then squad
+  // access is not narrowed to one side.
+  const isSuperUser = !!sessionUser && sessionUser.tier <= 2;
+  const canManageSquads = !!sessionUser && canManageSquad;
 
-  const canViewHomeTeam = isSuperUser || isAdmin || isHomeTeam || isSelectionReleased;
-  const canViewAwayTeam = isSuperUser || isAdmin || isAwayTeam || isSelectionReleased;
+  const canViewHomeTeam = isSuperUser || canManageSquads || isSelectionReleased;
+  const canViewAwayTeam = isSuperUser || canManageSquads || isSelectionReleased;
 
-  const canEditHomeTeam = isSuperUser || ((isAdmin || isHomeTeam) && !homeTeamConfirmed);
-  const canEditAwayTeam = isSuperUser || ((isAdmin || isAwayTeam) && !awayTeamConfirmed);
+  const canEditHomeTeam = isSuperUser || (canManageSquads && !homeTeamConfirmed);
+  const canEditAwayTeam = isSuperUser || (canManageSquads && !awayTeamConfirmed);
 
   const handleTeamSave = async (team: 'home' | 'away', selection: any) => {
     try {

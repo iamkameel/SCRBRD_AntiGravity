@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { TransactionSchema, TransactionInput } from '@/lib/validations/transactionSchema';
 import { createDocument, updateDocument } from '@/lib/firestore';
+import { requireUser } from '@/lib/auth/session';
 
 export interface TransactionActionState {
   error?: string;
@@ -15,6 +16,7 @@ export async function createTransactionAction(
   formData: FormData
 ): Promise<TransactionActionState> {
   try {
+      await requireUser('management');
     const rawData = {
       date: formData.get('date'),
       type: formData.get('type'),
@@ -56,6 +58,7 @@ export async function updateTransactionAction(
   formData: FormData
 ): Promise<TransactionActionState> {
   try {
+      await requireUser('management');
     const rawData = {
       date: formData.get('date'),
       type: formData.get('type'),

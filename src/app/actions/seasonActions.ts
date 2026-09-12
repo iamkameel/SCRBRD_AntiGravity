@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createDocument, updateDocument, deleteDocument } from "@/lib/firestore";
 import { SeasonSchema } from "@/lib/validations/seasonSchema";
+import { requireUser } from '@/lib/auth/session';
 
 interface SeasonFormState {
   errors?: {
@@ -40,6 +41,7 @@ export async function createSeasonAction(
   }
 
   try {
+      await requireUser('competitions');
     await createDocument("seasons", validatedFields.data);
   } catch (error) {
     return {
@@ -74,6 +76,7 @@ export async function updateSeasonAction(
   }
 
   try {
+      await requireUser('competitions');
     await updateDocument("seasons", id, validatedFields.data);
   } catch (error) {
     return {
@@ -89,6 +92,7 @@ export async function updateSeasonAction(
 
 export async function deleteSeasonAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+      await requireUser('competitions');
     await deleteDocument('seasons', id);
     revalidatePath('/seasons');
     return { success: true as const };

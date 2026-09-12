@@ -31,6 +31,7 @@ export const TeamStrengthAnalysis = dynamic(() => import('./bundle').then(m => m
 export const PartnershipChart = dynamic(() => import('./bundle').then(m => m.PartnershipChart), { ssr: false, loading: ChartFallback });
 
 // Page-level clients that embed charts — keep SSR for their non-chart content
+export const PlayerCareerHistoryTab = dynamic(() => import('./bundle').then(m => m.PlayerCareerHistoryTab));
 export const GlobalRankingsClient = dynamic(() => import('./bundle').then(m => m.GlobalRankingsClient));
 export const AnalyticsHubClient = dynamic(() => import('./bundle').then(m => m.AnalyticsHubClient));
 export const PlayerPassportView = dynamic(() => import('./bundle').then(m => m.PlayerPassportView));

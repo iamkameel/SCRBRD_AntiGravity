@@ -7,6 +7,7 @@ import admin from "@/lib/firebase-admin";
 import { leagueSchema } from "@/lib/validations/leagueSchema";
 import { League } from "@/types/firestore";
 import { serializeData } from "@/lib/serialize";
+import { requireUser } from '@/lib/auth/session';
 
 interface LeagueFormState {
   errors?: {
@@ -41,6 +42,7 @@ export async function createLeagueAction(
   }
 
   try {
+      await requireUser('leagues');
     const leagueData = {
       ...validatedFields.data,
       createdAt: new Date().toISOString(),
@@ -79,6 +81,7 @@ export async function updateLeagueAction(
   }
 
   try {
+      await requireUser('leagues');
     const leagueData = {
       ...validatedFields.data,
       updatedAt: new Date().toISOString(),
@@ -98,6 +101,7 @@ export async function updateLeagueAction(
 
 export async function deleteLeagueAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+      await requireUser('leagues');
     await admin.firestore().collection("leagues").doc(id).delete();
     revalidatePath('/leagues');
     return { success: true };

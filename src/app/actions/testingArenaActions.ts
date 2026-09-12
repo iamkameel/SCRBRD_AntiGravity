@@ -17,6 +17,7 @@ import {
 } from "@/lib/testing-arena-constants";
 import { Match, Person, Team, School, FixtureStatus } from "@/types/firestore";
 import { where, QueryConstraint } from "firebase/firestore";
+import { requireUser } from '@/lib/auth/session';
 
 /**
  * Generate a complete test match environment.
@@ -24,6 +25,7 @@ import { where, QueryConstraint } from "firebase/firestore";
  */
 export async function generateTestMatchAction() {
     try {
+        await requireUser('management');
         // 1. Create Schools
         const schoolAlphaId = await createDocument("schools", TEST_SCHOOL_ALPHA as Record<string, unknown>);
         const schoolBetaId = await createDocument("schools", TEST_SCHOOL_BETA as Record<string, unknown>);
@@ -102,6 +104,7 @@ export async function generateTestMatchAction() {
  */
 export async function cleanupTestArenaAction() {
     try {
+        await requireUser('management');
         const constraints: QueryConstraint[] = [where("isTestArena", "==", true)];
         const matches = await fetchCollection<Match>("matches", constraints);
 
@@ -124,6 +127,7 @@ export async function cleanupTestArenaAction() {
  */
 export async function resetMatchAction(matchId: string) {
     try {
+        await requireUser('management');
         await updateDocument("matches", matchId, {
             status: "scheduled",
             fixtureStatus: FixtureStatus.SCHEDULED,

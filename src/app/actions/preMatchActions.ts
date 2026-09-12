@@ -5,6 +5,7 @@ import admin from '@/lib/firebase-admin';
 import { PreMatchProcedure } from '@/types/firestore';
 import { Timestamp } from 'firebase/firestore';
 import { serializeData } from '@/lib/serialize';
+import { requireUser } from '@/lib/auth/session';
 
 export async function saveMatchDaySquadAction(
     matchId: string,
@@ -14,6 +15,7 @@ export async function saveMatchDaySquadAction(
     isHomeTeam: boolean
 ) {
     try {
+        await requireUser('squad');
         const db = admin.firestore();
         const proceduresRef = db.collection('pre_match_procedures');
 

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { SchoolSchema, SchoolInput } from '@/lib/validations/schoolSchema';
 import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore';
 import { School } from '@/types/firestore';
+import { requireUser } from '@/lib/auth/session';
 
 export interface SchoolActionState {
   error?: string;
@@ -17,6 +18,7 @@ export async function createSchoolAction(
   formData: FormData
 ): Promise<SchoolActionState> {
   try {
+      await requireUser('school');
     const rawData = {
       name: formData.get('name'),
       abbreviation: formData.get('abbreviation') || undefined,
@@ -69,6 +71,7 @@ export async function updateSchoolAction(
   formData: FormData
 ): Promise<SchoolActionState> {
   try {
+      await requireUser('school');
     const rawData = {
       name: formData.get('name'),
       abbreviation: formData.get('abbreviation') || undefined,
@@ -118,6 +121,7 @@ export async function updateSchoolAction(
 
 export async function deleteSchoolAction(schoolId: string): Promise<void> {
   try {
+      await requireUser('school');
     await deleteDocument('schools', schoolId);
     revalidatePath('/schools');
   } catch (error) {

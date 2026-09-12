@@ -14,6 +14,7 @@ import { personService } from '@/services/personService';
 import { organisationService } from '@/services/organisationService';
 import { transportService } from '@/lib/services/transportService';
 import { facilityService } from '@/lib/services/facilityService';
+import { requireUser } from '@/lib/auth/session';
 
 export type FixtureActionState = {
     error?: string;
@@ -111,6 +112,7 @@ export async function createSmartFixtureAction(
     formData: FormData
 ): Promise<FixtureActionState> {
     try {
+        await requireUser('matches');
         const date = formData.get('date') as string;
         const time = formData.get('time') as string;
         const homeTeamId = formData.get('homeTeamId') as string;

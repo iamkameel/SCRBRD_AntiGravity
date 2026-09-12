@@ -2,6 +2,7 @@
 
 import admin from '@/lib/firebase-admin';
 import { Match } from '@/types/firestore';
+import { requireUser } from '@/lib/auth/session';
 
 export interface BracketMatch {
   id: string;
@@ -30,6 +31,7 @@ export async function generateKnockoutFixturesAction(
   teamIds: string[]
 ): Promise<{ success: boolean; bracket?: TournamentBracket; error?: string }> {
   try {
+      await requireUser('competitions');
     const numTeams = teamIds.length;
 
     // Validate power of 2
@@ -164,6 +166,7 @@ export async function seedTeamsFromStandingsAction(
   leagueId: string
 ): Promise<{ success: boolean; teamIds?: string[]; error?: string }> {
   try {
+      await requireUser('competitions');
     // Get standings
     const { getPointsTableAction } = await import('./pointsTableActions');
     const standingsResult = await getPointsTableAction(leagueId, undefined);

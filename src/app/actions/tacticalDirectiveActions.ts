@@ -17,6 +17,7 @@
 
 import admin from '@/lib/firebase-admin';
 import { recordAuditLog } from '@/lib/services/auditService';
+import { requireUser } from '@/lib/auth/session';
 import type {
   TacticalDirective,
   DirectiveResponse,
@@ -39,6 +40,7 @@ function directivesRef(matchId: string) {
  */
 export async function transmitDirectiveAction(input: TransmitDirectiveInput): Promise<ActionResult<{ directiveId: string }>> {
   try {
+      await requireUser('scoring');
     const db = admin.firestore();
     const ref = directivesRef(input.matchId).doc(input.clientEventId);
     const existing = await ref.get();
@@ -129,6 +131,7 @@ export async function acknowledgeDirectiveReceiptAction(
   stage: 'DEVICE_RECEIVED' | 'VIEWED'
 ): Promise<ActionResult> {
   try {
+      await requireUser('scoring');
     const now = new Date().toISOString();
     const receiptRef = directivesRef(matchId).doc(directiveId).collection('receipts').doc(personId);
     await receiptRef.set(
@@ -163,6 +166,7 @@ export async function acknowledgeDirectiveReceiptAction(
  */
 export async function respondToDirectiveAction(input: RespondToDirectiveInput): Promise<ActionResult> {
   try {
+      await requireUser('scoring');
     const dirRef = directivesRef(input.matchId).doc(input.directiveId);
     const dirSnap = await dirRef.get();
     if (!dirSnap.exists) {
@@ -234,6 +238,7 @@ export async function cancelDirectiveAction(
   cancelledByName: string
 ): Promise<ActionResult> {
   try {
+      await requireUser('scoring');
     const dirRef = directivesRef(matchId).doc(directiveId);
     const snap = await dirRef.get();
     if (!snap.exists) return { success: false, error: 'Directive not found' };
@@ -272,6 +277,7 @@ export async function cancelDirectiveAction(
  */
 export async function sweepExpiredDirectivesAction(matchId: string): Promise<ActionResult<{ expiredCount: number }>> {
   try {
+      await requireUser('scoring');
     const now = new Date().toISOString();
     const activeStatuses: TacticalDirective['status'][] = ['TRANSMITTED', 'DELIVERED', 'VIEWED', 'ACTIVE'];
     const snap = await directivesRef(matchId).where('status', 'in', activeStatuses).get();
@@ -314,6 +320,7 @@ export async function tagDeliveryOutcomeAction(params: {
   scoringActionDocId?: string;
 }): Promise<ActionResult> {
   try {
+      await requireUser('scoring');
     const now = new Date().toISOString();
     const outcome: DirectiveOutcome = {
       deliveryId: params.deliveryId,

@@ -38,11 +38,14 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
                         matchId: 'aggregate' as UUID,
                         teamId: 'unknown' as UUID,
                         seasonId: 'current' as UUID,
-                        battingImpact: battingComp ? battingComp.normalisedValue : 20,
-                        bowlingImpact: bowlingComp ? bowlingComp.normalisedValue : 20,
-                        fieldingImpact: 35, // Placeholder until full fielding impact is tracked
-                        clutchImpact: clutchComp ? clutchComp.normalisedValue : 20,
-                        momentumShiftImpact: 40, // Placeholder
+                        // Null where the engine has no component for this
+                        // player: an untracked dimension renders as "—" rather
+                        // than a plausible-looking number.
+                        battingImpact: battingComp ? battingComp.normalisedValue : null,
+                        bowlingImpact: bowlingComp ? bowlingComp.normalisedValue : null,
+                        fieldingImpact: null, // Not tracked by the impact engine yet
+                        clutchImpact: clutchComp ? clutchComp.normalisedValue : null,
+                        momentumShiftImpact: null, // Not tracked by the impact engine yet
                         totalImpact: pprData.score,
                         pressureIndex: 1.0,
                         oppositionMultiplier: 1.0,
@@ -75,13 +78,24 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
         return null; // Don't show if no impact data
     }
 
-    const chartData = [
-        { subject: 'Batting', A: Math.min(100, impact.battingImpact), fullMark: 100 },
-        { subject: 'Bowling', A: Math.min(100, impact.bowlingImpact), fullMark: 100 },
-        { subject: 'Fielding', A: Math.min(100, impact.fieldingImpact), fullMark: 100 },
-        { subject: 'Clutch', A: Math.min(100, impact.clutchImpact), fullMark: 100 },
-        { subject: 'Momentum', A: Math.min(100, impact.momentumShiftImpact), fullMark: 100 },
-    ];
+    // Only dimensions the engine actually produced are plotted.
+    const chartData = ([
+        { subject: 'Batting', value: impact.battingImpact },
+        { subject: 'Bowling', value: impact.bowlingImpact },
+        { subject: 'Fielding', value: impact.fieldingImpact },
+        { subject: 'Clutch', value: impact.clutchImpact },
+        { subject: 'Momentum', value: impact.momentumShiftImpact },
+    ] as Array<{ subject: string; value: number | null }>)
+        .filter(d => d.value !== null)
+        .map(d => ({ subject: d.subject, A: Math.min(100, d.value as number), fullMark: 100 }));
+
+    // Season rating is derived from the score, not asserted.
+    const seasonRating =
+        impact.totalImpact >= 80 ? 'Elite'
+            : impact.totalImpact >= 65 ? 'Excellent'
+                : impact.totalImpact >= 50 ? 'Strong'
+                    : impact.totalImpact >= 35 ? 'Developing'
+                        : 'Emerging';
 
     return (
         <Card variant="glass" className="w-full max-w-2xl overflow-hidden border-primary/20 bg-black/40 backdrop-blur-3xl shadow-[0_0_50px_rgba(var(--primary),0.1)]">
@@ -102,7 +116,7 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
                     <div>
                         <CardTitle className="text-3xl font-black italic uppercase italic tracking-tighter">Impact Profile</CardTitle>
                         <CardDescription className="text-muted-foreground/60 flex items-center gap-2 mt-1 font-medium italic">
-                            Season Rating: <span className="text-foreground font-black">Elite</span>
+                            Season Rating: <span className="text-foreground font-black">{seasonRating}</span>
                             <Award className="h-4 w-4 text-amber-500" />
                         </CardDescription>
                     </div>
@@ -114,11 +128,19 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
                 <div className="h-[280px] w-full flex items-center justify-center bg-white/5 rounded-3xl border border-white/5 relative group">
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl duration-700" />
                     <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
+                        {/* margin leaves room for the outermost axis labels,
+                            which were clipping at the chart bounds */}
+                        <RadarChart
+                            cx="50%"
+                            cy="50%"
+                            outerRadius="68%"
+                            data={chartData}
+                            margin={{ top: 16, right: 40, bottom: 16, left: 40 }}
+                        >
                             <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                            <PolarAngleAxis 
-                                dataKey="subject" 
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} 
+                            <PolarAngleAxis
+                                dataKey="subject"
+                                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }}
                             />
                             <Radar
                                 name="Impact"
@@ -136,7 +158,9 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
                     <ImpactMetric 
                         icon={Zap} 
                         label="Primary Impact" 
-                        value={impact.battingImpact > impact.bowlingImpact ? impact.battingImpact : impact.bowlingImpact} 
+                        value={Math.max(impact.battingImpact ?? -1, impact.bowlingImpact ?? -1) >= 0
+                            ? Math.max(impact.battingImpact ?? -1, impact.bowlingImpact ?? -1)
+                            : null}
                         color="bg-primary"
                     />
                     <ImpactMetric 
@@ -164,20 +188,27 @@ export default function PlayerImpactCard({ playerId }: PlayerImpactCardProps) {
     );
 }
 
-function ImpactMetric({ icon: Icon, label, value, color }: any) {
+function ImpactMetric({ icon: Icon, label, value, color }: {
+    icon: React.ElementType; label: string; value: number | null; color: string;
+}) {
+    const tracked = value !== null && Number.isFinite(value);
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest px-1">
                 <span className="flex items-center gap-2 text-muted-foreground">
                     <Icon className="h-3.5 w-3.5" /> {label}
                 </span>
-                <span className="text-foreground">{value.toFixed(1)}</span>
+                {tracked
+                    ? <span className="text-foreground">{(value as number).toFixed(1)}</span>
+                    : <span className="text-muted-foreground/40 normal-case tracking-normal font-medium">Not tracked</span>}
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div 
-                    className={`h-full ${color} shadow-[0_0_10px_rgba(var(--primary),0.3)] transition-all duration-1000 ease-out`} 
-                    style={{ width: `${Math.min(100, value)}%` }}
-                />
+                {tracked && (
+                    <div
+                        className={`h-full ${color} shadow-[0_0_10px_rgba(var(--primary),0.3)] transition-all duration-1000 ease-out`}
+                        style={{ width: `${Math.min(100, value as number)}%` }}
+                    />
+                )}
             </div>
         </div>
     );

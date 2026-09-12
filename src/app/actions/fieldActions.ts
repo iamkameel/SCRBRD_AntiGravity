@@ -6,6 +6,7 @@ import { createDocument, updateDocument, deleteDocument } from '@/lib/firestore'
 import { Field } from '@/types/firestore';
 import { ZodError } from 'zod';
 import { db } from '@/lib/firebase';
+import { requireUser } from '@/lib/auth/session';
 import {
   collection,
   addDoc,
@@ -36,6 +37,7 @@ export async function createFieldAction(
   formData: FormData
 ): Promise<FieldActionState> {
   try {
+      await requireUser('fields');
     const rawData = {
       name: formData.get('name'),
       location: formData.get('location'),
@@ -108,6 +110,7 @@ export async function updateFieldAction(
   formData: FormData
 ): Promise<FieldActionState> {
   try {
+      await requireUser('fields');
     const rawData = {
       name: formData.get('name'),
       location: formData.get('location'),
@@ -176,6 +179,7 @@ export async function updateFieldAction(
 
 export async function deleteFieldAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+      await requireUser('fields');
     await deleteDocument('fields', id);
     revalidatePath('/fields');
     return { success: true };
@@ -190,6 +194,7 @@ export async function deleteFieldAction(id: string): Promise<{ success: boolean;
  */
 export async function logGroundStatusAction(data: Partial<GroundStatusLog>) {
   try {
+      await requireUser('fields');
     const docRef = await addDoc(collection(db, 'ground_status_logs'), {
       ...data,
       loggedAt: serverTimestamp() as unknown as ISO8601Timestamp
@@ -267,6 +272,7 @@ export async function getSchoolFieldsAction(schoolId: string) {
  */
 export async function upsertMaintenanceTaskAction(data: Partial<MaintenanceTask>) {
   try {
+      await requireUser('fields');
     if (data.id) {
       const docRef = firestoreDoc(db, 'maintenance_tasks', data.id);
       await firestoreUpdateDoc(docRef, {

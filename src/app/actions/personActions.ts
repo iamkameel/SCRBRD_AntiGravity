@@ -6,6 +6,7 @@ import { setDocument, deleteDocument, fetchPersonById } from '@/lib/firestore';
 import { Person } from '@/types/firestore';
 import { hasHigherOrEqualRole, USER_ROLES, UserRole } from '@/lib/roles';
 import { serializeData } from '@/lib/serialize';
+import { requireUser } from '@/lib/auth/session';
 
 /**
  * Check if user has permission to perform action
@@ -19,6 +20,7 @@ async function checkPermission(requiredRole: UserRole): Promise<boolean> {
 
 export async function createPersonAction(formData: FormData) {
     try {
+        await requireUser('profiles');
         // Check permissions
         const hasPermission = await checkPermission(USER_ROLES.COACH);
         if (!hasPermission) {
@@ -61,6 +63,7 @@ export async function createPersonAction(formData: FormData) {
 
 export async function updatePersonAction(personId: string, formData: FormData) {
     try {
+        await requireUser('profiles');
         // Check permissions
         const hasPermission = await checkPermission(USER_ROLES.COACH);
         if (!hasPermission) {
@@ -105,6 +108,7 @@ export async function updatePersonAction(personId: string, formData: FormData) {
 
 export async function deletePersonAction(personId: string) {
     try {
+        await requireUser('management');
         // Check permissions - only admins can delete
         const hasPermission = await checkPermission(USER_ROLES.ADMIN);
         if (!hasPermission) {
@@ -129,6 +133,7 @@ export async function deletePersonAction(personId: string) {
 
 export async function bulkDeletePeopleAction(personIds: string[]) {
     try {
+        await requireUser('management');
         // Check permissions - only admins can bulk delete
         const hasPermission = await checkPermission(USER_ROLES.ADMIN);
         if (!hasPermission) {
@@ -230,6 +235,12 @@ export async function completeOnboardingAction(data: {
     ageGroup: string;
 }) {
     try {
+        // Onboarding provisions a school and team from caller-supplied data,
+        // so it is restricted to the signed-in user onboarding themselves.
+        const actor = await requireUser();
+        if (!actor.email || actor.email.toLowerCase() !== data.email.toLowerCase()) {
+            throw new Error('You can only complete onboarding for your own account.');
+        }
         const admin = (await import('@/lib/firebase-admin')).default;
         const db = admin.firestore();
 

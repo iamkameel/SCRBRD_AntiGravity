@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { serializeData } from '@/lib/serialize';
+import { requireUser } from '@/lib/auth/session';
 
 export type TeamActionState = {
   error?: string;
@@ -19,6 +20,7 @@ export async function createTeamAction(
   formData: FormData
 ): Promise<TeamActionState> {
   try {
+      await requireUser('squad');
     // Extract and prepare data
     const rawData: Record<string, unknown> = {
       name: formData.get('name') || '',
@@ -109,6 +111,7 @@ export async function getCoachesBySchoolAction(schoolId: string) {
 
 export async function deleteTeamAction(id: string): Promise<TeamActionState> {
   try {
+      await requireUser('squad');
     await teamService.delete(id);
     revalidatePath('/teams');
     return { success: true };
@@ -139,6 +142,7 @@ export async function updateTeamAction(
   formData: FormData
 ): Promise<TeamActionState> {
   try {
+      await requireUser('squad');
     const rawData: Record<string, unknown> = {
       name: formData.get('name') || '',
       organisationId: formData.get('organisationId') || formData.get('schoolId') || '',

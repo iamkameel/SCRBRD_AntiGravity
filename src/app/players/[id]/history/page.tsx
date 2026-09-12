@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use } from "react";
-import { PlayerCareerHistoryTab } from "@/components/players/PlayerCareerHistoryTab";
+import { PlayerCareerHistoryTab } from "@/components/charts/lazy";
 import { MOCK_CAREER_PROFILES } from "@/lib/intelligence/playerHistoryEngine";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import admin from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { requireUser } from '@/lib/auth/session';
 
 export interface CapacityLogData {
     occupancy: number;
@@ -13,6 +14,7 @@ export interface CapacityLogData {
 
 export async function logCapacityAction(fieldId: string, data: CapacityLogData) {
     try {
+        await requireUser('fields');
         const capacityRef = admin.firestore()
             .collection('fields')
             .doc(fieldId)

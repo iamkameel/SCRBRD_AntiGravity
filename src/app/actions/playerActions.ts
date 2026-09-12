@@ -6,6 +6,7 @@ import { Person } from '@/types/firestore';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
+import { requireUser } from '@/lib/auth/session';
 
 export type PlayerActionState = {
   error?: string;
@@ -171,6 +172,7 @@ export async function createPlayerAction(
   formData: FormData
 ): Promise<PlayerActionState> {
   try {
+      await requireUser('profiles');
     const rawData = extractPlayerData(formData);
     const validatedData = playerSchema.parse(rawData);
     const newPlayerData = mapToFirestorePerson(validatedData);
@@ -204,6 +206,7 @@ export async function updatePlayerAction(
   formData: FormData
 ): Promise<PlayerActionState> {
   try {
+      await requireUser('profiles');
     const rawData = extractPlayerData(formData);
     const validatedData = playerSchema.parse(rawData);
     const updateData = mapToFirestorePerson(validatedData);
@@ -233,6 +236,7 @@ export async function updatePlayerAction(
 
 export async function deletePlayerAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
+      await requireUser('profiles');
     await deleteDocument('people', id);
     revalidatePath('/people');
     return { success: true };

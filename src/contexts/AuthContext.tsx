@@ -147,8 +147,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Server actions authorize against an httpOnly session cookie, not the
+  // client SDK's state, so every sign-in must mint one. Firebase only accepts
+  // an ID token minted in the last five minutes, so this runs at sign-in
+  // rather than on token refresh.
+  const startServerSession = async (firebaseUser: User) => {
+    const idToken = await firebaseUser.getIdToken();
+    const res = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) throw new Error('Could not establish a secure session. Please try again.');
+  };
+
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    await startServerSession(user);
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
@@ -170,10 +185,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
       emailVerified: false,
     });
+
+    await startServerSession(user);
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
+    try {
+      await fetch('/api/auth/session', { method: 'DELETE' });
+    } finally {
+      await firebaseSignOut(auth);
+    }
   };
 
   const resetPassword = async (email: string) => {

@@ -4,6 +4,7 @@ import { createDocument, fetchTeamById, fetchDivisionById } from '@/lib/firestor
 import { Match } from '@/types/firestore';
 import { revalidatePath } from 'next/cache';
 import { DraftFixture } from '@/services/fixtureGeneratorService';
+import { requireUser } from '@/lib/auth/session';
 
 // Add Competition type locally if missing from firestore.ts for now
 export interface LocalCompetition {
@@ -28,6 +29,7 @@ export async function bulkCreateFixturesAction(
     seasonId?: string
 ): Promise<MultiFixtureActionState> {
     try {
+        await requireUser('matches');
         if (!fixtures || fixtures.length === 0) {
             return { error: 'No fixtures provided to create' };
         }

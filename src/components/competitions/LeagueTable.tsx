@@ -46,14 +46,14 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
         <Table>
           <TableHeader className="bg-white/5 sticky top-0 z-10 backdrop-blur-md">
             <TableRow className="hover:bg-transparent border-white/10">
-              <TableHead className="w-14 text-center text-[10px] font-black uppercase tracking-tighter opacity-50">RANK</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-tighter opacity-50 pl-4">COMPETITOR</TableHead>
-              <TableHead className="text-center w-12 text-[10px] font-black uppercase tracking-tighter opacity-50">MAT</TableHead>
-              <TableHead className="text-center w-12 text-[10px] font-black uppercase tracking-tighter opacity-50">WON</TableHead>
-              <TableHead className="text-center w-12 text-[10px] font-black uppercase tracking-tighter opacity-50 hidden sm:table-cell">LST</TableHead>
-              <TableHead className="text-center w-14 text-[10px] font-black uppercase tracking-tighter opacity-50 hidden md:table-cell">NRR</TableHead>
-              <TableHead className="text-center w-16 text-[10px] font-black uppercase tracking-tighter text-emerald-400">PTS</TableHead>
-              <TableHead className="w-[124px] hidden lg:table-cell text-[10px] font-black uppercase tracking-tighter opacity-50">RECORDS / FORM</TableHead>
+              <TableHead className="w-14 text-center text-[10px] font-bold uppercase tracking-wider opacity-50">RANK</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider opacity-50 pl-4">COMPETITOR</TableHead>
+              <TableHead className="text-center w-12 text-[10px] font-bold uppercase tracking-wider opacity-50">MAT</TableHead>
+              <TableHead className="text-center w-12 text-[10px] font-bold uppercase tracking-wider opacity-50">WON</TableHead>
+              <TableHead className="text-center w-12 text-[10px] font-bold uppercase tracking-wider opacity-50 hidden sm:table-cell">LST</TableHead>
+              <TableHead className="text-center w-14 text-[10px] font-bold uppercase tracking-wider opacity-50 hidden md:table-cell">NRR</TableHead>
+              <TableHead className="text-center w-16 text-[10px] font-bold uppercase tracking-wider text-emerald-400">PTS</TableHead>
+              <TableHead className="w-[124px] hidden lg:table-cell text-[10px] font-bold uppercase tracking-wider opacity-50">RECORDS / FORM</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -79,7 +79,7 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
                     {isBottom && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />}
                     
                     <div className="flex items-center justify-center">
-                      <span className={`text-sm font-black italic ${isTop ? 'text-emerald-400' : isBottom ? 'text-rose-400' : 'text-white/40'}`}>
+                      <span className={`text-sm font-bold ${isTop ? 'text-emerald-400' : isBottom ? 'text-rose-400' : 'text-white/40'}`}>
                         {position.toString().padStart(2, '0')}
                       </span>
                     </div>
@@ -107,7 +107,7 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
                               className="flex lg:hidden items-center gap-1 mt-2 mb-1 overflow-hidden"
                             >
                               {team.recentForm.map((result, i) => (
-                                <div key={i} className={`w-4 h-4 rounded-[2px] flex items-center justify-center text-[8px] font-black ${
+                                <div key={i} className={`w-4 h-4 rounded-[2px] flex items-center justify-center text-[8px] font-bold ${
                                   result === 'W' ? 'bg-emerald-500 text-black' : 
                                   result === 'L' ? 'bg-rose-500 text-white' : 'bg-white/10 text-white/40'
                                 }`}>{result}</div>
@@ -121,7 +121,7 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
                   
                   {/* Stats */}
                   <TableCell className="text-center font-mono text-xs opacity-60 tabular-nums">{team.played}</TableCell>
-                  <TableCell className="text-center font-black text-sm text-emerald-400 tabular-nums">{team.won}</TableCell>
+                  <TableCell className="text-center font-bold text-sm text-emerald-400 tabular-nums">{team.won}</TableCell>
                   <TableCell className="text-center font-mono text-xs opacity-40 hidden sm:table-cell tabular-nums">{team.lost}</TableCell>
                   
                   {/* NRR with Velocity Indicator */}
@@ -142,7 +142,7 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
                   {/* Points */}
                   <TableCell className="text-center">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                      <span className="font-black text-lg text-emerald-400">{team.points}</span>
+                      <span className="font-bold text-lg text-emerald-400">{team.points}</span>
                     </div>
                   </TableCell>
                   
@@ -154,7 +154,7 @@ export function LeagueTable({ standings, isPromotionRelegationEnabled = true }: 
                           <TooltipTrigger>
                             <motion.div 
                               whileHover={{ y: -2, scale: 1.1 }}
-                              className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black transition-all shadow-lg
+                              className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition-all shadow-lg
                                 ${result === 'W' ? 'bg-emerald-500 text-black shadow-emerald-500/20' : 
                                   result === 'L' ? 'bg-rose-500 text-white shadow-rose-500/20' : 
                                   'bg-white/10 text-white/50 border border-white/5'}`

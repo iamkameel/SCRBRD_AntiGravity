@@ -67,10 +67,10 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
               <CalendarDays className="h-7 w-7 text-indigo-500" />
            </div>
            <div>
-              <h2 className="text-3xl font-black uppercase italic tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>
+              <h2 className="text-3xl font-bold uppercase tracking-tight" style={{ fontFamily: D.head, color: D.textPrimary }}>
                 {currentDate.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' }).toUpperCase()}
               </h2>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mt-1" style={{ color: D.textMuted }}>INSTITUTIONAL SCHEDULE CALENDAR</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] opacity-40 mt-1" style={{ color: D.textMuted }}>INSTITUTIONAL SCHEDULE CALENDAR</p>
            </div>
         </div>
         
@@ -78,7 +78,7 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
           <Button variant="ghost" size="icon" onClick={goToPreviousMonth} className="h-10 w-10 rounded-xl hover:bg-black/5">
             <ChevronLeft size={18} />
           </Button>
-          <Button variant="ghost" onClick={goToToday} className="px-6 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black/5">
+          <Button variant="ghost" onClick={goToToday} className="px-6 h-10 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5">
             TODAY
           </Button>
           <Button variant="ghost" size="icon" onClick={goToNextMonth} className="h-10 w-10 rounded-xl hover:bg-black/5">
@@ -90,7 +90,7 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
       <div className="p-10">
         <div className="grid grid-cols-7 gap-4">
           {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
-            <div key={day} className="text-center text-[10px] font-black uppercase tracking-[0.4em] opacity-40 py-4" style={{ color: D.textMuted }}>
+            <div key={day} className="text-center text-[10px] font-bold uppercase tracking-[0.3em] opacity-40 py-4" style={{ color: D.textMuted }}>
               {day}
             </div>
           ))}
@@ -117,7 +117,7 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
                 {today && <div className="absolute top-0 right-0 p-3"><div className="w-2 h-2 rounded-full animate-pulse" style={{ background: D.indigo, boxShadow: `0 0 10px ${D.indigo}` }} /></div>}
                 
                 <div className={cn(
-                  "text-xl font-black mb-3 italic",
+                  "text-xl font-bold mb-3",
                   today ? "text-indigo-500" : "opacity-40"
                 )} style={{ fontFamily: D.head }}>
                   {date.getDate()}
@@ -135,19 +135,19 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
 
                     return (
                       <Link key={fixture.id} href={`/matches/${fixture.id}`} className="block">
-                        <div className="px-2.5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-tight transition-all hover:scale-105"
+                        <div className="px-2.5 py-2 rounded-xl border text-[9px] font-bold uppercase tracking-tight transition-all hover:scale-105"
                              style={{ background: D.surf1, borderColor: `${sc.color}20`, color: D.textPrimary }}>
                           <div className="flex items-center gap-1.5 mb-1 opacity-40">
                              <sc.icon size={10} style={{ color: sc.color }} />
                              <span className="truncate">{fixture.status.toUpperCase()}</span>
                           </div>
-                          <div className="truncate font-black italic">{fixture.homeTeamName} vs {fixture.awayTeamName}</div>
+                          <div className="truncate font-bold">{fixture.homeTeamName} vs {fixture.awayTeamName}</div>
                         </div>
                       </Link>
                     );
                   })}
                   {dayFixtures.length > 3 && (
-                    <div className="text-[9px] font-black uppercase tracking-widest text-center py-1 opacity-40">
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-center py-1 opacity-40">
                       +{dayFixtures.length - 3} MORE MATCHES
                     </div>
                   )}
@@ -167,7 +167,7 @@ export function FixtureCalendar({ fixtures }: FixtureCalendarProps) {
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3">
               <div className="h-3 w-3 rounded-full" style={{ background: item.color, boxShadow: `0 0 8px ${item.color}40` }} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60" style={{ color: D.textMuted }}>{item.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60" style={{ color: D.textMuted }}>{item.label}</span>
             </div>
           ))}
         </div>

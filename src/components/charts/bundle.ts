@@ -20,6 +20,7 @@ export { PlayerSkillsDisplay } from '@/components/players/PlayerSkillsDisplay';
 export { default as PlayerImpactCard } from '@/components/rankings/PlayerImpactCard';
 export { TeamStrengthAnalysis } from '@/components/analytics/TeamStrengthAnalysis';
 export { PartnershipChart } from '@/components/scoring/PartnershipChart';
+export { PlayerCareerHistoryTab } from '@/components/players/PlayerCareerHistoryTab';
 export { GlobalRankingsClient } from '@/components/rankings/GlobalRankingsClient';
 export { AnalyticsHubClient } from '@/components/analytics/AnalyticsHubClient';
 export { PlayerPassportView } from '@/components/players/PlayerPassportView';

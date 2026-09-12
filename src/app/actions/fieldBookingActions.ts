@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import admin from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { requireUser } from '@/lib/auth/session';
 
 export interface BookingData {
   date: Date | string;
@@ -25,6 +26,7 @@ export async function createBookingAction(fieldId: string, bookingData: BookingD
   'use server';
 
   try {
+      await requireUser('fields');
     const bookingRef = admin.firestore()
       .collection('fields')
       .doc(fieldId)
@@ -103,6 +105,7 @@ export async function deleteBookingAction(fieldId: string, bookingId: string) {
   'use server';
 
   try {
+      await requireUser('fields');
     await admin.firestore()
       .collection('fields')
       .doc(fieldId)

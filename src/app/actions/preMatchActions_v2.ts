@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import admin from '@/lib/firebase-admin';
 import { FixtureReadinessCheck, MatchTeamSheet, MatchTeamSheetPlayer, UUID, ISO8601Timestamp } from '@/types/schema_v4';
 import { serializeData } from '@/lib/serialize';
+import { requireUser } from '@/lib/auth/session';
 
 const getFirestore = () => admin.firestore();
 
@@ -25,6 +26,7 @@ export async function createTeamSheetVersionAction(
     confirmedByPersonId: string
 ) {
     try {
+        await requireUser('squad');
         const db = getFirestore();
         const teamSheetsRef = db.collection('match_team_sheets');
 
@@ -102,6 +104,7 @@ export async function updateReadinessLayerAction(
     value: boolean
 ) {
     try {
+        await requireUser('squad');
         const db = getFirestore();
         const readinessRef = db.collection('fixture_readiness_checks');
         const snapshot = await readinessRef.where('fixtureId', '==', fixtureId).limit(1).get();
