@@ -25,8 +25,6 @@ export function MatchAnalyticsDashboard({
   battingFirst,
   targetRuns = 160,
 }: MatchAnalyticsDashboardProps) {
-  if (!innings1) return null;
-
   // Process over history into linear ball performance events
   const extractBalls = (innings: Innings): BallPerformance[] => {
     const balls: BallPerformance[] = [];
@@ -60,13 +58,13 @@ export function MatchAnalyticsDashboard({
     });
   };
 
-  const innings1Balls = extractBalls(innings1);
+  const innings1Balls = innings1 ? extractBalls(innings1) : [];
   const innings1Phases = calculatePhaseBreakdown(innings1Balls);
 
   const innings2Balls = innings2 ? extractBalls(innings2) : [];
   const innings2Phases = innings2 ? calculatePhaseBreakdown(innings2Balls) : null;
 
-  const innings1Data = processInningsData(innings1);
+  const innings1Data = innings1 ? processInningsData(innings1) : [];
   const innings2Data = innings2 ? processInningsData(innings2) : undefined;
 
   const team1Name = battingFirst === 'home' ? homeTeamName : awayTeamName;
@@ -75,12 +73,14 @@ export function MatchAnalyticsDashboard({
   // Compute DLS Telemetry if chasing in second innings
   const dlsTelemetry = useMemo(() => {
     if (!innings2) return null;
-    const currentRuns = innings2.totalRuns || 0;
+    const currentRuns = innings2.runs || 0;
     const oversBowled = (innings2.overHistory || []).length;
     const oversRemaining = Math.max(0, 20 - oversBowled);
     const wicketsLost = innings2.wickets || 0;
     return calculateDLSTelemetry(targetRuns, currentRuns, oversRemaining, wicketsLost);
   }, [innings2, targetRuns]);
+
+  if (!innings1) return null;
 
   return (
     <div className="space-y-6 mt-8">

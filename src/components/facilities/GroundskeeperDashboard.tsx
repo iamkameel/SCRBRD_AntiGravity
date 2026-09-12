@@ -167,7 +167,7 @@ export function GroundskeeperDashboard() {
     try {
       const res = await logGroundStatusAction({
         fieldId: currentPitch.fieldId,
-        conditionStatus: progressPercent >= 80 ? 'Optimal' : progressPercent >= 50 ? 'Playable' : 'Inspection Required',
+        conditionStatus: progressPercent >= 80 ? 'Excellent' : progressPercent >= 50 ? 'Good' : 'Fair',
         pitchReadiness: progressPercent,
         outfieldReadiness: 95,
         equipmentReadiness: 90,
