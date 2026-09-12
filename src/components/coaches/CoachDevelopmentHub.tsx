@@ -345,7 +345,7 @@ export function CoachDevelopmentHub() {
                         <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-1" style={{ color: D.textMuted, fontFamily: D.head }}>
                             Institutional Player Development Engine
                         </div>
-                        <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic" style={{ fontFamily: D.head }}>
+                        <h2 className="text-3xl font-bold text-white tracking-tight uppercase" style={{ fontFamily: D.head }}>
                             COACH <span style={{ color: D.indigo }}>DEVELOPMENT HUB</span>
                         </h2>
                     </div>
@@ -446,7 +446,7 @@ export function CoachDevelopmentHub() {
                                 ROLE-WEIGHTED SKILL SCORE
                             </div>
                             <div
-                                className="text-6xl font-black tracking-tighter italic my-2"
+                                className="text-6xl font-bold tracking-tight my-2"
                                 style={{ fontFamily: D.head, color: D.indigo }}
                             >
                                 {roleSkillScore} <span className="text-xl font-normal text-white/30">/ 100</span>
@@ -530,7 +530,7 @@ export function CoachDevelopmentHub() {
                                     <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-1 flex items-center gap-2">
                                         {selectedPlayer.name} <ChevronRight className="h-3 w-3 opacity-30" /> Domain Evaluation
                                     </div>
-                                    <h3 className="text-2xl font-black text-white uppercase italic flex items-center gap-3" style={{ fontFamily: D.head }}>
+                                    <h3 className="text-2xl font-bold text-white uppercase flex items-center gap-3" style={{ fontFamily: D.head }}>
                                         {DOMAINS.find(d => d.id === activeDomain)?.label}
                                     </h3>
                                 </div>
@@ -555,7 +555,7 @@ export function CoachDevelopmentHub() {
                                         style={{ background: D.surf2, borderColor: D.border }}
                                     >
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="text-xs font-black text-white uppercase tracking-wider italic" style={{ fontFamily: D.head }}>
+                                            <div className="text-xs font-bold text-white uppercase tracking-wider" style={{ fontFamily: D.head }}>
                                                 {attr}
                                             </div>
                                             <Badge
@@ -614,7 +614,7 @@ export function CoachDevelopmentHub() {
                             </div>
                             <div>
                                 <div className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">Automated System Diagnosis</div>
-                                <h3 className="text-2xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                <h3 className="text-2xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                     ATHLETE PERFORMANCE & SAFETY PROFILE
                                 </h3>
                             </div>
@@ -629,13 +629,13 @@ export function CoachDevelopmentHub() {
                             </div>
                             <div className="p-5 rounded-2xl border" style={{ background: D.surf2, borderColor: D.border }}>
                                 <span className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Primary Technical Need</span>
-                                <span className="text-xs font-black text-white italic" style={{ fontFamily: D.head }}>
+                                <span className="text-xs font-bold text-white" style={{ fontFamily: D.head }}>
                                     {aiDiagnosis.primaryWeakness}
                                 </span>
                             </div>
                             <div className="p-5 rounded-2xl border" style={{ background: D.surf2, borderColor: D.border }}>
                                 <span className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1 block">Primary Strength</span>
-                                <span className="text-xs font-black text-emerald-400 italic" style={{ fontFamily: D.head }}>
+                                <span className="text-xs font-bold text-emerald-400" style={{ fontFamily: D.head }}>
                                     {aiDiagnosis.primaryStrength}
                                 </span>
                             </div>
@@ -685,7 +685,7 @@ export function CoachDevelopmentHub() {
                                 </div>
                                 <div>
                                     <div className="text-[9px] font-black uppercase tracking-widest text-amber-400">Weakness Remediation</div>
-                                    <h3 className="text-xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                    <h3 className="text-xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                         RECOMMENDED INTERVENTIONS (V1 ENGINE)
                                     </h3>
                                 </div>
@@ -708,7 +708,7 @@ export function CoachDevelopmentHub() {
                                     >
                                         <div className="space-y-2 max-w-2xl">
                                             <div className="flex items-center gap-3 flex-wrap">
-                                                <span className="text-base font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                                <span className="text-base font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                                     {rec.drillName}
                                                 </span>
                                                 <Badge className="text-[8px] font-black uppercase bg-indigo-500/20 text-indigo-300 border-0">
@@ -777,7 +777,7 @@ export function CoachDevelopmentHub() {
                                     </div>
                                     <div>
                                         <div className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Strength Sharpening</div>
-                                        <h3 className="text-xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                        <h3 className="text-xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                             ELITE TRAIT REINFORCEMENT
                                         </h3>
                                     </div>
@@ -788,7 +788,7 @@ export function CoachDevelopmentHub() {
                                 {strengthDrills.map(drill => (
                                     <div key={drill.id} className="p-6 rounded-2xl border space-y-3" style={{ background: D.surf2, borderColor: D.border }}>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                            <span className="text-sm font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                                 {drill.name}
                                             </span>
                                             <Badge className="bg-emerald-500/20 text-emerald-300 text-[8px] uppercase">
@@ -813,8 +813,8 @@ export function CoachDevelopmentHub() {
                 </div>
             )}
 
-            {/* STAGE 5 & 6: EXECUTION & REVIEW LOOP */}
-            {(activeStage === 5 || activeStage === 6) && (
+            {/* STAGE 5: EXECUTION */}
+            {activeStage === 5 && (
                 <div className="space-y-8">
                     {/* Active Interventions List */}
                     <div className="p-8 rounded-[2rem] border relative overflow-hidden shadow-xl"
@@ -826,7 +826,7 @@ export function CoachDevelopmentHub() {
                                 </div>
                                 <div>
                                     <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Training Execution</div>
-                                    <h3 className="text-xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                    <h3 className="text-xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                         ACTIVE INTERVENTIONS FOR {selectedPlayer.name.toUpperCase()}
                                     </h3>
                                 </div>
@@ -839,7 +839,7 @@ export function CoachDevelopmentHub() {
                                      style={{ background: D.surf2, borderColor: D.border }}>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-base font-black text-white italic uppercase" style={{ fontFamily: D.head }}>
+                                            <span className="text-base font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                                 {item.drillName}
                                             </span>
                                             <Badge className="bg-indigo-500/20 text-indigo-300 text-[8px]">
@@ -860,7 +860,7 @@ export function CoachDevelopmentHub() {
                     {/* Session Feedback Logger */}
                     <div className="p-8 rounded-[2rem] border relative overflow-hidden shadow-xl"
                          style={{ background: D.surf1, borderColor: D.border }}>
-                        <h3 className="text-xl font-black text-white uppercase italic mb-4" style={{ fontFamily: D.head }}>
+                        <h3 className="text-xl font-bold text-white uppercase mb-4" style={{ fontFamily: D.head }}>
                             LOG SESSION EXECUTION & RESPONSE
                         </h3>
                         <div className="space-y-4">
@@ -879,6 +879,77 @@ export function CoachDevelopmentHub() {
                                     {sessionLogged ? <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400" /> : <Save className="w-4 h-4 mr-2" />}
                                     {sessionLogged ? "FEEDBACK RECORDED" : "SUBMIT SESSION LOG"}
                                 </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* STAGE 6: REVIEW LOOP & DEVELOPMENT TREND */}
+            {activeStage === 6 && (
+                <div className="space-y-8">
+                    <div className="p-8 rounded-[2rem] border relative overflow-hidden shadow-xl"
+                         style={{ background: D.surf1, borderColor: D.border }}>
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b" style={{ borderColor: D.border }}>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                    <TrendingUp className="h-5 w-5 text-emerald-400" />
+                                </div>
+                                <div>
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Longitudinal Review Loop</div>
+                                    <h3 className="text-xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
+                                        DEVELOPMENT TREND & MOVEMENT PROFILE
+                                    </h3>
+                                </div>
+                            </div>
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1 font-bold">
+                                TREND: IMPROVING STEADILY (+4.2pts)
+                            </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div className="p-6 rounded-2xl border bg-black/20 border-white/5 space-y-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block">Skill Score Movement</span>
+                                <div className="text-3xl font-bold text-emerald-400" style={{ fontFamily: D.head }}>
+                                    74 <span className="text-xs text-white/40 font-normal">from 69.8</span>
+                                </div>
+                                <p className="text-[10px] text-white/60">30-day assessment delta across key role domains.</p>
+                            </div>
+                            <div className="p-6 rounded-2xl border bg-black/20 border-white/5 space-y-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block">Training Compliance</span>
+                                <div className="text-3xl font-bold text-indigo-400" style={{ fontFamily: D.head }}>
+                                    100%
+                                </div>
+                                <p className="text-[10px] text-white/60">2 of 2 prescribed micro-drills completed on schedule.</p>
+                            </div>
+                            <div className="p-6 rounded-2xl border bg-black/20 border-white/5 space-y-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block">Coach Confidence Level</span>
+                                <div className="text-3xl font-bold text-sky-400" style={{ fontFamily: D.head }}>
+                                    HIGH
+                                </div>
+                                <p className="text-[10px] text-white/60">Backed by 12 ball-by-ball matches & 4 rubric logs.</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 rounded-2xl border bg-black/30 border-white/10 space-y-4">
+                            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                <CheckSquare className="w-4 h-4 text-emerald-400" /> Recent Assessment History & Notes
+                            </h4>
+                            <div className="space-y-3">
+                                <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                                    <div>
+                                        <span className="text-xs font-bold text-white">Batting Domain Re-evaluation</span>
+                                        <p className="text-[11px] text-white/50">Strike Rotation rating adjusted from 4/20 to 6/20 after drop-and-run session.</p>
+                                    </div>
+                                    <span className="text-[10px] font-mono text-white/40">2026-09-10 • Coach Assessment</span>
+                                </div>
+                                <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                                    <div>
+                                        <span className="text-xs font-bold text-white">Initial Season Baseline Logged</span>
+                                        <p className="text-[11px] text-white/50">Role-weighted baseline score established at 69.8 for Opener archetype.</p>
+                                    </div>
+                                    <span className="text-[10px] font-mono text-white/40">2026-09-01 • System Auto-Baseline</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -905,7 +976,7 @@ export function CoachDevelopmentHub() {
 
                             <div>
                                 <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">Prescribe Intervention</div>
-                                <h3 className="text-2xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                <h3 className="text-2xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                     {assignModalDrill.name}
                                 </h3>
                                 <p className="text-xs text-white/60 mt-1">Assigning to <b className="text-white">{selectedPlayer.name}</b> ({selectedPlayer.role})</p>
@@ -982,7 +1053,7 @@ export function CoachDevelopmentHub() {
                                 <Badge className="bg-indigo-500/20 text-indigo-300 text-[8px] uppercase mb-2">
                                     {inspectDrill.category} • {inspectDrill.level} LEVEL
                                 </Badge>
-                                <h3 className="text-3xl font-black text-white uppercase italic" style={{ fontFamily: D.head }}>
+                                <h3 className="text-3xl font-bold text-white uppercase" style={{ fontFamily: D.head }}>
                                     {inspectDrill.name}
                                 </h3>
                                 <p className="text-xs text-white/60 mt-2 leading-relaxed">

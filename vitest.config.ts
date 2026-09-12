@@ -11,7 +11,7 @@ export default defineConfig({
         // shell exports NODE_ENV=production. Force the test build regardless.
         env: { NODE_ENV: 'test' },
         setupFiles: ['./tests/setup.ts'],
-        exclude: ['**/e2e/**', '**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**'],
+        exclude: ['**/e2e/**', '**/node_modules/**', '**/dist/**', '**/cypress/**', '**/ponytail/**', '**/.{idea,git,cache,output,temp}/**'],
     },
     resolve: {
         alias: {

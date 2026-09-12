@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { ROLES, Role, Module, hasModuleAccess, resolveRoleTier, MODULES } from './rbac';
 import { usePermissionView } from '@/contexts/PermissionViewContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Helper to convert simulated display names to our static ROLES keys
 const mapSimulatedToRole = (simulated: string): Role => {
@@ -42,13 +43,21 @@ const mapSimulatedToRole = (simulated: string): Role => {
 
 /**
  * A hook to access the current user's role and RBAC permissions.
- * Currently uses the simulator context.
- * Future transition: Hook into Firebase Auth / NextAuth Context.
+ * Prioritizes authenticated userRole from AuthContext, with simulator override support.
  */
 export function usePermissions() {
     const { currentRole } = usePermissionView();
+    let authUserRole: string | null = null;
 
-    const role = useMemo(() => mapSimulatedToRole(currentRole), [currentRole]);
+    try {
+        const auth = useAuth();
+        authUserRole = auth.userRole;
+    } catch {
+        // AuthProvider not present in context scope
+    }
+
+    const activeRoleName = (authUserRole && authUserRole !== 'Player') ? authUserRole : currentRole;
+    const role = useMemo(() => mapSimulatedToRole(activeRoleName), [activeRoleName]);
     const tier = resolveRoleTier(role);
 
     const canAccess = useMemo(() => {

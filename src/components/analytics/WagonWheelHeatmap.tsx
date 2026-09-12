@@ -172,15 +172,15 @@ export function WagonWheelHeatmap({
         <div className="mt-10 grid grid-cols-3 gap-6 w-full px-4">
           <div className="text-center">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Strongest</p>
-            <p className="text-sm font-black text-zinc-900 dark:text-white uppercase italic" style={{ fontFamily: D.syne }}>Cover Drive</p>
+            <p className="text-sm font-bold text-zinc-900 dark:text-white uppercase" style={{ fontFamily: D.syne }}>Cover Drive</p>
           </div>
           <div className="text-center border-x border-zinc-200 dark:border-white/5">
             <p className="text-[10px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest mb-1">Efficiency</p>
-            <p className="text-sm font-black text-zinc-900 dark:text-white uppercase tabular-nums italic" style={{ fontFamily: D.syne }}>68% Zone Hits</p>
+            <p className="text-sm font-bold text-zinc-900 dark:text-white uppercase tabular-nums" style={{ fontFamily: D.syne }}>68% Zone Hits</p>
           </div>
           <div className="text-center">
             <p className="text-[10px] font-black text-zinc-400 dark:text-white/20 uppercase tracking-widest mb-1">Weakness</p>
-            <p className="text-sm font-black text-rose-500 uppercase italic" style={{ fontFamily: D.syne }}>Fine Leg</p>
+            <p className="text-sm font-bold text-rose-500 uppercase" style={{ fontFamily: D.syne }}>Fine Leg</p>
           </div>
         </div>
       </CardContent>

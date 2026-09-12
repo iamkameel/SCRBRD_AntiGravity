@@ -23,10 +23,10 @@ export async function createTeamSheetVersionAction(
         isWicketkeeper: boolean,
         shirtNumber?: string
     }>,
-    confirmedByPersonId: string
+    confirmedByPersonId?: string
 ) {
     try {
-        await requireUser('squad');
+        const actor = await requireUser('squad');
         const db = getFirestore();
         const teamSheetsRef = db.collection('match_team_sheets');
 
@@ -49,7 +49,7 @@ export async function createTeamSheetVersionAction(
         const teamSheetData: Omit<MatchTeamSheet, 'id'> = {
             matchId,
             teamId,
-            confirmedByPersonId,
+            confirmedByPersonId: confirmedByPersonId || actor.uid,
             confirmedAt: now,
             battingOrderLocked: false,
             bowlingRosterLocked: false,

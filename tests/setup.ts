@@ -46,7 +46,8 @@ vi.mock('@/lib/dataconnect', () => ({
     dc: {
         _app: {},
         _config: {}
-    }
+    },
+    isDataConnectEnabled: vi.fn(() => false)
 }));
 
 // Mock generated SDK
