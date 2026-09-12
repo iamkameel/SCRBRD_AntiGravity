@@ -26,9 +26,9 @@ export function Header() {
   const { toggleSidebar, isMobile } = useSidebar();
   const pathname = usePathname();
   const currentPage = [...navLinks].sort((a, b) => b.href.length - a.href.length).find(link => link.href === pathname || pathname.startsWith(link.href + '/'));
-  const { currentRole, setCurrentRole, canSimulate, isSimulating, verifiedRoleName } = usePermissionView();
+  const { currentRole, setCurrentRole, canSimulate, canSwitchRole, availableRoles, isSimulating, verifiedRoleName } = usePermissionView();
   const { theme, setTheme } = useTheme();
-  const { user, signOut, loading, userRole, availableRoles } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const router = useRouter();
 
   const roleColour = getRoleColour(currentRole);
@@ -173,7 +173,7 @@ export function Header() {
         )}
 
         {/* Global Operational Switcher */}
-        {canSimulate && (
+        {(canSwitchRole || canSimulate) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button aria-label="Switch role" variant="outline" size="icon" className="h-9 w-9 rounded-xl border shadow-sm transition-all hover:bg-indigo-500/10 hover:border-indigo-500/30" style={{ borderColor: D.border, background: D.surf2, color: D.indigo }}>
@@ -187,7 +187,11 @@ export function Header() {
               <DropdownMenuSeparator className="opacity-10" />
               <div className="max-h-[60vh] overflow-y-auto pr-1">
                 <DropdownMenuRadioGroup value={currentRole} onValueChange={(value) => setCurrentRole(value as SimulatedRole)}>
-                    {Object.entries(ROLE_GROUPS).map(([group, visibleRoles]) => {
+                    {Object.entries(ROLE_GROUPS).map(([group, groupRoles]) => {
+                    const visibleRoles = canSimulate
+                      ? groupRoles
+                      : groupRoles.filter(r => availableRoles.includes(r as typeof availableRoles[number]));
+                    if (visibleRoles.length === 0) return null;
                     return (
                         <div key={group} className="mb-2 last:mb-0">
                         <DropdownMenuLabel className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground px-4 py-2 mt-2 opacity-40">{group}</DropdownMenuLabel>

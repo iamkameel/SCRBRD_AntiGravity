@@ -14,7 +14,7 @@ import {
     SESSION_MAX_AGE_MS,
     createSessionCookie,
     getSessionUser,
-    setUserRoleClaim,
+    provisionUserRecord,
 } from '@/lib/auth/session';
 
 export async function POST(request: NextRequest) {
@@ -31,16 +31,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Recent sign-in required' }, { status: 401 });
         }
 
-        // Promote the stored role to a custom claim so later sessions resolve
-        // it from the cookie instead of reading users/{uid} on every action.
-        if (!decoded.role) {
-            try {
-                const snap = await adminDb.collection('users').doc(decoded.uid).get();
-                const storedRole = snap.exists ? (snap.data()?.role as string) : null;
-                if (storedRole) await setUserRoleClaim(decoded.uid, storedRole);
-            } catch {
-                // Non-fatal: resolveRole falls back to the users document.
-            }
+        // Create the users record and role claim if this account has none.
+        // Must happen server-side: the rules deny client writes to users/{uid}
+        // because the role stored there is what the claim is derived from.
+        try {
+            await provisionUserRecord(decoded.uid, decoded.email ?? null, decoded.name ?? null);
+        } catch (e) {
+            console.error('[auth] provisioning failed', e);
         }
 
         const cookie = await createSessionCookie(idToken);

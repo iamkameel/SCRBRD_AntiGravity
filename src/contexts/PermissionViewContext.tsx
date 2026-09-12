@@ -34,7 +34,7 @@ export const SIMULATED_ROLES = [
 
 export type SimulatedRole = typeof SIMULATED_ROLES[number];
 
-/** Tier at or above which an account may preview another role. */
+/** Tier at or above which an account may preview a role it does not hold. */
 const SIMULATION_MIN_TIER = 2;
 
 interface PermissionViewContextType {
@@ -52,7 +52,11 @@ interface PermissionViewContextType {
   uid: string | null;
   /** True until the session has been resolved; treat permissions as unknown. */
   loading: boolean;
-  /** Whether the role previewer should be offered at all. */
+  /** Roles the account genuinely holds; switching between these is always allowed. */
+  availableRoles: SimulatedRole[];
+  /** True when the account holds more than one role. */
+  canSwitchRole: boolean;
+  /** True when the account may additionally preview roles it does not hold. */
   canSimulate: boolean;
   /** True when the UI is showing a preview rather than the account's own role. */
   isSimulating: boolean;
@@ -64,6 +68,7 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
   // Until the session resolves, assume the least privilege. Defaulting high
   // would flash an administrator's navigation at every visitor.
   const [verifiedRole, setVerifiedRole] = React.useState<Role>(ROLES.EXTERNAL);
+  const [heldRoles, setHeldRoles] = React.useState<Role[]>([ROLES.EXTERNAL]);
   const [uid, setUid] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [simulated, setSimulated] = React.useState<SimulatedRole | null>(null);
@@ -74,6 +79,7 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
       .then(user => {
         if (cancelled) return;
         setVerifiedRole((user?.role as Role) ?? ROLES.EXTERNAL);
+        setHeldRoles((user?.availableRoles as Role[])?.length ? (user!.availableRoles as Role[]) : [ROLES.EXTERNAL]);
         setUid(user?.uid ?? null);
       })
       .catch(() => {
@@ -89,16 +95,26 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
   const canSimulate = !loading && verifiedTier <= SIMULATION_MIN_TIER;
 
   /**
-   * A preview may only ever *narrow* what the account can do: a higher tier
-   * number is lower privilege. This lets an administrator see the product as a
-   * parent or player sees it, and makes the previewer safe to ship, because no
-   * selection can grant access the account does not already have.
+   * Two different things share this control:
+   *
+   * - Switching to a role the account genuinely holds. A person can be both a
+   *   coach and a parent; every one of those roles is verified, so switching
+   *   between them is always allowed.
+   * - Previewing a role the account does not hold. Only tier <= 2 may do this,
+   *   and only *downward*: a higher tier number is lower privilege, so a
+   *   preview can never grant access the account lacks.
+   *
+   * Authorization server-side always uses the account's most permissive role,
+   * so neither case can widen what the server permits.
    */
   const effectiveRole: Role = React.useMemo(() => {
-    if (!canSimulate || !simulated) return verifiedRole;
+    if (!simulated) return verifiedRole;
     const candidate = mapDisplayRoleToRbac(simulated);
-    return resolveRoleTier(candidate) >= verifiedTier ? candidate : verifiedRole;
-  }, [canSimulate, simulated, verifiedRole, verifiedTier]);
+
+    if (heldRoles.includes(candidate)) return candidate;
+    if (canSimulate && resolveRoleTier(candidate) >= verifiedTier) return candidate;
+    return verifiedRole;
+  }, [simulated, verifiedRole, verifiedTier, heldRoles, canSimulate]);
 
   const value = React.useMemo<PermissionViewContextType>(() => ({
     currentRole: rbacRoleToDisplayName(effectiveRole) as SimulatedRole,
@@ -106,12 +122,14 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
     verifiedRole,
     verifiedRoleName: rbacRoleToDisplayName(verifiedRole) as SimulatedRole,
     effectiveRole,
+    availableRoles: heldRoles.map(r => rbacRoleToDisplayName(r) as SimulatedRole),
+    canSwitchRole: heldRoles.length > 1,
     tier: resolveRoleTier(effectiveRole),
     uid,
     loading,
     canSimulate,
     isSimulating: effectiveRole !== verifiedRole,
-  }), [effectiveRole, verifiedRole, uid, loading, canSimulate]);
+  }), [effectiveRole, verifiedRole, heldRoles, uid, loading, canSimulate]);
 
   return (
     <PermissionViewContext.Provider value={value}>

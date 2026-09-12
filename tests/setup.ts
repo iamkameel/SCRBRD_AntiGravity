@@ -1,6 +1,37 @@
 import '@testing-library/jest-dom';
 import { vi, beforeAll, afterAll } from 'vitest';
 
+// lib/firebase-admin refuses to start without real credentials — there is no
+// embedded fallback key any more, by design. Tests must never initialise the
+// real Admin SDK or reach Firebase, so it is stubbed for every test file.
+vi.mock('@/lib/firebase-admin', () => {
+    const chain: any = {
+        doc: () => chain,
+        collection: () => chain,
+        where: () => chain,
+        orderBy: () => chain,
+        limit: () => chain,
+        get: async () => ({ exists: false, empty: true, docs: [], data: () => undefined }),
+        set: async () => undefined,
+        add: async () => ({ id: 'test-doc' }),
+        update: async () => undefined,
+        delete: async () => undefined,
+        batch: () => ({ set: () => undefined, update: () => undefined, delete: () => undefined, commit: async () => undefined }),
+        getAll: async () => [],
+    };
+    const firestore = Object.assign(() => chain, { FieldValue: { increment: (n: number) => n, serverTimestamp: () => new Date().toISOString() } });
+    const adminStub = {
+        firestore,
+        auth: () => ({
+            verifySessionCookie: async () => { throw new Error('no session in tests'); },
+            createSessionCookie: async () => 'test-cookie',
+            setCustomUserClaims: async () => undefined,
+        }),
+        apps: [{}],
+    };
+    return { default: adminStub, adminDb: chain, adminAuth: adminStub.auth() };
+});
+
 // Mock matchMedia for JSDOM
 Object.defineProperty(window, 'matchMedia', {
     writable: true,

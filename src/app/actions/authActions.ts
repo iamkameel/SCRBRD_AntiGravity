@@ -6,8 +6,11 @@ import { Module, hasModuleAccess } from '@/lib/auth/rbac';
 export interface ClientSessionUser {
     uid: string;
     email: string | null;
+    /** Highest-privilege role held — what the server authorizes against. */
     role: string;
     tier: number;
+    /** Every role this account genuinely holds, for the role switcher. */
+    availableRoles: string[];
 }
 
 /**
@@ -20,7 +23,13 @@ export interface ClientSessionUser {
 export async function getSessionUserAction(): Promise<ClientSessionUser | null> {
     const user = await getSessionUser();
     if (!user) return null;
-    return { uid: user.uid, email: user.email, role: user.role, tier: user.tier };
+    return {
+        uid: user.uid,
+        email: user.email,
+        role: user.role,
+        tier: user.tier,
+        availableRoles: user.availableRoles,
+    };
 }
 
 /** Whether the verified caller may reach a module, for conditional rendering. */

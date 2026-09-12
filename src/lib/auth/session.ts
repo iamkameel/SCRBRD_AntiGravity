@@ -32,8 +32,16 @@ export { SESSION_COOKIE, SESSION_MAX_AGE_MS } from './sessionCookie';
 export interface SessionUser {
     uid: string;
     email: string | null;
+    /** Highest-privilege role the account holds — what authorization checks use. */
     role: Role;
     tier: number;
+    /**
+     * Every role this account genuinely holds. A person can be both a coach
+     * and a parent; all of these are verified, so the UI may switch between
+     * them freely. Authorization always uses `role` (the most permissive),
+     * so switching the view never changes what the server permits.
+     */
+    availableRoles: Role[];
 }
 
 export class AuthorizationError extends Error {
@@ -48,16 +56,38 @@ export class AuthorizationError extends Error {
  * document is a fallback for accounts provisioned before claims were issued.
  * Only ever read server-side — never trust a role sent by the client.
  */
-async function resolveRole(uid: string, claimRole: unknown): Promise<Role> {
-    if (typeof claimRole === 'string' && claimRole.length > 0) {
-        return mapDisplayRoleToRbac(claimRole);
+async function resolveRoles(uid: string, claimRole: unknown, claimRoles: unknown): Promise<Role[]> {
+    const fromClaim = [
+        ...(Array.isArray(claimRoles) ? claimRoles : []),
+        ...(typeof claimRole === 'string' ? [claimRole] : []),
+    ];
+    if (fromClaim.length > 0) {
+        return dedupe(fromClaim.map(r => mapDisplayRoleToRbac(String(r))));
     }
+
     try {
         const snap = await adminDb.collection('users').doc(uid).get();
-        return mapDisplayRoleToRbac(snap.exists ? (snap.data()?.role as string) : null);
+        if (snap.exists) {
+            const data = snap.data() ?? {};
+            const stored = [
+                ...(Array.isArray(data.roles) ? data.roles : []),
+                ...(typeof data.role === 'string' ? [data.role] : []),
+            ];
+            if (stored.length > 0) return dedupe(stored.map(r => mapDisplayRoleToRbac(String(r))));
+        }
     } catch {
-        return mapDisplayRoleToRbac(null);
+        // Fall through to the least-privileged default.
     }
+    return [mapDisplayRoleToRbac(null)];
+}
+
+function dedupe(roles: Role[]): Role[] {
+    return [...new Set(roles)];
+}
+
+/** The most permissive of the roles held — lower tier number wins. */
+function primaryRole(roles: Role[]): Role {
+    return roles.reduce((best, r) => (resolveRoleTier(r) < resolveRoleTier(best) ? r : best));
 }
 
 /** The verified caller, or null when there is no valid session. Never throws. */
@@ -68,13 +98,15 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
         // checkRevoked: a disabled or signed-out account stops working immediately.
         const decoded = await adminAuth.verifySessionCookie(cookie, true);
-        const role = await resolveRole(decoded.uid, decoded.role);
+        const availableRoles = await resolveRoles(decoded.uid, decoded.role, decoded.roles);
+        const role = primaryRole(availableRoles);
 
         return {
             uid: decoded.uid,
             email: decoded.email ?? null,
             role,
             tier: resolveRoleTier(role),
+            availableRoles,
         };
     } catch {
         return null;
@@ -159,6 +191,57 @@ export async function requireTeamAccess(module: Module, teamId: string): Promise
 /** Mints a session cookie from a freshly issued Firebase ID token. */
 export async function createSessionCookie(idToken: string): Promise<string> {
     return adminAuth.createSessionCookie(idToken, { expiresIn: SESSION_MAX_AGE_MS });
+}
+
+/**
+ * Ensures the account has a users record and a role claim.
+ *
+ * This runs server-side at sign-in because the client SDK cannot write here:
+ * users/{uid} holds the role that the claim is derived from, so allowing a
+ * client write would be privilege escalation. The previous client-side
+ * provisioning in AuthContext was silently refused by the rules, which is why
+ * accounts ended up with no role at all.
+ */
+export async function provisionUserRecord(
+    uid: string,
+    email: string | null,
+    displayName: string | null
+): Promise<Role[]> {
+    const ref = adminDb.collection('users').doc(uid);
+    const snap = await ref.get();
+
+    if (snap.exists) {
+        const data = snap.data() ?? {};
+        const stored = [
+            ...(Array.isArray(data.roles) ? data.roles : []),
+            ...(typeof data.role === 'string' ? [data.role] : []),
+        ];
+        const roles = dedupe(stored.map(r => mapDisplayRoleToRbac(String(r))));
+        const resolved = roles.length > 0 ? roles : [mapDisplayRoleToRbac(null)];
+        await adminAuth.setCustomUserClaims(uid, { role: primaryRole(resolved), roles: resolved });
+        return resolved;
+    }
+
+    // First sign-in. The bootstrap address is the only way to seed the first
+    // administrator; everyone else starts as a spectator and is promoted by
+    // someone who already has the rights to do so.
+    const bootstrapEmail = process.env.SCRBRD_BOOTSTRAP_ADMIN_EMAIL?.toLowerCase();
+    const isBootstrap = !!bootstrapEmail && email?.toLowerCase() === bootstrapEmail;
+    const displayRoles = isBootstrap ? ['System Architect'] : ['Spectator'];
+
+    await ref.set({
+        uid,
+        email,
+        displayName: displayName ?? email,
+        role: displayRoles[0],
+        roles: displayRoles,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    });
+
+    const roles = dedupe(displayRoles.map(mapDisplayRoleToRbac));
+    await adminAuth.setCustomUserClaims(uid, { role: primaryRole(roles), roles });
+    return roles;
 }
 
 /**
