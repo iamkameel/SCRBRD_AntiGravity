@@ -1,346 +1,300 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { D } from '@/lib/design-system';
-import { 
-  Sparkles, 
-  Target, 
-  Award, 
-  CheckCircle2, 
-  UserPlus, 
-  Filter, 
-  Search, 
-  ChevronRight, 
-  ShieldAlert, 
-  GraduationCap, 
-  School as SchoolIcon,
-  Brain,
-  Star,
-  Activity,
-  Layers
-} from 'lucide-react';
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
+import {
+  Award,
+  Bookmark,
+  ChevronRight,
+  GraduationCap,
+  MapPin,
+  Plus,
+  Radar,
+  Search,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { D } from "@/lib/design-system";
+import {
+  REGIONAL_TALENT_DEMO,
+  type InvitationalStatus,
+  type PathwayStage,
+  type ProvincialInvitational,
+  type RegionalProspect,
+} from "@/lib/intelligence/talentIdentificationEngine";
+import {
+  createProvincialInvitationalAction,
+  getRegionalTalentBoardAction,
+  toggleWatchlistAction,
+  updateProvincialInvitationalStatusAction,
+} from "@/app/actions/scoutingActions";
+import { PotentialAbilityRadar } from "./PotentialAbilityRadar";
 
-export interface PathwayProspect {
-  id: string;
-  name: string;
-  school: string;
-  ageGroup: 'U14' | 'U15' | 'U16' | 'U19 / 1st XI';
-  roleArchetype: 'New-ball Seamer' | 'Opener' | 'Top-order Anchor' | 'Wrist Spinner' | 'Wicketkeeper-Batter' | 'Finisher';
-  currentAbility: number; // 0-100
-  projectedPotential: number; // 0-100
-  pathwayStage: 'School Squad' | 'Zonal Select' | 'Provincial Invitational' | 'National Camp';
-  scoutGrade: 'A+' | 'A' | 'B+' | 'B';
-  nominatedForCamp: boolean;
-  shortlisted: boolean;
-  scoutNotes: string;
+const PATHWAY_STAGES: PathwayStage[] = ["School Squad", "Zonal Select", "Provincial Invitational", "National Camp"];
+const INVITATIONAL_STATUSES: InvitationalStatus[] = ["Identified", "Invited", "Confirmed", "Attended", "Selected", "Declined"];
+
+const statusStyles: Record<InvitationalStatus, string> = {
+  Identified: "bg-slate-400/10 text-slate-300 border-slate-400/20",
+  Invited: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  Confirmed: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  Attended: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  Selected: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  Declined: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+};
+
+function nextStatus(status: InvitationalStatus): InvitationalStatus | null {
+  const index = INVITATIONAL_STATUSES.indexOf(status);
+  return index >= 0 && index < INVITATIONAL_STATUSES.length - 2 ? INVITATIONAL_STATUSES[index + 1] : null;
 }
 
-export const MOCK_PATHWAY_PROSPECTS: PathwayProspect[] = [
-  {
-    id: 'pw-1',
-    name: 'Jaxon Reed',
-    school: 'St Stithians College',
-    ageGroup: 'U19 / 1st XI',
-    roleArchetype: 'New-ball Seamer',
-    currentAbility: 86,
-    projectedPotential: 96,
-    pathwayStage: 'Provincial Invitational',
-    scoutGrade: 'A+',
-    nominatedForCamp: true,
-    shortlisted: true,
-    scoutNotes: 'Explosive 138km/h seam presentation with late outward drift. High upside pace talent.',
-  },
-  {
-    id: 'pw-2',
-    name: 'Liam Smith',
-    school: 'King Edward VII School (KES)',
-    ageGroup: 'U19 / 1st XI',
-    roleArchetype: 'Opener',
-    currentAbility: 84,
-    projectedPotential: 92,
-    pathwayStage: 'Provincial Invitational',
-    scoutGrade: 'A+',
-    nominatedForCamp: true,
-    shortlisted: true,
-    scoutNotes: 'Flawless defensive technique against new ball pace. Superior gap placement under pressure.',
-  },
-  {
-    id: 'pw-3',
-    name: 'Ethan Miller',
-    school: 'Hilton College',
-    ageGroup: 'U15',
-    roleArchetype: 'Wrist Spinner',
-    currentAbility: 78,
-    projectedPotential: 94,
-    pathwayStage: 'Zonal Select',
-    scoutGrade: 'A',
-    nominatedForCamp: false,
-    shortlisted: true,
-    scoutNotes: 'Rare revolutions on leg-break stock ball with sharp wrong-un variation.',
-  },
-  {
-    id: 'pw-4',
-    name: 'Noah Patel',
-    school: 'Jeppe High School for Boys',
-    ageGroup: 'U16',
-    roleArchetype: 'Wicketkeeper-Batter',
-    currentAbility: 81,
-    projectedPotential: 90,
-    pathwayStage: 'Zonal Select',
-    scoutGrade: 'A',
-    nominatedForCamp: false,
-    shortlisted: true,
-    scoutNotes: 'Soft hands standing up to spinners; aggressive middle-order strike rotator.',
-  },
-  {
-    id: 'pw-5',
-    name: 'Tristan van Zyl',
-    school: 'Paul Roos Gimnasium',
-    ageGroup: 'U19 / 1st XI',
-    roleArchetype: 'Top-order Anchor',
-    currentAbility: 88,
-    projectedPotential: 93,
-    pathwayStage: 'National Camp',
-    scoutGrade: 'A+',
-    nominatedForCamp: true,
-    shortlisted: true,
-    scoutNotes: 'Averages 64.2 in school premier league. Exceptional tempo control and innings construction.',
-  },
-  {
-    id: 'pw-6',
-    name: 'Khangelani Mthembu',
-    school: 'Bishops Diocesan College',
-    ageGroup: 'U14',
-    roleArchetype: 'Finisher',
-    currentAbility: 72,
-    projectedPotential: 91,
-    pathwayStage: 'School Squad',
-    scoutGrade: 'B+',
-    nominatedForCamp: false,
-    shortlisted: false,
-    scoutNotes: 'Phenomenal hand-eye speed and boundary power; high ceiling long-term project.',
-  },
-];
+function invitationForLocalUpdate(prospect: RegionalProspect, patch: Partial<ProvincialInvitational>): ProvincialInvitational {
+  return {
+    id: prospect.invitational?.id || `local-${prospect.id}`,
+    personId: prospect.id,
+    personName: prospect.name,
+    province: prospect.invitational?.province || "Gauteng",
+    eventName: prospect.invitational?.eventName || "Provincial Invitational",
+    eventDate: prospect.invitational?.eventDate || "",
+    ageGroup: prospect.invitational?.ageGroup || prospect.ageGroup,
+    status: prospect.invitational?.status || "Identified",
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 export function TalentPathwayEngine() {
-  const [prospects, setProspects] = useState<PathwayProspect[]>(MOCK_PATHWAY_PROSPECTS);
-  const [selectedStage, setSelectedStage] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<string>('ALL');
-
-  const toggleNomination = (id: string) => {
-    setProspects(prev => prev.map(p => p.id === id ? { ...p, nominatedForCamp: !p.nominatedForCamp } : p));
-  };
-
-  const toggleShortlist = (id: string) => {
-    setProspects(prev => prev.map(p => p.id === id ? { ...p, shortlisted: !p.shortlisted } : p));
-  };
-
-  const filtered = prospects.filter(p => {
-    if (selectedStage !== 'ALL' && p.pathwayStage !== selectedStage) return false;
-    if (selectedRole !== 'ALL' && p.roleArchetype !== selectedRole) return false;
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase()) && !p.school.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
+  const [prospects, setProspects] = useState<RegionalProspect[]>(REGIONAL_TALENT_DEMO);
+  const [selectedId, setSelectedId] = useState(REGIONAL_TALENT_DEMO[0].id);
+  const [selectedStage, setSelectedStage] = useState<PathwayStage | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [watchlistOnly, setWatchlistOnly] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [invitee, setInvitee] = useState<RegionalProspect | null>(null);
+  const [isCreatingInvitation, setIsCreatingInvitation] = useState(false);
+  const [invitationForm, setInvitationForm] = useState({
+    province: "Gauteng",
+    eventName: "Provincial Talent Identification Invitational",
+    eventDate: "",
+    notes: "",
   });
 
-  const nominatedCount = prospects.filter(p => p.nominatedForCamp).length;
+  useEffect(() => {
+    let active = true;
+    const loadBoard = async () => {
+      try {
+        const result = await getRegionalTalentBoardAction();
+        if (active && result.success && result.prospects.length) {
+          setProspects(result.prospects);
+          setSelectedId(result.prospects[0].id);
+        }
+      } catch (error) {
+        console.error("Unable to load regional talent board:", error);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+    loadBoard();
+    return () => { active = false; };
+  }, []);
+
+  const filteredProspects = useMemo(() => prospects.filter((prospect) => {
+    const matchesSearch = !searchQuery || [prospect.name, prospect.school, prospect.region, prospect.roleArchetype]
+      .some((value) => value.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch
+      && (selectedStage === "ALL" || prospect.pathwayStage === selectedStage)
+      && (!watchlistOnly || prospect.inWatchlist);
+  }), [prospects, searchQuery, selectedStage, watchlistOnly]);
+
+  const selectedProspect = prospects.find((prospect) => prospect.id === selectedId) || filteredProspects[0] || prospects[0];
+  const selectedSnapshot = selectedProspect?.abilityHistory.find((snapshot) => snapshot.season === selectedSeason)
+    || selectedProspect?.abilityHistory[selectedProspect.abilityHistory.length - 1];
+
+  useEffect(() => {
+    if (selectedProspect && !selectedProspect.abilityHistory.some((snapshot) => snapshot.season === selectedSeason)) {
+      setSelectedSeason(selectedProspect.abilityHistory[selectedProspect.abilityHistory.length - 1]?.season || "");
+    }
+  }, [selectedProspect, selectedSeason]);
+
+  const toggleWatchlist = async (prospect: RegionalProspect) => {
+    const previous = prospect.inWatchlist;
+    setProspects((current) => current.map((item) => item.id === prospect.id ? {
+      ...item,
+      inWatchlist: !previous,
+      watchlistPriority: !previous ? item.watchlistPriority || "Standard" : undefined,
+    } : item));
+
+    try {
+      const result = await toggleWatchlistAction(prospect.id, { priority: prospect.watchlistPriority || "Standard", region: prospect.region });
+      if (result.success) return;
+    } catch (error) {
+      console.error("Unable to update talent watchlist:", error);
+    }
+    setProspects((current) => current.map((item) => item.id === prospect.id ? { ...item, inWatchlist: previous } : item));
+  };
+
+  const updateInvitationStatus = async (prospect: RegionalProspect, status: InvitationalStatus) => {
+    const previous = prospect.invitational;
+    const invitation = invitationForLocalUpdate(prospect, { status });
+    setProspects((current) => current.map((item) => item.id === prospect.id ? {
+      ...item,
+      invitational: invitation,
+      pathwayStage: status === "Selected" ? "National Camp" : "Provincial Invitational",
+    } : item));
+
+    if (!previous?.id || previous.id.startsWith("local-")) return;
+    try {
+      const result = await updateProvincialInvitationalStatusAction(previous.id, status);
+      if (result.success) return;
+    } catch (error) {
+      console.error("Unable to update provincial invitation:", error);
+    }
+    setProspects((current) => current.map((item) => item.id === prospect.id ? { ...item, invitational: previous } : item));
+  };
+
+  const createInvitation = async () => {
+    if (!invitee || !invitationForm.eventDate) return;
+    setIsCreatingInvitation(true);
+    try {
+      const result = await createProvincialInvitationalAction({
+        personId: invitee.id,
+        personName: invitee.name,
+        province: invitationForm.province,
+        eventName: invitationForm.eventName,
+        eventDate: invitationForm.eventDate,
+        ageGroup: invitee.ageGroup,
+        status: "Invited",
+        notes: invitationForm.notes,
+      });
+      if (result.success) {
+        const invitation = invitationForLocalUpdate(invitee, {
+          id: result.id || `local-${invitee.id}`,
+          province: invitationForm.province,
+          eventName: invitationForm.eventName,
+          eventDate: invitationForm.eventDate,
+          notes: invitationForm.notes,
+          status: "Invited",
+        });
+        setProspects((current) => current.map((item) => item.id === invitee.id ? { ...item, invitational: invitation, pathwayStage: "Provincial Invitational" } : item));
+        setInvitee(null);
+      }
+    } finally {
+      setIsCreatingInvitation(false);
+    }
+  };
+
+  const invitationCount = prospects.filter((prospect) => prospect.invitational && prospect.invitational.status !== "Declined").length;
+  const selectedCount = prospects.filter((prospect) => prospect.invitational?.status === "Selected").length;
 
   return (
-    <div className="space-y-8">
-      {/* ─── PATHWAY STAGE PIPELINE HUD ─── */}
-      <div className="rounded-[2.5rem] border border-white/10 bg-[#080808] p-8 md:p-10 shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.15)_0%,transparent_60%)]" />
-
-        <div className="relative z-10 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-8 pb-12">
+      <section className="rounded-[2.5rem] border p-7 md:p-9 shadow-2xl relative overflow-hidden" style={{ background: D.surf1, borderColor: D.border }}>
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(99,102,241,0.16)_0%,transparent_60%)]" />
+        <div className="relative space-y-7">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-indigo-400" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400" style={{ fontFamily: D.mono }}>
-                  Institutional Selection Framework
-                </span>
+              <div className="flex items-center gap-2 text-indigo-400">
+                <GraduationCap className="h-5 w-5" />
+                <span className="text-[10px] font-black uppercase tracking-[0.28em]" style={{ fontFamily: D.mono }}>Module 14 · Regional talent identification</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-1" style={{ fontFamily: D.head }}>
-                SELECTION PATHWAY & <span className="text-indigo-400 italic">ELITE INVITATIONAL ENGINE</span>
+              <h2 className="mt-2 text-3xl md:text-4xl font-black tracking-tighter" style={{ color: D.textPrimary, fontFamily: D.head }}>
+                SCOUT. <span className="italic text-indigo-400">PROJECT.</span> SELECT.
               </h2>
-              <p className="text-xs text-white/50 max-w-2xl mt-2 font-medium">
-                Separating current match performance from long-term projected potential. Manage zonal invitations, provincial selection shortlists, and national camp nominations.
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: D.textSecondary }}>
+                Convert field reports into a multi-season talent profile, maintain a focused watchlist, and track provincial invitations from identification through selection.
               </p>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-right">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block" style={{ fontFamily: D.mono }}>
-                  Camp Nominations
-                </span>
-                <span className="text-2xl font-black text-indigo-400" style={{ fontFamily: D.head }}>
-                  {nominatedCount} Players
-                </span>
+            <div className="grid grid-cols-2 gap-3 min-w-[240px]">
+              <div className="rounded-2xl border p-4" style={{ background: D.surf2, borderColor: D.border }}>
+                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}>Active invitations</p>
+                <p className="mt-1 text-3xl font-black text-indigo-400" style={{ fontFamily: D.head }}>{invitationCount}</p>
+              </div>
+              <div className="rounded-2xl border p-4" style={{ background: D.surf2, borderColor: D.border }}>
+                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}>Selected</p>
+                <p className="mt-1 text-3xl font-black text-emerald-400" style={{ fontFamily: D.head }}>{selectedCount}</p>
               </div>
             </div>
           </div>
 
-          {/* 4-Tier Pathway Funnel Bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-            {[
-              { stage: 'School Squad', count: prospects.filter(p => p.pathwayStage === 'School Squad').length, color: 'text-white' },
-              { stage: 'Zonal Select', count: prospects.filter(p => p.pathwayStage === 'Zonal Select').length, color: 'text-sky-400' },
-              { stage: 'Provincial Invitational', count: prospects.filter(p => p.pathwayStage === 'Provincial Invitational').length, color: 'text-indigo-400' },
-              { stage: 'National Camp', count: prospects.filter(p => p.pathwayStage === 'National Camp').length, color: 'text-emerald-400' },
-            ].map(tier => (
-              <button
-                key={tier.stage}
-                onClick={() => setSelectedStage(selectedStage === tier.stage ? 'ALL' : tier.stage)}
-                className={`p-4 rounded-2xl border text-left transition-all ${
-                  selectedStage === tier.stage
-                    ? 'bg-indigo-500/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10'
-                    : 'bg-white/[0.02] border-white/5 hover:border-white/20'
-                }`}
-              >
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/40 block" style={{ fontFamily: D.mono }}>
-                  {tier.stage}
-                </span>
-                <div className="flex items-center justify-between mt-2">
-                  <span className={`text-2xl font-black ${tier.color}`} style={{ fontFamily: D.head }}>
-                    {tier.count}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-white/20" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 border-t pt-6" style={{ borderColor: D.border }}>
+            {PATHWAY_STAGES.map((stage) => {
+              const selected = stage === selectedStage;
+              const count = prospects.filter((prospect) => prospect.pathwayStage === stage).length;
+              return (
+                <button key={stage} onClick={() => setSelectedStage(selected ? "ALL" : stage)} className="rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5" style={{ background: selected ? `${D.indigo}18` : D.surf2, borderColor: selected ? `${D.indigo}88` : D.border }}>
+                  <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}>{stage}</p>
+                  <div className="mt-2 flex items-center justify-between"><span className="text-2xl font-black" style={{ color: selected ? D.indigo : D.textPrimary, fontFamily: D.head }}>{count}</span><ChevronRight className="h-4 w-4" style={{ color: D.textMuted }} /></div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] gap-6">
+        <div className="space-y-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.indigo, fontFamily: D.mono }}>Regional board</p>
+              <h3 className="text-2xl font-black" style={{ color: D.textPrimary, fontFamily: D.head }}>Watchlists & priority prospects</h3>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setWatchlistOnly((value) => !value)} className="h-10 rounded-xl border px-3 text-[10px] font-black uppercase tracking-widest transition-colors" style={{ background: watchlistOnly ? `${D.amber}18` : D.surf2, borderColor: watchlistOnly ? `${D.amber}80` : D.border, color: watchlistOnly ? D.amber : D.textSecondary }}><Bookmark className="mr-1.5 inline h-3.5 w-3.5" />Watchlist</button>
+              <div className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2" style={{ color: D.textMuted }} /><input aria-label="Search regional prospects" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search athlete or region" className="h-10 w-52 rounded-xl border pl-9 pr-3 text-xs outline-none" style={{ background: D.surf2, borderColor: D.border, color: D.textPrimary }} /></div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {filteredProspects.map((prospect, index) => (
+              <motion.article key={prospect.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="rounded-3xl border p-5 cursor-pointer transition-all hover:border-indigo-400/50" onClick={() => setSelectedId(prospect.id)} style={{ background: selectedId === prospect.id ? `${D.indigo}0d` : D.surf1, borderColor: selectedId === prospect.id ? `${D.indigo}88` : D.border }}>
+                <div className="flex justify-between gap-3">
+                  <div><div className="flex items-center gap-2"><h4 className="font-black text-lg" style={{ color: D.textPrimary, fontFamily: D.head }}>{prospect.name}</h4><Badge className="border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-[9px]">{prospect.scoutGrade}</Badge></div><p className="mt-1 text-[11px]" style={{ color: D.textSecondary }}>{prospect.school} · {prospect.ageGroup}</p></div>
+                  <button aria-label={`Toggle ${prospect.name} watchlist`} onClick={(event) => { event.stopPropagation(); toggleWatchlist(prospect); }} className="h-8 w-8 rounded-lg border transition-colors" style={{ background: prospect.inWatchlist ? `${D.amber}18` : D.surf2, borderColor: prospect.inWatchlist ? `${D.amber}66` : D.border, color: prospect.inWatchlist ? D.amber : D.textMuted }}><Bookmark className={`mx-auto h-3.5 w-3.5 ${prospect.inWatchlist ? "fill-current" : ""}`} /></button>
                 </div>
-              </button>
+                <div className="mt-4 grid grid-cols-2 gap-3"><AbilityMetric label="Current ability" value={prospect.currentAbility} colour={D.sky} /><AbilityMetric label="Projected ceiling" value={prospect.projectedPotential} colour={D.indigo} /></div>
+                <div className="mt-4 flex items-center justify-between gap-3"><span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}><MapPin className="h-3 w-3" />{prospect.region}</span>{prospect.invitational ? <Badge className={`border text-[9px] ${statusStyles[prospect.invitational.status]}`}>{prospect.invitational.status}</Badge> : <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted }}>No invite</span>}</div>
+              </motion.article>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* ─── FILTERS & PROSPECT GRID ─── */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-            <input
-              type="text"
-              placeholder="Search talent pool..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 font-medium"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/40 mr-2 shrink-0" style={{ fontFamily: D.mono }}>
-              Role Filter:
-            </span>
-            {['ALL', 'New-ball Seamer', 'Opener', 'Top-order Anchor', 'Wrist Spinner', 'Wicketkeeper-Batter'].map(r => (
-              <button
-                key={r}
-                onClick={() => setSelectedRole(r)}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
-                  selectedRole === r
-                    ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/20'
-                    : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
-                }`}
-                style={{ fontFamily: D.mono }}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
+          {!isLoading && filteredProspects.length === 0 && <div className="rounded-2xl border p-10 text-center text-sm" style={{ background: D.surf1, borderColor: D.border, color: D.textSecondary }}>No prospects match this board filter.</div>}
         </div>
 
-        {/* Prospect Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(prospect => (
-            <motion.div
-              key={prospect.id}
-              whileHover={{ y: -4 }}
-              className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 hover:border-indigo-500/40 transition-all space-y-5 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                {/* Header info */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-bold text-white">{prospect.name}</h3>
-                      <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[9px] uppercase font-mono">
-                        {prospect.scoutGrade} Grade
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-white/40 font-medium mt-0.5">
-                      {prospect.school} · <span className="text-white/60">{prospect.ageGroup}</span>
-                    </p>
-                  </div>
+        {selectedProspect && selectedSnapshot && (
+          <aside className="space-y-5">
+            <div className="rounded-3xl border p-5" style={{ background: D.surf1, borderColor: D.border }}>
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400" style={{ fontFamily: D.mono }}>Multi-season projection</p><h3 className="mt-1 text-2xl font-black" style={{ color: D.textPrimary, fontFamily: D.head }}>{selectedProspect.name}</h3><p className="mt-1 text-xs" style={{ color: D.textSecondary }}>{selectedProspect.roleArchetype} · {selectedProspect.reportCount} reports</p></div><Radar className="h-5 w-5 text-indigo-400" /></div>
+              <div className="mt-5 flex flex-wrap gap-2" aria-label="Season selector">{selectedProspect.abilityHistory.map((snapshot) => <button key={snapshot.season} onClick={() => setSelectedSeason(snapshot.season)} className="rounded-lg border px-3 py-1.5 text-[10px] font-black" style={{ background: selectedSnapshot.season === snapshot.season ? `${D.indigo}22` : D.surf2, borderColor: selectedSnapshot.season === snapshot.season ? `${D.indigo}88` : D.border, color: selectedSnapshot.season === snapshot.season ? D.indigo : D.textSecondary }}>{snapshot.season}</button>)}</div>
+              <div className="mt-5"><PotentialAbilityRadar snapshot={selectedSnapshot} athleteName={selectedProspect.name} /></div>
+              <p className="mt-4 rounded-xl border p-3 text-xs leading-relaxed italic" style={{ background: D.surf2, borderColor: D.border, color: D.textSecondary }}>&ldquo;{selectedProspect.notes}&rdquo;</p>
+            </div>
 
-                  <Badge className="bg-white/5 text-white/60 border-white/10 text-[9px] uppercase font-mono">
-                    {prospect.roleArchetype}
-                  </Badge>
-                </div>
+            <section className="rounded-3xl border p-5" style={{ background: D.surf1, borderColor: D.border }}>
+              <div className="flex items-center justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400" style={{ fontFamily: D.mono }}>Provincial invitational</p><h3 className="mt-1 font-black" style={{ color: D.textPrimary, fontFamily: D.head }}>{selectedProspect.invitational?.eventName || "No active invitation"}</h3></div><Award className="h-5 w-5 text-amber-400" /></div>
+              {selectedProspect.invitational ? <div className="mt-4 space-y-3"><div className="flex items-center justify-between text-xs" style={{ color: D.textSecondary }}><span>{selectedProspect.invitational.province} · {selectedProspect.invitational.ageGroup}</span><Badge className={`border text-[9px] ${statusStyles[selectedProspect.invitational.status]}`}>{selectedProspect.invitational.status}</Badge></div><p className="text-xs" style={{ color: D.textSecondary }}>{selectedProspect.invitational.eventDate || "Date to be confirmed"}</p><div className="flex gap-2">{nextStatus(selectedProspect.invitational.status) && <Button onClick={() => updateInvitationStatus(selectedProspect, nextStatus(selectedProspect.invitational!.status)!)} className="flex-1 rounded-xl text-[10px] font-black uppercase tracking-wider" style={{ background: D.indigo, color: "white" }}>Advance to {nextStatus(selectedProspect.invitational.status)}</Button>}<select aria-label="Invitation status" value={selectedProspect.invitational.status} onChange={(event) => updateInvitationStatus(selectedProspect, event.target.value as InvitationalStatus)} className="rounded-xl border px-2 text-[10px] font-bold" style={{ background: D.surf2, borderColor: D.border, color: D.textPrimary }}>{INVITATIONAL_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}</select></div></div> : <Button onClick={() => { setInvitee(selectedProspect); setInvitationForm((current) => ({ ...current, province: selectedProspect.region.includes("KwaZulu") ? "KwaZulu-Natal" : "Gauteng" })); }} className="mt-4 w-full rounded-xl text-[10px] font-black uppercase tracking-wider" style={{ background: D.indigo, color: "white" }}><Plus className="mr-1.5 h-3.5 w-3.5" />Create provincial invitation</Button>}
+            </section>
+          </aside>
+        )}
+      </section>
 
-                {/* Current vs Potential Rating Bars */}
-                <div className="space-y-3 p-4 rounded-2xl bg-black/40 border border-white/5">
-                  <div>
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider mb-1" style={{ fontFamily: D.mono }}>
-                      <span className="text-white/40">Current Ability</span>
-                      <span className="text-white font-bold">{prospect.currentAbility}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-sky-400 rounded-full" style={{ width: `${prospect.currentAbility}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider mb-1" style={{ fontFamily: D.mono }}>
-                      <span className="text-indigo-400">Projected Potential</span>
-                      <span className="text-indigo-400 font-bold">{prospect.projectedPotential}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${prospect.projectedPotential}%` }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Scout Qualitative Notes */}
-                <p className="text-xs text-white/60 leading-relaxed italic bg-white/[0.01] p-3 rounded-xl border border-white/5">
-                  &quot;{prospect.scoutNotes}&quot;
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => toggleShortlist(prospect.id)}
-                  className={`flex-1 rounded-xl text-[10px] font-black uppercase tracking-wider h-9 ${
-                    prospect.shortlisted
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : 'border-white/10 text-white/50 hover:text-white'
-                  }`}
-                >
-                  <Star className={`h-3 w-3 mr-1.5 ${prospect.shortlisted ? 'fill-amber-300 text-amber-300' : ''}`} />
-                  {prospect.shortlisted ? 'Shortlisted' : 'Shortlist'}
-                </Button>
-
-                <Button
-                  size="sm"
-                  onClick={() => toggleNomination(prospect.id)}
-                  className={`flex-1 rounded-xl text-[10px] font-black uppercase tracking-wider h-9 ${
-                    prospect.nominatedForCamp
-                      ? 'bg-emerald-500 text-black font-bold'
-                      : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                  }`}
-                >
-                  <Award className="h-3 w-3 mr-1.5" />
-                  {prospect.nominatedForCamp ? 'Nominated' : 'Nominate Camp'}
-                </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      <Dialog open={Boolean(invitee)} onOpenChange={(open) => !open && setInvitee(null)}>
+        <DialogContent className="sm:max-w-lg" style={{ background: D.surf1, borderColor: D.border }}>
+          <DialogHeader><DialogTitle style={{ color: D.textPrimary, fontFamily: D.head }}>Create provincial invitation</DialogTitle><DialogDescription>Track {invitee?.name}&apos;s selection journey independently from their scouting report.</DialogDescription></DialogHeader>
+          <div className="grid gap-4 py-2"><Field label="Province"><Input value={invitationForm.province} onChange={(event) => setInvitationForm({ ...invitationForm, province: event.target.value })} /></Field><Field label="Invitational event"><Input value={invitationForm.eventName} onChange={(event) => setInvitationForm({ ...invitationForm, eventName: event.target.value })} /></Field><Field label="Event date"><Input type="date" value={invitationForm.eventDate} onChange={(event) => setInvitationForm({ ...invitationForm, eventDate: event.target.value })} /></Field><Field label="Selector notes"><Textarea value={invitationForm.notes} onChange={(event) => setInvitationForm({ ...invitationForm, notes: event.target.value })} placeholder="Attendance, workload or role allocation notes" /></Field></div>
+          <DialogFooter><Button variant="ghost" onClick={() => setInvitee(null)}>Cancel</Button><Button disabled={!invitationForm.eventDate || isCreatingInvitation} onClick={createInvitation} style={{ background: D.indigo, color: "white" }}>{isCreatingInvitation ? "Creating…" : "Issue invitation"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+function AbilityMetric({ label, value, colour }: { label: string; value: number; colour: string }) {
+  return <div><div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest" style={{ color: D.textMuted, fontFamily: D.mono }}><span>{label}</span><span style={{ color: colour }}>{value}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: D.surf2 }}><div className="h-full rounded-full" style={{ width: `${value}%`, background: colour }} /></div></div>;
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return <div className="grid gap-1.5"><Label className="text-[10px] font-black uppercase tracking-widest" style={{ color: D.textMuted }}>{label}</Label>{children}</div>;
 }

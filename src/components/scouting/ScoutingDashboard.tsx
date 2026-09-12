@@ -12,6 +12,7 @@ import { SectionHeader } from "../ui/SectionHeader";
 import ScoutReportForm from './ScoutReportForm';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { getProspectsAction, toggleWatchlistAction } from '@/app/actions/scoutingActions';
+import { PotentialVsAbilityRadar } from './PotentialVsAbilityRadar';
 
 const MOCK_PROSPECTS = [
     { 
@@ -64,7 +65,10 @@ const MOCK_PROSPECTS = [
     },
 ];
 
-const ProspectCard = ({ prospect, idx, onToggleWatchlist }: { prospect: any; idx: number; onToggleWatchlist?: (id: string) => void }) => (
+const ProspectCard = ({ prospect, idx, onToggleWatchlist, onCreateReport }: { prospect: any; idx: number; onToggleWatchlist?: (id: string) => void; onCreateReport?: (prospect: any) => void }) => {
+  const isWatchlisted = prospect.isWatchlisted ?? prospect.inWatchlist ?? false;
+
+  return (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -87,9 +91,9 @@ const ProspectCard = ({ prospect, idx, onToggleWatchlist }: { prospect: any; idx
               <button 
                 onClick={() => onToggleWatchlist(prospect.id)}
                 className="p-1 rounded-lg hover:bg-white/10 transition-colors"
-                title={prospect.isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
+                title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
               >
-                <Bookmark size={14} className={prospect.isWatchlisted ? "text-amber-400 fill-amber-400" : "opacity-30"} />
+                <Bookmark size={14} className={isWatchlisted ? "text-amber-400 fill-amber-400" : "opacity-30"} />
               </button>
             )}
           </div>
@@ -155,6 +159,7 @@ const ProspectCard = ({ prospect, idx, onToggleWatchlist }: { prospect: any; idx
         <Button 
           variant="ghost" 
           size="sm" 
+          onClick={() => onCreateReport?.(prospect)}
           className="h-10 w-10 rounded-xl border flex items-center justify-center transition-all group-hover:bg-indigo-500 group-hover:text-white"
           style={{ background: D.surf2, borderColor: D.border }}
         >
@@ -163,11 +168,13 @@ const ProspectCard = ({ prospect, idx, onToggleWatchlist }: { prospect: any; idx
       </div>
     </div>
   </motion.div>
-);
+  );
+};
 
 export default function ScoutingDashboard() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string>('1');
+    const [selectedProspect, setSelectedProspect] = useState<any>(MOCK_PROSPECTS[0]);
     const [prospects, setProspects] = useState<any[]>(MOCK_PROSPECTS);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -178,6 +185,8 @@ export default function ScoutingDashboard() {
             const data = await getProspectsAction();
             if (data?.success && data.prospects && data.prospects.length > 0) {
                 setProspects(data.prospects);
+                setSelectedProspect((current: any) => current?.id ? current : data.prospects[0]);
+                setSelectedPlayerId(current => current || data.prospects[0].id);
             }
         } catch (err) {
             console.error("Failed to load prospects, using mock fallback:", err);
@@ -191,12 +200,18 @@ export default function ScoutingDashboard() {
     }, []);
 
     const handleToggleWatchlist = async (id: string) => {
-        setProspects(prev => prev.map(p => p.id === id ? { ...p, isWatchlisted: !p.isWatchlisted } : p));
+        setProspects(prev => prev.map(p => p.id === id ? { ...p, isWatchlisted: !(p.isWatchlisted ?? p.inWatchlist), inWatchlist: !(p.isWatchlisted ?? p.inWatchlist) } : p));
         try {
             await toggleWatchlistAction(id);
         } catch (err) {
             console.error("Watchlist toggle error:", err);
         }
+    };
+
+    const handleCreateReport = (prospect: any) => {
+        setSelectedPlayerId(prospect.id);
+        setSelectedProspect(prospect);
+        setIsFormOpen(true);
     };
 
     const filteredProspects = prospects.filter(p => 
@@ -241,6 +256,9 @@ export default function ScoutingDashboard() {
                 <DialogTitle className="sr-only">Scout Report Evaluation Form</DialogTitle>
                 <ScoutReportForm 
                   playerId={selectedPlayerId} 
+                  playerName={selectedProspect?.name}
+                  roleArchetype={selectedProspect?.role}
+                  age={selectedProspect?.age}
                   onSave={() => {
                       setIsFormOpen(false);
                       loadProspects();
@@ -270,8 +288,34 @@ export default function ScoutingDashboard() {
             />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:mt-[-1rem]">
                 {filteredProspects.map((prospect, i) => (
-                    <ProspectCard key={prospect.id} prospect={prospect} idx={i} onToggleWatchlist={handleToggleWatchlist} />
+                    <ProspectCard key={prospect.id} prospect={prospect} idx={i} onToggleWatchlist={handleToggleWatchlist} onCreateReport={handleCreateReport} />
                 ))}
+            </div>
+
+            {/* Radar Talent Analysis Cockpit */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <PotentialVsAbilityRadar 
+                athleteName={filteredProspects[0]?.name || "James Anderson"}
+                dimensions={[
+                  { key: 'tech', label: 'Technical Mechanics', current: filteredProspects[0]?.metrics?.timing || 88, potential: 96 },
+                  { key: 'ment', label: 'Mental Composure', current: filteredProspects[0]?.metrics?.composure || 85, potential: 95 },
+                  { key: 'tact', label: 'Tactical Reading', current: filteredProspects[0]?.metrics?.accuracy || 92, potential: 98 },
+                  { key: 'phys', label: 'Physical Engine', current: filteredProspects[0]?.metrics?.velocity || 88, potential: 94 },
+                  { key: 'stat', label: 'Match Output', current: 82, potential: 92 },
+                  { key: 'will', label: 'Competitive Will', current: 90, potential: 97 },
+                ]}
+              />
+              <PotentialVsAbilityRadar 
+                athleteName={filteredProspects[1]?.name || "Liam Smith"}
+                dimensions={[
+                  { key: 'tech', label: 'Technical Mechanics', current: filteredProspects[1]?.metrics?.defense || 95, potential: 98 },
+                  { key: 'ment', label: 'Mental Composure', current: 80, potential: 92 },
+                  { key: 'tact', label: 'Tactical Reading', current: 84, potential: 94 },
+                  { key: 'phys', label: 'Physical Engine', current: filteredProspects[1]?.metrics?.power || 78, potential: 90 },
+                  { key: 'stat', label: 'Match Output', current: filteredProspects[1]?.metrics?.timing || 90, potential: 96 },
+                  { key: 'will', label: 'Competitive Will', current: 86, potential: 95 },
+                ]}
+              />
             </div>
 
             {/* Global Intelligence Alert */}

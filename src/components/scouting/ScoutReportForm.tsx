@@ -15,11 +15,27 @@ import { motion } from "framer-motion";
 
 interface ScoutReportFormProps {
     playerId: string;
+    playerName?: string;
+    roleArchetype?: string;
+    school?: string;
+    age?: number;
+    ageGroup?: string;
+    region?: string;
     onSave?: (reportId: string) => void;
     onCancel?: () => void;
 }
 
-export default function ScoutReportForm({ playerId, onSave, onCancel }: ScoutReportFormProps) {
+export default function ScoutReportForm({
+    playerId,
+    playerName = "Tracked Athlete",
+    roleArchetype = "General Athlete",
+    school,
+    age,
+    ageGroup,
+    region,
+    onSave,
+    onCancel,
+}: ScoutReportFormProps) {
     const [isSaving, setIsSaving] = useState(false);
     
     const [technicalScore, setTechnicalScore] = useState(10);
@@ -49,8 +65,8 @@ export default function ScoutReportForm({ playerId, onSave, onCancel }: ScoutRep
         try {
             const res = await createScoutReportAction({
                 personId: playerId || 'p1',
-                personName: "Tracked Athlete",
-                roleArchetype: prospectCategory,
+                personName: playerName,
+                roleArchetype,
                 scoutGrade: liveGrade,
                 potentialScore: prospectCategory,
                 metrics: {
@@ -60,7 +76,18 @@ export default function ScoutReportForm({ playerId, onSave, onCancel }: ScoutRep
                     composure: mentalScore,
                     impact: competitivenessScore,
                 },
-                notes
+                technicalScore,
+                tacticalScore,
+                physicalScore,
+                mentalScore,
+                competitivenessScore,
+                statisticalEvidenceScore,
+                confidenceLevel,
+                school,
+                age,
+                ageGroup,
+                region,
+                notes,
             });
             if (res.success && res.id) {
                 if (onSave) onSave(res.id);
@@ -98,7 +125,7 @@ export default function ScoutReportForm({ playerId, onSave, onCancel }: ScoutRep
                                 <h2 className="text-3xl font-black tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>
                                   FIELD <span style={{ color: D.indigo }}>INTELLIGENCE</span>
                                 </h2>
-                                <p className="font-bold uppercase tracking-widest text-[10px]" style={{ color: D.textMuted }}>Reference: S-INTEL-2026-B1 | Scoped Assessment</p>
+                                <p className="font-bold uppercase tracking-widest text-[10px]" style={{ color: D.textMuted }}>Subject: {playerName} · Scoped Assessment</p>
                             </div>
                         </div>
                         <div className="rounded-2xl p-4 flex items-center gap-6 min-w-[240px]" style={{ background: D.surf1, border: `1px solid ${D.border}` }}>

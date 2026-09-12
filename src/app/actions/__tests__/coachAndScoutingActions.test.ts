@@ -40,7 +40,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { createCoachAction, updateCoachAction } from "../coachActions";
-import { createScoutReportAction, toggleWatchlistAction } from "../scoutingActions";
+import {
+    createProvincialInvitationalAction,
+    createScoutReportAction,
+    toggleWatchlistAction,
+    updateProvincialInvitationalStatusAction,
+} from "../scoutingActions";
 
 describe("Coach & Scouting Server Actions Security", () => {
     beforeEach(() => {
@@ -147,6 +152,41 @@ describe("Coach & Scouting Server Actions Security", () => {
                 actionType: "LOGISTICS_CREATE",
                 entityType: "scouting_report",
                 entityId: "player_789",
+            }));
+        });
+
+        it("creates a provincial invitational independently from the scouting report", async () => {
+            mockRequireUser.mockResolvedValueOnce({ uid: "scout_user_1", email: "scout@scouting.org" });
+            mockAdminDbAdd.mockResolvedValueOnce({ id: "invite_doc_123" });
+
+            const res = await createProvincialInvitationalAction({
+                personId: "player_789",
+                personName: "Junior Star",
+                province: "Gauteng",
+                eventName: "Gauteng U19 Invitational",
+                eventDate: "2026-10-18",
+                ageGroup: "U19",
+                status: "Invited",
+            });
+
+            expect(res).toEqual({ success: true, id: "invite_doc_123" });
+            expect(mockAdminDbAdd).toHaveBeenCalledWith("provincial_invitationals", expect.objectContaining({
+                personId: "player_789",
+                status: "Invited",
+                createdBy: "scout_user_1",
+            }));
+        });
+
+        it("updates a provincial invitation status with talent access", async () => {
+            mockRequireUser.mockResolvedValueOnce({ uid: "scout_user_1", email: "scout@scouting.org" });
+            mockAdminDbDocUpdate.mockResolvedValueOnce({});
+
+            const res = await updateProvincialInvitationalStatusAction("invite_doc_123", "Confirmed");
+
+            expect(res).toEqual({ success: true, status: "Confirmed" });
+            expect(mockAdminDbDocUpdate).toHaveBeenCalledWith("provincial_invitationals", "invite_doc_123", expect.objectContaining({
+                status: "Confirmed",
+                updatedBy: "scout_user_1",
             }));
         });
     });
