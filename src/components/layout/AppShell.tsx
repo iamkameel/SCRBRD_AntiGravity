@@ -1,17 +1,38 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { Navbar } from "@/components/layout/Navbar";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { Loader2 } from "lucide-react";
 import { useSidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { BackgroundEffects } from "@/components/layout/BackgroundEffects";
-import { CommandMenu } from "@/components/dashboard/CommandMenu";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+
+// cmdk is ~180 KB; only fetch it the first time someone actually opens the palette.
+const CommandMenu = dynamic(() => import("@/components/dashboard/CommandMenu").then(m => m.CommandMenu), { ssr: false });
+
+function LazyCommandMenu() {
+  const [requested, setRequested] = useState(false);
+
+  useEffect(() => {
+    if (requested) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setRequested(true);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [requested]);
+
+  return requested ? <CommandMenu defaultOpen /> : null;
+}
+
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -32,27 +53,17 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
           <Breadcrumbs />
           {children}
         </div>
-        <CommandMenu />
+        <LazyCommandMenu />
       </main>
     </div>
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const pathname = usePathname();
-  
-  // Public pages should never have sidebar
-  const publicPages = ['/', '/login', '/signup'];
-  const isPublicPage = publicPages.includes(pathname);
+const PUBLIC_PAGES = ['/', '/login', '/signup', '/forgot-password'];
 
-  if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isPublicPage = PUBLIC_PAGES.includes(pathname);
 
   // On the root landing page: render without any shell chrome (owns its own nav + bg)
   if (pathname === '/') {

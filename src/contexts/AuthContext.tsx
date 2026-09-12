@@ -55,7 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      
+      // Unblock rendering as soon as auth is known; the role lookup below is a
+      // Firestore round trip and must not sit on the first-paint path.
+      setLoading(false);
+
       if (user) {
         // Special handling for System Architect
         if (user.email === 'kameel@maverickdesign.co.za') {
@@ -139,8 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserRole(null);
         setAvailableRoles([]);
       }
-      
-      setLoading(false);
     });
 
     return unsubscribe;

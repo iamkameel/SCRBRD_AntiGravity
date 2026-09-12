@@ -126,7 +126,9 @@ export function Header() {
         )}
 
         {/* Identity Unit */}
-        {user ? (
+        {loading ? (
+          <div className="h-9 w-28 rounded-xl border animate-pulse" style={{ borderColor: D.border, background: D.surf2 }} aria-hidden="true" />
+        ) : user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
