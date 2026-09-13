@@ -337,7 +337,7 @@ export function deriveInnings(events: MatchEvent[] = [], ctx: { flagFor?: (key: 
                     if (legal) inn.curPartner.balls += 1;
                 }
 
-                logBall(ev, at);
+                const entry = logBall(ev, at);
 
                 if (type === BALL_TYPE.WICKET) {
                     const runOut = /run ?out/i.test(ev.dismissal ?? "");
@@ -347,9 +347,9 @@ export function deriveInnings(events: MatchEvent[] = [], ctx: { flagFor?: (key: 
                         inn.wickets += 1;
                         if (outBat) {
                             outBat.status = "out";
-                            outBat.dismissal = ev.dismissal ?? "out";
+                            outBat.dismissal = describeDismissal(ev, nameOf(inn.bowler));
                         }
-                        if (bow && !runOut) bow.wickets += 1;
+                        if (bow && chargedToBowler(ev.dismissal)) bow.wickets += 1;
                         inn.fow.push({
                             runs: inn.runs, wickets: inn.wickets,
                             batsman: outBat?.name ?? "?", overs: fmtOvers(inn.balls),
@@ -358,6 +358,8 @@ export function deriveInnings(events: MatchEvent[] = [], ctx: { flagFor?: (key: 
                         if (inn.striker === outId) inn.striker = null; else inn.nonStriker = null;
                         inn.curPartner = { runs: 0, balls: 0, bat1: inn.striker, bat2: inn.nonStriker };
                         partnerStartRuns = inn.runs;
+                    } else {
+                        (entry as any).freeHitSaved = true;
                     }
                 }
 
@@ -391,3 +393,18 @@ export function deriveInnings(events: MatchEvent[] = [], ctx: { flagFor?: (key: 
 
     return inn;
 }
+
+const UNCREDITED = /run ?out|retired|obstruct|handled|timed ?out/i;
+export const chargedToBowler = (mode?: string | null): boolean => !UNCREDITED.test(mode ?? "");
+
+export function describeDismissal(ev: MatchEvent, bowlerName?: string | null): string {
+    const mode = ev.dismissal ?? "out";
+    const f = ev.fielder ? ` ${ev.fielder}` : "";
+    if (/run ?out/i.test(mode)) return `run out${f ? ` (${ev.fielder})` : ""}`;
+    if (/stumped|^st\b/i.test(mode)) return `st${f} b ${bowlerName ?? "?"}`;
+    if (/caught|^c\b/i.test(mode)) return `c${f || " ?"} b ${bowlerName ?? "?"}`;
+    if (/bowled|^b\b/i.test(mode)) return `b ${bowlerName ?? "?"}`;
+    if (/lbw/i.test(mode)) return `lbw b ${bowlerName ?? "?"}`;
+    return bowlerName ? `${mode} b ${bowlerName}` : mode;
+}
+

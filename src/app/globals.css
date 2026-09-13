@@ -586,3 +586,40 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Design 2.0: accessible foreground accents are distinct from spectral artwork. */
+:root {
+  --primary: 153 83% 25%;
+  --primary-foreground: 72 26% 96%;
+  --ring: 153 83% 25%;
+  --sidebar-primary: 153 83% 25%;
+  --sidebar-primary-foreground: 72 26% 96%;
+  --text-muted: #59655e;
+  --chart-1: 153 83% 25%;
+  --chart-2: 205 85% 35%;
+  --chart-4: 38 85% 32%;
+  --destructive: 358 72% 40%;
+  --destructive-foreground: 0 0% 100%;
+}
+.dark {
+  --primary: 68 100% 49%;
+  --primary-foreground: 204 16% 6%;
+  --ring: 68 100% 49%;
+  --sidebar-primary: 68 100% 49%;
+  --sidebar-primary-foreground: 204 16% 6%;
+  --text-muted: #a8b0ac;
+  --chart-1: 68 100% 49%;
+  --chart-2: 190 81% 53%;
+  --chart-4: 50 100% 55%;
+  --destructive: 358 100% 69%;
+  --destructive-foreground: 204 16% 6%;
+}
+.hero-scrim { background: linear-gradient(90deg, rgb(8 10 11 / .83), rgb(8 10 11 / .5) 45%, transparent 78%); }
+.hero-inverse { color: #f7f8f3; }
+.hero-inverse .text-primary { color: #d7f900; }
+.hero-inverse .text-muted-foreground { color: #e0e5df; }
+.hero-inverse .bg-primary { background: #d7f900; color: #0d1012; }
+.hero-inverse .text-primary-foreground { color: #0d1012; }
+@media (max-width: 640px) {
+  .hero-scrim { background: linear-gradient(90deg, rgb(8 10 11 / .88), rgb(8 10 11 / .56) 65%, rgb(8 10 11 / .12)); }
+}

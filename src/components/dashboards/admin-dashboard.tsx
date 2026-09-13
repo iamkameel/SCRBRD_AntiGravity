@@ -55,27 +55,27 @@ export default function AdminDashboard() {
               <item.icon className="h-4.5 w-4.5" />
             </div>
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-0.5" style={{ fontFamily: D.sans }}>{item.label}</p>
-              <p className="text-xs font-bold text-slate-100" style={{ fontFamily: D.mono }}>{item.status}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5" style={{ fontFamily: D.sans }}>{item.label}</p>
+              <p className="text-xs font-bold text-foreground" style={{ fontFamily: D.mono }}>{item.status}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Strategic Command Header */}
-      <div className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl" 
+      <div className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-sm"
            style={{ background: D.surf1, borderColor: D.border }}>
         <div className="absolute inset-0 opacity-[0.07]" style={{ background: D.gradMain }} />
         <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
-          <div className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm" 
+          <div className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm"
                style={{ background: D.surf2, borderColor: `${D.indigo}30` }}>
-             <Terminal className="h-7 w-7 text-indigo-400" />
+             <Terminal className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>
               Command <span style={{ color: D.indigo }}>Centre</span>
             </h1>
-            <p className="text-xs font-normal text-slate-400 mt-1 leading-relaxed" style={{ fontFamily: D.sans }}>
+            <p className="text-xs font-normal text-muted-foreground mt-1 leading-relaxed" style={{ fontFamily: D.sans }}>
               Global oversight and system architecture governance · Real-time telemetry active
             </p>
           </div>
@@ -100,20 +100,20 @@ export default function AdminDashboard() {
                    <Globe className="h-4.5 w-4.5" style={{ color: D.indigo }} />
                 </div>
                 <div>
-                   <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Global OS Event Stream</h3>
-                   <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Real-time cross-school telemetry</p>
+                   <h3 className="text-base font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>Global OS Event Stream</h3>
+                   <p className="text-xs font-medium text-muted-foreground mt-0.5" style={{ fontFamily: D.sans }}>Real-time cross-school telemetry</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20" style={{ background: `${D.emerald}10` }}>
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide">Live</span>
+                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Live</span>
               </div>
             </div>
             <div className="flex flex-col flex-1 divide-y" style={{ borderColor: D.border }}>
               {loadingLogs ? (
                 <div className="py-16 text-center opacity-40">
                   <Activity className="mx-auto h-8 w-8 mb-3 animate-spin" style={{ color: D.indigo }} />
-                  <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>Synchronizing telemetry...</p>
+                  <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>Synchronizing telemetry...</p>
                 </div>
               ) : auditLogs.length > 0 ? (
                 auditLogs.map((log: any, i: number) => (
@@ -124,20 +124,20 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: D.indigo }} />
-                        <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide" style={{ fontFamily: D.sans }}>{log.actionType}</span>
+                        <span className="text-xs font-semibold text-primary uppercase tracking-wide" style={{ fontFamily: D.sans }}>{log.actionType}</span>
                       </div>
-                      <span className="text-[11px] font-medium text-slate-400" style={{ fontFamily: D.mono }}>
+                      <span className="text-[11px] font-medium text-muted-foreground" style={{ fontFamily: D.mono }}>
                          {log.timestamp ? format(new Date(log.timestamp.seconds * 1000), 'HH:mm:ss') : 'LIVE'}
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-slate-200 pr-12 leading-relaxed" style={{ fontFamily: D.sans }}>{log.description}</p>
+                    <p className="text-xs font-medium text-foreground pr-12 leading-relaxed" style={{ fontFamily: D.sans }}>{log.description}</p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1.5 opacity-60">
-                           <Users size={12} className="text-indigo-400" />
-                           <span className="text-[10px] font-medium text-slate-400" style={{ fontFamily: D.sans }}>Actor: {log.actorName}</span>
+                           <Users size={12} className="text-primary" />
+                           <span className="text-xs font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>Actor: {log.actorName}</span>
                       </div>
                       <span
-                        className="text-[10px] px-2 py-0.5 rounded-md border border-white/10 font-medium"
+                        className="text-xs px-2 py-0.5 rounded-md border border-white/10 font-medium"
                         style={{ background: D.surf3, color: D.textMuted, fontFamily: D.mono }}
                       >
                         ID: {log.entityId.slice(-6)}
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="py-16 text-center opacity-40">
                   <Activity className="mx-auto h-8 w-8 mb-3 opacity-30" />
-                  <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>No active system traffic</p>
+                  <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>No active system traffic</p>
                 </div>
               )}
             </div>
@@ -156,12 +156,12 @@ export default function AdminDashboard() {
 
           <div className="space-y-5">
             <SectionHeader title="Match Architecture" sub="Global fixture schematic & operational status" />
-            <FixtureCentreCard 
+            <FixtureCentreCard
               role="System Architect"
               maxMatches={5}
             />
           </div>
-          
+
           <div className="space-y-5">
             <SectionHeader title="Metric Topology" sub="Quantitative performance analytics" />
             <DashboardStats />
@@ -177,19 +177,19 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center gap-3.5 mb-6">
                <div className="p-2.5 rounded-xl border border-indigo-500/20" style={{ background: `${D.indigo}10` }}>
-                  <Activity className="h-4.5 w-4.5 text-indigo-400" />
+                  <Activity className="h-4.5 w-4.5 text-primary" />
                </div>
                <div>
-                  <h4 className="text-sm font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Integrity Diagnostics</h4>
-                  <p className="text-xs font-normal text-slate-400" style={{ fontFamily: D.sans }}>Real-time logic sync</p>
+                  <h4 className="text-sm font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>Integrity Diagnostics</h4>
+                  <p className="text-xs font-normal text-muted-foreground" style={{ fontFamily: D.sans }}>Real-time logic sync</p>
                </div>
             </div>
-            
+
             <div className="space-y-5">
               {/* Metric 1 */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium text-slate-400" style={{ fontFamily: D.sans }}>Logic Sync</span>
+                  <span className="font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>Logic Sync</span>
                   <span className="font-bold text-emerald-400" style={{ fontFamily: D.mono }}>99.9%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: D.surf3 }}>
@@ -200,8 +200,8 @@ export default function AdminDashboard() {
                {/* Metric 2 */}
                <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium text-slate-400" style={{ fontFamily: D.sans }}>Match Stream</span>
-                  <span className="font-bold text-indigo-400" style={{ fontFamily: D.mono }}>Active</span>
+                  <span className="font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>Match Stream</span>
+                  <span className="font-bold text-primary" style={{ fontFamily: D.mono }}>Active</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: D.surf3 }}>
                   <div className="h-full rounded-full animate-pulse transition-all duration-1000" style={{ background: D.indigo, width: '75%' }} />

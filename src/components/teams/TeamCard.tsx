@@ -22,7 +22,7 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
         className="group relative"
       >
         <div 
-          className="p-5 rounded-2xl border transition-all duration-300 hover:border-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/5 space-y-4"
+          className="p-5 rounded-2xl border transition-all duration-300 hover:border-indigo-500/40 hover:shadow-sm hover:shadow-indigo-500/5 space-y-4"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           {/* Header Row */}
@@ -32,10 +32,10 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
                 className="h-11 w-11 rounded-xl flex items-center justify-center border shrink-0 transition-colors group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10" 
                 style={{ background: D.surf2, borderColor: D.border }}
               >
-                <Layers className="h-5 w-5 text-indigo-400" />
+                <Layers className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-base font-bold text-white truncate group-hover:text-indigo-300 transition-colors">
+                <h3 className="text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
                   {team.name}
                 </h3>
                 <p className="text-xs text-muted-foreground truncate font-medium">
@@ -46,7 +46,7 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
 
             <Badge 
               variant="outline" 
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-300 border-indigo-500/20 shrink-0"
+              className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-300 border-indigo-500/20 shrink-0"
             >
               {team.ageDivision?.name || 'Open'}
             </Badge>
@@ -76,7 +76,7 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="h-8 px-2.5 text-xs rounded-lg border-white/10 hover:bg-white/10"
+                  className="h-8 px-2.5 text-xs rounded-lg border-border hover:bg-secondary/60"
                 >
                   Roster
                 </Button>
@@ -84,7 +84,7 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
               <Link href={`/teams/${team.id}`}>
                 <Button 
                   size="sm" 
-                  className="h-8 px-3 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-600/20"
+                  className="h-8 px-3 text-xs rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-md shadow-indigo-600/20"
                 >
                   View
                   <ArrowUpRight size={13} className="ml-1" />
@@ -113,16 +113,16 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
             className="h-10 w-10 rounded-xl flex items-center justify-center border shrink-0 group-hover:bg-indigo-500/10" 
             style={{ background: D.surf2, borderColor: D.border }}
           >
-            <Layers className="h-5 w-5 text-indigo-400" />
+            <Layers className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors">
+              <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
                 {team.name}
               </h3>
               <Badge 
                 variant="outline" 
-                className="text-[10px] font-medium px-2 py-0 rounded bg-indigo-500/10 text-indigo-300 border-indigo-500/20"
+                className="text-xs font-medium px-2 py-0 rounded bg-indigo-500/10 text-indigo-300 border-indigo-500/20"
               >
                 {team.ageDivision?.name || 'Open'}
               </Badge>
@@ -135,12 +135,12 @@ export function TeamCard({ team, viewMode = 'grid' }: TeamCardProps) {
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <Link href={`/teams/${team.id}/roster`}>
-            <Button size="sm" variant="outline" className="h-8 px-3 text-xs rounded-lg border-white/10">
+            <Button size="sm" variant="outline" className="h-8 px-3 text-xs rounded-lg border-border">
               Roster
             </Button>
           </Link>
           <Link href={`/teams/${team.id}`}>
-            <Button size="sm" className="h-8 px-3 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">
+            <Button size="sm" className="h-8 px-3 text-xs rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
               Manage
               <ChevronRight size={14} className="ml-1" />
             </Button>

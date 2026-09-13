@@ -18,15 +18,15 @@ export default async function TeamsPage() {
   ]);
 
   return (
-    <div className="space-y-8 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-8 pb-20 max-w-[1600px] mx-auto">
       {/* Standardized Header */}
       <SectionHeader 
-        title="Team Registry"
-        sub="Institutional team identities, squad allocation, and competitive tracking engine."
-        icon={<Layers className="w-5 h-5 text-indigo-400" />}
+        title="Teams"
+        sub="Manage your teams, explore squads, and follow their season."
+        icon={<Layers className="w-5 h-5 text-primary" />}
         actions={
           <Link href="/teams/add">
-            <Button className="h-10 px-5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">
+            <Button className="h-10 px-5 rounded-xl font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-indigo-600/20">
               <Plus className="mr-1.5 h-4 w-4" />
               New Team
             </Button>

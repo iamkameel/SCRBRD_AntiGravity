@@ -38,27 +38,35 @@ export function SchoolsClient({ schools }: SchoolsClientProps) {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
+  const cleanSchools = useMemo(() => {
+    return schools.filter(s => 
+      !/alpha|beta|test/i.test(s.name) && 
+      !/alpha|beta|test/i.test(s.id) &&
+      !/alpha|beta|test/i.test(s.abbreviation || '')
+    );
+  }, [schools]);
+
   const filteredSchools = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
-    return schools.filter(school => {
+    return cleanSchools.filter(school => {
       return (
         school.name.toLowerCase().includes(searchLower) ||
         school.abbreviation?.toLowerCase().includes(searchLower) ||
         school.location?.toLowerCase().includes(searchLower)
       );
     });
-  }, [schools, searchTerm]);
+  }, [cleanSchools, searchTerm]);
 
   const metrics = useMemo(() => {
-    const locationsSet = new Set(schools.map(s => s.location).filter(Boolean));
-    const estCount = schools.filter(s => s.establishmentYear).length;
+    const locationsSet = new Set(cleanSchools.map(s => s.location).filter(Boolean));
+    const estCount = cleanSchools.filter(s => s.establishmentYear).length;
     return {
-      total: schools.length,
+      total: cleanSchools.length,
       locationsCount: locationsSet.size,
       estCount: estCount,
       filteredCount: filteredSchools.length
     };
-  }, [schools, filteredSchools]);
+  }, [cleanSchools, filteredSchools]);
 
   return (
     <div className="space-y-6">

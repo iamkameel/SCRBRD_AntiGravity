@@ -363,13 +363,20 @@ export interface TeamMembership {
 
 // --- Layer 5: Fixtures and Match Lifecycle ---
 
+export type FixtureContext = 'INTER_SCHOOL' | 'INTER_HOUSE' | 'CLUB' | 'FRIENDLY' | 'TRAINING';
+
 export interface Fixture {
     id: UUID;
+    fixtureContext?: FixtureContext;
     competitionId?: UUID;
+    cricketCompetitionId?: UUID;
+    cricketDivisionId?: UUID;
     seasonId: UUID;
     sport: string;
     homeTeamId: UUID;
     awayTeamId: UUID;
+    houseTeamAId?: UUID;
+    houseTeamBId?: UUID;
     venueId: UUID;
     fieldId?: UUID;
     scheduledStartAt: ISO8601Timestamp;

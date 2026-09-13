@@ -56,14 +56,14 @@ export function Header() {
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         {/* Mobile sidebar toggle */}
         {isMobile && (
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden h-9 w-9 rounded-xl border" style={{ borderColor: D.border, background: D.surf2 }}>
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden h-11 w-11 rounded-xl border" style={{ borderColor: D.border, background: D.surf2 }}>
             <Menu className="h-4 w-4" />
             <span className="sr-only">Toggle Sidebar</span>
           </Button>
         )}
         {!isMobile && (
           <div className="hidden group-data-[collapsible=icon]/sidebar-wrapper:block">
-            <SidebarTrigger className="h-9 w-9 rounded-xl border" style={{ borderColor: D.border, background: D.surf2 }} />
+            <SidebarTrigger className="h-11 w-11 rounded-xl border" style={{ borderColor: D.border, background: D.surf2 }} />
           </div>
         )}
 
@@ -83,14 +83,14 @@ export function Header() {
         {/* Theme Toggle Unit */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border transition-all hover:scale-105" style={{ borderColor: D.border, background: D.surf2 }}>
+            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border transition-all hover:scale-105" style={{ borderColor: D.border, background: D.surf2 }}>
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-2xl border-white/5 shadow-2xl" style={{ background: D.surf1 }}>
-            <DropdownMenuLabel className="text-[9px] font-semibold uppercase tracking-widest opacity-50 px-4 py-2">Appearance</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-4 py-2">Appearance</DropdownMenuLabel>
             <DropdownMenuSeparator className="opacity-10" />
             <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
               <DropdownMenuRadioItem value="light" className="text-sm font-medium py-2.5">Light Mode</DropdownMenuRadioItem>
@@ -100,34 +100,67 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Operational Role Chip — UIX Spec §8.3 */}
+        {/* Operational Role Switcher — UIX Spec §8.3 */}
         {currentRole && (
-          <div
-            className="hidden md:flex items-center gap-2.5 rounded-full px-4 py-1.5 border shadow-sm group"
-            style={{
-              background: `${roleColour}10`,
-              borderColor: `${roleColour}30`,
-              color: roleColour,
-            }}
-          >
-            <div
-              className="rounded-full shadow-inner animate-pulse"
-              style={{ width: 7, height: 7, background: roleColour }}
-              aria-hidden="true"
-            />
-            <span className="text-xs font-medium" style={{ fontFamily: D.sans }}>
-               {currentRole}
-            </span>
-            {isSimulating && (
-              <span
-                className="text-[8px] font-bold uppercase tracking-[0.12em] rounded px-1.5 py-0.5 border"
-                style={{ borderColor: `${roleColour}55`, background: `${roleColour}18` }}
-                title={`Previewing as ${currentRole}. Your account is ${verifiedRoleName}.`}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="hidden md:flex items-center gap-2.5 rounded-full px-4 py-1.5 border shadow-sm group cursor-pointer transition-all hover:scale-105 hover:border-indigo-500/50"
+                style={{
+                  background: `${roleColour}10`,
+                  borderColor: `${roleColour}30`,
+                  color: D.textSecondary,
+                }}
+                aria-label={`Current role ${currentRole}. Click to switch role.`}
               >
-                Preview
-              </span>
-            )}
-          </div>
+                <div
+                  className="rounded-full shadow-inner animate-pulse"
+                  style={{ width: 7, height: 7, background: roleColour }}
+                  aria-hidden="true"
+                />
+                <span className="text-xs font-medium" style={{ fontFamily: D.sans }}>
+                  {currentRole}
+                </span>
+                {isSimulating && (
+                  <span
+                    className="text-[8px] font-bold uppercase tracking-[0.12em] rounded px-1.5 py-0.5 border"
+                    style={{ borderColor: `${roleColour}55`, background: `${roleColour}18` }}
+                    title={`Previewing as ${currentRole}. Your account is ${verifiedRoleName}.`}
+                  >
+                    Preview
+                  </span>
+                )}
+                <ShieldCheck className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 rounded-[1.5rem] p-2 shadow-2xl border-white/5 overflow-hidden" style={{ background: D.surf1 }}>
+              <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-4 py-3">
+                Switch user role
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="opacity-10" />
+              <div className="max-h-[60vh] overflow-y-auto pr-1">
+                <DropdownMenuRadioGroup value={currentRole} onValueChange={(value) => setCurrentRole(value as SimulatedRole)}>
+                  {Object.entries(ROLE_GROUPS).map(([group, groupRoles]) => {
+                    const visibleRoles = canSimulate
+                      ? groupRoles
+                      : groupRoles.filter(r => availableRoles.includes(r as typeof availableRoles[number]));
+                    if (visibleRoles.length === 0) return null;
+                    return (
+                      <div key={group} className="mb-2 last:mb-0">
+                        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-4 py-2 mt-2">{group}</DropdownMenuLabel>
+                        {visibleRoles.map(role => (
+                          <DropdownMenuRadioItem key={role} value={role} className="rounded-xl px-4 py-2.5 text-xs font-bold italic uppercase tracking-tight cursor-pointer">
+                            {role}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </DropdownMenuRadioGroup>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Your account */}
@@ -165,49 +198,13 @@ export function Header() {
             variant="outline" 
             size="sm" 
             onClick={() => router.push('/login')} 
-            className="h-9 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest border"
+            className="h-11 px-4 rounded-xl font-medium text-sm border"
             style={{ borderColor: D.border, color: D.textPrimary, background: D.surf2 }}
           >
             Sign in
           </Button>
         )}
 
-        {/* Global Operational Switcher */}
-        {(canSwitchRole || canSimulate) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button aria-label="Switch role" variant="outline" size="icon" className="h-9 w-9 rounded-xl border shadow-sm transition-all hover:bg-indigo-500/10 hover:border-indigo-500/30" style={{ borderColor: D.border, background: D.surf2, color: D.indigo }}>
-                <ShieldCheck className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-[1.5rem] p-2 shadow-2xl border-white/5 overflow-hidden" style={{ background: D.surf1 }}>
-              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-50 px-4 py-3">
-                Switch role
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="opacity-10" />
-              <div className="max-h-[60vh] overflow-y-auto pr-1">
-                <DropdownMenuRadioGroup value={currentRole} onValueChange={(value) => setCurrentRole(value as SimulatedRole)}>
-                    {Object.entries(ROLE_GROUPS).map(([group, groupRoles]) => {
-                    const visibleRoles = canSimulate
-                      ? groupRoles
-                      : groupRoles.filter(r => availableRoles.includes(r as typeof availableRoles[number]));
-                    if (visibleRoles.length === 0) return null;
-                    return (
-                        <div key={group} className="mb-2 last:mb-0">
-                        <DropdownMenuLabel className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground px-4 py-2 mt-2 opacity-40">{group}</DropdownMenuLabel>
-                        {visibleRoles.map(role => (
-                            <DropdownMenuRadioItem key={role} value={role} className="rounded-xl px-4 py-2.5 text-xs font-bold italic uppercase tracking-tight cursor-pointer">
-                                {role}
-                            </DropdownMenuRadioItem>
-                        ))}
-                        </div>
-                    );
-                    })}
-                </DropdownMenuRadioGroup>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
       </div>
     </header>
   );

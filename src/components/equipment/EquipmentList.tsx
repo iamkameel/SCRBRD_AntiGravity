@@ -21,6 +21,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { D } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { deleteEquipmentAction } from '@/app/actions/equipmentActions';
+
 const INITIAL_EQUIPMENT = [
   { id: 'EQ-001', name: 'TITAN CRICKET BATS', category: 'BATTING', condition: 'PRISTINE', lifespan: '95%', location: 'LOCKER A' },
   { id: 'EQ-002', name: 'PREMIUM BALL SET (30)', category: 'BOWLING', condition: 'WORN', lifespan: '40%', location: 'STORAGE 1' },
@@ -30,6 +34,16 @@ const INITIAL_EQUIPMENT = [
 
 export default function EquipmentList() {
   const [equipment, setEquipment] = useState(INITIAL_EQUIPMENT);
+
+  const handleDeleteAsset = async (id: string, name: string) => {
+    setEquipment(prev => prev.filter(e => e.id !== id));
+    toast.success(`Removed asset: ${name}`);
+    try {
+      await deleteEquipmentAction(id);
+    } catch (err) {
+      console.warn("Server delete equipment error:", err);
+    }
+  };
 
   return (
     <div className="space-y-12 pb-24">
@@ -53,14 +67,16 @@ export default function EquipmentList() {
              <div className="flex items-center gap-6 px-10 h-16 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-[#181820]">
                 <div className="flex flex-col">
                    <span className="text-[9px] font-black uppercase tracking-widest opacity-40 italic text-zinc-500 dark:text-zinc-400">ASSETS TRACKED</span>
-                   <span className="text-xl font-black italic uppercase leading-none mt-1 text-zinc-900 dark:text-white" style={{ fontFamily: D.mono }}>248 UNITS</span>
+                   <span className="text-xl font-black italic uppercase leading-none mt-1 text-zinc-900 dark:text-white" style={{ fontFamily: D.mono }}>{equipment.length} UNITS</span>
                 </div>
                 <div className="h-8 w-px bg-zinc-200 dark:bg-white/10" />
                 <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/30 text-[9px]">SYNCED</Badge>
              </div>
-             <Button className="h-16 px-10 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl text-white hover:opacity-90" style={{ background: D.indigo }}>
-                <Plus className="mr-3 h-4 w-4" /> ADD ASSET
-             </Button>
+             <Link href="/equipment/add">
+               <Button className="h-16 px-10 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl text-white hover:opacity-90 cursor-pointer" style={{ background: D.indigo }}>
+                  <Plus className="mr-3 h-4 w-4" /> ADD ASSET
+               </Button>
+             </Link>
           </div>
         </div>
       </div>
@@ -80,9 +96,13 @@ export default function EquipmentList() {
                   <div className="h-14 w-14 rounded-2xl flex items-center justify-center border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-[#181820] shadow-inner transition-transform group-hover:scale-110 duration-500">
                      <Zap className="h-6 w-6 text-indigo-500 dark:text-indigo-400 group-hover:scale-125 transition-transform" />
                   </div>
-                  <div className="h-10 w-10 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-white/5 bg-zinc-100 dark:bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 group/btn transition-all cursor-pointer">
+                  <button 
+                    onClick={() => handleDeleteAsset(item.id, item.name)}
+                    title="Delete Asset"
+                    className="h-10 w-10 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-white/5 bg-zinc-100 dark:bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 group/btn transition-all cursor-pointer"
+                  >
                      <Trash2 size={16} className="text-zinc-400 dark:text-white/20 group-hover/btn:text-rose-500" />
-                  </div>
+                  </button>
                </div>
 
                <div className="mb-10">

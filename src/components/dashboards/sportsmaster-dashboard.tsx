@@ -60,8 +60,8 @@ export default function SportsmasterDashboard() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <Activity className="h-8 w-8 animate-spin text-indigo-400" />
-        <p className="text-xs font-semibold text-slate-400">Synchronizing Departmental Ops...</p>
+        <Activity className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs font-semibold text-muted-foreground">Synchronizing Departmental Ops...</p>
       </div>
     );
   }
@@ -75,31 +75,31 @@ export default function SportsmasterDashboard() {
   return (
     <div className="space-y-8 pb-12">
       {/* Strategic Command Header */}
-      <div 
-        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl" 
+      <div
+        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-sm"
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <div className="absolute inset-0 opacity-[0.05]" style={{ background: D.gradMain }} />
         <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
-          <div 
-            className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm shrink-0" 
+          <div
+            className="h-14 w-14 rounded-2xl flex items-center justify-center border shadow-sm shrink-0"
             style={{ background: D.surf2, borderColor: D.border }}
           >
-             <Shield className="h-7 w-7 text-indigo-400" />
+             <Shield className="h-7 w-7 text-primary" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
-              Sportsmaster <span className="text-indigo-400">Command</span>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>
+              Sportsmaster <span className="text-primary">Command</span>
             </h1>
-            <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>
-              Institution: <span className="text-slate-200 font-semibold uppercase">{person?.schoolId || 'Unallocated'}</span> · Operational Clearance Level 5
+            <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>
+              Institution: <span className="text-foreground font-semibold uppercase">{person?.schoolId || 'Unallocated'}</span> · Operational Clearance Level 5
             </p>
           </div>
           <div className="md:ml-auto flex gap-3 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border hover:bg-white/5 text-white" style={{ background: D.surf2, borderColor: D.border }}>
+             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border hover:bg-white/5 text-foreground" style={{ background: D.surf2, borderColor: D.border }}>
                Department Logs
              </Button>
-             <Button className="flex-1 md:flex-none rounded-xl font-bold text-xs px-5 h-10 shadow-lg text-white" style={{ background: D.indigo }}>
+             <Button className="flex-1 md:flex-none rounded-xl font-bold text-xs px-5 h-10 shadow-lg text-foreground" style={{ background: D.indigo }}>
                Create Fixture
              </Button>
           </div>
@@ -119,7 +119,7 @@ export default function SportsmasterDashboard() {
 
       {/* Strategic Match Readiness Board */}
       <div
-        className="overflow-hidden rounded-2xl border shadow-xl flex flex-col"
+        className="overflow-hidden rounded-2xl border shadow-sm flex flex-col"
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <div
@@ -127,17 +127,17 @@ export default function SportsmasterDashboard() {
           style={{ borderColor: D.border, background: D.surf2 }}
         >
           <div>
-            <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Readiness Status Board</h3>
-            <p className="text-xs text-slate-400">Operational health for upcoming fixture cycles.</p>
+            <h3 className="text-base font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Readiness Status Board</h3>
+            <p className="text-xs text-muted-foreground">Operational health for upcoming fixture cycles.</p>
           </div>
-          <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-indigo-400 hover:bg-white/5" style={{ background: D.surf1 }}>
+          <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-primary hover:bg-white/5" style={{ background: D.surf1 }}>
             Full Monitor
           </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b text-slate-400 text-xs font-bold uppercase tracking-wider" style={{ borderColor: D.border, background: D.surf2 }}>
+              <tr className="border-b text-muted-foreground text-xs font-bold uppercase tracking-wider" style={{ borderColor: D.border, background: D.surf2 }}>
                 <th className="px-6 py-3.5">Matchup</th>
                 <th className="px-6 py-3.5">Squad</th>
                 <th className="px-6 py-3.5">Venue</th>
@@ -157,9 +157,9 @@ export default function SportsmasterDashboard() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-white" style={{ fontFamily: D.head }}>{fixture.homeTeam} vs {fixture.awayTeam}</span>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
-                        <CalendarDays className="h-3 w-3 text-indigo-400" />
+                      <span className="text-xs font-bold text-foreground" style={{ fontFamily: D.head }}>{fixture.homeTeam} vs {fixture.awayTeam}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                        <CalendarDays className="h-3 w-3 text-primary" />
                         <span>{new Date(fixture.date).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ export default function SportsmasterDashboard() {
                     const c = STATUS_COLOURS[status];
                     return (
                       <td key={key} className="px-6 py-4">
-                        <div 
+                        <div
                           className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider"
                           style={{ background: c.bg, borderColor: c.border, color: c.text }}
                         >
@@ -180,7 +180,7 @@ export default function SportsmasterDashboard() {
                     );
                   })}
                   <td className="px-6 py-4">
-                    <button className="h-8 w-8 rounded-lg flex items-center justify-center border border-white/10 hover:bg-white/10 text-slate-300 transition-colors">
+                    <button className="h-8 w-8 rounded-lg flex items-center justify-center border border-white/10 hover:bg-white/10 text-muted-foreground transition-colors">
                       <ArrowUpRight className="h-4 w-4" />
                     </button>
                   </td>
@@ -195,7 +195,7 @@ export default function SportsmasterDashboard() {
       <div className="grid gap-8 md:grid-cols-5 lg:grid-cols-7">
         {/* Division League Integration (4/7) */}
         <div
-          className="lg:col-span-4 overflow-hidden rounded-2xl border shadow-xl flex flex-col"
+          className="lg:col-span-4 overflow-hidden rounded-2xl border shadow-sm flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div
@@ -207,11 +207,11 @@ export default function SportsmasterDashboard() {
                 <TrendingUp className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Division Standings</h3>
-                <p className="text-xs text-slate-400">Active competition summary.</p>
+                <h3 className="text-base font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Division Standings</h3>
+                <p className="text-xs text-muted-foreground">Active competition summary.</p>
               </div>
             </div>
-            <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-indigo-400 hover:bg-white/5" style={{ background: D.surf1 }}>
+            <Button variant="ghost" className="h-8 text-xs font-semibold px-4 rounded-xl border border-white/10 text-primary hover:bg-white/5" style={{ background: D.surf1 }}>
               Full Table
             </Button>
           </div>
@@ -222,7 +222,7 @@ export default function SportsmasterDashboard() {
 
         {/* OS Event Topology Stream (3/7) */}
         <div
-          className="lg:col-span-3 overflow-hidden rounded-2xl border shadow-xl flex flex-col"
+          className="lg:col-span-3 overflow-hidden rounded-2xl border shadow-sm flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div
@@ -230,12 +230,12 @@ export default function SportsmasterDashboard() {
             style={{ borderColor: D.border, background: D.surf2 }}
           >
             <div className="flex items-center gap-3">
-               <div className="p-2 rounded-lg border border-white/10 bg-indigo-500/10 text-indigo-400">
+               <div className="p-2 rounded-lg border border-white/10 bg-indigo-500/10 text-primary">
                   <History className="h-4 w-4" />
                </div>
                <div>
-                  <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>OS Event Stream</h3>
-                  <p className="text-xs text-slate-400">Real-time audit log.</p>
+                  <h3 className="text-base font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>OS Event Stream</h3>
+                  <p className="text-xs text-muted-foreground">Real-time audit log.</p>
                </div>
             </div>
             <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold">
@@ -259,15 +259,15 @@ export default function SportsmasterDashboard() {
                     />
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
                           {log.actionType.replace(/_/g, ' ')}
                         </span>
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-xs text-slate-500">
                           {log.timestamp && format(new Date(log.timestamp.seconds * 1000), 'HH:mm:ss')}
                         </span>
                         </div>
-                        <p className="text-xs font-semibold text-slate-200">{log.description}</p>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                        <p className="text-xs font-semibold text-foreground">{log.description}</p>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                              <Zap className="h-3 w-3 text-amber-400" />
                              <span>Actor: {log.actorName}</span>
                         </div>
@@ -290,25 +290,25 @@ export default function SportsmasterDashboard() {
         <SectionHeader title="Quick Operations & Match Dispatch" sub="Direct operational shortcuts for departmental management." />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link href="/fixtures/create">
-            <div 
+            <div
               className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-indigo-500/50 hover:bg-white/[0.03] group cursor-pointer"
               style={{ background: D.surf1, borderColor: D.border }}
             >
               <div className="flex items-center justify-between">
-                <div className="p-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-indigo-400">
+                <div className="p-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-primary">
                   <CalendarDays className="h-5 w-5" />
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Schedule Fixture</h4>
-                <p className="text-[10px] text-slate-400">Create & allocate venues</p>
+                <h4 className="text-xs font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Schedule Fixture</h4>
+                <p className="text-xs text-muted-foreground">Create & allocate venues</p>
               </div>
             </div>
           </Link>
 
           <Link href="/prematch">
-            <div 
+            <div
               className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-emerald-500/50 hover:bg-white/[0.03] group cursor-pointer"
               style={{ background: D.surf1, borderColor: D.border }}
             >
@@ -319,14 +319,14 @@ export default function SportsmasterDashboard() {
                 <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Pre-Match Cockpit</h4>
-                <p className="text-[10px] text-slate-400">Readiness & team lineups</p>
+                <h4 className="text-xs font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Pre-Match Cockpit</h4>
+                <p className="text-xs text-muted-foreground">Readiness & team lineups</p>
               </div>
             </div>
           </Link>
 
           <Link href="/scoring">
-            <div 
+            <div
               className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-amber-500/50 hover:bg-white/[0.03] group cursor-pointer"
               style={{ background: D.surf1, borderColor: D.border }}
             >
@@ -337,14 +337,14 @@ export default function SportsmasterDashboard() {
                 <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Live Scorer Console</h4>
-                <p className="text-[10px] text-slate-400">Ball-by-ball match engine</p>
+                <h4 className="text-xs font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Live Scorer Console</h4>
+                <p className="text-xs text-muted-foreground">Ball-by-ball match engine</p>
               </div>
             </div>
           </Link>
 
           <Link href="/coach/development">
-            <div 
+            <div
               className="p-4 rounded-2xl border flex flex-col gap-2 transition-all hover:border-sky-500/50 hover:bg-white/[0.03] group cursor-pointer"
               style={{ background: D.surf1, borderColor: D.border }}
             >
@@ -355,8 +355,8 @@ export default function SportsmasterDashboard() {
                 <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-sky-400 transition-colors" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>Coach & Skill Engine</h4>
-                <p className="text-[10px] text-slate-400">Drill matrix & development</p>
+                <h4 className="text-xs font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>Coach & Skill Engine</h4>
+                <p className="text-xs text-muted-foreground">Drill matrix & development</p>
               </div>
             </div>
           </Link>

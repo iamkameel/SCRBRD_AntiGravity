@@ -13,14 +13,14 @@ export default function GuardianDashboard() {
     <div className="space-y-10 pb-12 animate-in fade-in duration-500">
       {/* Header */}
       <div className="px-1">
-        <PageHeader 
-          title="Guardian Portal" 
+        <PageHeader
+          title="Guardian Portal"
           description="Monitor performance, schedule, and school sports integration for your student athletes."
         />
       </div>
 
       {/* Fixture Centre */}
-      <FixtureCentreCard 
+      <FixtureCentreCard
         role="Guardian"
         maxMatches={3}
       />
@@ -33,13 +33,13 @@ export default function GuardianDashboard() {
           { label: "Form Index", value: "Optimal", sub: "Recent: 45 runs (32b)", icon: Activity, color: D.emerald },
           { label: "Academic Standing", value: "On Track", sub: "GPA: 3.8 / 4.0", icon: GraduationCap, color: D.amber },
         ].map((stat, i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className="rounded-2xl p-6 transition-all border group"
             style={{ background: D.surf1, border: `1px solid ${D.border}` }}
           >
             <div className="flex justify-between items-start mb-4">
-              <div 
+              <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
                 style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}30`, color: stat.color }}
               >
@@ -47,9 +47,9 @@ export default function GuardianDashboard() {
               </div>
               <div className="w-2 h-2 rounded-full" style={{ background: stat.color }} />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: D.textMuted }}>{stat.label}</p>
-            <div className="text-3xl font-black italic uppercase tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>{stat.value}</div>
-            <p className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60" style={{ color: D.textMuted }}>{stat.sub}</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: D.textMuted }}>{stat.label}</p>
+            <div className="text-3xl font-semibold tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>{stat.value}</div>
+            <p className="text-xs font-bold uppercase tracking-widest mt-1 opacity-60" style={{ color: D.textMuted }}>{stat.sub}</p>
           </div>
         ))}
       </div>
@@ -57,8 +57,8 @@ export default function GuardianDashboard() {
       {/* Schedule & Operational Updates */}
       <div className="grid gap-8 md:grid-cols-2 px-1">
         {/* Schedule Panel */}
-        <div 
-          className="rounded-3xl border overflow-hidden shadow-xl"
+        <div
+          className="rounded-3xl border overflow-hidden shadow-sm"
           style={{ background: D.surf1, border: `1px solid ${D.border}` }}
         >
           <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -66,7 +66,7 @@ export default function GuardianDashboard() {
               <Clock className="h-5 w-5" style={{ color: D.indigo }} />
               PLAYER SCHEDULE
             </h3>
-            <Badge className="font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border-0" style={{ background: `${D.indigo}20`, color: D.indigo }}>
+            <Badge className="font-black text-[11px] uppercase tracking-widest px-3 py-1 rounded-full border-0" style={{ background: `${D.indigo}20`, color: D.indigo }}>
               LIVE REGISTRY
             </Badge>
           </div>
@@ -75,18 +75,18 @@ export default function GuardianDashboard() {
               { type: "Training Session", time: "Today, 4:00 PM", status: "Required", color: D.amber },
               { type: "Match Day", time: "Saturday, 9:00 AM", status: "Home Game", color: D.emerald },
             ].map((item, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="flex items-center justify-between p-4 rounded-2xl border transition-all"
                 style={{ background: D.surf2, border: `1px solid ${D.border}` }}
               >
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: D.textPrimary }}>{item.type}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 opacity-60" style={{ color: D.textMuted }}>
+                  <p className="text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 opacity-60" style={{ color: D.textMuted }}>
                     <Calendar className="w-3 h-3" /> {item.time}
                   </p>
                 </div>
-                <Badge className="font-black text-[9px] uppercase tracking-widest rounded-lg border-0" style={{ background: `${item.color}15`, color: item.color }}>
+                <Badge className="font-black text-[11px] uppercase tracking-widest rounded-lg border-0" style={{ background: `${item.color}15`, color: item.color }}>
                    {item.status}
                 </Badge>
               </div>
@@ -95,8 +95,8 @@ export default function GuardianDashboard() {
         </div>
 
         {/* Intelligence Feed */}
-        <div 
-          className="rounded-3xl border overflow-hidden shadow-xl"
+        <div
+          className="rounded-3xl border overflow-hidden shadow-sm"
           style={{ background: D.surf1, border: `1px solid ${D.border}` }}
         >
           <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -104,7 +104,7 @@ export default function GuardianDashboard() {
               <Bell className="h-5 w-5" style={{ color: D.emerald }} />
               COACH UPDATES
             </h3>
-            <Badge className="font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full border-0" style={{ background: `${D.emerald}20`, color: D.emerald }}>
+            <Badge className="font-black text-[11px] uppercase tracking-widest px-3 py-1 rounded-full border-0" style={{ background: `${D.emerald}20`, color: D.emerald }}>
               ENCRYPTED FEED
             </Badge>
           </div>
@@ -113,19 +113,19 @@ export default function GuardianDashboard() {
               { title: "Uniform Specifications", desc: "Please ensure white match kits are clean and prepared for Saturday. Traditional whites only.", color: D.indigo },
               { title: "In-Match Report", desc: "Team secured a tactical victory by 20 runs last weekend. Notable middle-order recovery.", color: D.emerald },
             ].map((update, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
                 className="relative pl-6 py-1"
               >
-                <div 
-                  className="absolute left-0 top-0 bottom-0 w-1.5 rounded-full" 
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1.5 rounded-full"
                   style={{ background: update.color }}
                 />
                 <p className="text-[11px] font-black uppercase tracking-widest mb-1 italic" style={{ color: D.textPrimary }}>{update.title}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest leading-relaxed opacity-60" style={{ color: D.textMuted }}>
+                <p className="text-xs font-bold uppercase tracking-widest leading-relaxed opacity-60" style={{ color: D.textMuted }}>
                   {update.desc}
                 </p>
               </motion.div>

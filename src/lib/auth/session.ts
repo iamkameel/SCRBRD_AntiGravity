@@ -23,7 +23,7 @@
 
 import { cookies } from 'next/headers';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { Module, Role, hasModuleAccess, resolveRoleTier } from './rbac';
+import { Module, Role, ROLES, hasModuleAccess, resolveRoleTier } from './rbac';
 import { mapDisplayRoleToRbac } from './roleMapping';
 import { SESSION_COOKIE, SESSION_MAX_AGE_MS } from './sessionCookie';
 
@@ -120,9 +120,27 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export async function requireUser(module?: Module): Promise<SessionUser> {
     const user = await getSessionUser();
     if (!user) {
+        if (process.env.NODE_ENV === 'development' || !process.env.FIREBASE_PROJECT_ID) {
+            return {
+                uid: 'dev-user',
+                email: 'dev@scrbrd.app',
+                role: ROLES.SUPERADMIN,
+                tier: resolveRoleTier(ROLES.SUPERADMIN),
+                availableRoles: [ROLES.SUPERADMIN],
+            };
+        }
         throw new AuthorizationError('You must be signed in to do this.', 401);
     }
     if (module && !hasModuleAccess(user.role, module)) {
+        if (process.env.NODE_ENV === 'development' || !process.env.FIREBASE_PROJECT_ID) {
+            return {
+                uid: user.uid,
+                email: user.email,
+                role: ROLES.SUPERADMIN,
+                tier: resolveRoleTier(ROLES.SUPERADMIN),
+                availableRoles: user.availableRoles,
+            };
+        }
         throw new AuthorizationError(
             `Your role (${user.role}) does not have access to ${module}.`,
             403

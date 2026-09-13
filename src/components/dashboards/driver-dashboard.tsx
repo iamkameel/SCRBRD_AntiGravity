@@ -33,7 +33,7 @@ export default function DriverDashboard() {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
           <Loader2 className="h-10 w-10 animate-spin" style={{ color: D.indigo }} />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>Syncing Logistics & Routes...</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>Syncing Logistics & Routes...</p>
         </div>
       );
   }
@@ -42,20 +42,20 @@ export default function DriverDashboard() {
   const upcomingTrips = trips.filter(t => new Date(t.scheduledDeparture as any) > new Date());
   const nextTrip = upcomingTrips[0];
   const totalTrips = trips.length;
-  const hoursLogged = 0; 
+  const hoursLogged = 0;
 
   return (
     <div className="space-y-10 pb-12">
       {/* Header */}
       <div className="px-1">
-        <PageHeader 
-          title="Transport Terminal" 
+        <PageHeader
+          title="Transport Terminal"
           description="Manage vehicle assignments, passenger manifests, and route efficiency."
         />
       </div>
 
       {/* Fixture Centre */}
-      <FixtureCentreCard 
+      <FixtureCentreCard
         role="Driver"
         maxMatches={3}
       />
@@ -73,8 +73,8 @@ export default function DriverDashboard() {
       </div>
 
       {/* Upcoming Schedule */}
-      <div 
-        className="rounded-3xl overflow-hidden shadow-2xl border"
+      <div
+        className="rounded-3xl overflow-hidden shadow-sm border"
         style={{ background: D.surf1, border: `1px solid ${D.border}` }}
       >
         <div className="p-6 flex flex-row items-center justify-between" style={{ borderBottom: `1px solid ${D.border}`, background: D.surf2 }}>
@@ -82,7 +82,7 @@ export default function DriverDashboard() {
             <Calendar className="h-5 w-5" style={{ color: D.indigo }} />
             LOGISTICS SCHEDULE
           </h3>
-          <Badge className="font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: `${D.indigo}20`, color: D.indigo, border: `1px solid ${D.indigo}30` }}>
+          <Badge className="font-black text-[11px] uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: `${D.indigo}20`, color: D.indigo, border: `1px solid ${D.indigo}30` }}>
             {upcomingTrips.length} UPCOMING TRIPS
           </Badge>
         </div>
@@ -90,7 +90,7 @@ export default function DriverDashboard() {
           {upcomingTrips.length > 0 ? (
             <div className="space-y-4">
               {upcomingTrips.map((trip, i) => (
-                <motion.div 
+                <motion.div
                   key={trip.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -102,7 +102,7 @@ export default function DriverDashboard() {
                 >
                   <div className="flex-1">
                     <p className="text-lg font-black uppercase italic tracking-tight mb-1" style={{ fontFamily: D.head, color: D.textPrimary }}>{trip.fixture || trip.fixtureId || 'MATCH TRANSPORT'}</p>
-                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest" style={{ color: D.textMuted }}>
+                    <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest" style={{ color: D.textMuted }}>
                       <span className="flex items-center gap-1.5"><UserPlus className="w-3.5 h-3.5 opacity-50" style={{ color: D.indigo }} /> {trip.passengerCount || 0} PASSENGERS</span>
                       <span className="opacity-20">•</span>
                       <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 opacity-50" style={{ color: D.indigo }} /> {trip.destination}</span>
@@ -110,11 +110,11 @@ export default function DriverDashboard() {
                   </div>
                   <div className="text-right flex flex-col items-end gap-2 px-6" style={{ borderLeft: `1px solid ${D.border}` }}>
                     <p className="text-sm font-black uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>{format(new Date(trip.scheduledDeparture as any), "EEE, MMM d")}</p>
-                    <Badge className="font-black text-[10px] uppercase tracking-widest rounded-lg" style={{ background: D.surf1, color: D.indigo, border: `1px solid ${D.border}` }}>
+                    <Badge className="font-black text-xs uppercase tracking-widest rounded-lg" style={{ background: D.surf1, color: D.indigo, border: `1px solid ${D.border}` }}>
                         {format(new Date(trip.scheduledDeparture as any), "HH:mm")}
                     </Badge>
                   </div>
-                  <div 
+                  <div
                     className="ml-4 p-2.5 rounded-full transition-all group-hover:scale-110"
                     style={{ background: D.surf3, color: D.textMuted }}
                   >
@@ -124,7 +124,7 @@ export default function DriverDashboard() {
               ))}
             </div>
           ) : (
-            <div 
+            <div
               className="py-16 text-center rounded-3xl border border-dashed flex flex-col items-center justify-center gap-4"
               style={{ background: D.surf2, borderColor: D.border }}
             >
@@ -132,7 +132,7 @@ export default function DriverDashboard() {
                     <Truck className="w-6 h-6" style={{ color: D.indigo }} />
                 </div>
                 <div>
-                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>No upcoming transport cycles</h4>
+                   <h4 className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>No upcoming transport cycles</h4>
                 </div>
             </div>
           )}

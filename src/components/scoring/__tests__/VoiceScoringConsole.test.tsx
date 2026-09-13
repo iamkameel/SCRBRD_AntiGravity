@@ -19,4 +19,10 @@ describe("VoiceScoringConsole Component", () => {
     const startBtn = screen.getByRole("button", { name: /Start Voice Input/i });
     expect(startBtn).toBeInTheDocument();
   });
+
+  it("renders multilingual indicator badge and cheat sheet options", () => {
+    render(<VoiceScoringConsole onRecordBall={vi.fn()} />);
+    expect(screen.getByText(/EN\/AF Multilingual/i)).toBeInTheDocument();
+    expect(screen.getByText(/Wicket caught \/ Paaltjie gevang/i)).toBeInTheDocument();
+  });
 });

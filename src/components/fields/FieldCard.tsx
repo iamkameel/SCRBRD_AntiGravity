@@ -20,6 +20,8 @@ import { motion } from "framer-motion";
 import { D } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
+import Link from 'next/link';
+
 interface FieldCardProps {
   field: any;
   index: number;
@@ -96,9 +98,11 @@ export function FieldCard({ field, index }: FieldCardProps) {
                <span className="text-xs font-black italic text-zinc-900 dark:text-white" style={{ fontFamily: D.mono }}>64%</span>
             </div>
          </div>
-         <button className="h-12 w-12 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center transition-all hover:bg-emerald-500 hover:text-white group/btn text-zinc-700 dark:text-white">
-            <ArrowUpRight size={18} className="transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
-         </button>
+         <Link href={`/fields/${field.id}`}>
+            <button className="h-12 w-12 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center transition-all hover:bg-emerald-500 hover:text-white group/btn text-zinc-700 dark:text-white cursor-pointer">
+               <ArrowUpRight size={18} className="transition-transform group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+            </button>
+         </Link>
       </div>
     </motion.div>
   );

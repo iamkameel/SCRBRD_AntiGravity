@@ -118,7 +118,7 @@ describe("Facilities, Fields & Groundskeeper Server Actions Security", () => {
             expect(mockAdminDbDocDelete).toHaveBeenCalledWith("fields", "field_doc_100");
             expect(mockRecordAuditLog).toHaveBeenCalledWith(expect.objectContaining({
                 actorId: "facility_user_1",
-                actionType: "LOGISTICS_UPDATE",
+                actionType: "LOGISTICS_DELETE",
                 entityType: "field",
                 entityId: "field_doc_100",
             }));

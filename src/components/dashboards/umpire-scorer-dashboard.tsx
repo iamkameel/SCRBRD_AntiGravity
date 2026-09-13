@@ -26,11 +26,11 @@ export default function UmpireScorerDashboard() {
   useEffect(() => {
     const loadData = async () => {
       if (!user?.email) return;
-      
+
       try {
         const profile = await fetchPersonByEmail(user.email);
         setPerson(profile);
-        
+
         if (profile?.id) {
           const matchData = await fetchOfficialMatches(profile.id);
           if (matchData.success) {
@@ -76,11 +76,11 @@ export default function UmpireScorerDashboard() {
   return (
     <div className="space-y-12 pb-12">
       {/* Strategic Command Banner */}
-      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl" 
+      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-sm"
            style={{ background: D.surf1, borderColor: D.border }}>
         <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group" 
+          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group"
                style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
              <ShieldCheck className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
           </div>
@@ -93,8 +93,8 @@ export default function UmpireScorerDashboard() {
             </p>
           </div>
           <div className="md:ml-auto flex gap-4 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5" style={{ background: D.surf2 }}>CERTIFICATIONS</Button>
-             <Button className="flex-1 md:flex-none rounded-2xl font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-2xl border border-indigo-500/50" style={{ background: D.indigo, color: 'white' }}>MATCH REPORTS</Button>
+             <Button variant="outline" className="flex-1 md:flex-none rounded-2xl font-black text-xs uppercase tracking-widest px-8 h-12 border transition-all hover:bg-black/5" style={{ background: D.surf2 }}>CERTIFICATIONS</Button>
+             <Button className="flex-1 md:flex-none rounded-2xl font-black text-xs uppercase tracking-widest px-10 h-12 shadow-sm border border-indigo-500/50" style={{ background: D.indigo, color: 'white' }}>MATCH REPORTS</Button>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function UmpireScorerDashboard() {
       {/* Fixture Centre Integration */}
       <div className="space-y-6">
         <SectionHeader title="ASSIGNMENT MONITOR" sub="LIVE FIXTURE TRACKING & OFFICIAL VERIFICATION HUB" />
-        <FixtureCentreCard 
+        <FixtureCentreCard
             role="Umpire"
             maxMatches={3}
             assignedMatches={[...matches.upcoming, ...matches.past].map(m => m.id)}
@@ -111,35 +111,35 @@ export default function UmpireScorerDashboard() {
 
       {/* Performance Matrix */}
       <div className="space-y-6">
-        <SectionHeader 
-            title="MATCH OPERATIONS" 
-            sub="LIVE FIXTURE MONITORING & SCORING UNIT" 
+        <SectionHeader
+            title="MATCH OPERATIONS"
+            sub="LIVE FIXTURE MONITORING & SCORING UNIT"
         />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard 
-            icon={Calendar} 
-            label="NEXT ASSIGNMENT" 
+          <MetricCard
+            icon={Calendar}
+            label="NEXT ASSIGNMENT"
             value={nextMatch ? format(new Date(nextMatch.matchDate as string), 'EEE').toUpperCase() : "-"}
             subtitle={nextMatch ? `${format(new Date(nextMatch.matchDate as string), 'HH:mm')} • ${nextMatch.venue || 'TBD'}` : "NO UPCOMING ASSIGNMENTS"}
             color={D.indigo}
           />
-          <MetricCard 
-            icon={Eye} 
-            label="MATCHES VERIFIED" 
+          <MetricCard
+            icon={Eye}
+            label="MATCHES VERIFIED"
             value={matchesOfficiated}
             subtitle="ACTIVE SEASON SESSION TOTAL"
             color={D.emerald}
           />
-          <MetricCard 
-            icon={ClipboardCheck} 
-            label="CERTIFICATION" 
+          <MetricCard
+            icon={ClipboardCheck}
+            label="CERTIFICATION"
             value={certification === "N/A" ? "-" : certification.split(' ')[0].toUpperCase()}
             subtitle={certification === "N/A" ? "NO RECORD FOUND" : certification.toUpperCase()}
             color={D.sky}
           />
-          <MetricCard 
-            icon={Zap} 
-            label="SYSTEM VERSION" 
+          <MetricCard
+            icon={Zap}
+            label="SYSTEM VERSION"
             value="v2.4"
             subtitle="ICC OFFICIAL RULESET UPDATE"
             color={D.violet}
@@ -150,8 +150,8 @@ export default function UmpireScorerDashboard() {
       {/* Operations & Resources Hub */}
       <div className="grid gap-10 md:grid-cols-2">
         {/* Assignment Manifest (Temporal) */}
-        <div 
-          className="rounded-[2.5rem] overflow-hidden shadow-2xl border flex flex-col"
+        <div
+          className="rounded-[2.5rem] overflow-hidden shadow-sm border flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div className="p-8 flex flex-row items-center justify-between border-b" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -159,9 +159,9 @@ export default function UmpireScorerDashboard() {
               <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
                 TEMPORAL MANIFEST
               </h3>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>UPCOMING ASSIGNMENT LOG</p>
+              <p className="text-xs font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>UPCOMING ASSIGNMENT LOG</p>
             </div>
-            <Button variant="ghost" className="h-10 text-[10px] font-black uppercase tracking-[0.2em] px-6 rounded-xl border" style={{ color: D.indigo, background: D.surf1, borderColor: D.border }}>
+            <Button variant="ghost" className="h-10 text-xs font-black uppercase tracking-[0.2em] px-6 rounded-xl border" style={{ color: D.indigo, background: D.surf1, borderColor: D.border }}>
               FULL ROSTER
             </Button>
           </div>
@@ -169,7 +169,7 @@ export default function UmpireScorerDashboard() {
             <AnimatePresence>
                 {matches.upcoming.length > 0 ? (
                 matches.upcoming.slice(0, 3).map((match, i) => (
-                    <motion.div 
+                    <motion.div
                     key={match.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -180,27 +180,27 @@ export default function UmpireScorerDashboard() {
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                         <span className="text-lg font-black tracking-tight uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>{match.homeTeamName || 'HOME'}</span>
-                        <span className="text-[10px] font-black uppercase opacity-30" style={{ color: D.textMuted }}>VS</span>
+                        <span className="text-xs font-black uppercase opacity-30" style={{ color: D.textMuted }}>VS</span>
                         <span className="text-lg font-black tracking-tight uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>{match.awayTeamName || 'AWAY'}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-[9px] h-5 border-white/10 px-3 font-black uppercase tracking-widest" style={{ background: D.surf1, color: D.textMuted }}>{match.matchType?.toUpperCase() || 'MATCH'}</Badge>
-                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>{match.venue?.toUpperCase() || 'LOC: TBD'}</span>
+                        <Badge variant="outline" className="text-[11px] h-5 border-white/10 px-3 font-black uppercase tracking-widest" style={{ background: D.surf1, color: D.textMuted }}>{match.matchType?.toUpperCase() || 'MATCH'}</Badge>
+                        <span className="text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>{match.venue?.toUpperCase() || 'LOC: TBD'}</span>
                         </div>
                     </div>
                     <div className="text-right flex flex-col items-end gap-1 px-6 border-l" style={{ borderColor: D.border }}>
                         <p className="text-lg font-black tracking-tighter italic" style={{ fontFamily: D.head, color: D.indigo }}>{format(new Date(match.matchDate as string), 'MMM d').toUpperCase()}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>{format(new Date(match.matchDate as string), 'HH:mm')}</p>
+                        <p className="text-xs font-black uppercase tracking-widest opacity-40" style={{ color: D.textMuted }}>{format(new Date(match.matchDate as string), 'HH:mm')}</p>
                     </div>
                     </motion.div>
                 ))
                 ) : (
-                    <div 
+                    <div
                     className="py-16 text-center rounded-2xl border border-dashed opacity-40 flex flex-col items-center justify-center gap-4"
                     style={{ background: D.surf2, borderColor: D.border }}
                     >
                     <ShieldCheck size={32} />
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">NO UPCOMING ASSIGNMENTS ASSIGNED</p>
+                    <p className="text-xs font-black uppercase tracking-[0.3em]">NO UPCOMING ASSIGNMENTS ASSIGNED</p>
                     </div>
                 )}
             </AnimatePresence>
@@ -208,8 +208,8 @@ export default function UmpireScorerDashboard() {
         </div>
 
         {/* Tactical Resources Grid */}
-        <div 
-          className="rounded-[2.5rem] overflow-hidden shadow-2xl border flex flex-col"
+        <div
+          className="rounded-[2.5rem] overflow-hidden shadow-sm border flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div className="p-8 flex flex-row items-center justify-between border-b" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -217,7 +217,7 @@ export default function UmpireScorerDashboard() {
               <h3 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
                 TACTICAL UNIT
               </h3>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>OFFICIAL DOCUMENTATION HUB</p>
+              <p className="text-xs font-black uppercase tracking-widest opacity-40 mt-1" style={{ color: D.textMuted }}>OFFICIAL DOCUMENTATION HUB</p>
             </div>
           </div>
           <div className="p-8">
@@ -228,19 +228,19 @@ export default function UmpireScorerDashboard() {
                 { label: "DRS REVIEW", icon: Eye, href: "#", color: D.sky },
                 { label: "FULL ROSTER", icon: Calendar, href: "#", color: D.violet }
               ].map((res, i) => (
-                <Link 
-                  key={i} 
-                  href={res.href} 
+                <Link
+                  key={i}
+                  href={res.href}
                   className="group relative flex flex-col items-start p-8 rounded-2xl border transition-all overflow-hidden"
                   style={{ background: D.surf2, borderColor: D.border }}
                 >
-                  <div 
+                  <div
                     className="absolute -top-4 -right-4 opacity-[0.03] group-hover:opacity-[0.1] transition-all group-hover:scale-125"
                     style={{ color: res.color }}
                   >
                     <res.icon size={100} />
                   </div>
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-all group-hover:scale-110 shadow-lg border"
                     style={{ background: D.surf1, borderColor: `${res.color}30`, color: res.color }}
                   >
@@ -250,10 +250,10 @@ export default function UmpireScorerDashboard() {
                 </Link>
               ))}
             </div>
-            
+
             <div className="mt-6 flex items-center justify-center p-4 border border-dashed rounded-2xl opacity-40 hover:opacity-100 transition-opacity cursor-help">
                 <Info size={14} className="mr-3" />
-                <span className="text-[9px] font-black uppercase tracking-widest">SUBMIT ISSUES TO APP OPERATIONAL CENTRE</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">SUBMIT ISSUES TO APP OPERATIONAL CENTRE</span>
             </div>
           </div>
         </div>

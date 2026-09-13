@@ -49,8 +49,16 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
   const [selectedOrg, setSelectedOrg] = useState<string>('all');
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
 
+  const cleanTeams = useMemo(() => {
+    return teams.filter(t => 
+      !/alpha|beta|test/i.test(t.name) && 
+      !/alpha|beta|test/i.test(t.id) &&
+      !/alpha|beta|test/i.test(t.organisation?.name || '')
+    );
+  }, [teams]);
+
   const filteredTeams = useMemo(() => {
-    return teams.filter(team => {
+    return cleanTeams.filter(team => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = (
         team.name.toLowerCase().includes(searchLower) ||
@@ -63,18 +71,18 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
 
       return matchesSearch && matchesOrg && matchesDivision;
     });
-  }, [teams, searchTerm, selectedOrg, selectedDivision]);
+  }, [cleanTeams, searchTerm, selectedOrg, selectedDivision]);
 
   const metrics = useMemo(() => {
-    const orgsSet = new Set(teams.map(t => t.organisation?.name).filter(Boolean));
-    const divsSet = new Set(teams.map(t => t.ageDivision?.name).filter(Boolean));
+    const orgsSet = new Set(cleanTeams.map(t => t.organisation?.name).filter(Boolean));
+    const divsSet = new Set(cleanTeams.map(t => t.ageDivision?.name).filter(Boolean));
     return {
-      total: teams.length,
+      total: cleanTeams.length,
       organisationsCount: orgsSet.size,
       divisionsCount: divsSet.size,
       filteredCount: filteredTeams.length
     };
-  }, [teams, filteredTeams]);
+  }, [cleanTeams, filteredTeams]);
 
   const hasActiveFilters = searchTerm !== '' || selectedOrg !== 'all' || selectedDivision !== 'all';
 
@@ -91,7 +99,7 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
         <div className="p-4 rounded-2xl border bg-surf1" style={{ background: D.surf1, borderColor: D.border }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Teams</span>
-            <Layers size={16} className="text-indigo-400" />
+            <Layers size={16} className="text-primary" />
           </div>
           <div className="text-2xl font-black text-primary font-mono">{metrics.total}</div>
         </div>
@@ -122,7 +130,7 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
       </div>
 
       {/* Control Strip (Search, Select Filters, View Toggle) */}
-      <div className="p-4 rounded-2xl border space-y-3 shadow-xl" style={{ background: D.surf1, borderColor: D.border }}>
+      <div className="p-4 rounded-2xl border space-y-3 shadow-sm" style={{ background: D.surf1, borderColor: D.border }}>
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           {/* Search Box */}
           <div className="relative flex-1">
@@ -131,7 +139,7 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
               placeholder="Search team, institution, or division..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-9 h-11 rounded-xl border-white/10 bg-white/5 focus:bg-white/10 text-sm"
+              className="pl-10 pr-9 h-11 rounded-xl border-border bg-secondary/60 focus:bg-secondary/60 text-sm"
             />
             {searchTerm && (
               <button 
@@ -147,10 +155,10 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
           <div className="flex flex-wrap items-center gap-3">
             {/* Organisation Filter */}
             <Select value={selectedOrg} onValueChange={setSelectedOrg}>
-              <SelectTrigger className="h-11 text-xs rounded-xl border-white/10 bg-white/5 w-[180px]">
+              <SelectTrigger className="h-11 text-xs rounded-xl border-border bg-secondary/60 w-[180px]">
                 <SelectValue placeholder="All Institutions" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-white/10">
+              <SelectContent className="bg-slate-900 border-border">
                 <SelectItem value="all">All Institutions</SelectItem>
                 {organisations.map(org => (
                   <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
@@ -160,10 +168,10 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
 
             {/* Age Division Filter */}
             <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-              <SelectTrigger className="h-11 text-xs rounded-xl border-white/10 bg-white/5 w-[170px]">
+              <SelectTrigger className="h-11 text-xs rounded-xl border-border bg-secondary/60 w-[170px]">
                 <SelectValue placeholder="All Divisions" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-white/10">
+              <SelectContent className="bg-slate-900 border-border">
                 <SelectItem value="all">All Divisions</SelectItem>
                 {ageDivisions.map(div => (
                   <SelectItem key={div.id} value={div.id}>{div.name}</SelectItem>
@@ -172,17 +180,17 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
             </Select>
 
             {/* View Mode Switcher */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-white/10 flex-shrink-0">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-black/20 border border-border flex-shrink-0">
               <button
                 onClick={() => setViewMode('grid')}
-                className={cn("p-2 rounded-lg transition-all", viewMode === 'grid' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+                className={cn("p-2 rounded-lg transition-all", viewMode === 'grid' ? "bg-secondary/60 text-foreground" : "text-muted-foreground hover:text-white")}
                 title="Grid View"
               >
                 <LayoutGrid size={16} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white")}
+                className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-secondary/60 text-foreground" : "text-muted-foreground hover:text-white")}
                 title="List View"
               >
                 <ListIcon size={16} />
@@ -193,11 +201,11 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
 
         {/* Reset Filter Action */}
         {hasActiveFilters && (
-          <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+          <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
             <span className="text-muted-foreground">Showing {filteredTeams.length} of {teams.length} teams</span>
             <button
               onClick={resetFilters}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+              className="text-primary hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
             >
               <X size={12} />
               Reset Filters
@@ -225,7 +233,7 @@ export function TeamsClient({ teams, organisations, ageDivisions }: TeamsClientP
                 No team units match your current search terms or filter selections.
               </p>
               {hasActiveFilters && (
-                <Button size="sm" variant="outline" onClick={resetFilters} className="mt-2 text-xs rounded-xl border-white/10">
+                <Button size="sm" variant="outline" onClick={resetFilters} className="mt-2 text-xs rounded-xl border-border">
                   Clear Filters
                 </Button>
               )}

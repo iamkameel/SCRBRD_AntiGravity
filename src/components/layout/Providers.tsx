@@ -19,7 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV !== 'production' && <ReactQueryDevtools initialIsOpen={false} />}
+      {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_QUERY_DEVTOOLS === 'true' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
 }

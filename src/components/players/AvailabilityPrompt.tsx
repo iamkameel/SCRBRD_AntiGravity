@@ -30,6 +30,7 @@ interface AvailabilityPromptProps {
 export function AvailabilityPrompt({ matchId, opponent, date, venue, time, onConfirm }: AvailabilityPromptProps) {
   const [step, setStep] = useState<'invite' | 'details' | 'success'>('invite');
   const [status, setStatus] = useState<'available' | 'unavailable' | null>(null);
+  const [transport, setTransport] = useState<'required' | 'own'>('required');
 
   const handleAction = (selectedStatus: 'available' | 'unavailable') => {
     setStatus(selectedStatus);
@@ -145,8 +146,22 @@ export function AvailabilityPrompt({ matchId, opponent, date, venue, time, onCon
                        <Bus className="w-3 h-3 text-primary" /> Transport Requirements
                     </label>
                     <div className="grid grid-cols-2 gap-3 p-1 bg-white/5 rounded-2xl border border-white/5">
-                      <button className="py-3 px-4 rounded-xl bg-primary text-black font-black text-[10px] uppercase tracking-widest">Seat Required</button>
-                      <button className="py-3 px-4 rounded-xl text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors">Own Transport</button>
+                      <button 
+                        onClick={() => setTransport('required')}
+                        className={`py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                          transport === 'required' ? 'bg-primary text-black' : 'text-white/40 hover:text-white'
+                        }`}
+                      >
+                        Seat Required
+                      </button>
+                      <button 
+                        onClick={() => setTransport('own')}
+                        className={`py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                          transport === 'own' ? 'bg-primary text-black' : 'text-white/40 hover:text-white'
+                        }`}
+                      >
+                        Own Transport
+                      </button>
                     </div>
                   </div>
 
@@ -164,7 +179,7 @@ export function AvailabilityPrompt({ matchId, opponent, date, venue, time, onCon
                   {/* Ready Action */}
                   <Button 
                     onClick={() => {
-                      onConfirm('available', { transport: 'required', fitness: 'fit' });
+                      onConfirm('available', { transport, fitness: 'fit' });
                       setStep('success');
                     }}
                     className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest text-xs mt-4"

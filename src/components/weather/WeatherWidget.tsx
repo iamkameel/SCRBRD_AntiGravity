@@ -35,13 +35,40 @@ export interface WeatherImpact {
   }>;
 }
 
+import { useState, useEffect } from "react";
+import { fetchLiveWeather } from "@/services/weatherService";
+
 interface WeatherWidgetProps {
   location: string;
-  weather: WeatherData;
+  weather?: WeatherData;
+  coordinates?: { lat: number; lng: number };
   showImpact?: boolean;
 }
 
-export function WeatherWidget({ location, weather, showImpact = false }: WeatherWidgetProps) {
+export function WeatherWidget({ location, weather: initialWeather, coordinates, showImpact = false }: WeatherWidgetProps) {
+  const [weatherData, setWeatherData] = useState<WeatherData>(initialWeather || {
+    temperature: 22,
+    condition: 'Clear',
+    humidity: 60,
+    windSpeed: 15,
+    windDirection: 'SE',
+    visibility: 10,
+    precipitation: 0
+  });
+
+  useEffect(() => {
+    if (initialWeather) {
+      setWeatherData(initialWeather);
+      return;
+    }
+    let isMounted = true;
+    fetchLiveWeather(location, coordinates?.lat, coordinates?.lng).then(data => {
+      if (isMounted) setWeatherData(data);
+    });
+    return () => { isMounted = false; };
+  }, [location, coordinates?.lat, coordinates?.lng, initialWeather]);
+
+  const weather = weatherData;
   
   const getWeatherIcon = () => {
     switch (weather.condition) {

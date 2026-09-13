@@ -15,7 +15,7 @@ interface SectionHeaderProps {
 export function SectionHeader({ title, sub, icon, color = D.indigo, actions, className = '' }: SectionHeaderProps) {
   return (
     <div
-      className={`flex items-start justify-between gap-6 mb-6 group ${className}`}
+      className={`flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 group ${className}`}
     >
       <div className="flex items-start gap-3.5 min-w-0">
         <div className="relative shrink-0 mt-1">
@@ -32,7 +32,7 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
           <div className="flex items-center gap-2.5">
             {icon && <div className="shrink-0">{icon}</div>}
             <h2
-              className="text-base md:text-lg font-bold tracking-tight text-white truncate"
+              className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground"
               style={{
                 fontFamily: D.head,
                 color: D.textPrimary,
@@ -43,7 +43,7 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
           </div>
           {sub && (
             <p
-              className="text-xs font-medium tracking-normal mt-1 opacity-70 truncate"
+              className="text-sm font-normal leading-relaxed mt-2"
               style={{
                 fontFamily: D.sans,
                 color: D.textMuted,
@@ -56,7 +56,7 @@ export function SectionHeader({ title, sub, icon, color = D.indigo, actions, cla
       </div>
 
       {actions && (
-        <div className="shrink-0 flex items-center gap-3">
+        <div className="shrink-0 flex flex-wrap items-center gap-3">
           {actions}
         </div>
       )}

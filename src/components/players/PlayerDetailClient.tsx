@@ -45,6 +45,9 @@ import { PlayerCareerHistoryTab } from "@/components/charts/lazy";
 import { SkillAssessment, ReadinessScore } from "@/types/schema_v4";
 import { PlayerContextFilterBar, PlayerContextFilterState } from "./PlayerContextFilterBar";
 import { InspectorDrawer, InspectorData } from "./InspectorDrawer";
+import { PlayerRoleArchetypeRadar } from "./PlayerRoleArchetypeRadar";
+import { PlayerPhaseBreakdown } from "./PlayerPhaseBreakdown";
+import { PlayerPitchShotVisualization } from "./PlayerPitchShotVisualization";
 
 interface PlayerDetailClientProps {
   player: Person;
@@ -567,6 +570,7 @@ export function PlayerDetailClient({
               TAB 3: DEVELOPMENT & HISTORY
           ══════════════════════════════════════════════════ */}
           <TabsContent value="development" className="space-y-6">
+            <PlayerRoleArchetypeRadar playingRole={player.role || player.playingRole} assessments={assessments} />
             <PlayerCareerHistoryTab playerId={player.id} />
           </TabsContent>
 
@@ -574,6 +578,11 @@ export function PlayerDetailClient({
               TAB 4: INTELLIGENCE & HEATMAPS
           ══════════════════════════════════════════════════ */}
           <TabsContent value="intelligence" className="space-y-8">
+            <div className="grid grid-cols-1 gap-8">
+              <PlayerPhaseBreakdown playerId={player.id} />
+              <PlayerPitchShotVisualization />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
                 <WagonWheelHeatmap />

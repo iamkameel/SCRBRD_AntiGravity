@@ -94,6 +94,7 @@ export const MODULES = {
     newsfeed: 6,
     inbox: 6,
     media: 4,        // broadcast overlays, highlight clipper, bulletins
+    operatingsystem: 4, // Canonical OS Engine - Operational Staff Only (Tier 1-4)
 } as const;
 
 export type Module = keyof typeof MODULES;
@@ -108,6 +109,27 @@ export function resolveRoleTier(role: Role): number {
  */
 export function hasModuleAccess(role: Role, module: Module): boolean {
     const userTier = resolveRoleTier(role);
+
+    // 0. Canonical Operating System - Operational Staff Only (Tier 1-4)
+    if (module === 'operatingsystem') {
+        const allowedOSRoles: Role[] = [
+            ROLES.SUPERADMIN,
+            ROLES.PLATFORMOPS,
+            ROLES.LEAGUEADMIN,
+            ROLES.TOURNAMENTDIRECTOR,
+            ROLES.SPORTSMASTER,
+            ROLES.SCHOOLADMIN,
+            ROLES.MEDICALOFFICER,
+            ROLES.SCHOOLSTAFF,
+            ROLES.COACH,
+            ROLES.COACHSUPPORT,
+            ROLES.MATCHOFFICIAL,
+            ROLES.GROUNDSKEEPER,
+            ROLES.DRIVER,
+            ROLES.SELECTOR
+        ];
+        return allowedOSRoles.includes(role);
+    }
 
     // 1. Scoring Console exclusively for operational scoring roles
     if (module === 'scoring') {

@@ -22,12 +22,20 @@ export function FieldMap({ location, coordinates, address }: FieldMapProps) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   };
 
-  // Generate embedded map
+  // Generate embedded map using API Key if present, falling back to seamless iframe embed
   const getEmbedUrl = () => {
-    if (coordinates) {
-      return `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d500!2d${coordinates.lng}!3d${coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2s!4v1234567890`;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      if (coordinates) {
+        return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${coordinates.lat},${coordinates.lng}&zoom=16`;
+      }
+      return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(location)}`;
     }
-    return `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(location)}`;
+    // High-fidelity fallback iframe without key requirement
+    if (coordinates) {
+      return `https://maps.google.com/maps?q=${coordinates.lat},${coordinates.lng}&z=16&output=embed`;
+    }
+    return `https://maps.google.com/maps?q=${encodeURIComponent(location)}&z=15&output=embed`;
   };
 
   const getDirectionsUrl = () => {

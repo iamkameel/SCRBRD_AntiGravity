@@ -29,11 +29,11 @@ export default function PlayerDashboard() {
   useEffect(() => {
     const loadData = async () => {
       if (!user?.email) return;
-      
+
       try {
         const profile = await fetchPersonByEmail(user.email);
         setPerson(profile);
-        
+
         if (profile?.teamIds && profile.teamIds.length > 0) {
           const matchData = await fetchMatchesForTeams(profile.teamIds);
           if (matchData.success) {
@@ -74,12 +74,12 @@ export default function PlayerDashboard() {
           <Button
             variant="outline"
             onClick={() => setViewMode('dashboard')}
-            className="rounded-2xl font-black text-[10px] uppercase tracking-widest px-6 h-10 border transition-all hover:bg-black/5"
+            className="rounded-2xl font-black text-xs uppercase tracking-widest px-6 h-10 border transition-all hover:bg-black/5"
             style={{ background: D.surf2 }}
           >
             &larr; Back to Player Dashboard
           </Button>
-          <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider" style={{ fontFamily: D.mono }}>
+          <span className="text-xs font-bold text-primary uppercase tracking-wider" style={{ fontFamily: D.mono }}>
             Biometric Passport Status: Active & Verified
           </span>
         </div>
@@ -91,20 +91,20 @@ export default function PlayerDashboard() {
   return (
     <div className="space-y-12 pb-12">
       {/* Strategic Header */}
-      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-2xl" 
+      <div className="relative p-8 rounded-[2.5rem] border overflow-hidden shadow-sm"
            style={{ background: D.surf1, borderColor: D.border }}>
         <div className="absolute inset-0 opacity-10" style={{ background: D.gradMain }} />
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group" 
+          <div className="h-20 w-20 rounded-2xl flex items-center justify-center shadow-inner group"
                style={{ background: D.surf2, border: `1px solid ${D.border}` }}>
              <Star className="h-10 w-10 text-indigo-500 group-hover:scale-110 transition-transform" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>
               Player <span style={{ color: D.indigo }}>Ops</span>
             </h1>
-            <p className="text-xs font-medium text-slate-400 mt-1" style={{ fontFamily: D.sans }}>
-                Identity: <span className="text-slate-200 font-semibold">{person?.firstName} {person?.lastName}</span> · Operational Status: Verified
+            <p className="text-xs font-medium text-muted-foreground mt-1" style={{ fontFamily: D.sans }}>
+                Identity: <span className="text-foreground font-semibold">{person?.firstName} {person?.lastName}</span> · Operational Status: Verified
             </p>
           </div>
           <div className="md:ml-auto flex gap-3 w-full md:w-auto">
@@ -116,19 +116,19 @@ export default function PlayerDashboard() {
              >
                Passport
              </Button>
-             <Button className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 shadow-lg text-white" style={{ background: D.indigo }}>Match Centre</Button>
+             <Button className="flex-1 md:flex-none rounded-xl font-semibold text-xs px-6 h-10 shadow-lg text-foreground" style={{ background: D.indigo }}>Match Centre</Button>
           </div>
         </div>
       </div>
 
       {/* Strategic Prompt Hub */}
       {nextMatch && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="mb-12"
         >
-          <AvailabilityPrompt 
+          <AvailabilityPrompt
             matchId={nextMatch.id || ''}
             opponent={nextMatch.awayTeamName === 'My Team' ? (nextMatch.homeTeamName || 'Unknown') : (nextMatch.awayTeamName || 'Unknown')}
             date={format(new Date(nextMatch.matchDate as string), 'MMM dd')}
@@ -176,9 +176,9 @@ export default function PlayerDashboard() {
 
       {/* Squad Preparation Section */}
       <div className="space-y-8">
-        <SectionHeader 
-            title="SQUAD PREPARATION" 
-            sub="TEAM SELECTION STATUS & MATCH AVAILABILITY" 
+        <SectionHeader
+            title="SQUAD PREPARATION"
+            sub="TEAM SELECTION STATUS & MATCH AVAILABILITY"
         />
         {/* Availability prompt is already handled at the top, but keeping context here if needed */}
       </div>
@@ -187,20 +187,20 @@ export default function PlayerDashboard() {
       <div className="grid gap-10 md:grid-cols-5">
         {/* Performance Visualization Unit (3/5) */}
         <div
-          className="md:col-span-3 overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+          className="md:col-span-3 overflow-hidden rounded-[2.5rem] border shadow-sm flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div className="flex items-center justify-between p-8 border-b" style={{ borderColor: D.border, background: D.surf2 }}>
             <div>
-              <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Performance Trend</h3>
-              <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Development feedback loop</p>
+              <h3 className="text-base font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>Performance Trend</h3>
+              <p className="text-xs font-medium text-muted-foreground mt-0.5" style={{ fontFamily: D.sans }}>Development feedback loop</p>
             </div>
             <div className="p-3 rounded-xl shadow-inner border" style={{ background: D.surf1, borderColor: D.border }}>
                 <TrendingUp size={20} className="text-emerald-500" />
             </div>
           </div>
           <div className="p-10 flex-1 flex flex-col items-center justify-center min-h-[300px]">
-            <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-2xl relative" style={{ background: D.surf2, border: `2px solid ${D.border}` }}>
+            <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-sm relative" style={{ background: D.surf2, border: `2px solid ${D.border}` }}>
                <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin" />
                <Trophy className="h-8 w-8 opacity-20" />
             </div>
@@ -212,7 +212,7 @@ export default function PlayerDashboard() {
 
         {/* Temporal Schedule Unit (2/5) */}
         <div
-          className="md:col-span-2 overflow-hidden rounded-[2.5rem] border shadow-2xl flex flex-col"
+          className="md:col-span-2 overflow-hidden rounded-[2.5rem] border shadow-sm flex flex-col"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           <div className="p-8 border-b flex items-center gap-4" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -220,8 +220,8 @@ export default function PlayerDashboard() {
                 <Calendar size={20} />
              </div>
              <div>
-               <h3 className="text-base font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>Upcoming</h3>
-               <p className="text-xs font-medium text-slate-400 mt-0.5" style={{ fontFamily: D.sans }}>Temporal event log</p>
+               <h3 className="text-base font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>Upcoming</h3>
+               <p className="text-xs font-medium text-muted-foreground mt-0.5" style={{ fontFamily: D.sans }}>Temporal event log</p>
              </div>
           </div>
           <div className="p-8 space-y-4">
@@ -236,7 +236,7 @@ export default function PlayerDashboard() {
                 <p className="text-xl font-black uppercase italic tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>TEAM NETS</p>
                 <div className="flex items-center gap-3 mt-2 opacity-60">
                     <Clock size={12} style={{ color: D.indigo }} />
-                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: D.textMuted }}>TODAY 16:00 · MAIN GROUNDS</span>
+                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: D.textMuted }}>TODAY 16:00 · MAIN GROUNDS</span>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" style={{ color: D.indigo }} />
@@ -254,7 +254,7 @@ export default function PlayerDashboard() {
                   <p className="text-xl font-black uppercase italic tracking-tighter" style={{ fontFamily: D.head, color: D.textPrimary }}>MATCH DAY</p>
                   <div className="flex items-center gap-3 mt-2 opacity-60">
                       <Calendar size={12} style={{ color: D.indigo }} />
-                      <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: D.textMuted }}>
+                      <span className="text-xs font-black uppercase tracking-widest" style={{ color: D.textMuted }}>
                          {format(new Date(nextMatch.matchDate as string), 'EEEE, HH:mm').toUpperCase()} · {nextMatch.venue?.toUpperCase() || 'HOME GROUND'}
                       </span>
                   </div>
@@ -264,7 +264,7 @@ export default function PlayerDashboard() {
             ) : (
                 <div className="p-12 text-center rounded-2xl border border-dashed opacity-40 flex flex-col items-center gap-3" style={{ background: D.surf2, borderColor: D.border }}>
                     <ShieldCheck size={32} />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Temporal flow stable. No upcoming events.</p>
+                    <p className="text-xs font-black uppercase tracking-widest">Temporal flow stable. No upcoming events.</p>
                 </div>
             )}
           </div>
@@ -274,7 +274,7 @@ export default function PlayerDashboard() {
       {/* Fixture Centre Integration */}
       <div className="space-y-6">
         <SectionHeader title="MATCH MONITOR" sub="LIVE FIXTURE TRACKING & PERFORMANCE HISTORY" />
-        <FixtureCentreCard 
+        <FixtureCentreCard
             role="Player"
             maxMatches={3}
             teamId={person?.teamIds?.[0]}

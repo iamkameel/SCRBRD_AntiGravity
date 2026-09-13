@@ -124,3 +124,29 @@ export async function updateEquipmentAction(
     };
   }
 }
+
+export async function deleteEquipmentAction(
+  equipmentId: string
+): Promise<EquipmentActionState> {
+  try {
+    const user = await requireUser('logistics');
+
+    await adminDb.collection('equipment').doc(equipmentId).delete();
+
+    await recordAuditLog({
+      actorId: user.uid,
+      actorName: user.email || 'Logistics Coordinator',
+      actionType: 'LOGISTICS_DELETE',
+      entityType: 'equipment',
+      entityId: equipmentId,
+      description: `Deleted equipment asset ID: ${equipmentId}`,
+    });
+
+    revalidatePath('/equipment');
+    return { success: true };
+  } catch (error: unknown) {
+    return {
+      error: error instanceof Error ? error.message : 'Failed to delete equipment'
+    };
+  }
+}

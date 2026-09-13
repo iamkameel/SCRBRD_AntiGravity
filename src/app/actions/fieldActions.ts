@@ -165,7 +165,7 @@ export async function deleteFieldAction(id: string): Promise<{ success: boolean;
     await recordAuditLog({
       actorId: user.uid,
       actorName: user.email || 'Facility Admin',
-      actionType: 'LOGISTICS_UPDATE',
+      actionType: 'LOGISTICS_DELETE',
       entityType: 'field',
       entityId: id,
       description: `Deleted field facility ${id}`,

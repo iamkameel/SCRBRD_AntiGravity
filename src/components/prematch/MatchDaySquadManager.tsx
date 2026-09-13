@@ -20,7 +20,9 @@ import {
   Clock, 
   Sparkles,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { saveMatchDaySquadAction } from "@/app/actions/preMatchActions";
 
 export interface SquadPlayer {
   id: string;
@@ -97,7 +101,55 @@ export function MatchDaySquadManager({ hideHeader = false }: MatchDaySquadManage
   const standbyList = players.filter(p => p.status === 'standby');
 
   const handleToggleLock = () => {
-    setIsLocked(prev => !prev);
+    const nextLocked = !isLocked;
+    setIsLocked(nextLocked);
+    if (nextLocked) {
+      toast.success(`Playing XI locked & saved (v${version}.0 Selection Package)`, {
+        description: "Official team sheet finalized for umpire and scorer review."
+      });
+    } else {
+      toast.info("Match-Day Squad unlocked for editing.");
+    }
+  };
+
+  const handleMovePlayer = (index: number, direction: 'up' | 'down') => {
+    if (isLocked) return;
+    const xi = [...selectedXi];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= xi.length) return;
+
+    // Swap orderIndex
+    const tempOrder = xi[index].orderIndex;
+    xi[index].orderIndex = xi[targetIdx].orderIndex;
+    xi[targetIdx].orderIndex = tempOrder;
+
+    setPlayers(prev => {
+      const remaining = prev.filter(p => p.status !== 'selected_xi');
+      return [...remaining, ...xi];
+    });
+    toast.success(`Batting order updated: ${xi[index].name} moved to #${xi[index].orderIndex}`);
+  };
+
+  const handleSetCaptain = (playerId: string) => {
+    if (isLocked) return;
+    setPlayers(prev => prev.map(p => ({
+      ...p,
+      isCaptain: p.id === playerId ? true : (p.id !== playerId && p.isCaptain ? false : p.isCaptain),
+      isViceCaptain: p.id === playerId ? false : p.isViceCaptain
+    })));
+    const targetP = players.find(p => p.id === playerId);
+    toast.success(`${targetP?.name} designated as Captain (C)`);
+  };
+
+  const handleSetViceCaptain = (playerId: string) => {
+    if (isLocked) return;
+    setPlayers(prev => prev.map(p => ({
+      ...p,
+      isViceCaptain: p.id === playerId ? true : (p.id !== playerId && p.isViceCaptain ? false : p.isViceCaptain),
+      isCaptain: p.id === playerId ? false : p.isCaptain
+    })));
+    const targetP = players.find(p => p.id === playerId);
+    toast.success(`${targetP?.name} designated as Vice-Captain (VC)`);
   };
 
   const handlePerformReplacement = () => {
@@ -134,6 +186,7 @@ export function MatchDaySquadManager({ hideHeader = false }: MatchDaySquadManage
     setOutgoingPlayerId('');
     setIncomingPlayerId('');
     setReplaceReason('');
+    toast.success(`Logged Replacement: ${outP.name} replaced by ${inP.name}`);
   };
 
   return (
@@ -260,9 +313,31 @@ export function MatchDaySquadManager({ hideHeader = false }: MatchDaySquadManage
                 className="flex items-center justify-between p-3.5 rounded-2xl bg-black/30 border border-white/5 hover:border-sky-500/30 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center font-mono text-xs font-black text-sky-400">
-                    {idx + 1}
+                  {/* Order Index & Reorder Controls */}
+                  <div className="flex items-center gap-1">
+                    <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center font-mono text-xs font-black text-sky-400">
+                      {idx + 1}
+                    </div>
+                    {!isLocked && (
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          disabled={idx === 0}
+                          onClick={() => handleMovePlayer(idx, 'up')}
+                          className="p-0.5 text-zinc-400 hover:text-white disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          disabled={idx === selectedXi.length - 1}
+                          onClick={() => handleMovePlayer(idx, 'down')}
+                          className="p-0.5 text-zinc-400 hover:text-white disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
+
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-black text-white">{p.name}</span>
@@ -287,7 +362,33 @@ export function MatchDaySquadManager({ hideHeader = false }: MatchDaySquadManage
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {/* Leadership Quick Action Buttons */}
+                  {!isLocked && (
+                    <div className="flex items-center gap-1 opacity-0 hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleSetCaptain(p.id)}
+                        className={`text-[9px] font-black px-2 py-0.5 rounded-lg border transition-all ${
+                          p.isCaptain 
+                            ? 'bg-amber-500 text-black border-amber-400' 
+                            : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        (C)
+                      </button>
+                      <button
+                        onClick={() => handleSetViceCaptain(p.id)}
+                        className={`text-[9px] font-black px-2 py-0.5 rounded-lg border transition-all ${
+                          p.isViceCaptain 
+                            ? 'bg-sky-500 text-black border-sky-400' 
+                            : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        (VC)
+                      </button>
+                    </div>
+                  )}
+
                   {p.medicalNote && (
                     <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30 text-[10px] font-bold hidden sm:flex items-center gap-1">
                       <ShieldAlert className="w-3 h-3" /> {p.medicalNote}

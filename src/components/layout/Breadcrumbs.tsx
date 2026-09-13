@@ -113,7 +113,7 @@ export function Breadcrumbs() {
                 )}
               </li>
               {!isLast && (
-                <ChevronRight size={10} className="opacity-20 translate-y-[-0.5px]" style={{ color: D.textMuted }} />
+                <li aria-hidden="true"><ChevronRight size={12} style={{ color: D.textMuted }} /></li>
               )}
             </Fragment>
           );

@@ -67,7 +67,7 @@ export default function CollapsibleNavGroup({
               style={{
                 background: hasActiveLink ? `${accent}20` : 'transparent',
                 borderColor: hasActiveLink ? accent : 'transparent',
-                color: hasActiveLink ? accent : D.textMuted,
+                color: hasActiveLink ? "hsl(var(--primary))" : D.textMuted,
               }}
               onClick={() => setIsOpen(!isOpen)}
             >
@@ -136,7 +136,7 @@ export default function CollapsibleNavGroup({
             }`}
             style={{
               background: hasActiveLink ? `${accent}20` : 'transparent',
-              color: hasActiveLink ? accent : D.textMuted,
+              color: hasActiveLink ? "hsl(var(--primary))" : D.textMuted,
             }}
           >
             {GroupIcon && <GroupIcon size={16} />}
@@ -144,7 +144,7 @@ export default function CollapsibleNavGroup({
           <span
             className="text-[13px] font-medium truncate"
             style={{
-              color: hasActiveLink ? accent : D.textMuted,
+              color: hasActiveLink ? "hsl(var(--primary))" : D.textMuted,
               fontFamily: D.head,
             }}
           >
@@ -196,7 +196,7 @@ export default function CollapsibleNavGroup({
                       `}
                       style={{
                         background: isActive ? `${accent}15` : 'transparent',
-                        color: isActive ? accent : D.textMuted,
+                        color: isActive ? "hsl(var(--primary))" : D.textMuted,
                         border: isActive ? `1px solid ${accent}30` : '1px solid transparent',
                       }}
                     >
@@ -213,7 +213,7 @@ export default function CollapsibleNavGroup({
                           className={`transition-all shrink-0 ${
                             isActive ? 'scale-110 opacity-100' : 'opacity-65 group-hover/link:opacity-100'
                           }`}
-                          style={{ color: isActive ? accent : 'inherit' }}
+                          style={{ color: isActive ? "hsl(var(--primary))" : 'inherit' }}
                         />
                       )}
 

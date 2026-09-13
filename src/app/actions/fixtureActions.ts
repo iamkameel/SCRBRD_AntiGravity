@@ -36,23 +36,30 @@ export async function checkFixtureConflictsAction(
 ): Promise<{ hasConflicts: boolean; conflicts: string[] }> {
     try {
         const existingMatches = await fixtureService.getAll();
+        if (!date || !time) return { hasConflicts: false, conflicts: [] };
+
         const startDateTime = new Date(`${date}T${time}`);
+        if (isNaN(startDateTime.getTime())) return { hasConflicts: false, conflicts: [] };
+
         const windowStart = new Date(startDateTime.getTime() - 3 * 60 * 60 * 1000);
         const windowEnd = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000);
 
         const conflicts: string[] = [];
 
         existingMatches.forEach(match => {
-            const matchTime = new Date(match.scheduledStartAt).getTime();
-            if (matchTime >= windowStart.getTime() && matchTime <= windowEnd.getTime()) {
-                // Check Venue
-                // Note: venueId in GQL is currently named venue.id or similar if available, or just check names for now 
-                // but checking by ID is better if we have it.
-                // Assuming venue reference exists.
+            const dateStr = (match as any).scheduledStartAt || (match as any).dateTime || (match as any).matchDate;
+            if (!dateStr) return;
 
-                // Check Teams
-                if (match.homeTeam.name === homeTeamId || match.awayTeam.name === homeTeamId) {
-                    conflicts.push(`Home team is already playing: ${match.homeTeam.name} vs ${match.awayTeam.name}`);
+            const matchTime = new Date(dateStr).getTime();
+            if (!isNaN(matchTime) && matchTime >= windowStart.getTime() && matchTime <= windowEnd.getTime()) {
+                const matchHomeId = (match as any).homeTeamId || match.homeTeam?.name || '';
+                const matchAwayId = (match as any).awayTeamId || match.awayTeam?.name || '';
+
+                if (matchHomeId === homeTeamId || matchAwayId === homeTeamId) {
+                    conflicts.push(`Home team is already playing around this time: ${match.homeTeam?.name || matchHomeId} vs ${match.awayTeam?.name || matchAwayId}`);
+                }
+                if (matchHomeId === awayTeamId || matchAwayId === awayTeamId) {
+                    conflicts.push(`Away team is already playing around this time: ${match.homeTeam?.name || matchHomeId} vs ${match.awayTeam?.name || matchAwayId}`);
                 }
             }
         });
@@ -119,6 +126,12 @@ export async function createSmartFixtureAction(
         const awayTeamId = formData.get('awayTeamId') as string;
         const venueId = formData.get('venueId') as string;
 
+        const overrideConflicts = formData.get('overrideConflicts') === 'true';
+
+        if (!date || !time || !homeTeamId || !awayTeamId) {
+            return { error: 'Missing required fixture fields (Date, Time, Home Team, Away Team).' };
+        }
+
         // Re-check conflicts server-side
         const { hasConflicts, conflicts } = await checkFixtureConflictsAction(
             date,
@@ -128,67 +141,84 @@ export async function createSmartFixtureAction(
             awayTeamId
         );
 
-        if (hasConflicts) {
+        if (hasConflicts && !overrideConflicts) {
             return { error: 'Scheduling conflicts detected', conflicts };
         }
 
-        // Fetch home team to get division/league context
-        const homeTeam = await fetchTeamById(homeTeamId);
-        let divisionId = homeTeam?.divisionId;
+        // Fetch home team to get division/league context safely
+        let divisionId: string | undefined = undefined;
         let leagueId = '';
         let divisionName = '';
 
-        if (divisionId) {
-            const division = await fetchDivisionById(divisionId);
-            if (division) {
-                leagueId = division.leagueId;
-                divisionName = division.name;
+        try {
+            const homeTeam = await fetchTeamById(homeTeamId);
+            if (homeTeam?.divisionId) {
+                divisionId = homeTeam.divisionId;
+                const division = await fetchDivisionById(divisionId);
+                if (division) {
+                    leagueId = division.leagueId || '';
+                    divisionName = division.name || '';
+                }
             }
+        } catch (err) {
+            console.warn('Error resolving division:', err);
         }
 
-        const matchData: Partial<Match> = {
+        const matchData: Record<string, any> = {
             dateTime: `${date}T${time}:00.000Z`, // ISO string
             matchDate: `${date}T${time}:00.000Z`, // For compatibility
             homeTeamId,
             awayTeamId,
-            fieldId: venueId,
-            matchType: formData.get('matchType') as any,
+            fieldId: venueId || '',
+            matchType: (formData.get('matchType') as any) || 'T20',
             overs: Number(formData.get('overs')) || 20,
             status: 'scheduled',
-            umpires: formData.get('umpireIds') ? (formData.get('umpireIds') as string).split(',') : [],
-            scorer: (formData.get('scorerId') as string) === 'unassigned' ? '' : (formData.get('scorerId') as string),
-            homeTeamName: formData.get('homeTeamName') as string, // Optimistic
-            awayTeamName: formData.get('awayTeamName') as string, // Optimistic
-            division: divisionName, // Store name for display
-            divisionId: divisionId, // Store ID for linking
-            leagueId: leagueId,
+            umpires: formData.get('umpireIds') ? (formData.get('umpireIds') as string).split(',').filter(Boolean) : [],
+            scorer: (formData.get('scorerId') as string) === 'unassigned' ? '' : (formData.get('scorerId') as string) || '',
+            homeTeamName: (formData.get('homeTeamName') as string) || '', // Optimistic
+            awayTeamName: (formData.get('awayTeamName') as string) || '', // Optimistic
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
 
+        if (divisionName) matchData.division = divisionName;
+        if (divisionId) matchData.divisionId = divisionId;
+        if (leagueId) matchData.leagueId = leagueId;
+
+        // Remove any undefined values as Firestore throws on undefined
+        Object.keys(matchData).forEach(key => {
+            if (matchData[key] === undefined) {
+                delete matchData[key];
+            }
+        });
+
         const matchId = await createDocument('matches', matchData);
 
         if (!matchId) {
-            return { error: 'Failed to create match record' };
+            return { error: 'Failed to create match record in database' };
         }
 
         revalidatePath('/fixtures');
 
-        // Record Audit Log
-        await recordAuditLog({
-            actorId: 'SPORTSMASTER',
-            actorName: 'Sportsmaster',
-            actionType: 'SQUAD_CONFIRMED', // Closest type for now
-            entityType: 'match',
-            entityId: matchId,
-            description: `Smart Fixture created: ${matchData.homeTeamName} vs ${matchData.awayTeamName} on ${date}`,
-            afterState: { matchId, homeTeamId, awayTeamId, date }
-        });
+        // Record Audit Log safely
+        try {
+            await recordAuditLog({
+                actorId: 'SPORTSMASTER',
+                actorName: 'Sportsmaster',
+                actionType: 'SQUAD_CONFIRMED', // Closest type for now
+                entityType: 'match',
+                entityId: matchId,
+                description: `Smart Fixture created: ${matchData.homeTeamName || homeTeamId} vs ${matchData.awayTeamName || awayTeamId} on ${date}`,
+                afterState: { matchId, homeTeamId, awayTeamId, date }
+            });
+        } catch (auditErr) {
+            console.warn('Failed to record audit log:', auditErr);
+        }
 
         return { success: true, matchId };
     } catch (error) {
         console.error('Error creating fixture:', error);
-        return { error: 'Failed to create fixture' };
+        return { error: error instanceof Error ? error.message : 'Failed to create fixture' };
     }
 }
 

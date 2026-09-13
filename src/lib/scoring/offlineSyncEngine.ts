@@ -16,6 +16,8 @@ export interface QueuedBallEvent {
     createdAt: number;
     status: 'pending' | 'syncing' | 'failed';
     retryCount: number;
+    epoch?: number;
+    scorerId?: string;
 }
 
 export type SyncState = 'online' | 'offline' | 'syncing';
@@ -87,7 +89,11 @@ class OfflineSyncEngine {
     /**
      * Enqueue a ball event to IndexedDB with an idempotency key.
      */
-    public async enqueueBallEvent(fixtureId: string, payload: Record<string, any>): Promise<string> {
+    public async enqueueBallEvent(
+        fixtureId: string,
+        payload: Record<string, any>,
+        opts: { epoch?: number; scorerId?: string } = {}
+    ): Promise<string> {
         const db = await this.initDB();
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(2, 8);
@@ -103,6 +109,8 @@ class OfflineSyncEngine {
             createdAt: timestamp,
             status: 'pending',
             retryCount: 0,
+            epoch: opts.epoch,
+            scorerId: opts.scorerId,
         };
 
         return new Promise((resolve, reject) => {

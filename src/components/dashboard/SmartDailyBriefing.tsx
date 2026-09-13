@@ -70,8 +70,8 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
         className="rounded-2xl border p-8 flex flex-col items-center justify-center gap-3 transition-all"
         style={{ background: D.surf1, borderColor: D.border }}
       >
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-        <p className="text-xs font-semibold text-slate-400">Loading your daily briefing…</p>
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <p className="text-xs font-semibold text-muted-foreground">Loading your daily briefing…</p>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in fade-in duration-500">
       {/* ── Main Strategic Briefing Card ── */}
       <div
-        className="lg:col-span-2 rounded-2xl border overflow-hidden relative group shadow-xl p-6 md:p-8"
+        className="lg:col-span-2 self-start rounded-2xl border overflow-hidden relative group shadow-sm p-6 md:p-8"
         style={{
           background: D.surf1,
           borderColor: D.border,
@@ -92,28 +92,28 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
       >
         {/* Subtle Background Glow */}
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:opacity-[0.06] transition-opacity duration-700" aria-hidden="true">
-          <Sparkles className="h-32 w-32 text-indigo-400" />
+          <Sparkles className="h-32 w-32 text-primary" />
         </div>
 
         <div className="relative z-10 space-y-6">
           {/* Header & Greeting */}
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-primary border border-indigo-500/20">
               <Sparkles className="h-3.5 w-3.5" />
               <span>Daily briefing</span>
             </div>
 
             <h2
-              className="text-lg md:text-xl font-bold text-white tracking-tight"
+              className="text-lg md:text-xl font-bold text-foreground tracking-tight"
               style={{ fontFamily: D.head }}
             >
-              {getGreeting()}, <span className="text-indigo-400">{userName || 'there'}</span>
+              {getGreeting()}, <span className="text-primary">{userName || 'there'}</span>
             </h2>
 
             {roleLabel && (
-              <p className="text-xs font-medium text-slate-400 flex items-center gap-2" style={{ fontFamily: D.sans }}>
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-2" style={{ fontFamily: D.sans }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                Your role: <span className="text-slate-200 font-semibold">{roleLabel}</span>
+                Your role: <span className="text-foreground font-semibold">{roleLabel}</span>
               </p>
             )}
           </div>
@@ -148,11 +148,11 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
                       >
                         {isWarning ? <Bell className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
                       </div>
-                      <p className="text-xs font-semibold text-slate-200 leading-normal flex-1" style={{ fontFamily: D.sans }}>
+                      <p className="text-xs font-semibold text-foreground leading-normal flex-1" style={{ fontFamily: D.sans }}>
                         {text}
                       </p>
                       <ArrowRight
-                        className="h-4 w-4 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-slate-400"
+                        className="h-4 w-4 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-muted-foreground"
                       />
                     </motion.div>
                   );
@@ -163,7 +163,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
                   style={{ background: D.surf2, borderColor: D.border }}
                 >
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <p className="text-xs font-semibold text-slate-300" style={{ fontFamily: D.sans }}>
+                  <p className="text-xs font-semibold text-muted-foreground" style={{ fontFamily: D.sans }}>
                     No updates to show right now. Check your fixtures to plan what’s next.
                   </p>
                 </div>
@@ -175,7 +175,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
           <div className="flex flex-wrap gap-3 pt-2">
             <Link href="/analytics">
               <button
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white transition-all shadow-md hover:opacity-90 active:scale-95"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-foreground transition-all shadow-md hover:opacity-90 active:scale-95"
                 style={{ background: D.indigo, color: "#101610", fontFamily: D.sans }}
               >
                 <Activity className="h-4 w-4" />
@@ -185,7 +185,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
             </Link>
             <Link href="/matches/add">
               <button
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-slate-200 border transition-all hover:bg-white/5 active:scale-95"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-foreground border transition-all hover:bg-white/5 active:scale-95"
                 style={{
                   fontFamily: D.sans,
                   borderColor: D.border,
@@ -193,7 +193,7 @@ export function SmartDailyBriefing({ userName, role }: SmartDailyBriefingProps) 
                 }}
               >
                 <Calendar className="h-4 w-4 text-amber-400" />
-                Initialize Match
+                Create match
               </button>
             </Link>
           </div>

@@ -26,9 +26,9 @@ export function TopPerformersList({ title, performers, icon }: TopPerformersList
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <div className="h-9 w-9 rounded-xl flex items-center justify-center border border-white/5" style={{ background: D.surf2 }}>
-          {icon || <Trophy className="h-4 w-4 text-slate-400" />}
+          {icon || <Trophy className="h-4 w-4 text-muted-foreground" />}
         </div>
-        <p className="text-xs font-medium text-slate-400" style={{ fontFamily: D.sans }}>
+        <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: D.sans }}>
           Data Currently Unavailable
         </p>
       </div>
@@ -40,18 +40,18 @@ export function TopPerformersList({ title, performers, icon }: TopPerformersList
 
   return (
     <div 
-      className="rounded-2xl border overflow-hidden shadow-xl transition-all"
+      className="rounded-2xl border overflow-hidden shadow-sm transition-all"
       style={{ background: D.surf1, borderColor: D.border }}
     >
       {/* Card Header */}
       <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: D.border, background: D.surf2 }}>
-        <h3 className="flex items-center gap-2.5 text-xs font-bold text-white tracking-wider uppercase" style={{ fontFamily: D.head }}>
-          <div className="p-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-indigo-400">
+        <h3 className="flex items-center gap-2.5 text-xs font-bold text-foreground tracking-wider uppercase" style={{ fontFamily: D.head }}>
+          <div className="p-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-primary">
             {icon || <Trophy className="h-4 w-4 text-amber-400" />}
           </div>
           <span>{title}</span>
         </h3>
-        <span className="text-[10px] font-bold tracking-widest text-slate-400 px-2.5 py-1 rounded-full border border-white/5 bg-white/5 uppercase" style={{ fontFamily: D.mono }}>
+        <span className="text-xs font-bold tracking-widest text-muted-foreground px-2.5 py-1 rounded-full border border-white/5 bg-white/5 uppercase" style={{ fontFamily: D.mono }}>
           TOP 3
         </span>
       </div>
@@ -78,8 +78,8 @@ export function TopPerformersList({ title, performers, icon }: TopPerformersList
                       isGold 
                         ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 border-amber-300/40 shadow-amber-500/20' 
                         : isSilver
-                          ? 'bg-slate-700/80 text-slate-200 border-slate-600'
-                          : 'bg-slate-800/80 text-slate-300 border-slate-700/80'
+                          ? 'bg-slate-700/80 text-foreground border-slate-600'
+                          : 'bg-slate-800/80 text-muted-foreground border-slate-700/80'
                     }`}
                     style={{ fontFamily: D.mono }}
                   >
@@ -89,12 +89,12 @@ export function TopPerformersList({ title, performers, icon }: TopPerformersList
                   {/* Player Info */}
                   <div>
                     <span 
-                      className="text-xs font-bold text-slate-200 group-hover:text-indigo-300 transition-colors block leading-snug"
+                      className="text-xs font-bold text-foreground group-hover:text-indigo-300 transition-colors block leading-snug"
                       style={{ fontFamily: D.sans }}
                     >
                       {performer.name}
                     </span>
-                    <span className="text-[10px] font-medium text-slate-400 block" style={{ fontFamily: D.sans }}>
+                    <span className="text-xs font-medium text-muted-foreground block" style={{ fontFamily: D.sans }}>
                       Verified Squad Athlete
                     </span>
                   </div>
@@ -104,12 +104,12 @@ export function TopPerformersList({ title, performers, icon }: TopPerformersList
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <span 
-                      className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors"
+                      className="text-sm font-bold text-foreground group-hover:text-indigo-300 transition-colors"
                       style={{ fontFamily: D.mono }}
                     >
                       {performer.value}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-400 ml-1 uppercase tracking-wider" style={{ fontFamily: D.sans }}>
+                    <span className="text-xs font-semibold text-muted-foreground ml-1 uppercase tracking-wider" style={{ fontFamily: D.sans }}>
                       {performer.stat}
                     </span>
                   </div>

@@ -11,8 +11,6 @@ import { fetchPersonByEmail } from "@/app/actions/personActions";
 import { Person } from "@/types/firestore";
 import { DashboardFilterBar } from "./DashboardFilterBar";
 import { SmartDailyBriefing } from "./SmartDailyBriefing";
-import { LiveTelemetryTicker } from "./LiveTelemetryTicker";
-import { SchoolReadinessGauge } from "./SchoolReadinessGauge";
 import FixtureCentreCard from "./FixtureCentreCard";
 import { 
   Loader2, Radio, Layers, Activity, Users, Trophy, Truck, Shield, Sparkles, UserCheck, RefreshCw, ChevronRight, Zap, Calendar, HeartPulse, Bus, Award, CheckCircle2
@@ -35,7 +33,7 @@ import { PlayerMicroPlanGenerator } from "../coaches/PlayerMicroPlanGenerator";
 import { GlobalRankingsClient } from "@/components/charts/lazy";
 
 export default function DashboardView() {
-  const { role: authRole } = usePermissions();
+  const { role: authRole, canAccess } = usePermissions();
   const { user } = useAuth();
   const { filters, setFilters } = useDashboard();
   const email = user?.email ?? null;
@@ -52,7 +50,7 @@ export default function DashboardView() {
   const [activeDeck, setActiveDeck] = useState<string>(filters.activeDeckMode || "operations");
 
   // Effective Role (simulated or authenticated)
-  const activeRole = filters.simulatedRole || authRole;
+  const activeRole = authRole;
 
   if (loading) {
     return (
@@ -108,73 +106,46 @@ export default function DashboardView() {
     { id: "coaching", label: "Development", icon: Users, color: D.amber },
     { id: "rankings", label: "Rankings", icon: Trophy, color: D.violet },
     { id: "logistics", label: "Operations", icon: Truck, color: D.sky },
-  ];
+  ].filter(tab => tab.id === "operations" || tab.id === "competition" || (tab.id === "squads" && canAccess("squad")) || (tab.id === "coaching" && canAccess("training")) || (tab.id === "rankings" && canAccess("powerindex")) || (tab.id === "logistics" && canAccess("logistics")));
+  const visibleDeck = deckTabs.some(tab => tab.id === activeDeck) ? activeDeck : "operations";
 
   return (
     <div className="pb-8 space-y-6 animate-in fade-in duration-500">
       <DashboardWelcome />
-      {/* 1. Realtime Match Telemetry Ticker */}
-      <LiveTelemetryTicker />
-
-      {/* 2. Global Filter Bar & Persona Simulator Switcher */}
       <DashboardFilterBar />
 
-      {/* 3. Persona Simulator Active Notice Banner (if role is overridden) */}
-      <AnimatePresence>
-        {filters.simulatedRole && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex items-center justify-between p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/10 shadow-lg"
-          >
-            <div className="flex items-center gap-3">
-              <UserCheck className="h-5 w-5 text-indigo-500 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight" style={{ fontFamily: D.head }}>
-                  Previewing another role
-                </p>
-                <p className="text-[11px] text-indigo-950 dark:text-indigo-200 font-medium" style={{ fontFamily: D.sans }}>
-                  Dashboard view: <span className="font-bold text-indigo-600 dark:text-white uppercase">{activeRole}</span>
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setFilters({ simulatedRole: undefined })}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-xs font-semibold text-indigo-900 dark:text-white transition-all"
-            >
-              <RefreshCw className="h-3.5 w-3.5 text-indigo-500" />
-              Reset view
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 4. Global OS Operational Readiness Gauge */}
-      <SchoolReadinessGauge />
-
-      {/* 5. Strategic 6-Layer OS Deck Navigation Tabs */}
+      {/* Available sections follow the active role. */}
       <div className="space-y-6">
         <div
           role="tablist" aria-label="Dashboard sections"
-          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-xl backdrop-blur-xl no-scrollbar"
+          onKeyDown={event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            const index = deckTabs.findIndex(tab => tab.id === visibleDeck);
+            const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? deckTabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + deckTabs.length) % deckTabs.length;
+            const id = deckTabs[nextIndex].id;
+            setActiveDeck(id);
+            setFilters({ activeDeckMode: id as typeof filters.activeDeckMode });
+            document.getElementById(`dashboard-tab-${id}`)?.focus();
+          }}
+          className="flex items-center gap-1.5 p-1.5 rounded-2xl border overflow-x-auto shadow-sm no-scrollbar"
           style={{ background: D.surf1, borderColor: D.border }}
         >
           {deckTabs.map((tab) => {
-            const isActive = activeDeck === tab.id;
+            const isActive = visibleDeck === tab.id;
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
-                role="tab" aria-selected={activeDeck === tab.id} aria-controls="dashboard-panel" id={`dashboard-tab-${tab.id}`}
+                tabIndex={visibleDeck === tab.id ? 0 : -1}
+                role="tab" aria-selected={visibleDeck === tab.id} aria-controls="dashboard-panel" id={`dashboard-tab-${tab.id}`}
                 onClick={() => {
                   setActiveDeck(tab.id as any);
                   setFilters({ activeDeckMode: tab.id as any });
                 }}
                 className={`relative flex items-center gap-2.5 px-4 py-3 rounded-xl font-bold text-xs transition-colors duration-300 whitespace-nowrap select-none ${
                   isActive
-                    ? "text-indigo-950 dark:text-white"
+                    ? "text-primary"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.03]"
                 }`}
                 style={{ fontFamily: D.sans }}
@@ -182,14 +153,14 @@ export default function DashboardView() {
                 {isActive && (
                   <motion.div
                     layoutId="activeDeckTabPill"
-                    className="absolute inset-0 rounded-xl border border-indigo-500/30 bg-indigo-500/15 shadow-lg shadow-indigo-500/10"
+                    className="absolute inset-0 rounded-xl border border-primary/30 bg-primary/10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
                 
                 <div
                   className={`relative z-10 p-1.5 rounded-lg transition-colors duration-300 ${
-                    isActive ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400" : "bg-transparent text-current"
+                    isActive ? "bg-primary/10 text-primary" : "bg-transparent text-current"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -198,7 +169,7 @@ export default function DashboardView() {
                 <span className="relative z-10">{tab.label}</span>
 
                 {isActive && (
-                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                  <span className="relative z-10 ml-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </button>
             );
@@ -208,60 +179,60 @@ export default function DashboardView() {
         {/* 6. Dynamic Content Deck Rendering */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeDeck + (activeRole || "")}
-            id="dashboard-panel" role="tabpanel" aria-labelledby={`dashboard-tab-${activeDeck}`}
+            key={visibleDeck + (activeRole || "")}
+            id="dashboard-panel" role="tabpanel" aria-labelledby={`dashboard-tab-${visibleDeck}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
             {/* Deck 1: Overview */}
-            {activeDeck === "operations" && (
+            {visibleDeck === "operations" && (
               <div className="space-y-8">
-                <SmartDailyBriefing
+                {canAccess("analytics") && <SmartDailyBriefing
                   userName={person?.firstName || user?.displayName?.split(" ")[0]}
                   role={activeRole as any}
-                />
+                />}
                 {renderDashboardWidgets(activeRole || "")}
               </div>
             )}
 
             {/* Deck 2: Fixtures */}
-            {activeDeck === "competition" && (
+            {visibleDeck === "competition" && (
               <div className="space-y-8">
                 <FixtureCentreCard role={activeRole || "schooladmin"} schoolId={person?.schoolId} />
               </div>
             )}
 
             {/* Deck 3: Team Operations & Selection */}
-            {activeDeck === "squads" && (
+            {visibleDeck === "squads" && (
               <div className="space-y-8">
                 <CoachDashboard />
               </div>
             )}
 
             {/* Deck 4: Development */}
-            {activeDeck === "coaching" && (
+            {visibleDeck === "coaching" && (
               <div className="space-y-8">
                 <PlayerMicroPlanGenerator />
               </div>
             )}
 
             {/* Deck 5: Rankings */}
-            {activeDeck === "rankings" && (
+            {visibleDeck === "rankings" && (
               <div className="space-y-8">
                 <GlobalRankingsClient />
               </div>
             )}
 
             {/* Deck 6: Operationsical */}
-            {activeDeck === "logistics" && (
+            {visibleDeck === "logistics" && (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <GroundskeeperDashboard schoolId={person?.schoolId || ""} />
                   <DriverDashboard />
                 </div>
-                <MedicalDashboard />
+                {canAccess("medical") && <MedicalDashboard />}
               </div>
             )}
           </motion.div>

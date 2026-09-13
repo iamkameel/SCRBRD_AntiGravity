@@ -74,7 +74,7 @@ export default function CoachDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Activity className="h-8 w-8 animate-spin text-indigo-400" />
+        <Activity className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function CoachDashboard() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-xl"
+        className="relative p-6 md:p-8 rounded-2xl border overflow-hidden shadow-sm"
         style={{ background: D.surf1, borderColor: D.border }}
       >
         <div className="absolute inset-0 opacity-[0.05]" style={{ background: D.gradMain }} />
@@ -94,24 +94,24 @@ export default function CoachDashboard() {
             className="h-14 w-14 rounded-2xl flex items-center justify-center border shrink-0"
             style={{ background: D.surf2, borderColor: D.border }}
           >
-            <Activity className="h-7 w-7 text-indigo-400 animate-pulse" />
+            <Activity className="h-7 w-7 text-primary animate-pulse" />
           </div>
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/10 text-primary border border-indigo-500/20">
               <Sparkles className="h-3 w-3" />
               <span>Intelligence Broadcast</span>
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>
               {intelligence?.watchlistFlags?.length > 0
                 ? `${intelligence.watchlistFlags.length} Critical Player Flags Detected`
                 : 'All Squad Parameters Stable'}
             </h3>
-            <p className="text-xs text-slate-400 font-medium" style={{ fontFamily: D.sans }}>
-              Squad at <span className="text-white font-bold">{intelligence?.avgReadiness || 0}%</span> aggregate capacity · {intelligence?.availableCount || 0} operational athletes
+            <p className="text-xs text-muted-foreground font-medium" style={{ fontFamily: D.sans }}>
+              Squad at <span className="text-foreground font-bold">{intelligence?.avgReadiness || 0}%</span> aggregate capacity · {intelligence?.availableCount || 0} operational athletes
             </p>
           </div>
           <div className="md:ml-auto flex gap-3 w-full md:w-auto">
-             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border text-white hover:bg-white/5" style={{ background: D.surf2, borderColor: D.border }}>
+             <Button variant="outline" className="flex-1 md:flex-none rounded-xl font-bold text-xs px-4 h-10 border text-foreground hover:bg-white/5" style={{ background: D.surf2, borderColor: D.border }}>
                Resync Data
              </Button>
           </div>
@@ -137,20 +137,20 @@ export default function CoachDashboard() {
               subtitle={intelligence?.avgReadiness > 80 ? 'High operational' : 'Monitor fatigue'}
               color={D.emerald}
             />
-            <MetricCard 
-                icon={Trophy} 
-                label="WIN VELOCITY" 
-                value="68%" 
-                subtitle="Last 5 match cycle" 
+            <MetricCard
+                icon={Trophy}
+                label="WIN VELOCITY"
+                value="68%"
+                subtitle="Last 5 match cycle"
                 color={D.amber}
             />
           </div>
 
           {/* Strategic Fixture Centre */}
           <div className="space-y-4">
-            <SectionHeader 
-                title="Match Operations" 
-                sub="Live fixture monitoring & scheduling unit." 
+            <SectionHeader
+                title="Match Operations"
+                sub="Live fixture monitoring & scheduling unit."
             />
             <FixtureCentreCard role={ROLES.COACH} />
           </div>
@@ -168,16 +168,16 @@ export default function CoachDashboard() {
         <div className="space-y-8">
           {/* Squad Readiness Visualizer */}
           <div
-            className="rounded-2xl border shadow-xl p-6 overflow-hidden space-y-6"
+            className="rounded-2xl border shadow-sm p-6 overflow-hidden space-y-6"
             style={{ background: D.surf1, borderColor: D.border }}
           >
             <div>
-              <h4 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+              <h4 className="text-base font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>
                 Readiness Heatmap
               </h4>
-              <p className="text-xs text-slate-400">Real-time fatigue distribution.</p>
+              <p className="text-xs text-muted-foreground">Real-time fatigue distribution.</p>
             </div>
-            
+
             <div className="space-y-6">
               <div className="grid grid-cols-6 gap-2">
                 {intelligence?.playerReadiness?.map((p: any) => (
@@ -202,9 +202,9 @@ export default function CoachDashboard() {
                     />
                   ))}
               </div>
-              
+
               <div
-                className="flex items-center justify-between p-3 rounded-xl border border-white/10 text-xs font-medium text-slate-300"
+                className="flex items-center justify-between p-3 rounded-xl border border-white/10 text-xs font-medium text-muted-foreground"
                 style={{ background: D.surf2 }}
               >
                 <div className="flex items-center gap-1.5">
@@ -232,7 +232,7 @@ export default function CoachDashboard() {
 
           {/* Strategic Watchlist Flags */}
           <div className="space-y-4">
-            <h3 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: D.head }}>
+            <h3 className="text-base font-bold text-foreground tracking-tight" style={{ fontFamily: D.head }}>
               Watchlist Alerts
             </h3>
             <div className="space-y-3">
@@ -261,18 +261,18 @@ export default function CoachDashboard() {
                                 : D.emerald,
                             }}
                         />
-                        <span className="text-xs font-bold text-white" style={{ fontFamily: D.head }}>
+                        <span className="text-xs font-bold text-foreground" style={{ fontFamily: D.head }}>
                             {flag.name}
                         </span>
                         </div>
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-muted-foreground font-medium">
                           {flag.rsn}
                         </span>
                     </motion.div>
                     ))}
                     {(!intelligence || intelligence.watchlistFlags.length === 0) && (
                     <div
-                        className="p-8 rounded-2xl text-center border border-dashed flex flex-col items-center gap-3 text-slate-400"
+                        className="p-8 rounded-2xl text-center border border-dashed flex flex-col items-center gap-3 text-muted-foreground"
                         style={{ background: D.surf2, borderColor: D.border }}
                     >
                         <ShieldCheck className="w-6 h-6 text-slate-500" />
@@ -300,7 +300,7 @@ function QuickAction({ icon: Icon, label, color }: { icon: any, label: string, c
       >
         <Icon className="h-5 w-5" />
       </div>
-      <span className="text-xs font-bold tracking-tight text-white" style={{ fontFamily: D.head }}>
+      <span className="text-xs font-bold tracking-tight text-foreground" style={{ fontFamily: D.head }}>
         {label}
       </span>
     </button>

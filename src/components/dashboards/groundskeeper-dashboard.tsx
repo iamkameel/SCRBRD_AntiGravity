@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Tractor, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  Plus, 
+import {
+  Tractor,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Plus,
   Search,
   Filter,
   RefreshCw,
@@ -23,9 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FieldCard } from "@/components/fields/FieldCard";
 import { MaintenanceTaskList } from "@/components/facilities/MaintenanceTaskList";
 import { MaintenanceTaskForm } from "@/components/facilities/MaintenanceTaskForm";
-import { 
-  getSchoolFieldsAction, 
-  getPendingMaintenanceTasksAction 
+import {
+  getSchoolFieldsAction,
+  getPendingMaintenanceTasksAction
 } from "@/app/actions/fieldActions";
 import { Field, MaintenanceTask } from "@/types/schema_v4";
 import { toast } from 'sonner';
@@ -56,7 +56,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
       if (fieldsResult.success && fieldsResult.data) {
         setFields(fieldsResult.data as unknown as Field[]);
       }
-      
+
       if (tasksResult.success && tasksResult.data) {
         setMaintenanceTasks(tasksResult.data as unknown as MaintenanceTask[]);
       }
@@ -73,7 +73,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
     fetchData();
   }, [fetchData]);
 
-  const filteredFields = fields.filter(f => 
+  const filteredFields = fields.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     f.pitchType?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -90,7 +90,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="h-10 w-10 animate-spin" style={{ color: D.emerald }} />
-        <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>Scanning Ground Surfaces...</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>Scanning Ground Surfaces...</p>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div className="space-y-2">
             <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all"
                   style={{ background: `${D.emerald}15`, border: `1px solid ${D.emerald}30`, color: D.emerald }}
                 >
@@ -111,7 +111,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
                     <h1 className="text-4xl font-black tracking-tighter uppercase italic" style={{ fontFamily: D.head, color: D.textPrimary }}>
                         GROUNDS <span style={{ color: D.emerald }}>OPS</span>
                     </h1>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>
+                    <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>
                         Precision Terrain Management & Facility Readiness
                     </p>
                 </div>
@@ -119,9 +119,9 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button 
-            variant="outline" 
-            className="h-10 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
+          <Button
+            variant="outline"
+            className="h-10 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
             style={{ background: D.surf2, border: `1px solid ${D.border}`, color: D.textSecondary }}
             onClick={() => fetchData(true)}
             disabled={refreshing}
@@ -129,9 +129,9 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Sync Status
           </Button>
-          
-          <MaintenanceTaskForm 
-            fields={fields.map(f => ({ id: f.id, name: f.name }))} 
+
+          <MaintenanceTaskForm
+            fields={fields.map(f => ({ id: f.id, name: f.name }))}
             onSuccess={() => fetchData(true)}
           />
         </div>
@@ -145,18 +145,18 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
           { label: "Pending Tasks", value: stats.pendingTasks, sub: "Scheduled Work", icon: Clock, color: D.sky },
           { label: "Urgent Alerts", value: stats.urgentTasks, sub: "Requires Immediate Action", icon: AlertTriangle, color: stats.urgentTasks > 0 ? D.rose : D.textMuted },
         ].map((stat, i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className="group relative overflow-hidden rounded-2xl p-6 transition-all border"
             style={{ background: D.surf1, border: `1px solid ${D.border}` }}
           >
-            <div 
+            <div
               className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-15 transition-all group-hover:scale-125"
               style={{ color: stat.color }}
             >
               <stat.icon className="w-10 h-10" />
             </div>
-            <div 
+            <div
               className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-all"
               style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}30`, color: stat.color }}
             >
@@ -164,7 +164,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
             </div>
             <div>
               <div className="text-3xl font-black" style={{ fontFamily: D.head, color: D.textPrimary }}>{stat.value}</div>
-              <div className="text-[9px] font-black uppercase tracking-widest mt-1" style={{ color: D.textMuted }}>{stat.label}</div>
+              <div className="text-[11px] font-black uppercase tracking-widest mt-1" style={{ color: D.textMuted }}>{stat.label}</div>
               <div className="text-[8px] font-bold uppercase tracking-widest mt-0.5 opacity-60" style={{ color: D.textMuted }}>{stat.sub}</div>
             </div>
           </div>
@@ -178,10 +178,10 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
             { value: "fields", label: "Field Status", icon: Construction },
             { value: "maintenance", label: "Maintenance log", icon: Clock, badge: stats.pendingTasks },
           ].map(tab => (
-            <TabsTrigger 
+            <TabsTrigger
               key={tab.value}
-              value={tab.value} 
-              className="font-black text-[10px] uppercase tracking-widest gap-2 rounded-xl px-6 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-500"
+              value={tab.value}
+              className="font-black text-xs uppercase tracking-widest gap-2 rounded-xl px-6 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-500"
               style={{ color: D.textSecondary }}
             >
               <tab.icon className="h-3.5 w-3.5" />
@@ -199,20 +199,20 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: D.textMuted, opacity: 0.4 }} />
-              <input 
-                placeholder="FIND A FIELD OR SURFACE TYPE..." 
-                className="w-full rounded-2xl py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest focus:outline-none transition-all placeholder:opacity-30"
-                style={{ 
-                  background: D.surf2, 
-                  border: `1px solid ${D.border}`, 
+              <input
+                placeholder="FIND A FIELD OR SURFACE TYPE..."
+                className="w-full rounded-2xl py-3 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:outline-none transition-all placeholder:opacity-30"
+                style={{
+                  background: D.surf2,
+                  border: `1px solid ${D.border}`,
                   color: D.textPrimary,
                 }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button 
-               variant="outline" 
+            <Button
+               variant="outline"
                className="h-10 w-10 rounded-xl p-0 transition-all"
                style={{ background: D.surf2, border: `1px solid ${D.border}`, color: D.textSecondary }}
             >
@@ -238,7 +238,7 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
               ) : (
                 <div className="col-span-full py-24 text-center rounded-3xl border border-dashed flex flex-col items-center justify-center gap-4" style={{ background: D.surf2, borderColor: D.border }}>
                   <Construction className="h-12 w-12 opacity-10" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>No matching surfaces found in the facility registry.</p>
+                  <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: D.textMuted }}>No matching surfaces found in the facility registry.</p>
                 </div>
               )}
             </AnimatePresence>
@@ -246,23 +246,23 @@ export default function GroundskeeperDashboard({ schoolId }: GroundskeeperDashbo
         </TabsContent>
 
         <TabsContent value="maintenance" className="space-y-6 outline-none px-1">
-          <div 
-            className="rounded-3xl overflow-hidden shadow-2xl border"
+          <div
+            className="rounded-3xl overflow-hidden shadow-sm border"
             style={{ background: D.surf1, border: `1px solid ${D.border}` }}
           >
             <div className="p-8 pb-10 flex items-center justify-between" style={{ borderBottom: `1px solid ${D.border}`, background: D.surf2 }}>
                 <div>
                   <h3 className="text-xl font-black uppercase tracking-tighter italic" style={{ fontFamily: D.head, color: D.textPrimary }}>UPCOMING MAINTENANCE</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest mt-1" style={{ color: D.textMuted }}>Master schedule across all school facilities</p>
+                  <p className="text-xs font-black uppercase tracking-widest mt-1" style={{ color: D.textMuted }}>Master schedule across all school facilities</p>
                 </div>
-                <MaintenanceTaskForm 
-                  fields={fields.map(f => ({ id: f.id, name: f.name }))} 
+                <MaintenanceTaskForm
+                  fields={fields.map(f => ({ id: f.id, name: f.name }))}
                   onSuccess={() => fetchData(true)}
                 />
             </div>
             <div className="p-6">
-              <MaintenanceTaskList 
-                tasks={maintenanceTasks} 
+              <MaintenanceTaskList
+                tasks={maintenanceTasks}
                 onTaskUpdate={() => fetchData(true)}
               />
             </div>

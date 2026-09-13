@@ -22,13 +22,13 @@ export default function MedicalDashboard() {
   useEffect(() => {
     const loadData = async () => {
       if (!user?.email) return;
-      
+
       try {
         const [profile, injured] = await Promise.all([
           fetchPersonByEmail(user.email),
           fetchInjuredPlayers()
         ]);
-        
+
         setPerson(profile);
         setInjuredPlayers(injured || []);
       } catch (error) {
@@ -45,7 +45,7 @@ export default function MedicalDashboard() {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-6">
           <Loader2 className="h-12 w-12 animate-spin" style={{ color: D.rose }} />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: D.textMuted }}>Initializing Medical Intelligence Core...</p>
+          <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: D.textMuted }}>Initializing Medical Intelligence Core...</p>
         </div>
       );
   }
@@ -54,14 +54,14 @@ export default function MedicalDashboard() {
     <div className="space-y-12 pb-12 animate-in fade-in duration-500">
       {/* Header Unit */}
       <div className="px-1">
-        <PageHeader 
-          title="Medical Operations" 
+        <PageHeader
+          title="Medical Operations"
           description={`Welcome back, Dr. ${person?.lastName || 'Staff'}. Cross-referencing player health trends and regional rehab cycles.`}
         />
       </div>
 
       {/* Fixture Centre Integration */}
-      <FixtureCentreCard 
+      <FixtureCentreCard
         role="Medical"
         maxMatches={3}
       />
@@ -79,8 +79,8 @@ export default function MedicalDashboard() {
       </div>
 
       {/* High-Fidelity Injury Status Board */}
-      <div 
-        className="rounded-3xl overflow-hidden shadow-2xl border"
+      <div
+        className="rounded-3xl overflow-hidden shadow-sm border"
         style={{ background: D.surf1, border: `1px solid ${D.border}` }}
       >
         <div className="p-8 flex flex-row items-center justify-between border-b" style={{ borderColor: D.border, background: D.surf2 }}>
@@ -89,9 +89,9 @@ export default function MedicalDashboard() {
               <Stethoscope className="h-6 w-6" style={{ color: D.rose }} />
               INJURY STATUS BOARD
             </h3>
-            <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-50" style={{ color: D.textMuted }}>REAL-TIME CLEARANCE AND REHAB MONITORING</p>
+            <p className="text-xs font-black uppercase tracking-widest mt-1 opacity-50" style={{ color: D.textMuted }}>REAL-TIME CLEARANCE AND REHAB MONITORING</p>
           </div>
-          <Button variant="ghost" className="h-9 font-black text-[9px] uppercase tracking-widest px-6 rounded-2xl border shadow-inner transition-all hover:translate-y-[-1px]" style={{ borderColor: D.border, color: D.indigo, background: D.surf1 }}>
+          <Button variant="ghost" className="h-9 font-black text-[11px] uppercase tracking-widest px-6 rounded-2xl border shadow-inner transition-all hover:translate-y-[-1px]" style={{ borderColor: D.border, color: D.indigo, background: D.surf1 }}>
             FULL AUDIT LOG
           </Button>
         </div>
@@ -100,7 +100,7 @@ export default function MedicalDashboard() {
             <AnimatePresence mode="popLayout">
               {injuredPlayers.length > 0 ? (
                 injuredPlayers.map((player, i) => (
-                  <motion.div 
+                  <motion.div
                     key={player.id}
                     initial={{ opacity: 0, scale: 0.98, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -110,32 +110,32 @@ export default function MedicalDashboard() {
                   >
                     <div className="flex items-center gap-5">
                       <div className="relative">
-                        <div 
+                        <div
                           className="h-14 w-14 rounded-2xl flex items-center justify-center font-black text-lg italic uppercase transition-transform group-hover:scale-105"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${D.rose}20, ${D.rose}05)`, 
-                            border: `1px solid ${D.rose}30`, 
-                            color: D.rose 
+                          style={{
+                            background: `linear-gradient(135deg, ${D.rose}20, ${D.rose}05)`,
+                            border: `1px solid ${D.rose}30`,
+                            color: D.rose
                           }}
                         >
                           {player.firstName[0]}{player.lastName[0]}
                         </div>
-                        <div 
-                          className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background animate-pulse shadow-sm" 
+                        <div
+                          className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-background animate-pulse shadow-sm"
                           style={{ background: D.rose, borderColor: D.surf2 }}
                         />
                       </div>
                       <div>
                         <p className="text-lg font-black uppercase italic tracking-tighter leading-none" style={{ fontFamily: D.head, color: D.textPrimary }}>{player.firstName} {player.lastName}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest mt-1.5 opacity-50" style={{ color: D.textMuted }}>LOWER LIMB • HIGH INTENSITY REHAB CYCLE</p>
+                        <p className="text-xs font-bold uppercase tracking-widest mt-1.5 opacity-50" style={{ color: D.textMuted }}>LOWER LIMB • HIGH INTENSITY REHAB CYCLE</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-8 pr-2">
                       <div className="text-right hidden sm:flex flex-col items-end gap-1.5">
-                        <Badge className="font-black text-[9px] uppercase tracking-widest px-4 py-1.5 rounded-lg border-0 shadow-sm" style={{ background: `${D.rose}15`, color: D.rose }}>RECOVERY UNIT</Badge>
-                        <p className="text-[9px] font-black mt-1 uppercase tracking-[0.2em] opacity-40" style={{ color: D.textMuted }}>EST. RETURN: 14-21 DAYS</p>
+                        <Badge className="font-black text-[11px] uppercase tracking-widest px-4 py-1.5 rounded-lg border-0 shadow-sm" style={{ background: `${D.rose}15`, color: D.rose }}>RECOVERY UNIT</Badge>
+                        <p className="text-[11px] font-black mt-1 uppercase tracking-[0.2em] opacity-40" style={{ color: D.textMuted }}>EST. RETURN: 14-21 DAYS</p>
                       </div>
-                      <div 
+                      <div
                         className="p-3.5 rounded-full transition-all group-hover:scale-110 group-hover:translate-x-1 shadow-inner"
                         style={{ background: D.surf1, color: D.textMuted, border: `1px solid ${D.border}` }}
                       >
@@ -145,7 +145,7 @@ export default function MedicalDashboard() {
                   </motion.div>
                 ) )
               ) : (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="py-20 text-center rounded-3xl border border-dashed flex flex-col items-center justify-center gap-6"
@@ -156,7 +156,7 @@ export default function MedicalDashboard() {
                   </div>
                   <div>
                       <h4 className="text-xl font-black uppercase italic tracking-tighter" style={{ fontFamily: D.head, color: D.emerald }}>SQUAD STATUS: FULLY OPERATIONAL</h4>
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] mt-2 opacity-50" style={{ color: D.textMuted }}>ZERO ACTIVE INJURY REPORTS IN THE REPOSITORY.</p>
+                      <p className="text-xs font-black uppercase tracking-[0.3em] mt-2 opacity-50" style={{ color: D.textMuted }}>ZERO ACTIVE INJURY REPORTS IN THE REPOSITORY.</p>
                   </div>
                 </motion.div>
               )}

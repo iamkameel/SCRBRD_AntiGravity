@@ -43,7 +43,12 @@ export function SchoolSidebar({ school, news }: SchoolSidebarProps) {
           )}
           <div className="flex items-center gap-3 pt-1">
             <Globe className="h-4 w-4 text-amber-400 shrink-0" />
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+            <a 
+              href={school.websiteUrl || "/schools"} 
+              target={school.websiteUrl ? "_blank" : "_self"}
+              rel={school.websiteUrl ? "noopener noreferrer" : undefined}
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+            >
               Visit Portal <ExternalLink className="h-3 w-3" />
             </a>
           </div>

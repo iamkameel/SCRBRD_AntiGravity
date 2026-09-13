@@ -39,6 +39,18 @@ export const dashboardLink: NavLink = {
 
 export const navGroups: NavGroup[] = [
   {
+    id: 'school-cricket-os',
+    label: 'School Cricket OS',
+    icon: Sparkles,
+    key: 'group-school-cricket-os',
+    defaultOpen: true,
+    highlighted: true,
+    accentColor: '#8b5cf6', // Violet
+    links: [
+      { href: '/operating-system', label: 'Canonical OS Hub', icon: Sparkles, key: 'operating-system', badge: 'OS' },
+    ]
+  },
+  {
     id: 'teams-people',
     label: 'Teams & People',
     icon: Users2,
@@ -49,6 +61,7 @@ export const navGroups: NavGroup[] = [
       { href: '/teams', label: 'Team Directory', icon: Shield, key: 'teams' },
       { href: '/players', label: 'People', icon: UsersRound, key: 'people' },
       { href: '/schools', label: 'Schools', icon: SchoolIcon, key: 'schools' },
+      { href: '/inter-house', label: 'Inter-House Cricket', icon: Shield, key: 'inter-house', badge: 'HOUSE' },
       { href: '/director', label: 'Director Command', icon: Crown, key: 'director-command' },
       { href: '/browse-leagues', label: 'Leagues', icon: Trophy, key: 'competitions' },
       { href: '/browse-divisions', label: 'Divisions', icon: Layers, key: 'divisions' },

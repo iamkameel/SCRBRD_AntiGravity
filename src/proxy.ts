@@ -2,13 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/auth/sessionCookie';
 
 /**
- * Route protection.
+ * Route protection (Next.js 16 Proxy Convention).
  *
  * Presence of the session cookie is checked here; its *signature* is verified
- * in each server action and route handler via requireUser(). Middleware runs on
- * the Edge runtime, which cannot load firebase-admin, so this is deliberately a
- * cheap gate that keeps anonymous visitors out of the app shell — never the
- * thing that authorizes a read or a write.
+ * in each server action and route handler via requireUser().
  */
 
 const PUBLIC_ROUTES = [
@@ -31,7 +28,7 @@ function isPublic(pathname: string): boolean {
     return PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix));
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
 
     if (isPublic(pathname)) return NextResponse.next();

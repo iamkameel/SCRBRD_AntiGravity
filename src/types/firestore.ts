@@ -83,6 +83,7 @@ export interface School extends FirestoreEntity {
   motto?: string;
   establishmentYear?: number;
   location?: string;
+  websiteUrl?: string;
   brandColors?: {
     primary: string;
     secondary: string;

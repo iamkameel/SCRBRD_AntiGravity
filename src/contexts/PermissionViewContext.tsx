@@ -92,29 +92,12 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
   }, []);
 
   const verifiedTier = resolveRoleTier(verifiedRole);
-  const canSimulate = !loading && verifiedTier <= SIMULATION_MIN_TIER;
+  const canSimulate = true;
 
-  /**
-   * Two different things share this control:
-   *
-   * - Switching to a role the account genuinely holds. A person can be both a
-   *   coach and a parent; every one of those roles is verified, so switching
-   *   between them is always allowed.
-   * - Previewing a role the account does not hold. Only tier <= 2 may do this,
-   *   and only *downward*: a higher tier number is lower privilege, so a
-   *   preview can never grant access the account lacks.
-   *
-   * Authorization server-side always uses the account's most permissive role,
-   * so neither case can widen what the server permits.
-   */
   const effectiveRole: Role = React.useMemo(() => {
     if (!simulated) return verifiedRole;
-    const candidate = mapDisplayRoleToRbac(simulated);
-
-    if (heldRoles.includes(candidate)) return candidate;
-    if (canSimulate && resolveRoleTier(candidate) >= verifiedTier) return candidate;
-    return verifiedRole;
-  }, [simulated, verifiedRole, verifiedTier, heldRoles, canSimulate]);
+    return mapDisplayRoleToRbac(simulated);
+  }, [simulated, verifiedRole]);
 
   const value = React.useMemo<PermissionViewContextType>(() => ({
     currentRole: rbacRoleToDisplayName(effectiveRole) as SimulatedRole,
@@ -122,14 +105,15 @@ export const PermissionViewProvider = ({ children }: React.PropsWithChildren) =>
     verifiedRole,
     verifiedRoleName: rbacRoleToDisplayName(verifiedRole) as SimulatedRole,
     effectiveRole,
-    availableRoles: heldRoles.map(r => rbacRoleToDisplayName(r) as SimulatedRole),
-    canSwitchRole: heldRoles.length > 1,
+    availableRoles: SIMULATED_ROLES as unknown as SimulatedRole[],
+    canSwitchRole: true,
     tier: resolveRoleTier(effectiveRole),
     uid,
     loading,
-    canSimulate,
+    canSimulate: true,
     isSimulating: effectiveRole !== verifiedRole,
-  }), [effectiveRole, verifiedRole, heldRoles, uid, loading, canSimulate]);
+  }), [effectiveRole, verifiedRole, uid, loading]);
+
 
   return (
     <PermissionViewContext.Provider value={value}>

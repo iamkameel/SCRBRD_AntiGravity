@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockRequireUser = vi.fn();
 const mockAdminDbCollectionAdd = vi.fn();
 const mockAdminDbDocUpdate = vi.fn();
+const mockAdminDbDocDelete = vi.fn();
 const mockAdminDbGet = vi.fn();
 const mockRecordAuditLog = vi.fn();
 
@@ -21,6 +22,7 @@ vi.mock("@/lib/firebase-admin", () => ({
             add: (data: any) => mockAdminDbCollectionAdd(collName, data),
             doc: (id: string) => ({
                 update: (data: any) => mockAdminDbDocUpdate(collName, id, data),
+                delete: () => mockAdminDbDocDelete(collName, id),
             }),
             where: () => ({
                 orderBy: () => ({
@@ -42,6 +44,8 @@ vi.mock("next/cache", () => ({
 
 import {
     updateVehicleStatusAction,
+    addVehicleAction,
+    deleteVehicleAction,
     createTripAction,
     updateTripStatusAction,
     updatePassengerBoardingAction,
@@ -50,6 +54,7 @@ import {
 import {
     createEquipmentAction,
     updateEquipmentAction,
+    deleteEquipmentAction,
 } from "../equipmentActions";
 
 describe("Transport & Logistics Server Actions Security", () => {
@@ -76,6 +81,52 @@ describe("Transport & Logistics Server Actions Security", () => {
                 actionType: "LOGISTICS_UPDATE",
                 entityType: "vehicle",
                 entityId: "veh_100",
+            }));
+        });
+
+        it("adds new vehicle with adminDb, requireUser('logistics'), and audit log", async () => {
+            mockRequireUser.mockResolvedValueOnce({ uid: "logistics_admin", email: "transport@school.edu" });
+            mockAdminDbCollectionAdd.mockResolvedValueOnce({ id: "veh_300" });
+
+            const result = await addVehicleAction({
+                schoolId: "school-1",
+                registration: "GP 123-456",
+                makeModel: "Titan Minibus",
+                type: "Minibus",
+                capacity: 16,
+                status: "AVAILABLE",
+            });
+
+            expect(result.success).toBe(true);
+            expect(result.id).toBe("veh_300");
+            expect(mockRequireUser).toHaveBeenCalledWith("logistics");
+            expect(mockAdminDbCollectionAdd).toHaveBeenCalledWith("vehicles", expect.objectContaining({
+                registration: "GP 123-456",
+                makeModel: "Titan Minibus",
+                createdBy: "logistics_admin",
+            }));
+            expect(mockRecordAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+                actorId: "logistics_admin",
+                actionType: "LOGISTICS_CREATE",
+                entityType: "vehicle",
+                entityId: "veh_300",
+            }));
+        });
+
+        it("deletes vehicle with adminDb, requireUser('logistics'), and audit log", async () => {
+            mockRequireUser.mockResolvedValueOnce({ uid: "logistics_admin", email: "transport@school.edu" });
+            mockAdminDbDocDelete.mockResolvedValueOnce({});
+
+            const result = await deleteVehicleAction("veh_300");
+
+            expect(result.success).toBe(true);
+            expect(mockRequireUser).toHaveBeenCalledWith("logistics");
+            expect(mockAdminDbDocDelete).toHaveBeenCalledWith("vehicles", "veh_300");
+            expect(mockRecordAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+                actorId: "logistics_admin",
+                actionType: "LOGISTICS_DELETE",
+                entityType: "vehicle",
+                entityId: "veh_300",
             }));
         });
 
@@ -198,6 +249,23 @@ describe("Transport & Logistics Server Actions Security", () => {
             expect(mockRecordAuditLog).toHaveBeenCalledWith(expect.objectContaining({
                 actorId: "logistics_admin",
                 actionType: "LOGISTICS_UPDATE",
+                entityType: "equipment",
+                entityId: "eq_500",
+            }));
+        });
+
+        it("deletes equipment asset with adminDb, requireUser('logistics'), and audit log", async () => {
+            mockRequireUser.mockResolvedValueOnce({ uid: "logistics_admin", email: "equip@school.edu" });
+            mockAdminDbDocDelete.mockResolvedValueOnce({});
+
+            const result = await deleteEquipmentAction("eq_500");
+
+            expect(result.success).toBe(true);
+            expect(mockRequireUser).toHaveBeenCalledWith("logistics");
+            expect(mockAdminDbDocDelete).toHaveBeenCalledWith("equipment", "eq_500");
+            expect(mockRecordAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+                actorId: "logistics_admin",
+                actionType: "LOGISTICS_DELETE",
                 entityType: "equipment",
                 entityId: "eq_500",
             }));

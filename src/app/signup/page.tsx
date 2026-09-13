@@ -165,7 +165,7 @@ export default function SignupPage() {
                   value={formData.role}
                   onValueChange={(value) => handleChange('role', value)}
                 >
-                  <SelectTrigger className="pl-10">
+                  <SelectTrigger id="role" aria-label="Role" className="pl-10">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -193,7 +193,8 @@ export default function SignupPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -216,6 +217,7 @@ export default function SignupPage() {
                 />
                 <button
                   type="button"
+                  aria-label={showConfirmPassword ? "Hide confirmed password" : "Show confirmed password"}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
@@ -234,11 +236,11 @@ export default function SignupPage() {
                 />
                 <Label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer pt-0.5">
                   I agree to the{' '}
-                  <Link href="#" className="text-primary hover:underline">
+                  <Link href="/rulebook" className="text-primary hover:underline">
                     Terms & Conditions
                   </Link>
                   {' '}and{' '}
-                  <Link href="#" className="text-primary hover:underline">
+                  <Link href="/help" className="text-primary hover:underline">
                     Privacy Policy
                   </Link>
                 </Label>

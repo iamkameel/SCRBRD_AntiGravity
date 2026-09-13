@@ -115,7 +115,7 @@ const DEFAULT_SAMPLE_FIXTURES: DisplayFixture[] = [
     division: 'Super 8 Division',
     umpiresDisplay: 'D. Smith, J. Pretorius',
     scorerName: 'A. Ndlovu',
-    readiness: { squadReady: true, transportReady: true, pitchReady: false }
+    readiness: { squadReady: true, transportReady: true, pitchReady: true }
   },
   {
     id: 'sample-3',
@@ -143,17 +143,19 @@ const DEFAULT_SAMPLE_FIXTURES: DisplayFixture[] = [
     homeTeamName: 'DHS 1st XI',
     awayTeamId: 't8',
     awayTeamName: 'Clifton School 1st XI',
-    date: format(new Date(Date.now() + 86400000 * 3), 'yyyy-MM-dd'),
-    displayDate: format(new Date(Date.now() + 86400000 * 3), 'EEE, MMM d, yyyy'),
+    date: format(new Date(), 'yyyy-MM-dd'),
+    displayDate: format(new Date(), 'EEE, MMM d, yyyy'),
     time: '13:30',
     location: 'DHS Main Field',
-    status: 'Scheduled',
+    status: 'Rain-Delay',
     matchType: 'T20',
     ageGroup: 'Open 1st XI',
     division: 'T20 Knockout',
     umpiresDisplay: 'B. Pillay, S. Miller',
     scorerName: 'C. Adams',
-    readiness: { squadReady: false, transportReady: true, pitchReady: true }
+    homeScore: '42/1 (5.3 ov)',
+    awayScore: 'DNB',
+    readiness: { squadReady: true, transportReady: true, pitchReady: false }
   }
 ];
 

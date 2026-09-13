@@ -53,6 +53,58 @@ export async function updateVehicleStatusAction(id: string, status: Vehicle['sta
     }
 }
 
+export async function addVehicleAction(vehicle: Omit<Vehicle, 'id'>) {
+    try {
+        const user = await requireUser("logistics");
+        const nowIso = new Date().toISOString();
+
+        const docRef = await adminDb.collection('vehicles').add({
+            ...vehicle,
+            createdBy: user.uid,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+        });
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Logistics Coordinator',
+            actionType: 'LOGISTICS_CREATE',
+            entityType: 'vehicle',
+            entityId: docRef.id,
+            description: `New fleet vehicle added: ${vehicle.makeModel} (${vehicle.registration}).`,
+        });
+
+        revalidatePath('/transport');
+        return { success: true, id: docRef.id };
+    } catch (error) {
+        console.error("Error adding vehicle:", error);
+        return { success: false, error: error instanceof Error ? error.message : "Failed to add vehicle." };
+    }
+}
+
+export async function deleteVehicleAction(id: string) {
+    try {
+        const user = await requireUser("logistics");
+
+        await adminDb.collection('vehicles').doc(id).delete();
+
+        await recordAuditLog({
+            actorId: user.uid,
+            actorName: user.email || 'Logistics Coordinator',
+            actionType: 'LOGISTICS_DELETE',
+            entityType: 'vehicle',
+            entityId: id,
+            description: `Vehicle ID ${id} removed from fleet.`,
+        });
+
+        revalidatePath('/transport');
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting vehicle:", error);
+        return { success: false, error: error instanceof Error ? error.message : "Failed to delete vehicle." };
+    }
+}
+
 // --- Trip Actions ---
 export async function getUpcomingTripsAction(schoolId?: string): Promise<{ success: boolean; data: TransportTrip[] }> {
     try {

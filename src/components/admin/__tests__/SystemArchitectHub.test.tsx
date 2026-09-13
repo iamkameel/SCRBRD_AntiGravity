@@ -90,8 +90,8 @@ describe("SystemArchitectHub Component", () => {
     render(<SystemArchitectHub />);
 
     expect(await screen.findByText(/System Architect & Platform Audit Hub/i)).toBeInTheDocument();
-    expect(screen.getByText(/SCRBRD OS 6-Engine Core Status Matrix/i)).toBeInTheDocument();
-    expect(screen.getByText(/Identity & Role Engine/i)).toBeInTheDocument();
+    expect(await screen.findByText(/SCRBRD OS 6-Engine Core Status Matrix/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Identity & Role Engine/i)).toBeInTheDocument();
   });
 
   it("allows switching between navigation tabs (RBAC, Audit, Workflows, Broadcast)", async () => {

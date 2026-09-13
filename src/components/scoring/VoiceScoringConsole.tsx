@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -45,7 +45,7 @@ export function VoiceScoringConsole({
   const recognitionRef = useRef<any>(null);
 
   // Play audio beep tone via Web Audio API for acoustic confirmation
-  const playAcousticConfirmation = (frequency: number = 880, duration: number = 0.15) => {
+  const playAcousticConfirmation = useCallback((frequency: number = 880, duration: number = 0.15) => {
     if (!audioFeedback || typeof window === 'undefined') return;
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -64,7 +64,7 @@ export function VoiceScoringConsole({
     } catch (e) {
       // AudioContext muted/unsupported
     }
-  };
+  }, [audioFeedback]);
 
   useEffect(() => {
     // Check SpeechRecognition support
@@ -156,8 +156,30 @@ export function VoiceScoringConsole({
     setConfidence(Math.round(conf * 100));
     setLastParsedCommand(text);
 
-    // Command Parsing Rules (English + Afrikaans/Local terms)
-    // 1. Undo
+    // Shot Zone Extraction Helper
+    let zoneName: string | undefined = undefined;
+    if (text.includes('point')) zoneName = 'Point';
+    else if (text.includes('cover')) zoneName = 'Cover';
+    else if (text.includes('midwicket') || text.includes('mid-wicket') || text.includes('mid wicket')) zoneName = 'Mid Wicket';
+    else if (text.includes('long on') || text.includes('long-on')) zoneName = 'Long On';
+    else if (text.includes('long off') || text.includes('long-off')) zoneName = 'Long Off';
+    else if (text.includes('third man') || text.includes('thirdman')) zoneName = 'Third Man';
+    else if (text.includes('fine leg') || text.includes('fine-leg')) zoneName = 'Fine Leg';
+    else if (text.includes('square leg') || text.includes('square-leg')) zoneName = 'Square Leg';
+    else if (text.includes('gully')) zoneName = 'Gully';
+    else if (text.includes('mid off') || text.includes('midoff')) zoneName = 'Mid Off';
+
+    // Shot Type Extraction Helper
+    let shotType: string | undefined = undefined;
+    if (text.includes('drive')) shotType = 'Drive';
+    else if (text.includes('pull')) shotType = 'Pull';
+    else if (text.includes('cut')) shotType = 'Cut';
+    else if (text.includes('flick')) shotType = 'Flick';
+    else if (text.includes('sweep')) shotType = 'Sweep';
+    else if (text.includes('hook')) shotType = 'Hook';
+    else if (text.includes('glance')) shotType = 'Glance';
+
+    // 1. Undo Command
     if (text.includes('undo') || text.includes('cancel ball') || text.includes('take back') || text.includes('kanselleer')) {
       if (onUndo) {
         onUndo();
@@ -167,7 +189,63 @@ export function VoiceScoringConsole({
       return;
     }
 
-    // 2. Wicket / Paaltjie
+    // 2. Byes & Leg Byes
+    if (text.includes('leg bye') || text.includes('legbye') || text.includes('benewydte')) {
+      let runs = 1;
+      if (text.includes('two') || text.includes('2')) runs = 2;
+      if (text.includes('three') || text.includes('3')) runs = 3;
+      if (text.includes('four') || text.includes('4')) runs = 4;
+
+      onRecordBall({ runs, extras: runs, extrasType: 'legbye', zoneName });
+      playAcousticConfirmation(620, 0.15);
+      toast.warning(`Voice Recorded: ${runs} Leg Bye(s) ${zoneName ? `to ${zoneName}` : ''}`);
+      return;
+    }
+
+    if (text.includes('bye') && !text.includes('goodbye')) {
+      let runs = 1;
+      if (text.includes('two') || text.includes('2')) runs = 2;
+      if (text.includes('three') || text.includes('3')) runs = 3;
+      if (text.includes('four') || text.includes('4')) runs = 4;
+
+      onRecordBall({ runs, extras: runs, extrasType: 'bye', zoneName });
+      playAcousticConfirmation(610, 0.15);
+      toast.warning(`Voice Recorded: ${runs} Bye(s) ${zoneName ? `to ${zoneName}` : ''}`);
+      return;
+    }
+
+    // 3. Wide (with optional Run Out)
+    if (text.includes('wide') || text.includes('wyd')) {
+      let runs = 1;
+      if (text.includes('two') || text.includes('2')) runs = 2;
+      if (text.includes('three') || text.includes('3')) runs = 3;
+      if (text.includes('four') || text.includes('4')) runs = 4;
+
+      const isWicket = text.includes('run out') || text.includes('wicket');
+      const wicketType = isWicket ? 'Run Out' : undefined;
+
+      onRecordBall({ runs, extras: runs, extrasType: 'wide', isWicket, wicketType, zoneName });
+      playAcousticConfirmation(600, 0.15);
+      toast.warning(`Voice Recorded: Wide (${runs} runs)${isWicket ? ' + Wicket' : ''}`);
+      return;
+    }
+
+    // 4. No Ball (with optional Run Out / Off Bat Runs)
+    if (text.includes('no ball') || text.includes('noball')) {
+      let runs = 1;
+      if (text.includes('four') || text.includes('4')) runs = 5;
+      if (text.includes('six') || text.includes('6')) runs = 7;
+
+      const isWicket = text.includes('run out');
+      const wicketType = isWicket ? 'Run Out' : undefined;
+
+      onRecordBall({ runs, extras: 1, extrasType: 'noball', isWicket, wicketType, shotType, zoneName });
+      playAcousticConfirmation(650, 0.15);
+      toast.warning(`Voice Recorded: No Ball (${runs} runs)${isWicket ? ' + Wicket' : ''}`);
+      return;
+    }
+
+    // 5. Standalone Wicket / Paaltjie
     if (text.includes('wicket') || text.includes('out') || text.includes('bowled') || text.includes('caught') || text.includes('paaltjie')) {
       let wicketType = 'Bowled';
       if (text.includes('caught') || text.includes('gevang')) wicketType = 'Caught';
@@ -175,37 +253,13 @@ export function VoiceScoringConsole({
       if (text.includes('run out')) wicketType = 'Run Out';
       if (text.includes('stumped')) wicketType = 'Stumped';
 
-      onRecordBall({ runs: 0, isWicket: true, wicketType });
+      onRecordBall({ runs: 0, isWicket: true, wicketType, zoneName });
       playAcousticConfirmation(300, 0.3);
-      toast.error(`Voice Recorded: Wicket (${wicketType})`);
+      toast.error(`Voice Recorded: Wicket (${wicketType})${zoneName ? ` at ${zoneName}` : ''}`);
       return;
     }
 
-    // 3. Wide
-    if (text.includes('wide') || text.includes('wyd')) {
-      let runs = 1;
-      if (text.includes('two') || text.includes('2')) runs = 2;
-      if (text.includes('four') || text.includes('4')) runs = 4;
-
-      onRecordBall({ runs, extras: runs, extrasType: 'wide' });
-      playAcousticConfirmation(600, 0.15);
-      toast.warning(`Voice Recorded: Wide (${runs} runs)`);
-      return;
-    }
-
-    // 4. No Ball
-    if (text.includes('no ball') || text.includes('noball')) {
-      let runs = 1;
-      if (text.includes('four') || text.includes('4')) runs = 5;
-      if (text.includes('six') || text.includes('6')) runs = 7;
-
-      onRecordBall({ runs, extras: 1, extrasType: 'noball' });
-      playAcousticConfirmation(650, 0.15);
-      toast.warning(`Voice Recorded: No Ball (${runs} runs)`);
-      return;
-    }
-
-    // 5. Regular Runs & Zones (including "vier", "ses")
+    // 6. Regular Runs & Shot Placement (including Afrikaans "vier", "ses", "nul")
     let runs = -1;
     if (text.includes('dot') || text.includes('zero') || text.includes('no run') || text.includes('nul')) runs = 0;
     else if (text.includes('single') || text.includes('one run') || text.includes(' 1 ') || text.includes('een')) runs = 1;
@@ -215,16 +269,9 @@ export function VoiceScoringConsole({
     else if (text.includes('six') || text.includes('6') || text.includes('maximum') || text.includes('ses')) runs = 6;
 
     if (runs !== -1) {
-      let shotType = undefined;
-      if (text.includes('drive')) shotType = 'Drive';
-      if (text.includes('pull')) shotType = 'Pull';
-      if (text.includes('cut')) shotType = 'Cut';
-      if (text.includes('flick')) shotType = 'Flick';
-      if (text.includes('sweep')) shotType = 'Sweep';
-
-      onRecordBall({ runs, shotType });
+      onRecordBall({ runs, shotType, zoneName });
       playAcousticConfirmation(880, 0.15);
-      toast.success(`Voice Recorded: ${runs} Runs ${shotType ? `(${shotType})` : ''}`);
+      toast.success(`Voice Recorded: ${runs} Runs ${shotType ? `(${shotType})` : ''} ${zoneName ? `to ${zoneName}` : ''}`);
     }
   };
 
